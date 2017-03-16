@@ -1,0 +1,17 @@
+We are contacting you to let you know that an Export Win you recorded will shortly be forwarded to {{ win.customer_name|title }} of {{ win.company_name }} for confirmation.  The message attached to that email will say:
+
+
+- - - -
+
+> I'm delighted to hear of your recent export business success in
+> {{ win.country.name }}.
+>
+> It's been a privilege to work with you on this. As part of my role, I have to
+> report on the service I've provided to customers like you.  Could I ask you
+> to confirm details of your success by clicking on the link below?  It should
+> only take a couple minutes of your time and I'd really appreciate your help.
+
+- - - -
+
+
+If you have experienced a problem with the new Export Wins service, please contact us, giving brief details, at this address: {{ feedback_address }}

@@ -1,0 +1,7 @@
+For the attention of: {{ customer_response.win.lead_officer_name }}
+
+{{ customer_response.name }} from {{ customer_response.win.company_name }} has submitted a response to the Export Win you recorded in {{ customer_response.win.country.name }}.
+
+Progress of your export wins forms can be tracked through the Export Wins homepage. For full details of what the customer has submitted, go to the MI download on CDMS.
+
+If you would like to offer feedback on this service, please contact us, giving brief details at: {{ feedback_address }}

@@ -1,0 +1,16 @@
+For attention of: {{ win.customer_name|title }}
+
+I'm delighted to hear of your recent export business success in {{ win.country.name }}.
+
+It's been a privilege to work with you on this. As part of my role, I have to report on the service I've provided to customers like you.  Could I ask you to confirm details of your success by clicking on the link below?  It should only take a couple minutes of your time and I'd really appreciate your help.
+
+  {{ url }}
+
+Best regards
+
+{{ win.lead_officer_name|safe }}
+{{ win.get_hq_team_display|safe }}
+{{ win.lead_officer_email_address|default:win.user.email }}
+https://www.gov.uk/dit
+
+Department for International Trade is the Government Department that helps UK-based companies succeed globally and assists overseas companies to bring investment to the UK.
