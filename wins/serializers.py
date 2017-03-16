@@ -74,6 +74,8 @@ class WinSerializer(ModelSerializer):
         return {
             'created': win.confirmation.created,
             'our_help': self._our_help(win.confirmation),
+            'agreed': win.confirmation.agree_with_win,
+            'comment': win.confirmation.comments,
         }
 
     def get_sent(self, win):
@@ -229,7 +231,11 @@ class DetailWinSerializer(ModelSerializer):
         # should be abstracted better
         if not hasattr(win, 'confirmation'):
             return None
-        return {'created': win.confirmation.created}
+        return {
+            'created': win.confirmation.created,
+            'agreed': win.confirmation.agree_with_win,
+            'comment': win.confirmation.comments,
+        }
 
     def get_sent(self, win):
         # should be abstracted better
