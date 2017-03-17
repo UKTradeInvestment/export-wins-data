@@ -1,10 +1,11 @@
 import datetime
 import uuid
 
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.utils import OperationalError, ProgrammingError
 from django_countries.fields import CountryField
-from django.utils.functional import lazy
 
 from users.models import User
 from . import constants
@@ -76,7 +77,13 @@ class HVC(models.Model):
 
     @classmethod
     def choices(cls):
-        return tuple([(hvc.campaign_id, hvc.name) for hvc in cls.objects.all()])
+        try:
+            return tuple([(hvc.campaign_id, hvc.name)
+                         for hvc in cls.objects.all()])
+        except (OperationalError, ProgrammingError):
+            # small hack for when you have empty DB (e.g. running tests)
+            # migrations need to initialize models
+            return []
 
 
 class Win(SoftDeleteModel):
@@ -86,16 +93,6 @@ class Win(SoftDeleteModel):
         ordering = ['created']
         verbose_name = "Export Win"
         verbose_name_plural = "Export Wins"
-
-    def __init__(self,  *args, **kwargs):
-        super(Win, self).__init__(*args, **kwargs)
-        # little hack to make choices populated by table
-        self._meta.get_field_by_name('hvc')[0]._choices = lazy(HVC.choices, list)()
-
-    def get_hvc_display(self):
-        if not self.hvc:
-            return ''
-        return HVC.objects.get(campaign_id=self.hvc).name
 
     id = models.UUIDField(primary_key=True)
     user = models.ForeignKey(User, related_name="wins")
@@ -148,6 +145,7 @@ class Win(SoftDeleteModel):
         verbose_name="Prosperity Fund", default=False)
     hvc = models.CharField(
         max_length=6,
+        choices=HVC.choices(),
         verbose_name="HVC code, if applicable",
         blank=True,
         null=True,
