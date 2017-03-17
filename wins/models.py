@@ -316,7 +316,7 @@ class Breakdown(SoftDeleteModel):
     win = models.ForeignKey(Win, related_name="breakdowns")
     type = models.PositiveIntegerField(choices=constants.BREAKDOWN_TYPES)
     year = models.PositiveIntegerField()
-    value = models.PositiveIntegerField()
+    value = models.BigIntegerField()
 
     def __str__(self):
         return "{}/{} {}: {}K".format(
