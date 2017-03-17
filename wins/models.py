@@ -136,12 +136,12 @@ class Win(SoftDeleteModel):
     date = models.DateField(verbose_name="Date business won [MM/YY]")
     country = CountryField()
 
-    total_expected_export_value = models.IntegerField()
+    total_expected_export_value = models.BigIntegerField()
     goods_vs_services = models.PositiveIntegerField(
         choices=constants.GOODS_VS_SERVICES,
         verbose_name="Does the expected export value relate to"
     )
-    total_expected_non_export_value = models.IntegerField()
+    total_expected_non_export_value = models.BigIntegerField()
 
     sector = models.PositiveIntegerField(choices=constants.SECTORS)
     is_prosperity_fund_related = models.BooleanField(
