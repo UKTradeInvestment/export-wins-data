@@ -35,7 +35,7 @@ def set_field(wins, fieldname, val):
     for win in wins:
         setattr(win, fieldname, val)
         win.save()
-    get_win_field(wins, fieldname)
+    get_field(wins, fieldname)
 
 
 def reactivate(id_str):
