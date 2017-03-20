@@ -1,3 +1,4 @@
+
 # Depending on how often these are edited, it may make more sense to put these
 # into a model of their own, but as I don't have that information handy, I'm
 # not going to over-complicate things at this stage for the sake of
@@ -1016,7 +1017,9 @@ WIN_TYPES = (
 BREAKDOWN_TYPES = (
     (1, "Export"),
     (2, "Non-export"),
+    (3, "Outward Direct Investment"),
 )
+BREAKDOWN_NAME_TO_ID = dict((v, k) for k, v in BREAKDOWN_TYPES)
 
 NOTIFICATION_TYPES = (
     ('o', 'Officer'),
