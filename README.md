@@ -20,9 +20,9 @@ SENDING_ADDRESS='noreply@example.com'
 FEEDBACK_ADDRESS='feedback@example.com'
 ```
 
-## Docker
+## Dependencies
 
-To run Postgres in a docker container run:
+You need a Postgres database to connect to, to run Postgres in a docker container run:
 
 ```bash
 docker run -d -p 5432:5432 -e POSTGRES_DB=export-wins-data postgres:9
@@ -32,4 +32,16 @@ Now set your DATABASE_URL to include the default user `postgres`:
 
 ```bash
 export DATABASE_URL='postgres://postgres@127.0.0.1:5432/export-wins-data'
+```
+
+## Docker
+
+The image for this should be built by docker hub automatically.
+
+### OSX
+
+Create the required env variables and network alias, then run this:
+
+```bash
+docker run -d -p 8000:8000 -e "SECRET_KEY=${SECRET_KEY}" -e "ADMIN_SECRET=${ADMIN_SECRET}" -e "UI_SECRET=${UI_SECRET}" -e "MI_SECRET=${MI_SECRET}" -e "DATABASE_URL=postgres://postgres@10.200.10.1:5432/export-wins-data" -e "EMAIL_HOST=${EMAIL_HOST}" -e "EMAIL_PORT=${EMAIL_PORT}" ukti/export-wins-data:latest
 ```
