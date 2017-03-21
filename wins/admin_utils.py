@@ -1,5 +1,6 @@
 from django.db.models.aggregates import Sum
 
+from wins.constants import BREAKDOWN_TYPES
 from wins.models import Win
 
 
@@ -92,34 +93,59 @@ def add_advisor(win_id, name, hq_team):
     print(win.advisors.all())
 
 
-def update_numbers(win_id, export_value, year1, year2, year3, year4, year5,
-                   update_confirmed=False):
+def update_numbers(win_id, new_total, year1, year2, year3, year4, year5,
+                   audit='', value_type=None, update_confirmed=True):
+    assert value_type in ['export', 'non_export', 'odi'], 'invalid value'
+    # get breakdown values and check they add up to the total
     years = [year1, year2, year3, year4, year5]
     years = [int(y) if y != '' else 0 for y in years]
-    assert (export_value == sum(years),
-            'values do not add up: %s %s' % (export_value, sum(years)))
+    assert_fail_msg = 'values do not add up: %s %s' % (new_total, sum(years))
+    assert new_total == sum(years), assert_fail_msg
+    # get win, check if its confirmed and we don't want to overwrite confirmed
     win = Win.objects.get(id=win_id)
     if not update_confirmed and win.confirmed:
         print('Win already confirmed, aborting')
         return
-    print(win_id, win.total_expected_export_value, export_value)
-    win.total_expected_export_value = export_value
+    # output current win details
+    total_attr_str = 'total_expected_{}_value'.format(value_type)
+    print(win_id, getattr(win, total_attr_str), new_total)
+    # set the new total
+    setattr(win, total_attr_str, new_total)
     win.save()
-    breakdowns = win.breakdowns.filter(type=1)
+    # get and re-set the breakdowns
+    breakdown_dict = dict((v, k) for k, v in BREAKDOWN_TYPES)
+    if value_type == 'odi':
+        breakdown_name = 'ODI'
+    elif value_type == 'export':
+        breakdown_name = 'Export'
+    elif value_type == 'non_export':
+        breakdown_name = 'Non-export'
+    breakdown_type = breakdown_dict[breakdown_name]
+    breakdowns = win.breakdowns.filter(type=breakdown_type)
     print(breakdowns)
     for value, breakdown in zip(years, breakdowns):
         breakdown.value = value or 0
         breakdown.save()
-    breakdowns = win.breakdowns.filter(type=1)
+    breakdowns = win.breakdowns.filter(type=breakdown_type)
     print(breakdowns)
+    # add audit info
+    win.add_audit('Updated {}; total: {}, years: {} - {}'.format(
+        breakdown_name,
+        new_total,
+        years,
+        audit,
+    ))
+    win.save()
+    print('Audit:\n', win.audit)
+    # final check that inoput breakdowns equal input total
     win = Win.objects.get(id=win_id)
     sum_breakdowns = win.breakdowns.filter(
-        type=1
+        type=breakdown_type,
     ).aggregate(
-        total=Sum('value')
+        total=Sum('value'),
     )['total']
-    assert (win.total_expected_export_value == sum_breakdowns,
-            'saved values do not add up {} {}'.format(
-                win.total_expected_export_value,
-                sum_breakdowns)
-            )
+    assert_fail_msg = ('saved values do not add up {} {}'.format(
+        win.total_expected_export_value,
+        sum_breakdowns,
+    ))
+    assert getattr(win, total_attr_str) == sum_breakdowns, assert_fail_msg
