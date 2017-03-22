@@ -148,3 +148,10 @@ class AdvisorViewSet(AliceMixin, ModelViewSet):
     filter_fields = ('win__id',)
     ordering_fields = ("pk",)
     http_method_names = ("get", "post", "patch", "put", "delete")
+
+    def perform_destroy(self, instance):
+        # when Win is deleted, it's advisors get soft-deleted
+        # but when a user deletes the advisor, want to delete it for real
+        # which requires overriding the standard method to give the
+        # `for_real` flag
+        instance.delete(for_real=True)
