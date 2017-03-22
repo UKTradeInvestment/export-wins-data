@@ -96,7 +96,7 @@ class BaseWinMIView(BaseMIView):
 
         avg_confirm_time = average(confirm_times)
 
-        return avg_confirm_time or 0
+        return avg_confirm_time or 0.0
 
     def _overview_target_percentage(self, hvc_wins, total_target):
         """ percentages of confirmed/unconfirmed hvc wins against total target """
@@ -178,10 +178,11 @@ class BaseWinMIView(BaseMIView):
 
         if run_rate > 45:
             return 'green'
-        elif run_rate < 25:
+
+        if run_rate < 25:
             return 'red'
-        else:
-            return 'amber'
+
+        return 'amber'
 
     def _breakdown_wins(self, wins, non_export=False):
         """

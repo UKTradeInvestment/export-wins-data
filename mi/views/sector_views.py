@@ -117,20 +117,23 @@ class TopNonHvcSectorCountryWinsView(BaseSectorMIView):
             total_wins=Count('id')
         ).order_by('-total_value')[:records_to_retreive]
 
-        top_value = int(wins[0]['total_value'])
+        if not wins:
+            results = []
+        else:
+            top_value = int(wins[0]['total_value'])
 
-        results = [
-            {
-                'region': DjangoCountry(agg_win['country']).name,
-                'sector': Sector.objects.get(id=agg_win['sector']).name,
-                'totalValue': agg_win['total_value'],
-                'totalWins': agg_win['total_wins'],
-                'percentComplete': int(int(agg_win['total_value']) * 100 / top_value),
-                'averageWinValue': int(agg_win['total_value'] / agg_win['total_wins']),
-                'averageWinPercent': int((agg_win['total_value'] / agg_win['total_wins']) * 100 / top_value)
-            }
-            for agg_win in wins
-            ]
+            results = [
+                {
+                    'region': DjangoCountry(agg_win['country']).name,
+                    'sector': Sector.objects.get(id=agg_win['sector']).name,
+                    'totalValue': agg_win['total_value'],
+                    'totalWins': agg_win['total_wins'],
+                    'percentComplete': int(int(agg_win['total_value']) * 100 / top_value),
+                    'averageWinValue': int(agg_win['total_value'] / agg_win['total_wins']),
+                    'averageWinPercent': int((agg_win['total_value'] / agg_win['total_wins']) * 100 / top_value)
+                }
+                for agg_win in wins
+                ]
         return self._success(results)
 
 

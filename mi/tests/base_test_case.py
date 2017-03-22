@@ -13,8 +13,9 @@ class MiApiViewsBaseTestCase(TestCase):
     fin_end_date = "2017-03-31"
 
     TEAM_1_HVCS = ['E006', 'E019', 'E031', 'E072', 'E095', 'E115', 'E128', 'E160', 'E167', 'E191']
-    TEAM_1_SECTORS = [58, 59, 60, 61, 62, 63, 64, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159,
+    TEAM_1_SECTORS = [60, 61, 62, 63, 64, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159,
                       160, 161, 162, 163, 164, 165, 166, 167, 168, 169]
+    SAMPLE_COUNTRIES = ['CA', 'BS', 'GQ', 'VA', 'AQ', 'SA', 'EG', 'LU', 'ER', 'GA', 'MP']
     CAMPAIGN_TARGET = 10000000
 
     @classmethod
