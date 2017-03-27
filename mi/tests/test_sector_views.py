@@ -61,6 +61,12 @@ class SectorTeamBaseTestCase(MiApiViewsBaseTestCase):
         """ creates a dummy non-HVC `Win` using Factory, can be confirmed or unconfirmed """
         self._create_win(None, sector_id, win_date, export_value, confirm, notify_date, response_date, country)
 
+    def _team_data(self, teams_list, team_id=1):
+        """ returns specific team's data dict out of overview response list """
+        team_data = next((team_item for team_item in teams_list if team_item["id"] == team_id), None)
+        self.assertIsNotNone(team_data)
+        return team_data
+
 
 @freeze_time(MiApiViewsBaseTestCase.frozen_date)
 class SectorTeamListTestCase(MiApiViewsBaseTestCase):

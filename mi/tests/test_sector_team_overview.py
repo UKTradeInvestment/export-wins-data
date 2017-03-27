@@ -18,12 +18,6 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
     expected_response = {}
     url = reverse('mi:sector_teams_overview')
 
-    def _team_data(self, teams_list, id):
-        """ returns specific team's data dict out of overview response list """
-        team_data = next((team_item for team_item in teams_list if team_item["id"] == id), None)
-        self.assertIsNotNone(team_data)
-        return team_data
-
     def test_hvc_target_values_no_wins(self):
         """
         When no wins, hvc current export value, confirmed and unconfirmed wil be 0

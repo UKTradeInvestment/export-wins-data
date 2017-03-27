@@ -1,10 +1,25 @@
 import datetime
 
+LAST_FIN_YEAR = datetime.datetime(2017, 3, 31)
+
+
+def _today():
+    """
+    if the current date is past 2016-17 FY, it returns last day of 2016-17 FY
+    otherwise, returns today's date.
+    This is to make MI default to 2016-17 FY, even when we are in new FY.
+    Until MI is ready to support multiple financial years at the same time.
+    """
+    if datetime.datetime.today() > LAST_FIN_YEAR:
+        return LAST_FIN_YEAR
+
+    return datetime.datetime.today()
+
 
 def get_financial_start_date(date=None):
     """ Returns financial year start date for a given date. Set to current date if none supplied """
     if not date:
-        date = datetime.datetime.today()
+        date = _today()
     if date.month < 4:
         return datetime.datetime(date.year - 1, 4, 1)
     else:
@@ -14,7 +29,7 @@ def get_financial_start_date(date=None):
 def get_financial_end_date(date=None):
     """ Returns financial year end date for a given date. Set to current date if none supplied """
     if not date:
-        date = datetime.datetime.today()
+        date = _today()
     if date.month >= 4:
         return datetime.datetime(date.year + 1, 3, 31)
     else:
@@ -22,11 +37,12 @@ def get_financial_end_date(date=None):
 
 
 def month_iterator(start_date, end_date=None):
-    """ Helper generator function to iterate through (year, month) between given dates,
-    both dates' months inclusive """
-    # initialise end_date to today, if missing
+    """
+    Helper generator function to iterate through (year, month) between given dates,
+    both dates' months inclusive
+    """
     if not end_date:
-        end_date = datetime.datetime.today()
+        end_date = _today()
     start_month = start_date.month - 1
     start_year = start_date.year
     end_month = end_date.month
@@ -47,9 +63,9 @@ def two_digit_float(number):
 
 def sort_campaigns_by(campaign):
     """ Helper sort order function for campaigns graph """
-    return (campaign['totals']['progress']['confirmed_percent'],
-            campaign['totals']['progress']['unconfirmed_percent'],
-            campaign['totals']['target'])
+    return (campaign["totals"]["progress"]["confirmed_percent"],
+            campaign["totals"]["progress"]["unconfirmed_percent"],
+            campaign["totals"]["target"])
 
 
 def average(in_list):
