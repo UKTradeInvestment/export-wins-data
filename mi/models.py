@@ -136,7 +136,7 @@ class Target(models.Model):
     target = models.BigIntegerField()
     sector_team = models.ForeignKey(SectorTeam, related_name="targets")
     hvc_group = models.ForeignKey(HVCGroup, related_name="targets")
-    country = models.ForeignKey(Country, related_name="targets")
+    country = models.ForeignKey(Country, related_name="targets", null=True)
 
     @property
     def name(self):
