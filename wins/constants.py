@@ -1073,3 +1073,12 @@ UK_REGIONS = (
     (11, "West Midlands"),
     (12, "Yorkshire and The Humber"),
 )
+
+STATUS = (
+  (1, "Has never exported before"),
+  (2, "Has exported before but not won an export order in the past twelve months"),
+  (3, "Has exported in the past twelve months but has not won an export order proactively as a result of having an export plan"),
+  (4, "Is an exporter but exports currently account for less than 10% of its overall turnover"),
+  (5, "Is an exporter but has only won export orders in three countries or fewer"),
+  (6, "Is an exporter that we are helping to maintain and grow its exports"),
+)

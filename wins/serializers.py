@@ -12,6 +12,7 @@ class WinSerializer(ModelSerializer):
     sent = SerializerMethodField()
     country_name = SerializerMethodField()
     type_display = SerializerMethodField()
+    export_experience_display = SerializerMethodField()
 
     class Meta(object):
         model = Win
@@ -54,6 +55,7 @@ class WinSerializer(ModelSerializer):
             "line_manager_name",
             "team_type",
             "hq_team",
+            "export_experience",
             "location",
             "created",
             "updated",
@@ -62,6 +64,7 @@ class WinSerializer(ModelSerializer):
             "sent",
             "country_name",
             "type_display",
+            "export_experience_display",
             "audit",
         )
 
@@ -91,11 +94,16 @@ class WinSerializer(ModelSerializer):
     def validate_user(self, value):
         return self.context["request"].user
 
+    def get_export_experience_display(self, win):
+        return win.get_export_experience_display() or ''
+
 
 class ChoicesSerializerField(SerializerMethodField):
     """ Read-only field return representation of model field with choices
 
     http://stackoverflow.com/questions/28945327/django-rest-framework-with-choicefield
+
+    requires there to be some choices
 
     """
     def to_representation(self, value):
@@ -111,6 +119,7 @@ class LimitedWinSerializer(ModelSerializer):
     country = ChoicesSerializerField()
     customer_location = ChoicesSerializerField()
     goods_vs_services = ChoicesSerializerField()
+    export_experience_customer = SerializerMethodField()
 
     class Meta(object):
         model = Win
@@ -124,8 +133,12 @@ class LimitedWinSerializer(ModelSerializer):
             "total_expected_export_value",
             "total_expected_non_export_value",
             "goods_vs_services",
+            "export_experience_customer",
             "created",
         )
+
+    def get_export_experience_customer(self, win):
+        return win.get_export_experience_customer()
 
 
 class DetailWinSerializer(ModelSerializer):
@@ -150,6 +163,7 @@ class DetailWinSerializer(ModelSerializer):
     advisors = SerializerMethodField()  # prob should be advisorserializer
     responded = SerializerMethodField()
     sent = SerializerMethodField()
+    export_experience_display = SerializerMethodField()
 
     class Meta(object):
         model = Win
@@ -191,6 +205,8 @@ class DetailWinSerializer(ModelSerializer):
             "line_manager_name",
             "team_type",
             "hq_team",
+            "export_experience",
+            "export_experience_display",
             "location",
             "created",
             "updated",
@@ -237,6 +253,9 @@ class DetailWinSerializer(ModelSerializer):
         if not notifications:
             return []
         return [n.created for n in notifications]
+
+    def get_export_experience_display(self, win):
+        return win.get_export_experience_display()
 
 
 class BreakdownSerializer(ModelSerializer):
