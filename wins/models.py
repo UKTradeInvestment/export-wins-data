@@ -63,6 +63,9 @@ class SoftDeleteModel(models.Model):
 
 class HVC(models.Model):
 
+    class Meta(object):
+        ordering = ['name']
+
     campaign_id = models.CharField(max_length=4, unique=True)
     name = models.CharField(max_length=128)
 
