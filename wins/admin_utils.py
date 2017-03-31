@@ -1,7 +1,7 @@
 from django.db.models.aggregates import Sum
 
 from wins.constants import BREAKDOWN_TYPES
-from wins.models import Win
+from wins.models import Win, Advisor
 
 
 def report_missing_ids(given, found):
