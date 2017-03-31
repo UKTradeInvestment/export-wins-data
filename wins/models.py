@@ -125,20 +125,22 @@ class Win(SoftDeleteModel):
     )
     name_of_export = models.CharField(
         max_length=128,
-        verbose_name="What goods or services are being exported?",
+        verbose_name="What are the goods or services?",
     )
 
+    # no longer used but kept for now in case needed
     type = models.PositiveIntegerField(
-        choices=constants.WIN_TYPES, verbose_name="Type of win")
+        choices=constants.WIN_TYPES, verbose_name="Type of win", null=True)
     date = models.DateField(verbose_name="Date business won [MM/YY]")
     country = CountryField()
 
     total_expected_export_value = models.BigIntegerField()
     goods_vs_services = models.PositiveIntegerField(
         choices=constants.GOODS_VS_SERVICES,
-        verbose_name="Does the expected export value relate to"
+        verbose_name="Does the expected value relate to"
     )
     total_expected_non_export_value = models.BigIntegerField()
+    total_expected_odi_value = models.BigIntegerField()
 
     sector = models.PositiveIntegerField(choices=constants.SECTORS)
     is_prosperity_fund_related = models.BooleanField(
@@ -402,7 +404,7 @@ class CustomerResponse(SoftDeleteModel):
     )
     last_export = models.PositiveIntegerField(
         choices=constants.EXPERIENCE,
-        verbose_name="When did your company last export goods or services?"
+        verbose_name="Apart from this win, when did your company last export goods or services?"
     )
     has_enabled_expansion_into_new_market = models.BooleanField(
         verbose_name="It enabled you to expand into a new market",
@@ -433,7 +435,7 @@ class CustomerResponse(SoftDeleteModel):
         verbose_name="Would you be willing for DIT / Exporting is GREAT to feature your success in marketing materials?"
     )
 
-    comments = models.TextField(blank=True, verbose_name='Other comments or changes to the export details')
+    comments = models.TextField(blank=True, verbose_name='Other comments or changes to the win details')
     name = models.CharField(max_length=256, verbose_name='Your name')
     created = models.DateTimeField(auto_now_add=True)
 

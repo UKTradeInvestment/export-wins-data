@@ -10,7 +10,7 @@ def generate_officer_email(win):
     })
 
     return {
-        'subject': "Thank you for submitting a new Export Win.",
+        'subject': "Thank you for submitting a new Win.",
         'body': body,
         'from': settings.SENDING_ADDRESS,
     }
@@ -46,7 +46,7 @@ def generate_customer_email(url, win):
         "url": url
     })
 
-    subject = "Please confirm {} helped with your export success".format(
+    subject = "Please confirm {} helped with your success".format(
         win.lead_officer_name,
     )
 
