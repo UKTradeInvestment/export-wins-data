@@ -22,11 +22,25 @@ class OverseasRegion(models.Model):
                 targets.add(target)
         return targets
 
+    def targets_filtered(self, fin_year):
+        """ List of `Targets` of all HVCs belonging to the `OverseasRegion`, filtered by Financial Year """
+
+        targets = set()
+        for country in self.countries.all():
+            for target in country.targets.filtered(fin_year):
+                targets.add(target)
+        return targets
+
     @property
     def campaign_ids(self):
         """ List of Campaign IDs of all HVCs belonging to the `OverseasRegion` """
 
         return [t.campaign_id for t in self.targets]
+
+    def campaign_ids_filtered(self, fin_year):
+        """ List of Campaign IDs of all HVCs belonging to the `OverseasRegion`, filtered by Financial Year """
+
+        return [t.campaign_id for t in self.targets_filtered(fin_year)]
 
     @property
     def country_ids(self):
@@ -75,6 +89,11 @@ class SectorTeam(models.Model):
 
         return [t.campaign_id for t in self.targets.all()]
 
+    def campaign_ids_filtered(self, fin_year):
+        """ List of Campaign IDs of all HVCs belonging to the HVC Group, filtered by Financial Year """
+
+        return [t.campaign_id for t in self.targets.filtered(fin_year=fin_year)]
+
 
 class ParentSector(models.Model):
     """ CDMS groupings of CDMS Sectors """
@@ -115,6 +134,11 @@ class HVCGroup(models.Model):
 
         return [t.campaign_id for t in self.targets.all()]
 
+    def campaign_ids_filtered(self, fin_year):
+        """ List of Campaign IDs of all HVCs belonging to the HVC Group, filtered by Financial Year """
+
+        return [t.campaign_id for t in self.targets.filtered(fin_year=fin_year)]
+
 
 class Sector(models.Model):
     """ CDMS big list of Sectors """
@@ -129,6 +153,15 @@ class Sector(models.Model):
         return 'Sector: {} ({})'.format(self.name, self.parent_sector)
 
 
+class FinancialYear(models.Model):
+    """ Financial Years """
+    id = models.IntegerField(primary_key=True)
+    description = models.CharField(max_length=128)
+
+    def __str__(self):
+        return self.description
+
+
 class Target(models.Model):
     """ HVC targets """
 
@@ -137,11 +170,15 @@ class Target(models.Model):
     sector_team = models.ForeignKey(SectorTeam, related_name="targets")
     hvc_group = models.ForeignKey(HVCGroup, related_name="targets")
     country = models.ForeignKey(Country, related_name="targets", null=True)
+    financial_year = models.ForeignKey(FinancialYear, related_name="targets")
 
     @property
     def name(self):
         # don't want tight integration with win models...
         return HVC.objects.get(campaign_id=self.campaign_id).name
+
+    def filtered(self, fin_year):
+        return self.objects.filter(financial_year=fin_year)
 
     def __str__(self):
         return 'Target: {} - {} - {}'.format(
