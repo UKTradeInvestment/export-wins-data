@@ -34,6 +34,7 @@ class WinSerializer(ModelSerializer):
             "type",
             "total_expected_export_value",
             "total_expected_non_export_value",
+            "total_expected_odi_value",
             "goods_vs_services",
             "sector",
             "is_prosperity_fund_related",
@@ -132,6 +133,7 @@ class LimitedWinSerializer(ModelSerializer):
             "customer_location",
             "total_expected_export_value",
             "total_expected_non_export_value",
+            "total_expected_odi_value",
             "goods_vs_services",
             "export_experience_customer",
             "created",
@@ -184,6 +186,7 @@ class DetailWinSerializer(ModelSerializer):
             "type",
             "total_expected_export_value",
             "total_expected_non_export_value",
+            "total_expected_odi_value",
             "goods_vs_services",
             "sector",
             "is_prosperity_fund_related",
@@ -224,9 +227,12 @@ class DetailWinSerializer(ModelSerializer):
         exports = [{'value': b.value, 'year': b.year} for b in exports]
         nonexports = win.breakdowns.filter(type=2).order_by('year')
         nonexports = [{'value': b.value, 'year': b.year} for b in nonexports]
+        odi = win.breakdowns.filter(type=3).order_by('year')
+        odi = [{'value': b.value, 'year': b.year} for b in odi]
         return {
             'exports': exports,
             'nonexports': nonexports,
+            'odi': odi,
         }
 
     def get_advisors(self, win):

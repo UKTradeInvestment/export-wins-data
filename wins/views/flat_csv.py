@@ -26,8 +26,8 @@ class CSVView(APIView):
     win_fields = WinSerializer().fields
     customerresponse_fields = CustomerResponseSerializer().fields
     IGNORE_FIELDS = ['responded', 'sent', 'country_name', 'updated',
-                     'complete', 'type_display', 'export_experience_display',
-                     'location']
+                     'complete', 'type', 'type_display',
+                     'export_experience_display', 'location']
 
     def __init__(self, *args, **kwargs):
         # cache some stuff to make flat CSV. like prefetch but works easily
@@ -183,6 +183,7 @@ class CSVView(APIView):
                 comma_fields = [
                     'total_expected_export_value',
                     'total_expected_non_export_value',
+                    'total_expected_odi_value',
                 ]
                 if field_name in comma_fields:
                     value = "£{:,}".format(value)

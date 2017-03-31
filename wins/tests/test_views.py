@@ -75,6 +75,7 @@ class AlicePermissionTestCase(TestCase):
           "team_type": "investment",
           "total_expected_export_value": 5,
           "total_expected_non_export_value": 5,
+          "total_expected_odi_value": 5,
           "type": 1,
           "type_of_support_1": 1,
           "business_type": 1,
@@ -359,7 +360,7 @@ class AlicePermissionTestCase(TestCase):
             mail.outbox[0].subject.startswith('Please confirm '),
         )
         self.assertIn(
-            'delighted to hear of your recent export',
+            'delighted to hear of your recent',
             mail.outbox[0].body,
         )
         self.assertEqual(mail.outbox[0].to, ['no@way.ca'])
@@ -389,7 +390,7 @@ class AlicePermissionTestCase(TestCase):
             mail.outbox[0].subject.startswith('Please confirm '),
         )
         self.assertIn(
-            'delighted to hear of your recent export',
+            'delighted to hear of your recent',
             mail.outbox[0].body,
         )
         self.assertEqual(mail.outbox[0].to, ['customer@email.address'])
@@ -397,7 +398,7 @@ class AlicePermissionTestCase(TestCase):
         # email to both extra officers, but not Win creator
         self.assertTrue(
             mail.outbox[1].subject.startswith(
-                'Thank you for submitting a new Export Win.'
+                'Thank you for submitting a new Win.'
             ),
         )
         self.assertIn(
@@ -779,11 +780,11 @@ class AlicePermissionTestCase(TestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEquals(len(mail.outbox), 2)
         self.assertIn(
-            'your export success',
+            'helped with your success',
             mail.outbox[0].subject,
         )
         self.assertIn(
-            'delighted to hear of your recent export',
+            'delighted to hear of your recent business',
             mail.outbox[0].body,
         )
         self.assertEqual(
@@ -792,7 +793,7 @@ class AlicePermissionTestCase(TestCase):
         )
 
         self.assertIn(
-            'hank you for submitting a new Export Win',
+            'hank you for submitting a new Win',
             mail.outbox[1].subject,
         )
         self.assertIn(
@@ -839,11 +840,11 @@ class AlicePermissionTestCase(TestCase):
         self.assertEqual(win.customer_email_address, 'new-email@example.com')
         self.assertEquals(len(mail.outbox), 2)
         self.assertIn(
-            'your export success',
+            'helped with your success',
             mail.outbox[0].subject,
         )
         self.assertIn(
-            'delighted to hear of your recent export',
+            'delighted to hear of your recent business',
             mail.outbox[0].body,
         )
         self.assertEqual(
@@ -852,7 +853,7 @@ class AlicePermissionTestCase(TestCase):
         )
 
         self.assertIn(
-            'hank you for submitting a new Export Win',
+            'hank you for submitting a new Win',
             mail.outbox[1].subject,
         )
         self.assertIn(
