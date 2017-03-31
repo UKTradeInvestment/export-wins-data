@@ -78,8 +78,9 @@ class HVC(models.Model):
     @classmethod
     def choices(cls):
         try:
+            # note, we add a HVC if the DB is empty for development
             return tuple([(hvc.campaign_id, hvc.name)
-                         for hvc in cls.objects.all()])
+                         for hvc in cls.objects.all()]) or [('dev', 'dev')]
         except (OperationalError, ProgrammingError):
             # small hack for when you have empty DB (e.g. running tests)
             # migrations need to initialize models
