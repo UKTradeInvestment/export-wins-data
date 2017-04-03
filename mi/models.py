@@ -22,7 +22,7 @@ class OverseasRegion(models.Model):
                 targets.add(target)
         return targets
 
-    def targets_filtered(self, fin_year):
+    def fin_year_targets(self, fin_year):
         """ List of `Targets` of all HVCs belonging to the `OverseasRegion`, filtered by Financial Year """
 
         targets = set()
@@ -37,10 +37,10 @@ class OverseasRegion(models.Model):
 
         return [t.campaign_id for t in self.targets]
 
-    def campaign_ids_filtered(self, fin_year):
+    def fin_year_campaign_ids(self, fin_year):
         """ List of Campaign IDs of all HVCs belonging to the `OverseasRegion`, filtered by Financial Year """
 
-        return [t.campaign_id for t in self.targets_filtered(fin_year)]
+        return [t.campaign_id for t in self.fin_year_targets(fin_year)]
 
     @property
     def country_ids(self):
@@ -89,7 +89,7 @@ class SectorTeam(models.Model):
 
         return [t.campaign_id for t in self.targets.all()]
 
-    def campaign_ids_filtered(self, fin_year):
+    def fin_year_campaign_ids(self, fin_year):
         """ List of Campaign IDs of all HVCs belonging to the HVC Group, filtered by Financial Year """
 
         return [t.campaign_id for t in self.targets.filtered(fin_year=fin_year)]
@@ -134,7 +134,7 @@ class HVCGroup(models.Model):
 
         return [t.campaign_id for t in self.targets.all()]
 
-    def campaign_ids_filtered(self, fin_year):
+    def fin_year_campaign_ids(self, fin_year):
         """ List of Campaign IDs of all HVCs belonging to the HVC Group, filtered by Financial Year """
 
         return [t.campaign_id for t in self.targets.filtered(fin_year=fin_year)]
@@ -170,14 +170,14 @@ class Target(models.Model):
     sector_team = models.ForeignKey(SectorTeam, related_name="targets")
     hvc_group = models.ForeignKey(HVCGroup, related_name="targets")
     country = models.ForeignKey(Country, related_name="targets", null=True)
-    financial_year = models.ForeignKey(FinancialYear, related_name="targets")
+    financial_year = models.ForeignKey(FinancialYear, related_name="targets", null=True)
 
     @property
     def name(self):
         # don't want tight integration with win models...
         return HVC.objects.get(campaign_id=self.campaign_id).name
 
-    def filtered(self, fin_year):
+    def for_fin_year(self, fin_year):
         return self.objects.filter(financial_year=fin_year)
 
     def __str__(self):
