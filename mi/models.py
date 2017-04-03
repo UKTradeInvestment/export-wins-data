@@ -170,7 +170,7 @@ class Target(models.Model):
     sector_team = models.ForeignKey(SectorTeam, related_name="targets")
     hvc_group = models.ForeignKey(HVCGroup, related_name="targets")
     country = models.ForeignKey(Country, related_name="targets", null=True)
-    financial_year = models.ForeignKey(FinancialYear, related_name="targets", null=True)
+    financial_year = models.ForeignKey(FinancialYear, related_name="targets", null=False)
 
     @property
     def name(self):
