@@ -141,7 +141,10 @@ class Target(models.Model):
     @property
     def name(self):
         # don't want tight integration with win models...
-        return HVC.objects.get(campaign_id=self.campaign_id).name
+        return HVC.objects.get(
+            campaign_id=self.campaign_id,
+            financial_year=16,
+        ).name
 
     def __str__(self):
         return 'Target: {} - {} - {}'.format(

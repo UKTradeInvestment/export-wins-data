@@ -68,6 +68,7 @@ class HVCFactory(factory.DjangoModelFactory):
 
     campaign_id = factory.Sequence(lambda n: 'E%03d' % (n + 1))
     name = factory.LazyAttribute(lambda o: 'HVC: {}'.format(o.campaign_id))
+    financial_year = FuzzyChoice([16, 17])
 
 
 class BreakdownFactory(factory.DjangoModelFactory):

@@ -64,29 +64,49 @@ class SoftDeleteModel(models.Model):
 class HVC(models.Model):
 
     class Meta(object):
-        ordering = ['name']
+        ordering = ['name', 'financial_year']
+        unique_together = ('campaign_id', 'financial_year',)
 
-    campaign_id = models.CharField(max_length=4, unique=True)
+    campaign_id = models.CharField(max_length=4)
+    financial_year = models.PositiveIntegerField()
     name = models.CharField(max_length=128)
 
     def __str__(self):
         # note name includes code
-        return self.name
+        return "{} ({})".format(self.name, self.financial_year)
 
     @property
     def campaign(self):
         # names are always <Name of HVC: HVCCode>
         return self.name.split(':')[0]
 
+    @property
+    def charcode(self):
+        # see choices comment
+        return '{}{}'.format(self.campaign_id, self.financial_year)
+
     @classmethod
     def choices(cls):
+        # because of AliceMixin and it's metaclass, could take a long time
+        # and cause unforseeable bugs to make this work properly as a
+        # foreignkey field.
+        # instead this manageable hack - add the FY in the campaign_id
+        # so that the front-end can filter by financial year.
         try:
-            return tuple([(hvc.campaign_id, hvc.name)
-                         for hvc in cls.objects.all()])
+            choices = tuple(
+                (hvc.charcode, hvc.name) for hvc in cls.objects.all()
+            )
+            # note, return a 'dev' HVC if the DB is empty for development
+            # and testing, since a non-empty list is required to make the
+            # hvc field on the model act as a choice field.
+            if not choices:
+                choices = (('dev', 'dev'),)
+            return choices
+
         except (OperationalError, ProgrammingError):
             # small hack for when you have empty DB (e.g. running tests)
             # migrations need to initialize models
-            return []
+            return (('dev', 'dev'),)
 
 
 class Win(SoftDeleteModel):
@@ -148,6 +168,8 @@ class Win(SoftDeleteModel):
     sector = models.PositiveIntegerField(choices=constants.SECTORS)
     is_prosperity_fund_related = models.BooleanField(
         verbose_name="Prosperity Fund", default=False)
+    # note, this consists of first 4 chars hvc code, final 2 chars the
+    # financial year it applies to, see HVC.choices
     hvc = models.CharField(
         max_length=6,
         choices=HVC.choices(),

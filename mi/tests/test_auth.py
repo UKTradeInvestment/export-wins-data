@@ -13,7 +13,7 @@ class MIPermissionTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        HVCFactory.create_batch(255)
+        HVCFactory.create_batch(255, financial_year=16)
 
     def setUp(self):
         self.sector_teams_list = reverse('mi:sector_teams')
