@@ -72,7 +72,7 @@ class BaseWinMIView(BaseMIView):
 
         hvc_colours = []
         for t in targets:
-            target_wins = [win for win in hvc_wins if win.hvc == t.campaign_id]
+            target_wins = [win for win in hvc_wins if win.hvc == t.charcode]
             current_val = sum(win.total_expected_export_value for win in target_wins if win.confirmed)
             hvc_colours.append(self._get_status_colour(t.target, current_val))
 

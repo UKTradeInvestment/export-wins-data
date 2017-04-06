@@ -13,7 +13,7 @@ from wins.factories import (
 )
 from wins.models import HVC
 
-GROUP_4_HVCS = ['E001', 'E017', 'E024', 'E049', 'E063', 'E107', 'E184']
+GROUP_4_HVCS = [code + "16" for code in ['E001', 'E017', 'E024', 'E049', 'E063', 'E107', 'E184']]
 TEAM_SECTORS = [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35]
 GROUP_4_TARGET = 70000000
 HVC_TARGET = 10000000
@@ -492,8 +492,8 @@ class HVCGroupCampaignViewsTestCase(MiApiViewsBaseTestCase):
             response1.save()
 
             campaigns.append({
-                "campaign": HVC.objects.get(campaign_id=hvc_code).campaign,
-                "campaign_id": hvc_code,
+                "campaign": HVC.objects.get(campaign_id=hvc_code[:-2]).campaign,
+                "campaign_id": hvc_code[:-2],
                 "totals": {
                     "hvc": {
                         "value": {
@@ -529,8 +529,8 @@ class HVCGroupCampaignViewsTestCase(MiApiViewsBaseTestCase):
             WinFactory(user=self.user, hvc=hvc_code)
 
             campaigns.append({
-                "campaign": HVC.objects.get(campaign_id=hvc_code).campaign,
-                "campaign_id": hvc_code,
+                "campaign": HVC.objects.get(campaign_id=hvc_code[:-2]).campaign,
+                "campaign_id": hvc_code[:-2],
                 "totals": {
                     "hvc": {
                         "value": {

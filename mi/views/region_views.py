@@ -175,7 +175,7 @@ class OverseasRegionCampaignsView(BaseOverseasRegionsMIView):
         # group existing wins by campaign
         for k, g in groupby(sorted_wins, key=hvc_attrgetter):
             campaign_wins = list(g)
-            campaign_to_wins.append((Target.objects.get(campaign_id=k), campaign_wins))
+            campaign_to_wins.append((Target.objects.get(campaign_id=k[:-2]), campaign_wins))
 
         # add remaining campaigns
 

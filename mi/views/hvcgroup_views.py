@@ -23,7 +23,7 @@ class BaseHVCGroupMIView(BaseSectorMIView):
         """
         Average of (earliest CUSTOMER notification created date - customer response date) for given team
         """
-        group_targets = [s.campaign_id for s in group.targets.all()]
+        group_targets = [t.charcode for t in group.targets.all()]
         notifications_qs = Notification.objects.filter(
             type__exact='c',
             win__hvc__in=group_targets,
@@ -145,7 +145,7 @@ class HVCGroupCampaignsView(BaseHVCGroupMIView):
         # group existing wins by campaign
         for k, g in groupby(sorted_wins, key=hvc_attrgetter):
             campaign_wins = list(g)
-            campaign_to_wins.append((Target.objects.get(campaign_id=k), campaign_wins))
+            campaign_to_wins.append((Target.objects.get(campaign_id=k[:-2]), campaign_wins))
 
         # add remaining campaigns
         for target in group_targets:
