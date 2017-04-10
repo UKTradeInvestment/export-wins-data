@@ -102,7 +102,6 @@ class HVC(models.Model):
             if not choices:
                 choices = (('dev', 'dev'),)
             return choices
-
         except (OperationalError, ProgrammingError):
             # small hack for when you have empty DB (e.g. running tests)
             # migrations need to initialize models
@@ -231,6 +230,10 @@ class Win(SoftDeleteModel):
         verbose_name="HQ team, Region or Post",
         choices=constants.HQ_TEAM_REGION_OR_POST
     )
+    export_experience = models.PositiveIntegerField(
+        choices=constants.STATUS,
+        null=True,
+    )
     location = models.CharField(max_length=128, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True, null=True)
@@ -324,6 +327,19 @@ class Win(SoftDeleteModel):
 
     def un_soft_delete(self):
         self._is_active_cascade(True)
+
+    def get_export_experience_customer(self):
+        if not self.export_experience:
+            return ''
+        customer_map = {
+            1: 'Never exported before',
+            2: 'Not won an export order for twelve months',
+            3: 'Have won an export order in the past twelve months and are working on your export plan',
+            4: 'You wanted to increase exports as a proportion of your overall turnover',
+            5: 'You wanted to increase the number of countries you export to',
+            6: 'You wanted to maintain and grow your exports',
+        }
+        return customer_map[self.export_experience]
 
 
 class Breakdown(SoftDeleteModel):
