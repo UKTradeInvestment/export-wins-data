@@ -77,6 +77,11 @@ class HVC(models.Model):
 
     @property
     def campaign(self):
+        """ The name of the campaign alone without the code
+
+        e.g. Africa Agritech or Italy Automotive
+
+        """
         # names are always <Name of HVC: HVCCode>
         return self.name.split(':')[0]
 
@@ -84,6 +89,10 @@ class HVC(models.Model):
     def charcode(self):
         # see choices comment
         return '{}{}'.format(self.campaign_id, self.financial_year)
+
+    @classmethod
+    def get_by_charcode(cls, charcode):
+        return cls.objects.get(campaign_id=charcode[:-2])
 
     @classmethod
     def choices(cls):

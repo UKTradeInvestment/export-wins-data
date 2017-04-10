@@ -154,36 +154,18 @@ class OverseasRegionCampaignsView(BaseOverseasRegionsMIView):
     """ Overseas Region's HVC's view along with their win-breakdown """
 
     def _campaign_breakdowns(self, region):
-        campaign_to_wins = self._group_wins_by_campaign(region)
+        wins = self._get_region_hvc_wins(region)
+        campaign_to_wins = self._group_wins_by_target(wins, region.targets)
         campaigns = [
             {
                 'campaign': campaign.name.split(":")[0],
                 'totals': self._progress_breakdown(campaign_wins, campaign.target),
             }
             for campaign, campaign_wins in campaign_to_wins
-            ]
+        ]
 
         sorted_campaigns = sorted(campaigns, key=sort_campaigns_by, reverse=True)
         return sorted_campaigns
-
-    def _group_wins_by_campaign(self, region):
-        wins = self._get_region_hvc_wins(region)
-        hvc_attrgetter = attrgetter('hvc')
-        sorted_wins = sorted(wins, key=hvc_attrgetter)
-        campaign_to_wins = []
-
-        # group existing wins by campaign
-        for k, g in groupby(sorted_wins, key=hvc_attrgetter):
-            campaign_wins = list(g)
-            campaign_to_wins.append((Target.objects.get(campaign_id=k[:-2]), campaign_wins))
-
-        # add remaining campaigns
-
-        for target in region.targets:
-            if not any(target in campaign_to_win for campaign_to_win in campaign_to_wins):
-                campaign_to_wins.append((target, []))
-
-        return campaign_to_wins
 
     def get(self, request, region_id):
 

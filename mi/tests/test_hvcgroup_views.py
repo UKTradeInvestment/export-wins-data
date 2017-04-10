@@ -490,10 +490,11 @@ class HVCGroupCampaignViewsTestCase(MiApiViewsBaseTestCase):
             response1 = CustomerResponseFactory(win=win, agree_with_win=True)
             response1.created = datetime.datetime(2016, 5, 6)
             response1.save()
+            hvc = HVC.get_by_charcode(hvc_code)
 
             campaigns.append({
-                "campaign": HVC.objects.get(campaign_id=hvc_code[:-2]).campaign,
-                "campaign_id": hvc_code[:-2],
+                "campaign": hvc.campaign,
+                "campaign_id": hvc.campaign_id,
                 "totals": {
                     "hvc": {
                         "value": {
@@ -527,10 +528,11 @@ class HVCGroupCampaignViewsTestCase(MiApiViewsBaseTestCase):
         campaigns = []
         for hvc_code in GROUP_4_HVCS:
             WinFactory(user=self.user, hvc=hvc_code)
+            hvc = HVC.get_by_charcode(hvc_code)
 
             campaigns.append({
-                "campaign": HVC.objects.get(campaign_id=hvc_code[:-2]).campaign,
-                "campaign_id": hvc_code[:-2],
+                "campaign": hvc.campaign,
+                "campaign_id": hvc.campaign_id,
                 "totals": {
                     "hvc": {
                         "value": {

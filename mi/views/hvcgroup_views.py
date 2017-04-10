@@ -118,7 +118,9 @@ class HVCGroupCampaignsView(BaseHVCGroupMIView):
     """ All campaigns for a given HVC Group and their win-breakdown"""
 
     def _campaign_breakdowns(self, group):
-        campaign_to_wins = self._group_wins_by_campaign(group)
+        wins = self._get_group_wins(group)
+        group_targets = group.targets.all()
+        campaign_to_wins = self._group_wins_by_target(wins, group_targets)
         campaigns = [
             {
                 'campaign': campaign.name.split(":")[0],
@@ -126,7 +128,7 @@ class HVCGroupCampaignsView(BaseHVCGroupMIView):
                 'totals': self._progress_breakdown(campaign_wins, campaign.target),
             }
             for campaign, campaign_wins in campaign_to_wins
-            ]
+        ]
         sorted_campaigns = sorted(campaigns,
                                   key=lambda c: (
                                     c['totals']['progress']['confirmed_percent'],
@@ -134,26 +136,6 @@ class HVCGroupCampaignsView(BaseHVCGroupMIView):
                                     c['totals']['target']),
                                   reverse=True)
         return sorted_campaigns
-
-    def _group_wins_by_campaign(self, group):
-        wins = self._get_group_wins(group)
-        group_targets = group.targets.all()
-        hvc_attrgetter = attrgetter('hvc')
-        sorted_wins = sorted(wins, key=hvc_attrgetter)
-        campaign_to_wins = []
-
-        # group existing wins by campaign
-        for k, g in groupby(sorted_wins, key=hvc_attrgetter):
-            campaign_wins = list(g)
-            campaign_to_wins.append((Target.objects.get(campaign_id=k[:-2]), campaign_wins))
-
-        # add remaining campaigns
-        for target in group_targets:
-            target_campaign = Target.objects.get(campaign_id=target.campaign_id)
-            if not any(target_campaign in campaign_to_win for campaign_to_win in campaign_to_wins):
-                campaign_to_wins.append((target_campaign, []))
-
-        return campaign_to_wins
 
     def get(self, request, group_id):
 
