@@ -33,8 +33,8 @@ from mi.views.sector_views import (
 )
 
 urlpatterns = [
-    url(r"^sector_teams/$", SectorTeamsListView.as_view(), name="sector_teams"),
-    url(r"^sector_teams/overview/$", SectorTeamsOverviewView.as_view(), name="sector_teams_overview"),
+    url(r"^sector_teams/(?P<year>\d+)/$", SectorTeamsListView.as_view(), name="sector_teams"),
+    url(r"^sector_teams/(?P<year>\d+)/overview/$", SectorTeamsOverviewView.as_view(), name="sector_teams_overview"),
     url(r"^sector_teams/(?P<team_id>\d+)/$", SectorTeamDetailView.as_view(), name="sector_team_detail"),
     url(r"^sector_teams/(?P<team_id>\d+)/campaigns/$", SectorTeamCampaignsView.as_view(),
         name="sector_team_campaigns"),

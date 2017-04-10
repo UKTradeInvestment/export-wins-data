@@ -1,10 +1,13 @@
 from itertools import groupby
 from operator import attrgetter, itemgetter
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Count, Min, Q, Sum
 from django_countries.fields import Country as DjangoCountry
 
 from mi.models import (
+    FinancialYear,
+    HVCGroup,
     Sector,
     SectorTeam,
     Target,
@@ -21,6 +24,14 @@ from wins.models import Notification
 
 class BaseSectorMIView(BaseWinMIView):
     """ Abstract Base for other Sector-related MI endpoints to inherit from """
+
+    def _hvc_groups_for_fin_year(self, fin_year):
+        """ extracts hvc groups from targets for the given financial year """
+        return HVCGroup.objects.filter(targets__financial_year=fin_year).distinct()
+
+    def _sector_teams_for_fin_year(self, fin_year):
+        """ Returns sector teams based on hvc groups from Targets for the given financial year """
+        return SectorTeam.objects.filter(hvc_groups__targets__financial_year=fin_year).distinct()
 
     def _get_team(self, team_id):
         """ Get SectorTeam object or False if invalid ID """
@@ -177,16 +188,21 @@ class SectorTeamsListView(BaseSectorMIView):
             ]
         return sorted(results, key=itemgetter('name'))
 
-    def get(self, request):
+    def get(self, request, year):
+        try:
+            fin_year = FinancialYear.objects.get(id=year)
+        except ObjectDoesNotExist:
+            return self._not_found()
+
         results = [
             {
                 'id': sector_team.id,
                 'name': sector_team.name,
                 'hvc_groups': self._get_hvc_groups_for_team(sector_team)
             }
-            for sector_team in SectorTeam.objects.all()
+            for sector_team in self._sector_teams_for_fin_year(fin_year)
             ]
-        return self._success(sorted(results, key=itemgetter('name')))
+        return self._success_fin_year(sorted(results, key=itemgetter('name')), fin_year)
 
 
 class SectorTeamDetailView(BaseSectorMIView):
@@ -296,7 +312,7 @@ class SectorTeamCampaignsView(BaseSectorMIView):
 class SectorTeamsOverviewView(BaseSectorMIView):
     """ Overview of HVCs, targets etc. for each SectorTeam """
 
-    def _sector_obj_data(self, sector_obj):
+    def _sector_obj_data(self, sector_obj, fin_year):
         """ Get general data from SectorTeam or HVCGroup """
 
         targets = sector_obj.targets.all()
@@ -324,10 +340,10 @@ class SectorTeamsOverviewView(BaseSectorMIView):
             'hvc_performance': hvc_colours_count,
         }
 
-    def _sector_data(self, sector_team):
+    def _sector_data(self, sector_team, fin_year):
         """ Calculate overview for a sector team """
 
-        result = self._sector_obj_data(sector_team)
+        result = self._sector_obj_data(sector_team, fin_year)
 
         hvc_wins = self._get_hvc_wins(sector_team)
         non_hvc_wins = self._get_non_hvc_wins(sector_team)
@@ -356,11 +372,16 @@ class SectorTeamsOverviewView(BaseSectorMIView):
         result['values']['hvc']['total_win_percent'] = total_win_percent['hvc']
 
         result['hvc_groups'] = [
-            self._sector_obj_data(parent)
+            self._sector_obj_data(parent, fin_year)
             for parent in sector_team.hvc_groups.all()
             ]
         return result
 
-    def get(self, request):
-        result = [self._sector_data(team) for team in SectorTeam.objects.all()]
-        return self._success(sorted(result, key=lambda x: (x['name'])))
+    def get(self, request, year):
+        try:
+            fin_year = FinancialYear.objects.get(id=year)
+        except ObjectDoesNotExist:
+            return self._not_found()
+
+        result = [self._sector_data(team, fin_year) for team in self._sector_teams_for_fin_year(fin_year)]
+        return self._success_fin_year(sorted(result, key=lambda x: (x['name'])), fin_year)

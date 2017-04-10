@@ -2,6 +2,7 @@ from collections import Counter
 import datetime
 from itertools import groupby
 from operator import itemgetter
+import time
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -28,6 +29,20 @@ class BaseMIView(APIView):
 
     def _success(self, results):
         return Response(results, status=status.HTTP_200_OK)
+
+    def _success_fin_year(self, results, fin_year):
+        response = {
+            "timestamp": time.time(),
+            "financial_year": {
+                "id": fin_year.id,
+                "description": fin_year.description,
+            },
+            "results": results
+        }
+        return Response(response, status=status.HTTP_200_OK)
+
+    def _not_found(self):
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
     def _hvc_overview(self, targets):
         """ Make an overview dict for a list of targets """
