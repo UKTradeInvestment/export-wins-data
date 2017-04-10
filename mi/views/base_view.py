@@ -1,7 +1,7 @@
-from collections import Counter
 import datetime
+from collections import Counter
 from itertools import groupby
-from operator import itemgetter
+from operator import attrgetter, itemgetter
 import time
 
 from rest_framework import status
@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from alice.authenticators import IsMIServer, IsMIUser
+from mi.models import Target
 from mi.utils import (
     average,
     get_financial_start_date,
@@ -87,7 +88,7 @@ class BaseWinMIView(BaseMIView):
 
         hvc_colours = []
         for t in targets:
-            target_wins = [win for win in hvc_wins if win.hvc == t.campaign_id]
+            target_wins = [win for win in hvc_wins if win.hvc == t.charcode]
             current_val = sum(win.total_expected_export_value for win in target_wins if win.confirmed)
             hvc_colours.append(self._get_status_colour(t.target, current_val))
 
@@ -401,3 +402,14 @@ class BaseWinMIView(BaseMIView):
             },
         }
         return result
+
+    def _group_wins_by_target(self, wins, targets):
+        """ Take wins and targets, return list of [(target, target_wins)] """
+
+        # convenient for testing to be ordered by campaign_id
+        targets = sorted(targets, key=attrgetter('campaign_id'))
+
+        def target_wins(target):
+            return [w for w in wins if w.hvc == target.charcode]
+
+        return [(t, target_wins(t)) for t in targets]

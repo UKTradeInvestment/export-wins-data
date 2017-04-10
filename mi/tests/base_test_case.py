@@ -12,7 +12,9 @@ class MiApiViewsBaseTestCase(TestCase):
     frozen_date = "2016-11-01"
     fin_end_date = "2017-03-31"
 
-    TEAM_1_HVCS = ['E006', 'E019', 'E031', 'E072', 'E095', 'E115', 'E128', 'E160', 'E167', 'E191']
+    TEAM_1_HVCS = [code + "16" for code in
+                   ['E006', 'E019', 'E031', 'E072', 'E095', 'E115', 'E128', 'E160', 'E167', 'E191']
+                   ]
     TEAM_1_SECTORS = [60, 61, 62, 63, 64, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159,
                       160, 161, 162, 163, 164, 165, 166, 167, 168, 169]
     SAMPLE_COUNTRIES = ['CA', 'BS', 'GQ', 'VA', 'AQ', 'SA', 'EG', 'LU', 'ER', 'GA', 'MP']
@@ -30,10 +32,13 @@ class MiApiViewsBaseTestCase(TestCase):
         mi_group = Group.objects.get(name="mi_group")
         mi_group.user_set.add(cls.user)
 
+        # needed to get names of HVCs, have to do again because factory
+        # remembers other tests, even if flushed from DB
         for i in range(255):
-            # needed to get names of HVCs, have to do again because factory
-            # remembers the instances from other tests
-            HVCFactory.create(campaign_id='E%03d' % (i + 1))
+            HVCFactory.create(
+                campaign_id='E%03d' % (i + 1),
+                financial_year=16,
+            )
 
     @override_settings(MI_SECRET=AliceClient.SECRET)
     def _get_api_response(self, url, status_code=200):

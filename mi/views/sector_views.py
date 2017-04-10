@@ -268,7 +268,7 @@ class SectorTeamCampaignsView(BaseSectorMIView):
 
         wins = self._get_hvc_wins(team)
         targets = team.targets.all()
-        campaign_to_wins = self._group_wins_by_campaign(wins, targets)
+        campaign_to_wins = self._group_wins_by_target(wins, targets)
         campaigns = [
             {
                 'campaign': campaign.name.split(':')[0],
@@ -276,28 +276,10 @@ class SectorTeamCampaignsView(BaseSectorMIView):
                 'totals': self._progress_breakdown(campaign_wins, campaign.target),
             }
             for campaign, campaign_wins in campaign_to_wins
-            ]
+        ]
 
         sorted_campaigns = sorted(campaigns, key=sort_campaigns_by, reverse=True)
         return sorted_campaigns
-
-    def _group_wins_by_campaign(self, wins, targets):
-        hvc_attrgetter = attrgetter('hvc')
-        sorted_wins = sorted(wins, key=hvc_attrgetter)
-        campaign_to_wins = []
-
-        # group existing wins by campaign
-        for k, g in groupby(sorted_wins, key=hvc_attrgetter):
-            campaign_wins = list(g)
-            campaign_to_wins.append((Target.objects.get(campaign_id=k), campaign_wins))
-
-        # add remaining campaigns
-        for target in targets:
-            target_campaign = Target.objects.get(campaign_id=target.campaign_id)
-            if not any(target_campaign in campaign_to_win for campaign_to_win in campaign_to_wins):
-                campaign_to_wins.append((target_campaign, []))
-
-        return campaign_to_wins
 
     def get(self, request, team_id):
         team = self._get_team(team_id)

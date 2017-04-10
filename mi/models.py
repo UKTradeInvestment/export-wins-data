@@ -35,7 +35,7 @@ class OverseasRegion(models.Model):
     def campaign_ids(self):
         """ List of Campaign IDs of all HVCs belonging to the `OverseasRegion` """
 
-        return [t.campaign_id for t in self.targets]
+        return [t.charcode for t in self.targets]
 
     def fin_year_campaign_ids(self, fin_year):
         """ List of Campaign IDs of all HVCs belonging to the `OverseasRegion`, filtered by Financial Year """
@@ -90,7 +90,7 @@ class SectorTeam(models.Model):
     def campaign_ids(self):
         """ List of Campaign IDs of all HVCs belonging to the Sector Team """
 
-        return [t.campaign_id for t in self.targets.all()]
+        return [t.charcode for t in self.targets.all()]
 
     def fin_year_campaign_ids(self, fin_year):
         """ List of Campaign IDs of all HVCs belonging to the HVC Group, filtered by Financial Year """
@@ -135,7 +135,7 @@ class HVCGroup(models.Model):
     def campaign_ids(self):
         """ List of Campaign IDs of all HVCs belonging to the HVC Group """
 
-        return [t.campaign_id for t in self.targets.all()]
+        return [t.charcode for t in self.targets.all()]
 
     def fin_year_campaign_ids(self, fin_year):
         """ List of Campaign IDs of all HVCs belonging to the HVC Group, filtered by Financial Year """
@@ -178,7 +178,14 @@ class Target(models.Model):
     @property
     def name(self):
         # don't want tight integration with win models...
-        return HVC.objects.get(campaign_id=self.campaign_id).name
+        return HVC.objects.get(
+            campaign_id=self.campaign_id,
+            financial_year=16,
+        ).name
+
+    @property
+    def charcode(self):
+        return self.campaign_id + "16"
 
     def for_fin_year(self, fin_year):
         return self.objects.filter(financial_year=fin_year)
