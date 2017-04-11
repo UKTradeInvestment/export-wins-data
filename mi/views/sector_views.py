@@ -1,14 +1,9 @@
 from itertools import groupby
 from operator import attrgetter, itemgetter
 
-from django.db.models import Count, Min, Q, Sum
-from django_countries.fields import Country as DjangoCountry
+from django.db.models import Min, Q
 
-from mi.models import (
-    Sector,
-    SectorTeam,
-    Target,
-)
+from mi.models import SectorTeam
 from mi.utils import (
     get_financial_start_date,
     month_iterator,
@@ -39,7 +34,7 @@ class BaseSectorMIView(BaseWinMIView):
         """ HVC wins of the HVC Group """
         return self._wins().filter(
             hvc__in=group.campaign_ids,
-        ).select_related('confirmation')
+        )
 
     def _get_hvc_wins(self, team):
         """
@@ -49,7 +44,7 @@ class BaseSectorMIView(BaseWinMIView):
         """
         return self._wins().filter(
             hvc__in=team.campaign_ids
-        ).select_related('confirmation')
+        )
 
     def _get_non_hvc_wins(self, team):
         """
@@ -61,7 +56,7 @@ class BaseSectorMIView(BaseWinMIView):
         return self._wins().filter(
             Q(sector__in=team.sector_ids),
             Q(hvc__isnull=True) | Q(hvc='')
-        ).select_related('confirmation')
+        )
 
     def _get_all_wins(self, sector_team):
         """ Get HVC and non-HVC Wins of a Sector Team """
@@ -69,24 +64,12 @@ class BaseSectorMIView(BaseWinMIView):
         return (list(self._get_hvc_wins(sector_team)) +
                 list(self._get_non_hvc_wins(sector_team)))
 
-    def _get_avg_confirm_time(self, team):
-        """
-        Average of (earliest CUSTOMER notification created date - customer response date) for given team
-        """
-
-        notifications_qs = Notification.objects.filter(
-            type__exact='c',
-            win__sector__in=team.sector_ids,
-            win__confirmation__isnull=False,
-        )
-        return self._average_confirm_time(notifications_qs)
-
     def _sector_result(self, team):
         """ Basic data about sector team - name & hvc's """
 
         return {
             'name': team.name,
-            'avg_time_to_confirm': self._get_avg_confirm_time(team),
+            'avg_time_to_confirm': self._average_confirm_time(win__sector__in=team.sector_ids),
             'hvcs': self._hvc_overview(team.targets.all()),
         }
 
@@ -103,37 +86,8 @@ class TopNonHvcSectorCountryWinsView(BaseSectorMIView):
         team = self._get_team(team_id)
         if not team:
             return self._invalid('team not found')
-
-        records_to_retreive = 5
-
-        wins = self._wins().filter(
-            Q(hvc='') | Q(hvc__isnull=True),
-            sector__in=team.sector_ids,
-        ).values(
-            'country',
-            'sector'
-        ).annotate(
-            total_value=Sum('total_expected_export_value'),
-            total_wins=Count('id')
-        ).order_by('-total_value')[:records_to_retreive]
-
-        if not wins:
-            results = []
-        else:
-            top_value = int(wins[0]['total_value'])
-
-            results = [
-                {
-                    'region': DjangoCountry(agg_win['country']).name,
-                    'sector': Sector.objects.get(id=agg_win['sector']).name,
-                    'totalValue': agg_win['total_value'],
-                    'totalWins': agg_win['total_wins'],
-                    'percentComplete': int(int(agg_win['total_value']) * 100 / top_value),
-                    'averageWinValue': int(agg_win['total_value'] / agg_win['total_wins']),
-                    'averageWinPercent': int((agg_win['total_value'] / agg_win['total_wins']) * 100 / top_value)
-                }
-                for agg_win in wins
-                ]
+        non_hvc_wins_qs = self._get_non_hvc_wins(team)
+        results = self._top_non_hvc(non_hvc_wins_qs)
         return self._success(results)
 
 
@@ -166,7 +120,7 @@ class SectorTeamsListView(BaseSectorMIView):
     """ Basic information about all Sector Teams """
 
     def _get_hvc_groups_for_team(self, team):
-        """ return sorted list of HVC Groups for a given Sector Team """
+        """ return sorted list of HVC Groups data for a given Sector Team """
 
         results = [
             {
@@ -174,7 +128,7 @@ class SectorTeamsListView(BaseSectorMIView):
                 'name': hvc_group.name,
             }
             for hvc_group in team.hvc_groups.all()
-            ]
+        ]
         return sorted(results, key=itemgetter('name'))
 
     def get(self, request):
@@ -185,7 +139,7 @@ class SectorTeamsListView(BaseSectorMIView):
                 'hvc_groups': self._get_hvc_groups_for_team(sector_team)
             }
             for sector_team in SectorTeam.objects.all()
-            ]
+        ]
         return self._success(sorted(results, key=itemgetter('name')))
 
 
@@ -213,7 +167,7 @@ class SectorTeamMonthsView(BaseSectorMIView):
                 'totals': self._breakdowns_cumulative(month_wins),
             }
             for date_str, month_wins in month_to_wins
-            ]
+        ]
 
     def _group_wins_by_month(self, wins):
         date_attrgetter = attrgetter('date')
@@ -282,12 +236,9 @@ class SectorTeamsOverviewView(BaseSectorMIView):
         """ Get general data from SectorTeam or HVCGroup """
 
         targets = sector_obj.targets.all()
-        hvc_wins = self._get_hvc_wins(sector_obj)
-
-        hvc_export_confirmed = sum(w.total_expected_export_value for w in hvc_wins if w.confirmed)
-        hvc_export_unconfirmed = sum(w.total_expected_export_value for w in hvc_wins if not w.confirmed)
         total_target = sum(t.target for t in targets)
-
+        hvc_wins = self._get_hvc_wins(sector_obj)
+        hvc_confirmed, hvc_unconfirmed = self._confirmed_unconfirmed(hvc_wins)
         hvc_colours_count = self._colours(hvc_wins, targets)
 
         return {
@@ -296,8 +247,8 @@ class SectorTeamsOverviewView(BaseSectorMIView):
             'values': {
                 'hvc': {
                     'current': {
-                        'confirmed': hvc_export_confirmed,
-                        'unconfirmed': hvc_export_unconfirmed
+                        'confirmed': hvc_confirmed,
+                        'unconfirmed': hvc_unconfirmed
                     },
                     'target': total_target,
                     'target_percent': self._overview_target_percentage(hvc_wins, total_target),
@@ -313,8 +264,9 @@ class SectorTeamsOverviewView(BaseSectorMIView):
 
         hvc_wins = self._get_hvc_wins(sector_team)
         non_hvc_wins = self._get_non_hvc_wins(sector_team)
-        non_hvc_confirmed = sum(w.total_expected_export_value for w in non_hvc_wins if w.confirmed)
-        non_hvc_unconfirmed = sum(w.total_expected_export_value for w in non_hvc_wins if not w.confirmed)
+
+        non_hvc_confirmed, non_hvc_unconfirmed = self._confirmed_unconfirmed(non_hvc_wins)
+
         hvc_confirmed = result['values']['hvc']['current']['confirmed']
         hvc_unconfirmed = result['values']['hvc']['current']['unconfirmed']
 
@@ -340,7 +292,7 @@ class SectorTeamsOverviewView(BaseSectorMIView):
         result['hvc_groups'] = [
             self._sector_obj_data(parent)
             for parent in sector_team.hvc_groups.all()
-            ]
+        ]
         return result
 
     def get(self, request):

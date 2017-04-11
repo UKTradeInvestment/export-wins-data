@@ -3,20 +3,23 @@ from collections import Counter
 from itertools import groupby
 from operator import attrgetter, itemgetter
 
+from django.db.models import Count, Sum
+from django_countries.fields import Country as DjangoCountry
+
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from alice.authenticators import IsMIServer, IsMIUser
-from mi.models import Target
+from mi.models import Sector
 from mi.utils import (
     average,
     get_financial_start_date,
     get_financial_end_date,
     percentage,
-    two_digit_float,
+    percentage_formatted,
 )
-from wins.models import Win
+from wins.models import Notification, Win
 
 
 class BaseMIView(APIView):
@@ -80,9 +83,17 @@ class BaseWinMIView(BaseMIView):
         colours.update(dict(Counter(hvc_colours)))
         return colours
 
-    def _average_confirm_time(self, notifications_qs):
-        """ given a set of notifications, this helper would figure out average confirmation time for subclasses """
-        notifications = notifications_qs.values(
+    def _average_confirm_time(self, **win_filter):
+        """ Average confirmation time of Wins matching given filter """
+
+        # fetch all notifications with response date, ordered by win id and
+        # notification creation date, so that it is easy to group
+        # notifications by win and then find each win's earliest notification
+        notifications = Notification.objects.filter(
+            type__exact='c',
+            win__confirmation__isnull=False,
+            **win_filter
+        ).values(
             'win__id',
             'created',
             'win__confirmation__created',
@@ -91,34 +102,31 @@ class BaseWinMIView(BaseMIView):
             'created'
         )
         confirm_times = []
-        for win_id, dates_grouper in groupby(notifications, itemgetter('win__id')):
-            earliest_dates = next(iter(dates_grouper))
-            confirm_times.append((earliest_dates['win__confirmation__created'] - earliest_dates['created']).days)
+        for win_id, values_grouper in groupby(notifications, itemgetter('win__id')):
+            earliest_values = next(iter(values_grouper))
+            delta = earliest_values['win__confirmation__created'] - earliest_values['created']
+            confirm_times.append(delta.days)
 
         avg_confirm_time = average(confirm_times)
 
         return avg_confirm_time or 0.0
 
-    def _overview_target_percentage(self, hvc_wins, total_target):
-        """ percentages of confirmed/unconfirmed hvc wins against total target """
-        hvc_export_confirmed = sum(w.total_expected_export_value for w in hvc_wins if w.confirmed)
-        hvc_export_unconfirmed = sum(w.total_expected_export_value for w in hvc_wins if not w.confirmed)
+    def _overview_target_percentage(self, wins, total_target):
+        """ Percentages of confirmed/unconfirmed wins against total target """
 
-        confirmed = two_digit_float(percentage(hvc_export_confirmed, total_target)) or 0
-        unconfirmed = two_digit_float(percentage(hvc_export_unconfirmed, total_target)) or 0
-
+        confirmed, unconfirmed = self._confirmed_unconfirmed(wins)
+        confirmed = percentage_formatted(confirmed, total_target)
+        unconfirmed = percentage_formatted(unconfirmed, total_target)
         return {
             'confirmed': confirmed,
             'unconfirmed': unconfirmed
         }
 
     def _overview_win_percentages(self, hvc_wins, non_hvc_wins):
-        """ Percentages of total confirmed/unconfirmed value from HVC vs non-HVC, for overview page """
+        """ Percentages of total confirmed/unconfirmed value HVC & non-HVC """
 
-        hvc_confirmed = sum(w.total_expected_export_value for w in hvc_wins if w.confirmed)
-        hvc_unconfirmed = sum(w.total_expected_export_value for w in hvc_wins if not w.confirmed)
-        non_hvc_confirmed = sum(w.total_expected_export_value for w in non_hvc_wins if w.confirmed)
-        non_hvc_unconfirmed = sum(w.total_expected_export_value for w in non_hvc_wins if not w.confirmed)
+        hvc_confirmed, hvc_unconfirmed = self._confirmed_unconfirmed(hvc_wins)
+        non_hvc_confirmed, non_hvc_unconfirmed = self._confirmed_unconfirmed(non_hvc_wins)
 
         total_confirmed = hvc_confirmed + non_hvc_confirmed
         total_unconfirmed = hvc_unconfirmed + non_hvc_unconfirmed
@@ -224,6 +232,28 @@ class BaseWinMIView(BaseMIView):
         }
 
     def _breakdowns(self, wins, include_non_hvc=True):
+        """ Get breakdown of data for wins
+
+        Result looks like:
+        {
+            'export': {
+                'hvc': {
+                    'value': ...,
+                    'number': ...,
+                },
+                'non_hvc' <optional>:{
+                   'value': ...,
+                   'number': ...,
+                }
+            },
+            'non_export': {
+               'value': ...,
+               'number': ...,
+            }
+
+        }
+
+        """
         hvc_wins = [win for win in wins if win.hvc]
         result = {
             'export': {
@@ -232,30 +262,30 @@ class BaseWinMIView(BaseMIView):
             'non_export': self._breakdown_wins(hvc_wins, non_export=True),
         }
 
-        total_confirmed_value = result['export']['hvc']['value']['confirmed']
-        total_unconfirmed_value = result['export']['hvc']['value']['unconfirmed']
-        total_confirmed_number = result['export']['hvc']['number']['confirmed']
-        total_unconfirmed_number = result['export']['hvc']['number']['unconfirmed']
+        confirmed_value = result['export']['hvc']['value']['confirmed']
+        unconfirmed_value = result['export']['hvc']['value']['unconfirmed']
+        confirmed_number = result['export']['hvc']['number']['confirmed']
+        unconfirmed_number = result['export']['hvc']['number']['unconfirmed']
 
         if include_non_hvc:
             non_hvc_wins = [win for win in wins if not win.hvc]
             result['export']['non_hvc'] = self._breakdown_wins(non_hvc_wins)
 
-            total_confirmed_value += result['export']['non_hvc']['value']['confirmed']
-            total_unconfirmed_value += result['export']['non_hvc']['value']['unconfirmed']
-            total_confirmed_number += result['export']['non_hvc']['number']['confirmed']
-            total_unconfirmed_number += result['export']['non_hvc']['number']['unconfirmed']
+            confirmed_value += result['export']['non_hvc']['value']['confirmed']
+            unconfirmed_value += result['export']['non_hvc']['value']['unconfirmed']
+            confirmed_number += result['export']['non_hvc']['number']['confirmed']
+            unconfirmed_number += result['export']['non_hvc']['number']['unconfirmed']
 
         result['export']['totals'] = {
             'value': {
-                'confirmed': total_confirmed_value,
-                'unconfirmed': total_unconfirmed_value,
-                'grand_total': total_confirmed_value + total_unconfirmed_value,
+                'confirmed': confirmed_value,
+                'unconfirmed': unconfirmed_value,
+                'grand_total': confirmed_value + unconfirmed_value,
             },
             'number': {
-                'confirmed': total_confirmed_number,
-                'unconfirmed': total_unconfirmed_number,
-                'grand_total': total_confirmed_number + total_unconfirmed_number,
+                'confirmed': confirmed_number,
+                'unconfirmed': unconfirmed_number,
+                'grand_total': confirmed_number + unconfirmed_number,
             }
         }
 
@@ -265,8 +295,8 @@ class BaseWinMIView(BaseMIView):
         """ Breakdown wins by progress toward HVC target """
 
         breakdown = self._breakdown_wins(wins)
-        confirmed_percent = two_digit_float(percentage(breakdown['value']['confirmed'], target)) or 0.0
-        unconfirmed_percent = two_digit_float(percentage(breakdown['value']['unconfirmed'], target)) or 0.0
+        confirmed_percent = percentage_formatted(breakdown['value']['confirmed'], target)
+        unconfirmed_percent = percentage_formatted(breakdown['value']['unconfirmed'], target)
         return {
             'hvc': breakdown,
             'target': target,
@@ -279,8 +309,11 @@ class BaseWinMIView(BaseMIView):
         }
 
     def _breakdowns_cumulative(self, wins, include_non_hvc=True):
-        """ Breakdown wins by HVC, confirmed and non-export - cumulative"""
+        """ Breakdown wins by HVC, confirmed and non-export - cumulative
 
+        Month-by-month breakdown using class values
+
+        """
         hvc_confirmed = []
         hvc_unconfirmed = []
         non_hvc_confirmed = []
@@ -398,3 +431,37 @@ class BaseWinMIView(BaseMIView):
             return [w for w in wins if w.hvc == target.charcode]
 
         return [(t, target_wins(t)) for t in targets]
+
+    def _confirmed_unconfirmed(self, wins):
+        """ Find total Confirmed & Unconfirmed export value for given Wins """
+
+        confirmed = sum(w.total_expected_export_value for w in wins if w.confirmed)
+        unconfirmed = sum(w.total_expected_export_value for w in wins if not w.confirmed)
+        return confirmed, unconfirmed
+
+    def _top_non_hvc(self, non_hvc_wins_qs, records_to_retreive=5):
+        """ Get dict of data about non-HVC wins """
+
+        non_hvc_wins = non_hvc_wins_qs.values(
+            'country',
+            'sector'
+        ).annotate(
+            total_value=Sum('total_expected_export_value'),
+            total_wins=Count('id')
+        ).order_by('-total_value')[:records_to_retreive]
+
+        # make a lookup to get names efficiently
+        sector_id_to_name = {s.id: s.name for s in Sector.objects.all()}
+        top_value = int(non_hvc_wins[0]['total_value']) if non_hvc_wins else None
+        return [
+            {
+                'region': DjangoCountry(w['country']).name,
+                'sector': sector_id_to_name[w['sector']],
+                'totalValue': w['total_value'],
+                'totalWins': w['total_wins'],
+                'percentComplete': int(percentage(w['total_value'], top_value)),
+                'averageWinValue': int(w['total_value'] / w['total_wins']),
+                'averageWinPercent': int(percentage((w['total_value'] / w['total_wins']), top_value)),
+            }
+            for w in non_hvc_wins
+        ]

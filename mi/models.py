@@ -143,6 +143,7 @@ class HVCGroup(models.Model):
 class Sector(models.Model):
     """ CDMS big list of Sectors """
 
+    # note, primary key matches ids of Win sector field (from constants)
     # note, there are 2 sectors in constants not in this
 
     name = models.CharField(max_length=128)

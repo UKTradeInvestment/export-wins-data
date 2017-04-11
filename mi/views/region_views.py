@@ -7,7 +7,7 @@ from django_countries.fields import Country as DjangoCountry
 from rest_framework.generics import ListAPIView
 
 from alice.authenticators import IsMIServer, IsMIUser
-from mi.models import OverseasRegion, Target, Sector
+from mi.models import OverseasRegion, Sector
 from mi.serializers import OverseasRegionSerializer
 from mi.utils import (
     get_financial_start_date,
@@ -16,7 +16,6 @@ from mi.utils import (
     two_digit_float,
 )
 from mi.views.base_view import BaseWinMIView
-from wins.models import Notification
 
 
 class BaseOverseasRegionsMIView(BaseWinMIView):
@@ -38,7 +37,7 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
 
         return self._wins().filter(
             country__in=region.country_ids,
-        ).select_related('confirmation')
+        )
 
     def _get_region_hvc_wins(self, region):
         """
@@ -46,7 +45,7 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
         """
         return self._wins().filter(
             hvc__in=region.campaign_ids,
-        ).select_related('confirmation')
+        )
 
     def _get_region_non_hvc_wins(self, region):
         """
@@ -55,33 +54,13 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
         return self._wins().filter(
             Q(country__in=region.country_ids),
             Q(hvc__isnull=True) | Q(hvc=''),
-        ).select_related('confirmation')
-
-    def _get_avg_confirm_time(self, region):
-        """
-            Average of (earliest CUSTOMER notification created date - customer response date) for given team
-        """
-        notifications = Notification.objects.filter(
-            type__exact='c',
-            win__country__in=region.country_ids,
-            win__confirmation__created__isnull=False
-        ).annotate(Min('created')).select_related('win__confirmation')
-
-        if notifications.count() == 0:
-            return two_digit_float(0)
-
-        confirm_delay = [(notification.win.confirmation.created - notification.created).days
-                         for notification in notifications]
-        total_days = sum(confirm_delay)
-        average_time = total_days / notifications.count()
-
-        return two_digit_float(average_time)
+        )
 
     def _region_result(self, region):
         """ Basic data about region - name & hvc's """
         return {
             'name': region.name,
-            'avg_time_to_confirm': self._get_avg_confirm_time(region),
+            'avg_time_to_confirm': self._average_confirm_time(win__country__in=region.country_ids),
             'hvcs': self._hvc_overview(region.targets),
         }
 
@@ -117,7 +96,7 @@ class OverseasRegionMonthsView(BaseOverseasRegionsMIView):
                 'totals': self._breakdowns_cumulative(month_wins),
             }
             for date_str, month_wins in month_to_wins
-            ]
+        ]
 
     def _group_wins_by_month(self, wins):
         date_attrgetter = attrgetter('date')
@@ -199,33 +178,12 @@ class OverseasRegionsTopNonHvcWinsView(BaseOverseasRegionsMIView):
         if not region:
             return self._invalid('region not found')
         country_ids = [s.country for s in region.countries.all()]
-        records_to_retreive = 5
-        non_hvc_wins = self._wins().filter(
+
+        non_hvc_wins_qs = self._wins().filter(
             Q(hvc='') | Q(hvc__isnull=True),
             country__in=country_ids,
-        ).values(
-            'country',
-            'sector'
-        ).annotate(
-            total_value=Sum('total_expected_export_value'),
-            total_wins=Count('id')
-        ).order_by('-total_value')[:records_to_retreive]
-
-        top_value = int(non_hvc_wins[0]['total_value'])
-
-        results = [
-            {
-                'region': DjangoCountry(agg_win['country']).name,
-                'sector': Sector.objects.get(id=agg_win['sector']).name,
-                'totalValue': agg_win['total_value'],
-                'totalWins': agg_win['total_wins'],
-                'percentComplete': int(int(agg_win['total_value']) * 100 / top_value),
-                'averageWinValue': agg_win['total_value'] / agg_win['total_wins'],
-                'averageWinPercent': two_digit_float(
-                    (agg_win['total_value'] / agg_win['total_wins']) * 100 / int(agg_win['total_value']))
-            }
-            for agg_win in non_hvc_wins
-            ]
+        )
+        results = self._top_non_hvc(non_hvc_wins_qs)
         return self._success(results)
 
 
@@ -238,20 +196,16 @@ class OverseasRegionOverviewView(BaseOverseasRegionsMIView):
         targets = region_obj.targets
         country_ids = region_obj.country_ids
         total_countries = len(country_ids)
-
         total_target = sum(t.target for t in targets)
 
         hvc_wins = self._get_region_hvc_wins(region_obj)
-        hvc_confirmed = sum(w.total_expected_export_value for w in hvc_wins if w.confirmed)
-        hvc_unconfirmed = sum(w.total_expected_export_value for w in hvc_wins if not w.confirmed)
+        hvc_confirmed, hvc_unconfirmed = self._confirmed_unconfirmed(hvc_wins)
+
         non_hvc_wins = self._get_region_non_hvc_wins(region_obj)
-        non_hvc_confirmed = sum(w.total_expected_export_value for w in non_hvc_wins if w.confirmed)
-        non_hvc_unconfirmed = sum(w.total_expected_export_value for w in non_hvc_wins if not w.confirmed)
+        non_hvc_confirmed, non_hvc_unconfirmed = self._confirmed_unconfirmed(non_hvc_wins)
 
         target_percentage = self._overview_target_percentage(hvc_wins, total_target)
-
         total_win_percent = self._overview_win_percentages(hvc_wins, non_hvc_wins)
-
         hvc_colours_count = self._colours(hvc_wins, targets)
 
         result = {

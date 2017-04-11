@@ -83,6 +83,10 @@ def percentage(part, total):
     return round(100 * part / total)
 
 
+def percentage_formatted(part, total):
+    return two_digit_float(percentage(part, total)) or 0
+
+
 def lookup(dict, key, *keys):
     """
     Helper to lookup a key or nested keys within a dictionary
