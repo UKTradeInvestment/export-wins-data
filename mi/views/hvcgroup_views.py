@@ -1,13 +1,12 @@
 from itertools import groupby
 from operator import attrgetter
 
-from mi.models import Target, HVCGroup
+from mi.models import HVCGroup
 from mi.utils import (
     get_financial_start_date,
     month_iterator,
 )
 from mi.views.sector_views import BaseSectorMIView
-from wins.models import Notification
 
 
 class BaseHVCGroupMIView(BaseSectorMIView):
@@ -19,23 +18,11 @@ class BaseHVCGroupMIView(BaseSectorMIView):
         except HVCGroup.DoesNotExist:
             return False
 
-    def _get_avg_confirm_time(self, group):
-        """
-        Average of (earliest CUSTOMER notification created date - customer response date) for given team
-        """
-        group_targets = [t.charcode for t in group.targets.all()]
-        notifications_qs = Notification.objects.filter(
-            type__exact='c',
-            win__hvc__in=group_targets,
-            win__confirmation__isnull=False,
-        )
-        return self._average_confirm_time(notifications_qs)
-
     def _group_result(self, group):
         """ Basic data about HVC Group - name & hvc's """
         return {
             'name': group.name,
-            'avg_time_to_confirm': self._get_avg_confirm_time(group),
+            'avg_time_to_confirm': self._average_confirm_time(win__hvc__in=group.campaign_ids),
             'hvcs': self._hvc_overview(group.targets.all()),
         }
 
@@ -48,7 +35,7 @@ class HVCGroupsListView(BaseHVCGroupMIView):
                 'name': hvc_group.name,
             }
             for hvc_group in HVCGroup.objects.all()
-            ]
+        ]
         return self._success(results)
 
 
@@ -80,7 +67,7 @@ class HVCGroupMonthsView(BaseHVCGroupMIView):
                 'totals': self._breakdowns_cumulative(month_wins, include_non_hvc=False),
             }
             for date_str, month_wins in month_to_wins
-            ]
+        ]
 
     def _group_wins_by_month(self, wins):
         date_attrgetter = attrgetter('date')
@@ -129,12 +116,15 @@ class HVCGroupCampaignsView(BaseHVCGroupMIView):
             }
             for campaign, campaign_wins in campaign_to_wins
         ]
-        sorted_campaigns = sorted(campaigns,
-                                  key=lambda c: (
-                                    c['totals']['progress']['confirmed_percent'],
-                                    c['totals']['progress']['unconfirmed_percent'],
-                                    c['totals']['target']),
-                                  reverse=True)
+        sorted_campaigns = sorted(
+            campaigns,
+            key=lambda c: (
+                c['totals']['progress']['confirmed_percent'],
+                c['totals']['progress']['unconfirmed_percent'],
+                c['totals']['target']
+            ),
+            reverse=True,
+        )
         return sorted_campaigns
 
     def get(self, request, group_id):
