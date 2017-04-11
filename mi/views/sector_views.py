@@ -213,7 +213,12 @@ class SectorTeamsListView(BaseSectorMIView):
 class SectorTeamDetailView(BaseSectorMIView):
     """ Sector Team name, targets and win-breakdown """
 
-    def get(self, request, team_id):
+    def get(self, request, team_id, year):
+        try:
+            self.fin_year = FinancialYear.objects.get(id=year)
+        except ObjectDoesNotExist:
+            return self._not_found()
+
         team = self._get_team(team_id)
         if not team:
             return self._invalid('team not found')
@@ -286,14 +291,19 @@ class SectorTeamCampaignsView(BaseSectorMIView):
         sorted_campaigns = sorted(campaigns, key=sort_campaigns_by, reverse=True)
         return sorted_campaigns
 
-    def get(self, request, team_id):
+    def get(self, request, team_id, year):
+        try:
+            self.fin_year = FinancialYear.objects.get(id=year)
+        except ObjectDoesNotExist:
+            return self._not_found()
+
         team = self._get_team(team_id)
         if not team:
             return self._invalid('team not found')
 
         results = self._sector_result(team)
         results['campaigns'] = self._campaign_breakdowns(team)
-        return self._success(results)
+        return self._success_fin_year(results, self.fin_year)
 
 
 class SectorTeamsOverviewView(BaseSectorMIView):

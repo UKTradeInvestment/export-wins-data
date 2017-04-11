@@ -59,7 +59,7 @@ class MiApiViewsBaseTestCase(TestCase):
     def _api_response_data(self):
         return self._get_api_response(self.url).data
 
-    def assertResponse(self):
+    def with_fyassertResponse(self):
         """ Helper to check that the API response is as expected
 
         Small abstraction to allow defining url once per TestCase/endpoint,

@@ -34,13 +34,13 @@ from mi.views.sector_views import (
 
 urlpatterns = [
     url(r"^sector_teams/(?P<year>\d+)/$", SectorTeamsListView.as_view(), name="sector_teams"),
-    url(r"^sector_teams/(?P<year>\d+)/overview/$", SectorTeamsOverviewView.as_view(), name="sector_teams_overview"),
-    url(r"^sector_teams/(?P<team_id>\d+)/$", SectorTeamDetailView.as_view(), name="sector_team_detail"),
-    url(r"^sector_teams/(?P<team_id>\d+)/campaigns/$", SectorTeamCampaignsView.as_view(),
+    url(r"^sector_teams/overview/(?P<year>\d+)/$", SectorTeamsOverviewView.as_view(), name="sector_teams_overview"),
+    url(r"^sector_teams/(?P<team_id>\d+)/(?P<year>\d+)/$", SectorTeamDetailView.as_view(), name="sector_team_detail"),
+    url(r"^sector_teams/(?P<team_id>\d+)/campaigns/(?P<year>\d+)/$", SectorTeamCampaignsView.as_view(),
         name="sector_team_campaigns"),
-    url(r"^sector_teams/(?P<team_id>\d+)/months/$", SectorTeamMonthsView.as_view(),
+    url(r"^sector_teams/(?P<team_id>\d+)/months/(?P<year>\d+)/$", SectorTeamMonthsView.as_view(),
         name="sector_team_months"),
-    url(r"^sector_teams/(?P<team_id>\d+)/top_non_hvcs/$", TopNonHvcSectorCountryWinsView.as_view(),
+    url(r"^sector_teams/(?P<team_id>\d+)/top_non_hvcs/(?P<year>\d+)/$", TopNonHvcSectorCountryWinsView.as_view(),
         name="sector_team_top_non_hvc"),
 
     url(r"^parent_sectors/$", ParentSectorListView.as_view(), name="parent_sectors"),
