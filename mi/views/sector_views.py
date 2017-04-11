@@ -14,6 +14,7 @@ from mi.models import (
 )
 from mi.utils import (
     get_financial_start_date,
+    get_financial_end_date,
     month_iterator,
     sort_campaigns_by,
     two_digit_float,
@@ -25,17 +26,16 @@ from wins.models import Notification
 class BaseSectorMIView(BaseWinMIView):
     """ Abstract Base for other Sector-related MI endpoints to inherit from """
 
-    def _hvc_groups_for_fin_year(self, fin_year):
+    def _hvc_groups_for_fin_year(self):
         """ extracts hvc groups from targets for the given financial year """
-        return HVCGroup.objects.filter(targets__financial_year=fin_year).distinct()
+        return HVCGroup.objects.filter(targets__financial_year=self.fin_year).distinct()
 
-    def _sector_teams_for_fin_year(self, fin_year):
+    def _sector_teams_for_fin_year(self):
         """ Returns sector teams based on hvc groups from Targets for the given financial year """
-        return SectorTeam.objects.filter(hvc_groups__targets__financial_year=fin_year).distinct()
+        return SectorTeam.objects.filter(hvc_groups__targets__financial_year=self.fin_year).distinct()
 
     def _get_team(self, team_id):
         """ Get SectorTeam object or False if invalid ID """
-
         try:
             return SectorTeam.objects.get(id=int(team_id))
         except SectorTeam.DoesNotExist:
@@ -89,6 +89,11 @@ class BaseSectorMIView(BaseWinMIView):
             type__exact='c',
             win__sector__in=team.sector_ids,
             win__confirmation__isnull=False,
+            win__date__range=(
+                get_financial_start_date(self.fin_year),
+                get_financial_end_date(self.fin_year),
+            ),
+
         )
         return self._average_confirm_time(notifications_qs)
 
@@ -190,7 +195,7 @@ class SectorTeamsListView(BaseSectorMIView):
 
     def get(self, request, year):
         try:
-            fin_year = FinancialYear.objects.get(id=year)
+            self.fin_year = FinancialYear.objects.get(id=year)
         except ObjectDoesNotExist:
             return self._not_found()
 
@@ -200,9 +205,9 @@ class SectorTeamsListView(BaseSectorMIView):
                 'name': sector_team.name,
                 'hvc_groups': self._get_hvc_groups_for_team(sector_team)
             }
-            for sector_team in self._sector_teams_for_fin_year(fin_year)
+            for sector_team in self._sector_teams_for_fin_year()
             ]
-        return self._success_fin_year(sorted(results, key=itemgetter('name')), fin_year)
+        return self._success_fin_year(sorted(results, key=itemgetter('name')), self.fin_year)
 
 
 class SectorTeamDetailView(BaseSectorMIView):
@@ -294,7 +299,7 @@ class SectorTeamCampaignsView(BaseSectorMIView):
 class SectorTeamsOverviewView(BaseSectorMIView):
     """ Overview of HVCs, targets etc. for each SectorTeam """
 
-    def _sector_obj_data(self, sector_obj, fin_year):
+    def _sector_obj_data(self, sector_obj):
         """ Get general data from SectorTeam or HVCGroup """
 
         targets = sector_obj.targets.all()
@@ -322,10 +327,10 @@ class SectorTeamsOverviewView(BaseSectorMIView):
             'hvc_performance': hvc_colours_count,
         }
 
-    def _sector_data(self, sector_team, fin_year):
+    def _sector_data(self, sector_team):
         """ Calculate overview for a sector team """
 
-        result = self._sector_obj_data(sector_team, fin_year)
+        result = self._sector_obj_data(sector_team)
 
         hvc_wins = self._get_hvc_wins(sector_team)
         non_hvc_wins = self._get_non_hvc_wins(sector_team)
@@ -354,16 +359,16 @@ class SectorTeamsOverviewView(BaseSectorMIView):
         result['values']['hvc']['total_win_percent'] = total_win_percent['hvc']
 
         result['hvc_groups'] = [
-            self._sector_obj_data(parent, fin_year)
+            self._sector_obj_data(parent)
             for parent in sector_team.hvc_groups.all()
             ]
         return result
 
     def get(self, request, year):
         try:
-            fin_year = FinancialYear.objects.get(id=year)
+            self.fin_year = FinancialYear.objects.get(id=year)
         except ObjectDoesNotExist:
             return self._not_found()
 
-        result = [self._sector_data(team, fin_year) for team in self._sector_teams_for_fin_year(fin_year)]
-        return self._success_fin_year(sorted(result, key=lambda x: (x['name'])), fin_year)
+        result = [self._sector_data(team) for team in self._sector_teams_for_fin_year()]
+        return self._success_fin_year(sorted(result, key=lambda x: (x['name'])), self.fin_year)

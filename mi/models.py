@@ -22,25 +22,11 @@ class OverseasRegion(models.Model):
                 targets.add(target)
         return targets
 
-    def fin_year_targets(self, fin_year):
-        """ List of `Targets` of all HVCs belonging to the `OverseasRegion`, filtered by Financial Year """
-
-        targets = set()
-        for country in self.countries.all():
-            for target in country.targets.filtered(fin_year):
-                targets.add(target)
-        return targets
-
     @property
     def campaign_ids(self):
         """ List of Campaign IDs of all HVCs belonging to the `OverseasRegion` """
 
         return [t.charcode for t in self.targets]
-
-    def fin_year_campaign_ids(self, fin_year):
-        """ List of Campaign IDs of all HVCs belonging to the `OverseasRegion`, filtered by Financial Year """
-
-        return [t.campaign_id for t in self.fin_year_targets(fin_year)]
 
     @property
     def country_ids(self):
@@ -92,11 +78,6 @@ class SectorTeam(models.Model):
 
         return [t.charcode for t in self.targets.all()]
 
-    def fin_year_campaign_ids(self, fin_year):
-        """ List of Campaign IDs of all HVCs belonging to the HVC Group, filtered by Financial Year """
-
-        return [t.campaign_id for t in self.targets.filtered(fin_year=fin_year)]
-
 
 class ParentSector(models.Model):
     """ CDMS groupings of CDMS Sectors """
@@ -136,11 +117,6 @@ class HVCGroup(models.Model):
         """ List of Campaign IDs of all HVCs belonging to the HVC Group """
 
         return [t.charcode for t in self.targets.all()]
-
-    def fin_year_campaign_ids(self, fin_year):
-        """ List of Campaign IDs of all HVCs belonging to the HVC Group, filtered by Financial Year """
-
-        return [t.campaign_id for t in self.targets.filtered(fin_year=fin_year)]
 
 
 class Sector(models.Model):
@@ -185,7 +161,7 @@ class Target(models.Model):
 
     @property
     def charcode(self):
-        return self.campaign_id + "16"
+        return self.campaign_id + str(self.financial_year.id)[-2:]
 
     def for_fin_year(self, fin_year):
         return self.objects.filter(financial_year=fin_year)

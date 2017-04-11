@@ -9,7 +9,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from alice.authenticators import IsMIServer, IsMIUser
-from mi.models import Target
 from mi.utils import (
     average,
     get_financial_start_date,
@@ -57,6 +56,7 @@ class BaseMIView(APIView):
 class BaseWinMIView(BaseMIView):
     """ Base view with Win-related MI helpers """
 
+    fin_year = None
     # cumulative values for `_breakdowns_cumulative` method
     hvc_confirm_cu_number = hvc_confirm_cu_value = hvc_non_cu_number = hvc_non_cu_value = 0
     non_hvc_confirm_cu_number = non_hvc_confirm_cu_value = non_hvc_non_cu_number = non_hvc_non_cu_value = 0
@@ -67,8 +67,8 @@ class BaseWinMIView(BaseMIView):
 
         return Win.objects.filter(
             date__range=(
-                get_financial_start_date(),
-                get_financial_end_date(),
+                get_financial_start_date(self.fin_year),
+                get_financial_end_date(self.fin_year),
             ),
         ).select_related('confirmation')
 
@@ -166,7 +166,7 @@ class BaseWinMIView(BaseMIView):
         If in case of previous ones, just return 365
         """
 
-        days_into_year = (datetime.datetime.today() - get_financial_start_date()).days
+        days_into_year = (datetime.datetime.today() - get_financial_start_date(self.fin_year)).days
 
         if days_into_year > 365:
             return 365
