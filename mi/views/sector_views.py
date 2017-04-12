@@ -2,7 +2,7 @@ from collections import defaultdict
 from itertools import groupby
 from operator import attrgetter, itemgetter
 
-from django.db.models import Min, Q
+from django.db.models import Min
 
 from mi.models import SectorTeam
 from mi.utils import (
@@ -33,19 +33,17 @@ class BaseSectorMIView(BaseWinMIView):
 
     def _get_group_wins(self, group):
         """ HVC wins of the HVC Group """
-        return self._wins().filter(
-            hvc__in=group.campaign_ids,
-        )
+
+        return self._wins().filter(hvc__in=group.campaign_ids)
 
     def _get_hvc_wins(self, team):
         """
         HVC wins alone for the `SectorTeam`
 
         A `Win` is considered HVC for this team, when it falls under a Campaign that belongs to this `SectorTeam`
+
         """
-        return self._wins().filter(
-            hvc__in=team.campaign_ids
-        )
+        return self._wins().filter(hvc__in=team.campaign_ids)
 
     def _get_non_hvc_wins(self, team):
         """
@@ -53,11 +51,9 @@ class BaseSectorMIView(BaseWinMIView):
 
         A `Win` is a non-HVC, if no HVC was mentioned while recording it
         but it belongs to a CDMS Sector that is within this `SectorTeam`s range
+
         """
-        return self._wins().filter(
-            Q(sector__in=team.sector_ids),
-            Q(hvc__isnull=True) | Q(hvc='')
-        )
+        return self._non_hvc_wins().filter(sector__in=team.sector_ids)
 
     def _get_all_wins(self, sector_team):
         """ Get HVC and non-HVC Wins of a Sector Team """
@@ -79,11 +75,6 @@ class TopNonHvcSectorCountryWinsView(BaseSectorMIView):
     """ Sector Team non-HVC Win data broken down by country """
 
     def get(self, request, team_id):
-        """
-        percentComplete is based on the top value being 100%
-        averageWinValue is total non_hvc win value for the sector/total number of wins during the financial year
-        averageWinPercent is therefore averageWinValue * 100/Total win value for the sector/market
-        """
         team = self._get_team(team_id)
         if not team:
             return self._invalid('team not found')

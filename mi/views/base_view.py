@@ -3,7 +3,7 @@ from collections import Counter
 from itertools import groupby
 from operator import attrgetter, itemgetter
 
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, Q
 from django_countries.fields import Country as DjangoCountry
 
 from rest_framework import status
@@ -59,6 +59,9 @@ class BaseWinMIView(BaseMIView):
                 get_financial_end_date(),
             ),
         ).select_related('confirmation')
+
+    def _non_hvc_wins(self):
+        return self._wins().filter(Q(hvc__isnull=True) | Q(hvc=''))
 
     def _colours(self, hvc_wins, targets):
         """
@@ -440,8 +443,13 @@ class BaseWinMIView(BaseMIView):
         return confirmed, unconfirmed
 
     def _top_non_hvc(self, non_hvc_wins_qs, records_to_retreive=5):
-        """ Get dict of data about non-HVC wins """
+        """ Get dict of data about non-HVC wins
 
+        percentComplete is based on the top value being 100%
+        averageWinValue is total non_hvc win value for the sector/total number of wins during the financial year
+        averageWinPercent is therefore averageWinValue * 100/Total win value for the sector/market
+
+        """
         non_hvc_wins = non_hvc_wins_qs.values(
             'country',
             'sector'
