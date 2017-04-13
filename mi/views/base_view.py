@@ -13,7 +13,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from alice.authenticators import IsMIServer, IsMIUser
-from mi.models import Sector, FinancialYear
+from mi.models import (
+    FinancialYear,
+    Sector
+)
 from mi.utils import (
     average,
     get_financial_start_date,
