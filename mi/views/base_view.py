@@ -68,10 +68,11 @@ class BaseMIView(APIView):
             date_end = datetime.strptime(str_date_end, '%Y-%m-%d')
             return datetime.combine(date_end, datetime.max.time())
 
-        if datetime.today().year >= self.fin_year.id:
+        fin_year_end_date = get_financial_end_date(self.fin_year)
+        if datetime.today() < fin_year_end_date:
             return datetime.utcnow()
         else:
-            return datetime.combine(get_financial_end_date(self.fin_year), datetime.max.time())
+            return datetime.combine(fin_year_end_date, datetime.max.time())
 
     def _fill_date_ranges(self, request):
         """
@@ -82,8 +83,8 @@ class BaseMIView(APIView):
         date_to = self._date_range_end(request.GET.get("to", None))
 
         self.date_range = {
-            "from": int(date_from.timestamp()),
-            "to": int(date_to.timestamp()),
+            "start": int(date_from.timestamp()),
+            "end": int(date_to.timestamp()),
         }
 
     def _invalid(self, msg):
