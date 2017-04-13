@@ -102,7 +102,6 @@ class HVCGroupMonthsView(BaseHVCGroupMIView):
         if response:
             return response
 
-
         group = self._get_hvc_group(group_id)
         if not group:
             return self._invalid('hvc group not found')
@@ -110,7 +109,7 @@ class HVCGroupMonthsView(BaseHVCGroupMIView):
         results = self._group_result(group)
         wins = self._get_group_wins(group)
         results['months'] = self._month_breakdowns(wins)
-        self._fill_date_ranges(request)
+        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -145,12 +144,11 @@ class HVCGroupCampaignsView(BaseHVCGroupMIView):
         if response:
             return response
 
-
         group = self._get_hvc_group(group_id)
         if not group:
             return self._invalid('hvc group not found')
 
         results = self._group_result(group)
         results['campaigns'] = self._campaign_breakdowns(group)
-        self._fill_date_ranges(request)
+        self._fill_date_ranges()
         return self._success(results)

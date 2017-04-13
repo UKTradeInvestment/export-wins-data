@@ -50,44 +50,31 @@ class BaseMIView(APIView):
         except ObjectDoesNotExist:
             return self._not_found()
 
-    def _date_range_start(self, str_date_start):
+    def _date_range_start(self):
         """ 
-        If the request has start date, it will be returned as datetime
-        else financial year start date, as datetime, is returned
+        Financial year start date, as datetime, is returned
         """
-        if str_date_start:
-            date_start = datetime.strptime(str_date_start, '%Y-%m-%d')
-            return datetime.combine(date_start, datetime.min.time())
-
         return datetime.combine(get_financial_start_date(self.fin_year), datetime.min.time())
 
-    def _date_range_end(self, str_date_end):
+    def _date_range_end(self):
         """
-        If the request has end date, it will be returned as datetime
-        Otherwise if fin_year is not current one, current datetime is returned
+        If fin_year is not current one, current datetime is returned
         Else financial year end date, as datetime, is returned
         """
-        if str_date_end:
-            date_end = datetime.strptime(str_date_end, '%Y-%m-%d')
-            return datetime.combine(date_end, datetime.max.time())
-
         fin_year_end_date = get_financial_end_date(self.fin_year)
         if datetime.today() < fin_year_end_date:
             return datetime.utcnow()
         else:
             return datetime.combine(fin_year_end_date, datetime.max.time())
 
-    def _fill_date_ranges(self, request):
+    def _fill_date_ranges(self):
         """
-        This will interrogate request object and sets up date_range for response 
-        using _date_range_start and _date_range_end functions, as epoch 
+        This sets up date_range for response using _date_range_start 
+        and _date_range_end functions, as epoch 
         """
-        date_from = self._date_range_start(request.GET.get("from", None))
-        date_to = self._date_range_end(request.GET.get("to", None))
-
         self.date_range = {
-            "start": int(date_from.timestamp()),
-            "end": int(date_to.timestamp()),
+            "start": int(self._date_range_start().timestamp()),
+            "end": int(self._date_range_end().timestamp()),
         }
 
     def _invalid(self, msg):

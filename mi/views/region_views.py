@@ -136,7 +136,7 @@ class OverseasRegionMonthsView(BaseOverseasRegionsMIView):
         results = self._region_result(region)
         wins = self._get_region_wins(region)
         results['months'] = self._month_breakdowns(wins)
-        self._fill_date_ranges(request)
+        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -166,7 +166,7 @@ class OverseasRegionCampaignsView(BaseOverseasRegionsMIView):
 
         results = self._region_result(region)
         results['campaigns'] = self._campaign_breakdowns(region)
-        self._fill_date_ranges(request)
+        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -183,7 +183,7 @@ class OverseasRegionsTopNonHvcWinsView(BaseOverseasRegionsMIView):
 
         non_hvc_wins_qs = self._get_region_non_hvc_wins(region)
         results = self._top_non_hvc(non_hvc_wins_qs)
-        self._fill_date_ranges(request)
+        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -241,5 +241,5 @@ class OverseasRegionOverviewView(BaseOverseasRegionsMIView):
             return response
 
         result = [self._region_data(region) for region in OverseasRegion.objects.all()]
-        self._fill_date_ranges(request)
+        self._fill_date_ranges()
         return self._success(result)

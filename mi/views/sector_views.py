@@ -91,7 +91,7 @@ class TopNonHvcSectorCountryWinsView(BaseSectorMIView):
             return self._invalid('team not found')
         non_hvc_wins_qs = self._get_non_hvc_wins(team)
         results = self._top_non_hvc(non_hvc_wins_qs)
-        self._fill_date_ranges(request) 
+        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -114,7 +114,6 @@ class SectorTeamsListView(BaseSectorMIView):
         response = self._handle_fin_year(request)
         if response:
             return response
-
 
         results = [
             {
@@ -140,6 +139,7 @@ class SectorTeamDetailView(BaseSectorMIView):
 
         results = self._sector_result(team)
         results['wins'] = self._team_wins_breakdown(team)
+        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -187,7 +187,7 @@ class SectorTeamMonthsView(BaseSectorMIView):
         results = self._sector_result(team)
         wins = self._get_all_wins(team)
         results['months'] = self._month_breakdowns(wins)
-        self._fill_date_ranges(request)
+        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -223,7 +223,7 @@ class SectorTeamCampaignsView(BaseSectorMIView):
 
         results = self._sector_result(team)
         results['campaigns'] = self._campaign_breakdowns(team)
-        self._fill_date_ranges(request)
+        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -326,5 +326,5 @@ class SectorTeamsOverviewView(BaseSectorMIView):
             'hvc_groups__targets',
         )
         result = [self._sector_data(team) for team in sector_team_qs]
-        self._fill_date_ranges(request)
+        self._fill_date_ranges()
         return self._success(sorted(result, key=lambda x: (x['name'])))
