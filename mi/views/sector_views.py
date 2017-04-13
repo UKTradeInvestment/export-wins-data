@@ -1,23 +1,18 @@
 from itertools import groupby
 from operator import attrgetter, itemgetter
 
-from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Min, Q
+from django.db.models import Q
 
 from mi.models import (
-    FinancialYear,
     HVCGroup,
     SectorTeam,
 )
-
 from mi.utils import (
     get_financial_start_date,
     month_iterator,
     sort_campaigns_by,
-    two_digit_float,
 )
 from mi.views.base_view import BaseWinMIView
-from wins.models import Notification
 
 
 class BaseSectorMIView(BaseWinMIView):
@@ -87,6 +82,7 @@ class BaseSectorMIView(BaseWinMIView):
         }
 
 
+
 class TopNonHvcSectorCountryWinsView(BaseSectorMIView):
     """ Sector Team non-HVC Win data broken down by country """
 
@@ -96,36 +92,16 @@ class TopNonHvcSectorCountryWinsView(BaseSectorMIView):
         averageWinValue is total non_hvc win value for the sector/total number of wins during the financial year
         averageWinPercent is therefore averageWinValue * 100/Total win value for the sector/market
         """
+        response = self._handle_fin_year(request)
+        if response:
+            return response
+
         team = self._get_team(team_id)
         if not team:
             return self._invalid('team not found')
         non_hvc_wins_qs = self._get_non_hvc_wins(team)
         results = self._top_non_hvc(non_hvc_wins_qs)
-        return self._success(results)
-
-
-class AverageTimeToConfirmView(BaseWinMIView):
-    """  Average number of days to confirm a Win """
-
-    average_time = 0.0
-
-    def get(self, request):
-        """
-            Average of (earliest CUSTOMER notification created date - customer response date)
-        """
-        notifications = Notification.objects.filter(
-            type__exact='c',
-            win__confirmation__created__isnull=False
-        ).annotate(Min('created')).select_related('win__confirmation')
-
-        confirm_delay = [(notification.win.confirmation.created - notification.created).days
-                         for notification in notifications]
-        total_days = sum(confirm_delay)
-        average_time = total_days / notifications.count()
-
-        results = {
-            'average': two_digit_float(average_time),
-        }
+        self._fill_date_ranges(request) 
         return self._success(results)
 
 
@@ -144,11 +120,11 @@ class SectorTeamsListView(BaseSectorMIView):
         ]
         return sorted(results, key=itemgetter('name'))
 
-    def get(self, request, year):
-        try:
-            self.fin_year = FinancialYear.objects.get(id=year)
-        except ObjectDoesNotExist:
-            return self._not_found()
+    def get(self, request):
+        response = self._handle_fin_year(request)
+        if response:
+            return response
+
 
         results = [
             {
@@ -158,18 +134,16 @@ class SectorTeamsListView(BaseSectorMIView):
             }
             for sector_team in self._sector_teams_for_fin_year()
             ]
-        return self._success_fin_year(sorted(results, key=itemgetter('name')), self.fin_year)
+        return self._success(sorted(results, key=itemgetter('name')))
 
 
 class SectorTeamDetailView(BaseSectorMIView):
     """ Sector Team name, targets and win-breakdown """
 
-    def get(self, request, team_id, year):
-        try:
-            self.fin_year = FinancialYear.objects.get(id=year)
-        except ObjectDoesNotExist:
-            return self._not_found()
-
+    def get(self, request, team_id):
+        response = self._handle_fin_year(request)
+        if response:
+            return response
         team = self._get_team(team_id)
         if not team:
             return self._invalid('team not found')
@@ -203,7 +177,7 @@ class SectorTeamMonthsView(BaseSectorMIView):
             month_to_wins.append((date_str, month_wins))
 
         # Add missing months within the financial year until current month
-        for item in month_iterator(get_financial_start_date()):
+        for item in month_iterator(get_financial_start_date(self.fin_year)):
             date_str = '{:d}-{:02d}'.format(*item)
             existing = [m for m in month_to_wins if m[0] == date_str]
             if len(existing) == 0:
@@ -212,6 +186,10 @@ class SectorTeamMonthsView(BaseSectorMIView):
         return sorted(month_to_wins, key=lambda tup: tup[0])
 
     def get(self, request, team_id):
+        response = self._handle_fin_year(request)
+        if response:
+            return response
+
         team = self._get_team(team_id)
         if not team:
             return self._invalid('team not found')
@@ -219,6 +197,7 @@ class SectorTeamMonthsView(BaseSectorMIView):
         results = self._sector_result(team)
         wins = self._get_all_wins(team)
         results['months'] = self._month_breakdowns(wins)
+        self._fill_date_ranges(request)
         return self._success(results)
 
 
@@ -242,11 +221,11 @@ class SectorTeamCampaignsView(BaseSectorMIView):
         sorted_campaigns = sorted(campaigns, key=sort_campaigns_by, reverse=True)
         return sorted_campaigns
 
-    def get(self, request, team_id, year):
-        try:
-            self.fin_year = FinancialYear.objects.get(id=year)
-        except ObjectDoesNotExist:
-            return self._not_found()
+    def get(self, request, team_id):
+        response = self._handle_fin_year(request)
+        if response:
+            return response
+
 
         team = self._get_team(team_id)
         if not team:
@@ -254,7 +233,8 @@ class SectorTeamCampaignsView(BaseSectorMIView):
 
         results = self._sector_result(team)
         results['campaigns'] = self._campaign_breakdowns(team)
-        return self._success_fin_year(results, self.fin_year)
+        self._fill_date_ranges(request)
+        return self._success(results)
 
 
 class SectorTeamsOverviewView(BaseSectorMIView):
@@ -323,11 +303,11 @@ class SectorTeamsOverviewView(BaseSectorMIView):
         ]
         return result
 
-    def get(self, request, year):
-        try:
-            self.fin_year = FinancialYear.objects.get(id=year)
-        except ObjectDoesNotExist:
-            return self._not_found()
+    def get(self, request):
+        response = self._handle_fin_year(request)
+        if response:
+            return response
 
         result = [self._sector_data(team) for team in self._sector_teams_for_fin_year()]
-        return self._success_fin_year(sorted(result, key=lambda x: (x['name'])), self.fin_year)
+        self._fill_date_ranges(request)
+        return self._success(sorted(result, key=lambda x: (x['name'])))

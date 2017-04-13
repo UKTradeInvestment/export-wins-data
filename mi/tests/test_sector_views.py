@@ -74,7 +74,7 @@ class SectorTeamListTestCase(MiApiViewsBaseTestCase):
     Tests covering SectorTeam overview and detail API endpoints
     """
 
-    url = reverse("mi:sector_teams")
+    url = reverse("mi:sector_teams") + "?year=2016"
 
     def test_sector_teams_list(self):
         """ test `SectorTeam` list API """
@@ -288,7 +288,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
     expected_response = {}
     TEST_CAMPAIGN_ID = "E006"
     TEST_CHARCODE = TEST_CAMPAIGN_ID + "16"
-    url = reverse("mi:sector_team_campaigns", kwargs={"team_id": 1})
+    url = reverse("mi:sector_team_campaigns", kwargs={"team_id": 1}) + "?year=2016"
 
     def _campaign_data(self, campaign_list, hvc_code):
         """ returns specific campaign's data out of Campaigns list """
@@ -362,8 +362,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         self.expected_response["campaigns"] = sorted(campaigns, key=sort_campaigns_by, reverse=True)
         self.expected_response["avg_time_to_confirm"] = 4.0
 
-        api_response = self._get_api_response(self.url)
-        self.assertJSONEqual(api_response.content.decode("utf-8"), self.expected_response)
+        self.assertResponse()
 
     def test_sector_team_campaigns_1_wins_for_all_hvcs_unconfirmed(self):
         """ Campaigns api for team 1, with wins for all HVCs"""
@@ -408,13 +407,12 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
             c["totals"]["progress"]["unconfirmed_percent"],
             c["totals"]["target"]), reverse=True)
 
-        api_response = self._get_api_response(self.url)
-        self.assertJSONEqual(api_response.content.decode("utf-8"), self.expected_response)
+        self.assertResponse()
 
     def test_total_target_with_no_wins(self):
         """ Test that there is no effect on Total Target when there are no wins """
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         expected_total = len(self.TEAM_1_HVCS) * self.CAMPAIGN_TARGET
         response_total = response_decoded["hvcs"]["target"]
         self.assertEqual(expected_total, response_total)
@@ -425,7 +423,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
             self._create_hvc_win(hvc_code=hvc_code)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         expected_total = len(self.TEAM_1_HVCS) * self.CAMPAIGN_TARGET
         response_total = response_decoded["hvcs"]["target"]
         self.assertEqual(expected_total, response_total)
@@ -436,7 +434,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
             self._create_hvc_win(hvc_code=hvc_code, confirm=True)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         expected_total = len(self.TEAM_1_HVCS) * self.CAMPAIGN_TARGET
         response_total = response_decoded["hvcs"]["target"]
         self.assertEqual(expected_total, response_total)
@@ -444,7 +442,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
     def test_avg_time_to_confirm_no_wins(self):
         """ Average time to confirm will be zero when no wins """
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         expected_avg_time = 0.0
         response_avg_time = response_decoded["avg_time_to_confirm"]
         self.assertEqual(expected_avg_time, response_avg_time)
@@ -454,7 +452,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         for hvc_code in self.TEAM_1_HVCS:
             self._create_hvc_win(hvc_code=hvc_code, confirm=False)
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         expected_avg_time = 0.0
         response_avg_time = response_decoded["avg_time_to_confirm"]
         self.assertEqual(expected_avg_time, response_avg_time)
@@ -464,7 +462,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         for hvc_code in self.TEAM_1_HVCS:
             self._create_hvc_win(hvc_code=hvc_code, confirm=True)
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         expected_avg_time = 1.0
         response_avg_time = response_decoded["avg_time_to_confirm"]
         self.assertEqual(expected_avg_time, response_avg_time)
@@ -479,14 +477,14 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
                                                                                                                False)
             self._create_hvc_win(hvc_code=hvc_code, confirm=True, response_date=response_date)
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         response_avg_time = response_decoded["avg_time_to_confirm"]
         self.assertTrue(response_avg_time > 1.0)
 
     def test_campaigns_count_no_wins(self):
         """ Make sure number of campaigns returned have no effect when there are no wins """
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         self.assertEqual(len(response_decoded["campaigns"]), len(self.TEAM_1_HVCS))
 
     def test_campaigns_count_unconfirmed_wins(self):
@@ -494,7 +492,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         for hvc_code in self.TEAM_1_HVCS:
             self._create_hvc_win(hvc_code=hvc_code, confirm=False)
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         self.assertEqual(len(response_decoded["campaigns"]), len(self.TEAM_1_HVCS))
 
     def test_campaigns_count_confirmed_wins(self):
@@ -502,7 +500,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         for hvc_code in self.TEAM_1_HVCS:
             self._create_hvc_win(hvc_code=hvc_code, confirm=True)
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         self.assertEqual(len(response_decoded["campaigns"]), len(self.TEAM_1_HVCS))
 
     def test_campaigns_count_unconfirmed_nonhvc_wins(self):
@@ -510,7 +508,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         for _ in self.TEAM_1_HVCS:
             self._create_non_hvc_win(confirm=False)
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         self.assertEqual(len(response_decoded["campaigns"]), len(self.TEAM_1_HVCS))
 
     def test_campaigns_count_confirmed_nonhvc_wins(self):
@@ -518,13 +516,13 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         for _ in self.TEAM_1_HVCS:
             self._create_non_hvc_win(confirm=True)
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         self.assertEqual(len(response_decoded["campaigns"]), len(self.TEAM_1_HVCS))
 
     def test_campaign_progress_colour_no_wins(self):
         """ Given the 'Frozen datetime', progress colour will be Red if there are no wins """
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["progress"]["status"], "red")
 
@@ -534,7 +532,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
             self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=100000)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["progress"]["status"], "red")
 
@@ -542,7 +540,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         """ Given the 'Frozen datetime', progress colour will be Red if there are not enough confirmed wins """
         self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=100000, confirm=True)
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["progress"]["status"], "red")
 
@@ -552,7 +550,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
             self._create_non_hvc_win(export_value=100000)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["progress"]["status"], "red")
 
@@ -562,7 +560,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
             self._create_non_hvc_win(export_value=100000, confirm=True)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["progress"]["status"], "red")
 
@@ -575,7 +573,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
             self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=1000000, confirm=True)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["progress"]["status"], "amber")
 
@@ -585,7 +583,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
             self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=1000000, confirm=True)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["progress"]["status"], "green")
 
@@ -596,7 +594,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
             self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=263900, confirm=True)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["progress"]["status"], "green")
 
@@ -609,7 +607,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
             self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=263777, confirm=True)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["progress"]["status"], "amber")
 
@@ -622,7 +620,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
             self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=146700, confirm=True)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["progress"]["status"], "amber")
 
@@ -632,14 +630,14 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
             self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=146516.5, confirm=True)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["progress"]["status"], "red")
 
     def test_campaign_progress_percent_no_wins(self):
         """ Progress percentage will be 0, if there are no confirmed HVC wins """
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["progress"]["confirmed_percent"], 0.0)
         self.assertEqual(campaign_data["totals"]["progress"]["unconfirmed_percent"], 0.0)
@@ -650,7 +648,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
             self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=100000)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["progress"]["confirmed_percent"], 0.0)
         self.assertEqual(campaign_data["totals"]["progress"]["unconfirmed_percent"], 10.0)
@@ -659,7 +657,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         """ Test simple progress percent """
         self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=100000, confirm=True)
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["progress"]["confirmed_percent"], 1.0)
         self.assertEqual(campaign_data["totals"]["progress"]["unconfirmed_percent"], 0.0)
@@ -670,7 +668,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
             self._create_non_hvc_win(export_value=100000)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["progress"]["confirmed_percent"], 0.0)
         self.assertEqual(campaign_data["totals"]["progress"]["unconfirmed_percent"], 0.0)
@@ -681,7 +679,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
             self._create_non_hvc_win(export_value=100000, confirm=True)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["progress"]["confirmed_percent"], 0.0)
         self.assertEqual(campaign_data["totals"]["progress"]["unconfirmed_percent"], 0.0)
@@ -692,7 +690,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
             self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=1000000, confirm=True)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["progress"]["confirmed_percent"], 20.0)
         self.assertEqual(campaign_data["totals"]["progress"]["unconfirmed_percent"], 0.0)
@@ -700,7 +698,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
     def test_campaign_hvc_number_no_wins(self):
         """ HVC number shouldn't be affected when there are no wins """
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["hvc"]["number"]["confirmed"], 0)
         self.assertEqual(campaign_data["totals"]["hvc"]["number"]["unconfirmed"], 0)
@@ -711,7 +709,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         for _ in range(1, 10):
             self._create_non_hvc_win(export_value=100000, confirm=False)
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["hvc"]["number"]["confirmed"], 0)
         self.assertEqual(campaign_data["totals"]["hvc"]["number"]["unconfirmed"], 0)
@@ -722,7 +720,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         for _ in range(1, 10):
             self._create_non_hvc_win(export_value=100000, confirm=True)
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["hvc"]["number"]["confirmed"], 0)
         self.assertEqual(campaign_data["totals"]["hvc"]["number"]["unconfirmed"], 0)
@@ -733,7 +731,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         for _ in range(1, 11):
             self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=100000, confirm=False)
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["hvc"]["number"]["confirmed"], 0)
         self.assertEqual(campaign_data["totals"]["hvc"]["number"]["unconfirmed"], 10)
@@ -744,7 +742,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         for _ in range(1, 11):
             self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=100000, confirm=True)
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["hvc"]["number"]["confirmed"], 10)
         self.assertEqual(campaign_data["totals"]["hvc"]["number"]["unconfirmed"], 0)
@@ -757,7 +755,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         for _ in range(1, 11):
             self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=100000, confirm=True)
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["hvc"]["number"]["confirmed"], 10)
         self.assertEqual(campaign_data["totals"]["hvc"]["number"]["unconfirmed"], 10)
@@ -766,7 +764,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
     def test_campaign_hvc_value_no_wins(self):
         """ HVC value will be 0 with there are no wins """
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["hvc"]["value"]["confirmed"], 0)
         self.assertEqual(campaign_data["totals"]["hvc"]["value"]["unconfirmed"], 0)
@@ -777,7 +775,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         for _ in range(1, 10):
             self._create_non_hvc_win(export_value=100000, confirm=False)
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["hvc"]["value"]["confirmed"], 0)
         self.assertEqual(campaign_data["totals"]["hvc"]["value"]["unconfirmed"], 0)
@@ -788,7 +786,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         for _ in range(1, 10):
             self._create_non_hvc_win(export_value=100000, confirm=True)
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["hvc"]["value"]["confirmed"], 0)
         self.assertEqual(campaign_data["totals"]["hvc"]["value"]["unconfirmed"], 0)
@@ -799,7 +797,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         for _ in range(1, 11):
             self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=100000, confirm=False)
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["hvc"]["value"]["confirmed"], 0)
         self.assertEqual(campaign_data["totals"]["hvc"]["value"]["unconfirmed"], 1000000)
@@ -810,7 +808,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         for _ in range(1, 11):
             self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=100000, confirm=True)
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["hvc"]["value"]["confirmed"], 1000000)
         self.assertEqual(campaign_data["totals"]["hvc"]["value"]["unconfirmed"], 0)
@@ -823,7 +821,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         for _ in range(1, 11):
             self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=100000, confirm=True)
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
         self.assertEqual(campaign_data["totals"]["hvc"]["value"]["confirmed"], 1000000)
         self.assertEqual(campaign_data["totals"]["hvc"]["value"]["unconfirmed"], 1000000)
@@ -833,7 +831,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
 @freeze_time(MiApiViewsBaseTestCase.frozen_date)
 class SectorTeamTopNonHvcTestCase(SectorTeamBaseTestCase):
     expected_response = {}
-    url = reverse("mi:sector_team_top_non_hvc", kwargs={"team_id": 1})
+    url = reverse("mi:sector_team_top_non_hvc", kwargs={"team_id": 1}) + "?year=2016"
     SECTOR_58 = 58
     SECTOR_59 = 59
     SECTORS_DICT = dict(SECTORS)
@@ -841,7 +839,7 @@ class SectorTeamTopNonHvcTestCase(SectorTeamBaseTestCase):
     def test_top_non_hvc_with_no_wins(self):
         """ Top non-hvc wins will be empty if there are no wins """
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         self.assertEqual(len(response_decoded), 0)
 
     def test_top_non_hvc_with_conformed_hvc_wins(self):
@@ -850,7 +848,7 @@ class SectorTeamTopNonHvcTestCase(SectorTeamBaseTestCase):
             self._create_hvc_win(hvc_code=hvc_code)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         self.assertEqual(len(response_decoded), 0)
 
     def test_top_non_hvc_with_unconformed_hvc_wins(self):
@@ -859,7 +857,7 @@ class SectorTeamTopNonHvcTestCase(SectorTeamBaseTestCase):
             self._create_hvc_win(hvc_code=hvc_code, confirm=True)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         self.assertEqual(len(response_decoded), 0)
 
     def test_top_non_hvc_with_unconfirmed_non_hvc_wins(self):
@@ -868,7 +866,7 @@ class SectorTeamTopNonHvcTestCase(SectorTeamBaseTestCase):
             self._create_non_hvc_win(export_value=100000)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         self.assertEqual(len(response_decoded), 5)
 
     def test_top_non_hvc_with_confirmed_non_hvc_wins_one_sector_country(self):
@@ -877,7 +875,7 @@ class SectorTeamTopNonHvcTestCase(SectorTeamBaseTestCase):
             self._create_non_hvc_win(export_value=100000, sector_id=self.SECTOR_58, country="CA", confirm=True)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         self.assertEqual(len(response_decoded), 1)
 
     def test_top_non_hvc_with_confirmed_non_hvc_wins_one_country(self):
@@ -889,7 +887,7 @@ class SectorTeamTopNonHvcTestCase(SectorTeamBaseTestCase):
             self._create_non_hvc_win(export_value=100000, country="CA", confirm=True)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         self.assertEqual(len(response_decoded), 5)
 
     def test_top_non_hvc_with_confirmed_non_hvc_wins_one_sector(self):
@@ -898,7 +896,7 @@ class SectorTeamTopNonHvcTestCase(SectorTeamBaseTestCase):
             self._create_non_hvc_win(export_value=100000, sector_id=self.SECTOR_58, confirm=True)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         self.assertEqual(len(response_decoded), 1)
 
     def test_top_non_hvc_top_win_with_confirmed_non_hvc_wins(self):
@@ -910,7 +908,7 @@ class SectorTeamTopNonHvcTestCase(SectorTeamBaseTestCase):
             self._create_non_hvc_win(export_value=100000, confirm=True)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         self.assertEqual(len(response_decoded), 5)
         top_item = response_decoded[0]
         self.assertEqual(top_item["sector"], self.SECTORS_DICT[expected_top_team])
@@ -930,7 +928,7 @@ class SectorTeamTopNonHvcTestCase(SectorTeamBaseTestCase):
             self._create_non_hvc_win(export_value=100000, confirm=True)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         self.assertEqual(len(response_decoded), 5)
         second_top_item = response_decoded[1]
         percent_complete = int((100000 * 4 * 100) / (100000 * 5))
@@ -946,7 +944,7 @@ class SectorTeamTopNonHvcTestCase(SectorTeamBaseTestCase):
                 self._create_non_hvc_win(export_value=100000, sector_id=self.TEAM_1_SECTORS[i], confirm=True)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         self.assertEqual(len(response_decoded), 5)
         self.assertTrue(response_decoded[0]["percentComplete"] >= response_decoded[1]["percentComplete"])
         self.assertTrue(response_decoded[1]["percentComplete"] >= response_decoded[2]["percentComplete"])
@@ -960,7 +958,7 @@ class SectorTeamTopNonHvcTestCase(SectorTeamBaseTestCase):
                 self._create_non_hvc_win(export_value=100000, sector_id=self.TEAM_1_SECTORS[i], confirm=True)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         self.assertEqual(len(response_decoded), 5)
         self.assertTrue(response_decoded[0]["totalValue"] >= response_decoded[1]["totalValue"])
         self.assertTrue(response_decoded[1]["totalValue"] >= response_decoded[2]["totalValue"])
@@ -974,7 +972,7 @@ class SectorTeamTopNonHvcTestCase(SectorTeamBaseTestCase):
                 self._create_non_hvc_win(export_value=100000, sector_id=self.TEAM_1_SECTORS[i], confirm=True)
 
         api_response = self._get_api_response(self.url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         self.assertEqual(len(response_decoded), 5)
         self.assertTrue(response_decoded[0]["averageWinValue"] >= response_decoded[1]["averageWinValue"])
         self.assertTrue(response_decoded[1]["averageWinValue"] >= response_decoded[2]["averageWinValue"])

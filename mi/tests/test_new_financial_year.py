@@ -11,12 +11,12 @@ from mi.tests.test_sector_views import SectorTeamBaseTestCase
 
 class SectorTeamNewFinancialYearTestCase(SectorTeamBaseTestCase):
     """ These tests are to check MI defaults to 2016-17 in the new FY 2017-18 """
-    root_url = reverse("mi:sector_teams")
-    overview_url = reverse("mi:sector_teams_overview")
-    detail_url = reverse("mi:sector_team_detail", kwargs={"team_id": 1})
-    campaigns_url = reverse("mi:sector_team_campaigns", kwargs={"team_id": 1})
-    months_url = reverse("mi:sector_team_months", kwargs={"team_id": 1})
-    non_hvc_url = reverse("mi:sector_team_top_non_hvc", kwargs={"team_id": 1})
+    root_url = reverse("mi:sector_teams") + "?year=2016"
+    overview_url = reverse("mi:sector_teams_overview") + "?year=2016"
+    detail_url = reverse("mi:sector_team_detail", kwargs={"team_id": 1}) + "?year=2016"
+    campaigns_url = reverse("mi:sector_team_campaigns", kwargs={"team_id": 1}) + "?year=2016"
+    months_url = reverse("mi:sector_team_months", kwargs={"team_id": 1}) + "?year=2016"
+    non_hvc_url = reverse("mi:sector_team_top_non_hvc", kwargs={"team_id": 1}) + "?year=2016"
 
     def _random_date_in_fy(self, fin_year=2016):
         """ generate a random date in the given financial year """
@@ -54,18 +54,18 @@ class SectorTeamNewFinancialYearTestCase(SectorTeamBaseTestCase):
         """
         with freeze_time("2017-03-31"):
             api_response = self._get_api_response(url)
-            old_fy_response_decoded = json.loads(api_response.content.decode("utf-8"))
+            old_fy_response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
             check_func(old_fy_response_decoded, *args)
 
         with freeze_time("2017-04-01"):
             api_response = self._get_api_response(url)
-            response_decoded = json.loads(api_response.content.decode("utf-8"))
+            response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
             self.assertEqual(old_fy_response_decoded, response_decoded)
             check_func(response_decoded, *args)
 
         with freeze_time("2017-09-01"):
             api_response = self._get_api_response(url)
-            response_decoded = json.loads(api_response.content.decode("utf-8"))
+            response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
             self.assertEqual(old_fy_response_decoded, response_decoded)
             check_func(response_decoded, *args)
 
@@ -80,7 +80,7 @@ class SectorTeamNewFinancialYearTestCase(SectorTeamBaseTestCase):
             self.assertTrue(relate(response["wins"]["export"]["non_hvc"]["value"]["total"], 0))
 
         api_response = self._get_api_response(self.detail_url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         check_values(response_decoded, eq)
 
         self._add_test_data_for_fy(fin_year=2015, batch=10)
@@ -98,7 +98,7 @@ class SectorTeamNewFinancialYearTestCase(SectorTeamBaseTestCase):
             self.assertTrue(relate(len(months), 0))
 
         api_response = self._get_api_response(self.months_url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         check_values(response_decoded, eq)
 
         self._add_test_data_for_fy(fin_year=2015, batch=10)
@@ -114,7 +114,7 @@ class SectorTeamNewFinancialYearTestCase(SectorTeamBaseTestCase):
             self.assertTrue(relate(len(response), 0))
 
         api_response = self._get_api_response(self.non_hvc_url)
-        response_decoded = json.loads(api_response.content.decode("utf-8"))
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         check_values(response_decoded, eq)
 
         self._add_test_data_for_fy(fin_year=2015, batch=10)
@@ -129,18 +129,18 @@ class SectorTeamNewFinancialYearTestCase(SectorTeamBaseTestCase):
         """
         with freeze_time("2017-03-31"):
             api_response = self._get_api_response(url)
-            team_1_data_old = self._team_data(api_response.data, 1)
+            team_1_data_old = self._team_data(api_response.data["results"], 1)
             check_func(team_1_data_old, *args)
 
         with freeze_time("2017-04-01"):
             api_response = self._get_api_response(url)
-            team_1_data_new = self._team_data(api_response.data, 1)
+            team_1_data_new = self._team_data(api_response.data["results"], 1)
             self.assertEqual(team_1_data_old, team_1_data_new)
             check_func(team_1_data_new, *args)
 
         with freeze_time("2017-09-01"):
             api_response = self._get_api_response(url)
-            team_1_data_new = self._team_data(api_response.data, 1)
+            team_1_data_new = self._team_data(api_response.data["results"], 1)
             self.assertEqual(team_1_data_old, team_1_data_new)
             check_func(team_1_data_new, *args)
 
@@ -161,7 +161,7 @@ class SectorTeamNewFinancialYearTestCase(SectorTeamBaseTestCase):
             self.assertTrue(relate(response["values"]["non_hvc"]["total_win_percent"]["unconfirmed"], 0))
 
         api_response = self._get_api_response(self.overview_url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
         check_values(team_1_data, eq)
 
         self._add_test_data_for_fy(fin_year=2015, batch=10)
@@ -201,7 +201,7 @@ class SectorTeamNewFinancialYearTestCase(SectorTeamBaseTestCase):
             self.assertTrue(relate(response["hvc_performance"]["green"], 0))
 
         api_response = self._get_api_response(self.overview_url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertTrue(team_1_data["hvc_performance"]["green"] == 0)
         self.assertTrue(team_1_data["hvc_performance"]["amber"] == 0)
@@ -227,7 +227,7 @@ class SectorTeamNewFinancialYearTestCase(SectorTeamBaseTestCase):
             self.assertTrue(relate(response["hvc_groups"][0]["hvc_performance"]["green"], 0))
 
         api_response = self._get_api_response(self.overview_url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertTrue(team_1_data["hvc_groups"][0]["hvc_performance"]["green"] == 0)
         self.assertTrue(team_1_data["hvc_groups"][0]["hvc_performance"]["amber"] == 0)

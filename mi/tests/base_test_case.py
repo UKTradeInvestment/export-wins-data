@@ -1,3 +1,5 @@
+import json
+
 from django.contrib.auth.models import Group
 from django.test import override_settings, TestCase
 
@@ -57,9 +59,9 @@ class MiApiViewsBaseTestCase(TestCase):
 
     @property
     def _api_response_data(self):
-        return self._get_api_response(self.url).data
+        return self._get_api_response(self.url).data["results"]
 
-    def with_fyassertResponse(self):
+    def assertResponse(self):
         """ Helper to check that the API response is as expected
 
         Small abstraction to allow defining url once per TestCase/endpoint,
@@ -68,4 +70,5 @@ class MiApiViewsBaseTestCase(TestCase):
         """
         assert hasattr(self, 'expected_response'),\
             'expected_response not added to TestCase class'
-        self.assertJSONEqual(self._api_response_json, self.expected_response)
+        api_response_result = json.loads(self._api_response_json)["results"]
+        self.assertJSONEqual(json.dumps(api_response_result), self.expected_response)

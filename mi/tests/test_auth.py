@@ -16,18 +16,18 @@ class MIPermissionTestCase(TestCase):
         HVCFactory.create_batch(255, financial_year=16)
 
     def setUp(self):
-        self.sector_teams_list = reverse('mi:sector_teams')
-        self.regions_list = reverse('mi:overseas_regions')
-        self.hvc_groups_list = reverse('mi:hvc_groups')
+        self.sector_teams_list = reverse("mi:sector_teams") + "?year=2016"
+        self.regions_list = reverse("mi:overseas_regions") + "?year=2016"
+        self.hvc_groups_list = reverse("mi:hvc_groups") + "?year=2016"
 
         self.alice_client = AliceClient()
 
         self.user = UserFactory.create()
-        self.user.set_password('asdf')
+        self.user.set_password("asdf")
         self.user.save()
 
     def _add_to_mi_group(self):
-        mi_group = Group.objects.get(name='mi_group')
+        mi_group = Group.objects.get(name="mi_group")
         mi_group.user_set.add(self.user)
 
     def _test_get_status(self, url, status, mi=False):
@@ -76,7 +76,7 @@ class MIPermissionTestCase(TestCase):
     # specific Sector Team
     def _get_first_sector_team_url(self):
         st = SectorTeam.objects.all()[0]
-        st_url = reverse('mi:sector_team_detail', kwargs={'team_id': st.id})
+        st_url = reverse("mi:sector_team_detail", kwargs={"team_id": st.id}) + "?year=2016"
         return st_url
 
     def test_mi_st_1_not_allowed_without_group(self):
@@ -155,7 +155,7 @@ class MIPermissionTestCase(TestCase):
     # specific Overseas Region
     def _get_first_region_url(self):
         region = OverseasRegion.objects.all()[0]
-        region_url = reverse('mi:overseas_region_detail', kwargs={'region_id': region.id})
+        region_url = reverse("mi:overseas_region_detail", kwargs={"region_id": region.id}) + "?year=2016"
         return region_url
 
     def test_mi_or_1_not_allowed_without_group(self):
@@ -234,7 +234,7 @@ class MIPermissionTestCase(TestCase):
     # specific HVC Group
     def _get_first_hvc_group_url(self):
         group = HVCGroup.objects.all()[0]
-        group_url = reverse('mi:hvc_group_detail', kwargs={'group_id': group.id})
+        group_url = reverse("mi:hvc_group_detail", kwargs={"group_id": group.id}) + "?year=2016"
         return group_url
 
     def test_mi_hg_1_not_allowed_without_group(self):

@@ -1,9 +1,10 @@
-import datetime
+from datetime import datetime
 from collections import Counter
 from itertools import groupby
 from operator import attrgetter, itemgetter
 import time
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Count, Sum
 from django_countries.fields import Country as DjangoCountry
 
@@ -12,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from alice.authenticators import IsMIServer, IsMIUser
-from mi.models import Sector
+from mi.models import Sector, FinancialYear
 from mi.utils import (
     average,
     get_financial_start_date,
@@ -23,26 +24,88 @@ from mi.utils import (
 from wins.models import Notification, Win
 
 
+
 class BaseMIView(APIView):
     """ Base view for other MI endpoints to inherit from """
 
     permission_classes = (IsMIServer, IsMIUser)
+    fin_year = None
+    date_range = None
+
+    def _handle_fin_year(self, request):
+        """
+        Checks and makes sure if year query param is supplied within request object
+        Obtains FinancialYear model out of it and stores it for subclasses to use
+        Returns 404 if FinancialYear is not found
+        """
+        year = request.GET.get("year", None)
+        if not year:
+            return self._invalid("missing argument: year")
+        try:
+            self.fin_year = FinancialYear.objects.get(id=year)
+            return None
+        except ObjectDoesNotExist:
+            return self._not_found()
+
+    def _date_range_start(self, str_date_start):
+        """ 
+        If the request has start date, it will be returned as datetime
+        else financial year start date, as datetime, is returned
+        """
+        if str_date_start:
+            date_start = datetime.strptime(str_date_start, '%Y-%m-%d')
+            return datetime.combine(date_start, datetime.min.time())
+
+        return datetime.combine(get_financial_start_date(self.fin_year), datetime.min.time())
+
+    def _date_range_end(self, str_date_end):
+        """
+        If the request has end date, it will be returned as datetime
+        Otherwise if fin_year is not current one, current datetime is returned
+        Else financial year end date, as datetime, is returned
+        """
+        if str_date_end:
+            date_end = datetime.strptime(str_date_end, '%Y-%m-%d')
+            return datetime.combine(date_end, datetime.max.time())
+
+        if datetime.today().year >= self.fin_year.id:
+            return datetime.utcnow()
+        else:
+            return datetime.combine(get_financial_end_date(self.fin_year), datetime.max.time())
+
+    def _fill_date_ranges(self, request):
+        """
+        This will interrogate request object and sets up date_range for response 
+        using _date_range_start and _date_range_end functions, as epoch 
+        """
+        date_from = self._date_range_start(request.GET.get("from", None))
+        date_to = self._date_range_end(request.GET.get("to", None))
+
+        self.date_range = {
+            "from": date_from.strftime("%s"),
+            "to": date_to.strftime("%s")
+        }
 
     def _invalid(self, msg):
         return Response({'error': msg}, status=status.HTTP_400_BAD_REQUEST)
 
     def _success(self, results):
-        return Response(results, status=status.HTTP_200_OK)
+        if self.fin_year is not None:
+            response = {
+                "timestamp": time.time(),
+                "financial_year": {
+                    "id": self.fin_year.id,
+                    "description": self.fin_year.description,
+                },
+                "results": results
+            }
 
-    def _success_fin_year(self, results, fin_year):
-        response = {
-            "timestamp": time.time(),
-            "financial_year": {
-                "id": fin_year.id,
-                "description": fin_year.description,
-            },
-            "results": results
-        }
+            if self.date_range is not None:
+                response["date_range"] = self.date_range
+
+        else:
+            response = results
+
         return Response(response, status=status.HTTP_200_OK)
 
     def _not_found(self):
@@ -60,7 +123,6 @@ class BaseMIView(APIView):
 class BaseWinMIView(BaseMIView):
     """ Base view with Win-related MI helpers """
 
-    fin_year = None
     # cumulative values for `_breakdowns_cumulative` method
     hvc_confirm_cu_number = hvc_confirm_cu_value = hvc_non_cu_number = hvc_non_cu_value = 0
     non_hvc_confirm_cu_number = non_hvc_confirm_cu_value = non_hvc_non_cu_number = non_hvc_non_cu_value = 0
@@ -175,7 +237,7 @@ class BaseWinMIView(BaseMIView):
         If in case of previous ones, just return 365
         """
 
-        days_into_year = (datetime.datetime.today() - get_financial_start_date(self.fin_year)).days
+        days_into_year = (datetime.today() - get_financial_start_date(self.fin_year)).days
 
         if days_into_year > 365:
             return 365
