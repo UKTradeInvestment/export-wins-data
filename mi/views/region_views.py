@@ -1,8 +1,6 @@
 from itertools import groupby
 from operator import attrgetter, itemgetter
 
-from django.db.models import Q
-
 from mi.models import OverseasRegion
 from mi.utils import (
     get_financial_start_date,
@@ -45,10 +43,7 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
         """
         non-HVC wins alone for the `OverseasRegion`
         """
-        return self._wins().filter(
-            Q(country__in=region.country_ids),
-            Q(hvc__isnull=True) | Q(hvc=''),
-        )
+        return self._non_hvc_wins().filter(country__in=region.country_ids)
 
     def _region_result(self, region):
         """ Basic data about region - name & hvc's """
@@ -78,7 +73,6 @@ class OverseasRegionsListView(BaseOverseasRegionsMIView):
             for region in OverseasRegion.objects.all()
             ]
         return self._success(sorted(results, key=itemgetter('name')))
-
 
 
 class OverseasRegionDetailView(BaseOverseasRegionsMIView):
@@ -135,7 +129,6 @@ class OverseasRegionMonthsView(BaseOverseasRegionsMIView):
         if response:
             return response
 
-
         region = self._get_region(region_id)
         if not region:
             return self._invalid('region not found')
@@ -180,33 +173,15 @@ class OverseasRegionCampaignsView(BaseOverseasRegionsMIView):
 class OverseasRegionsTopNonHvcWinsView(BaseOverseasRegionsMIView):
     """ Top n HVCs with win-breakdown for given Overseas Region"""
 
-    def _breakdown(self, agg_win):
-        return {
-            'region': agg_win.country.name,
-            'sector': agg_win.sector.name,
-            'totalValue': agg_win.total_value,
-            'totalWins': agg_win.total_wins
-        }
-
     def get(self, request, region_id):
-        """
-            percentComplete is based on the top value being 100%
-            averageWinValue is total non_hvc win value for the sector/total number of wins during the financial year
-            averageWinPercent is therefore averageWinValue * 100/Total win value for the sector/market
-        """
         response = self._handle_fin_year(request)
         if response:
             return response
-
         region = self._get_region(region_id)
         if not region:
             return self._invalid('region not found')
-        country_ids = [s.country for s in region.countries.all()]
 
-        non_hvc_wins_qs = self._wins().filter(
-            Q(hvc='') | Q(hvc__isnull=True),
-            country__in=country_ids,
-        )
+        non_hvc_wins_qs = self._get_region_non_hvc_wins(region)
         results = self._top_non_hvc(non_hvc_wins_qs)
         self._fill_date_ranges(request)
         return self._success(results)

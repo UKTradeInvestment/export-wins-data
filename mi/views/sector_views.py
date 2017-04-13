@@ -1,7 +1,6 @@
+from collections import defaultdict
 from itertools import groupby
 from operator import attrgetter, itemgetter
-
-from django.db.models import Q
 
 from mi.models import (
     HVCGroup,
@@ -40,19 +39,17 @@ class BaseSectorMIView(BaseWinMIView):
 
     def _get_group_wins(self, group):
         """ HVC wins of the HVC Group """
-        return self._wins().filter(
-            hvc__in=group.campaign_ids,
-        )
+
+        return self._wins().filter(hvc__in=group.campaign_ids)
 
     def _get_hvc_wins(self, team):
         """
         HVC wins alone for the `SectorTeam`
 
         A `Win` is considered HVC for this team, when it falls under a Campaign that belongs to this `SectorTeam`
+
         """
-        return self._wins().filter(
-            hvc__in=team.campaign_ids
-        )
+        return self._wins().filter(hvc__in=team.campaign_ids)
 
     def _get_non_hvc_wins(self, team):
         """
@@ -60,11 +57,9 @@ class BaseSectorMIView(BaseWinMIView):
 
         A `Win` is a non-HVC, if no HVC was mentioned while recording it
         but it belongs to a CDMS Sector that is within this `SectorTeam`s range
+
         """
-        return self._wins().filter(
-            Q(sector__in=team.sector_ids),
-            Q(hvc__isnull=True) | Q(hvc='')
-        )
+        return self._non_hvc_wins().filter(sector__in=team.sector_ids)
 
     def _get_all_wins(self, sector_team):
         """ Get HVC and non-HVC Wins of a Sector Team """
@@ -87,11 +82,6 @@ class TopNonHvcSectorCountryWinsView(BaseSectorMIView):
     """ Sector Team non-HVC Win data broken down by country """
 
     def get(self, request, team_id):
-        """
-        percentComplete is based on the top value being 100%
-        averageWinValue is total non_hvc win value for the sector/total number of wins during the financial year
-        averageWinPercent is therefore averageWinValue * 100/Total win value for the sector/market
-        """
         response = self._handle_fin_year(request)
         if response:
             return response
@@ -240,12 +230,27 @@ class SectorTeamCampaignsView(BaseSectorMIView):
 class SectorTeamsOverviewView(BaseSectorMIView):
     """ Overview of HVCs, targets etc. for each SectorTeam """
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def _get_cached_hvc_wins(self, charcodes):
+        return [win
+                for code, wins in self.hvc_to_wins.items() if code in charcodes
+                for win in wins
+                ]
+
+    def _get_cached_non_hvc_wins(self, sector_ids):
+        return [win
+                for sector, wins in self.sector_to_wins.items() if sector in sector_ids
+                for win in wins
+                ]
+
     def _sector_obj_data(self, sector_obj):
         """ Get general data from SectorTeam or HVCGroup """
 
         targets = sector_obj.targets.all()
         total_target = sum(t.target for t in targets)
-        hvc_wins = self._get_hvc_wins(sector_obj)
+        hvc_wins = self._get_cached_hvc_wins(sector_obj.campaign_ids)
         hvc_confirmed, hvc_unconfirmed = self._confirmed_unconfirmed(hvc_wins)
         hvc_colours_count = self._colours(hvc_wins, targets)
 
@@ -269,17 +274,12 @@ class SectorTeamsOverviewView(BaseSectorMIView):
         """ Calculate overview for a sector team """
 
         result = self._sector_obj_data(sector_team)
-
-        hvc_wins = self._get_hvc_wins(sector_team)
-        non_hvc_wins = self._get_non_hvc_wins(sector_team)
-
+        hvc_wins = self._get_cached_hvc_wins(sector_team.campaign_ids)
+        non_hvc_wins = self._get_cached_non_hvc_wins(sector_team.sector_ids)
         non_hvc_confirmed, non_hvc_unconfirmed = self._confirmed_unconfirmed(non_hvc_wins)
-
         hvc_confirmed = result['values']['hvc']['current']['confirmed']
         hvc_unconfirmed = result['values']['hvc']['current']['unconfirmed']
-
         total_win_percent = self._overview_win_percentages(hvc_wins, non_hvc_wins)
-
         totals = {
             'confirmed': hvc_confirmed + non_hvc_confirmed,
             'unconfirmed': hvc_unconfirmed + non_hvc_unconfirmed
@@ -308,6 +308,23 @@ class SectorTeamsOverviewView(BaseSectorMIView):
         if response:
             return response
 
-        result = [self._sector_data(team) for team in self._sector_teams_for_fin_year()]
+        # cache wins to avoid many queries
+        all_wins = self._wins()
+        self.hvc_to_wins = defaultdict(list)
+        self.sector_to_wins = defaultdict(list)
+
+        for win in all_wins:
+            if win.hvc:
+                self.hvc_to_wins[win.hvc].append(win)
+            else:
+                self.sector_to_wins[win.sector].append(win)
+
+        sector_team_qs = self._sector_teams_for_fin_year().prefetch_related(
+            'sectors',
+            'targets',
+            'hvc_groups',
+            'hvc_groups__targets',
+        )
+        result = [self._sector_data(team) for team in sector_team_qs]
         self._fill_date_ranges(request)
         return self._success(sorted(result, key=lambda x: (x['name'])))
