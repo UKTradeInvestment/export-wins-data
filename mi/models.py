@@ -77,6 +77,9 @@ class SectorTeam(models.Model):
     def __str__(self):
         return 'SectorTeam: {}'.format(self.name)
 
+    def for_fin_year(self, fin_year):
+        return self.objects.filter(financial_year=fin_year)
+
     @property
     def sector_ids(self):
         """ List of CDMS sector IDs associated with the Sector Team """
@@ -183,7 +186,10 @@ class Target(models.Model):
 
     @property
     def charcode(self):
-        return self.campaign_id + "16"
+        return self.campaign_id + str(self.financial_year.id)[-2:]
+
+    def for_fin_year(self, fin_year):
+        return self.objects.filter(financial_year=fin_year)
 
     def for_fin_year(self, fin_year):
         return self.objects.filter(financial_year=fin_year)

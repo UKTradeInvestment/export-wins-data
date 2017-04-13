@@ -29,6 +29,10 @@ class BaseHVCGroupMIView(BaseSectorMIView):
 
 class HVCGroupsListView(BaseHVCGroupMIView):
     def get(self, request):
+        response = self._handle_fin_year(request)
+        if response:
+            return response
+
         results = [
             {
                 'id': hvc_group.id,
@@ -43,6 +47,10 @@ class HVCGroupDetailView(BaseHVCGroupMIView):
     """ HVC Group details with name, targets and win-breakdown """
 
     def get(self, request, group_id):
+        response = self._handle_fin_year(request)
+        if response:
+            return response
+
         group = self._get_hvc_group(group_id)
         if not group:
             return self._invalid('hvc group not found')
@@ -50,6 +58,7 @@ class HVCGroupDetailView(BaseHVCGroupMIView):
         results = self._group_result(group)
         wins = self._get_group_wins(group)
         results['wins'] = self._breakdowns(wins, include_non_hvc=False)
+        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -80,7 +89,7 @@ class HVCGroupMonthsView(BaseHVCGroupMIView):
             month_to_wins.append((date_str, month_wins))
 
         # Add missing months within the financial year until current month
-        for item in month_iterator(get_financial_start_date()):
+        for item in month_iterator(get_financial_start_date(self.fin_year)):
             date_str = '{:d}-{:02d}'.format(*item)
             existing = [m for m in month_to_wins if m[0] == date_str]
             if len(existing) == 0:
@@ -90,6 +99,9 @@ class HVCGroupMonthsView(BaseHVCGroupMIView):
         return sorted(month_to_wins, key=lambda tup: tup[0])
 
     def get(self, request, group_id):
+        response = self._handle_fin_year(request)
+        if response:
+            return response
 
         group = self._get_hvc_group(group_id)
         if not group:
@@ -98,6 +110,7 @@ class HVCGroupMonthsView(BaseHVCGroupMIView):
         results = self._group_result(group)
         wins = self._get_group_wins(group)
         results['months'] = self._month_breakdowns(wins)
+        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -128,6 +141,9 @@ class HVCGroupCampaignsView(BaseHVCGroupMIView):
         return sorted_campaigns
 
     def get(self, request, group_id):
+        response = self._handle_fin_year(request)
+        if response:
+            return response
 
         group = self._get_hvc_group(group_id)
         if not group:
@@ -135,4 +151,5 @@ class HVCGroupCampaignsView(BaseHVCGroupMIView):
 
         results = self._group_result(group)
         results['campaigns'] = self._campaign_breakdowns(group)
+        self._fill_date_ranges()
         return self._success(results)

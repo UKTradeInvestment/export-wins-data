@@ -1,6 +1,6 @@
-import datetime
+from datetime import datetime
 
-LAST_FIN_YEAR = datetime.datetime(2017, 3, 31)
+LAST_FIN_YEAR = datetime(2017, 3, 31)
 
 
 def _today():
@@ -10,30 +10,20 @@ def _today():
     This is to make MI default to 2016-17 FY, even when we are in new FY.
     Until MI is ready to support multiple financial years at the same time.
     """
-    if datetime.datetime.today() > LAST_FIN_YEAR:
+    if datetime.today() > LAST_FIN_YEAR:
         return LAST_FIN_YEAR
 
-    return datetime.datetime.today()
+    return datetime.today()
 
 
-def get_financial_start_date(date=None):
-    """ Returns financial year start date for a given date. Set to current date if none supplied """
-    if not date:
-        date = _today()
-    if date.month < 4:
-        return datetime.datetime(date.year - 1, 4, 1)
-    else:
-        return datetime.datetime(date.year, 4, 1)
+def get_financial_start_date(fin_year):
+    """ Returns financial year start date for a given financial year. """
+    return datetime(fin_year.id, 4, 1)
 
 
-def get_financial_end_date(date=None):
-    """ Returns financial year end date for a given date. Set to current date if none supplied """
-    if not date:
-        date = _today()
-    if date.month >= 4:
-        return datetime.datetime(date.year + 1, 3, 31)
-    else:
-        return datetime.datetime(date.year, 3, 31)
+def get_financial_end_date(fin_year):
+    """ Returns financial year end date for a given financial year. """
+    return datetime(fin_year.id + 1, 3, 31)
 
 
 def month_iterator(start_date, end_date=None):

@@ -1,8 +1,10 @@
-import datetime
+from datetime import datetime
 from collections import Counter
 from itertools import groupby
 from operator import attrgetter, itemgetter
+import time
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Count, Sum, Q
 from django_countries.fields import Country as DjangoCountry
 
@@ -11,7 +13,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from alice.authenticators import IsMIServer, IsMIUser
-from mi.models import Sector
+from mi.models import (
+    FinancialYear,
+    Sector
+)
 from mi.utils import (
     average,
     get_financial_start_date,
@@ -22,16 +27,80 @@ from mi.utils import (
 from wins.models import Notification, Win
 
 
+
 class BaseMIView(APIView):
     """ Base view for other MI endpoints to inherit from """
 
     permission_classes = (IsMIServer, IsMIUser)
+    fin_year = None
+    date_range = None
+
+    def _handle_fin_year(self, request):
+        """
+        Checks and makes sure if year query param is supplied within request object
+        Obtains FinancialYear model out of it and stores it for subclasses to use
+        Returns 404 if FinancialYear is not found
+        """
+        year = request.GET.get("year", None)
+        if not year:
+            return self._invalid("missing argument: year")
+        try:
+            self.fin_year = FinancialYear.objects.get(id=year)
+            return None
+        except ObjectDoesNotExist:
+            return self._not_found()
+
+    def _date_range_start(self):
+        """ 
+        Financial year start date, as datetime, is returned
+        """
+        return datetime.combine(get_financial_start_date(self.fin_year), datetime.min.time())
+
+    def _date_range_end(self):
+        """
+        If fin_year is not current one, current datetime is returned
+        Else financial year end date, as datetime, is returned
+        """
+        fin_year_end_date = get_financial_end_date(self.fin_year)
+        if datetime.today() < fin_year_end_date:
+            return datetime.utcnow()
+        else:
+            return datetime.combine(fin_year_end_date, datetime.max.time())
+
+    def _fill_date_ranges(self):
+        """
+        This sets up date_range for response using _date_range_start 
+        and _date_range_end functions, as epoch 
+        """
+        self.date_range = {
+            "start": int(self._date_range_start().timestamp()),
+            "end": int(self._date_range_end().timestamp()),
+        }
 
     def _invalid(self, msg):
         return Response({'error': msg}, status=status.HTTP_400_BAD_REQUEST)
 
     def _success(self, results):
-        return Response(results, status=status.HTTP_200_OK)
+        if self.fin_year is not None:
+            response = {
+                "timestamp": time.time(),
+                "financial_year": {
+                    "id": self.fin_year.id,
+                    "description": self.fin_year.description,
+                },
+                "results": results
+            }
+
+            if self.date_range is not None:
+                response["date_range"] = self.date_range
+
+        else:
+            response = results
+
+        return Response(response, status=status.HTTP_200_OK)
+
+    def _not_found(self):
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
     def _hvc_overview(self, targets):
         """ Make an overview dict for a list of targets """
@@ -55,8 +124,8 @@ class BaseWinMIView(BaseMIView):
 
         return Win.objects.filter(
             date__range=(
-                get_financial_start_date(),
-                get_financial_end_date(),
+                get_financial_start_date(self.fin_year),
+                get_financial_end_date(self.fin_year),
             ),
         ).select_related('confirmation')
 
@@ -162,7 +231,7 @@ class BaseWinMIView(BaseMIView):
         If in case of previous ones, just return 365
         """
 
-        days_into_year = (datetime.datetime.today() - get_financial_start_date()).days
+        days_into_year = (datetime.today() - get_financial_start_date(self.fin_year)).days
 
         if days_into_year > 365:
             return 365

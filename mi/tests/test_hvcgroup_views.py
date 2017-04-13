@@ -1,4 +1,5 @@
 import datetime
+import json
 
 from django.core.urlresolvers import reverse
 
@@ -13,7 +14,7 @@ from wins.factories import (
 )
 from wins.models import HVC
 
-GROUP_4_HVCS = [code + "16" for code in ['E001', 'E017', 'E024', 'E049', 'E063', 'E107', 'E184']]
+GROUP_4_HVCS = [code + "16" for code in ["E001", "E017", "E024", "E049", "E063", "E107", "E184"]]
 TEAM_SECTORS = [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35]
 GROUP_4_TARGET = 70000000
 HVC_TARGET = 10000000
@@ -25,7 +26,7 @@ class HVCGroupListTestCase(MiApiViewsBaseTestCase):
     Tests covering HVCGroup overview API endpoints
     """
 
-    url = reverse('mi:hvc_groups')
+    url = reverse("mi:hvc_groups") + "?year=2016"
 
     def test_hvc_group_list(self):
         """ test `HVCGroup` list API """
@@ -143,7 +144,7 @@ class HVCGroupListTestCase(MiApiViewsBaseTestCase):
                 "name": "Strategic Campaigns",
                 "id": 28
             }
-        ], key=lambda x: (x['name']))
+        ], key=lambda x: (x["name"]))
         self.assertResponse()
 
 
@@ -153,7 +154,7 @@ class HVCGroupDetailTestCase(MiApiViewsBaseTestCase):
     Tests covering HVC Group details API endpoint
     """
 
-    url = reverse('mi:hvc_group_detail', kwargs={'group_id': 4})
+    url = reverse("mi:hvc_group_detail", kwargs={"group_id": 4}) + "?year=2016"
     expected_response = {}
 
     def setUp(self):
@@ -219,20 +220,20 @@ class HVCGroupDetailTestCase(MiApiViewsBaseTestCase):
         for i in range(5):
             WinFactory(user=self.user, hvc=FuzzyChoice(GROUP_4_HVCS), sector=FuzzyChoice(TEAM_SECTORS))
 
-        self.expected_response['wins']['export']['totals']['number']['unconfirmed'] = 5
-        self.expected_response['wins']['export']['totals']['number']['grand_total'] = 5
-        self.expected_response['wins']['export']['totals']['value']['unconfirmed'] = 500000
-        self.expected_response['wins']['export']['totals']['value']['grand_total'] = 500000
+        self.expected_response["wins"]["export"]["totals"]["number"]["unconfirmed"] = 5
+        self.expected_response["wins"]["export"]["totals"]["number"]["grand_total"] = 5
+        self.expected_response["wins"]["export"]["totals"]["value"]["unconfirmed"] = 500000
+        self.expected_response["wins"]["export"]["totals"]["value"]["grand_total"] = 500000
 
-        self.expected_response['wins']['export']['hvc']['number']['unconfirmed'] = 5
-        self.expected_response['wins']['export']['hvc']['number']['total'] = 5
-        self.expected_response['wins']['export']['hvc']['value']['unconfirmed'] = 500000
-        self.expected_response['wins']['export']['hvc']['value']['total'] = 500000
+        self.expected_response["wins"]["export"]["hvc"]["number"]["unconfirmed"] = 5
+        self.expected_response["wins"]["export"]["hvc"]["number"]["total"] = 5
+        self.expected_response["wins"]["export"]["hvc"]["value"]["unconfirmed"] = 500000
+        self.expected_response["wins"]["export"]["hvc"]["value"]["total"] = 500000
 
-        self.expected_response['wins']['non_export']['value']['unconfirmed'] = 11500
-        self.expected_response['wins']['non_export']['value']['total'] = 11500
-        self.expected_response['wins']['non_export']['number']['unconfirmed'] = 5
-        self.expected_response['wins']['non_export']['number']['total'] = 5
+        self.expected_response["wins"]["non_export"]["value"]["unconfirmed"] = 11500
+        self.expected_response["wins"]["non_export"]["value"]["total"] = 11500
+        self.expected_response["wins"]["non_export"]["number"]["unconfirmed"] = 5
+        self.expected_response["wins"]["non_export"]["number"]["total"] = 5
 
         self.assertResponse()
 
@@ -242,20 +243,20 @@ class HVCGroupDetailTestCase(MiApiViewsBaseTestCase):
             win = WinFactory(user=self.user, hvc=FuzzyChoice(GROUP_4_HVCS), sector=FuzzyChoice(TEAM_SECTORS))
             CustomerResponseFactory(win=win, agree_with_win=True)
 
-        self.expected_response['wins']['export']['hvc']['value']['confirmed'] = 500000
-        self.expected_response['wins']['export']['hvc']['value']['total'] = 500000
-        self.expected_response['wins']['export']['hvc']['number']['confirmed'] = 5
-        self.expected_response['wins']['export']['hvc']['number']['total'] = 5
+        self.expected_response["wins"]["export"]["hvc"]["value"]["confirmed"] = 500000
+        self.expected_response["wins"]["export"]["hvc"]["value"]["total"] = 500000
+        self.expected_response["wins"]["export"]["hvc"]["number"]["confirmed"] = 5
+        self.expected_response["wins"]["export"]["hvc"]["number"]["total"] = 5
 
-        self.expected_response['wins']['export']['totals']['value']['confirmed'] = 500000
-        self.expected_response['wins']['export']['totals']['value']['grand_total'] = 500000
-        self.expected_response['wins']['export']['totals']['number']['confirmed'] = 5
-        self.expected_response['wins']['export']['totals']['number']['grand_total'] = 5
+        self.expected_response["wins"]["export"]["totals"]["value"]["confirmed"] = 500000
+        self.expected_response["wins"]["export"]["totals"]["value"]["grand_total"] = 500000
+        self.expected_response["wins"]["export"]["totals"]["number"]["confirmed"] = 5
+        self.expected_response["wins"]["export"]["totals"]["number"]["grand_total"] = 5
 
-        self.expected_response['wins']['non_export']['value']['confirmed'] = 11500
-        self.expected_response['wins']['non_export']['value']['total'] = 11500
-        self.expected_response['wins']['non_export']['number']['confirmed'] = 5
-        self.expected_response['wins']['non_export']['number']['total'] = 5
+        self.expected_response["wins"]["non_export"]["value"]["confirmed"] = 11500
+        self.expected_response["wins"]["non_export"]["value"]["total"] = 11500
+        self.expected_response["wins"]["non_export"]["number"]["confirmed"] = 5
+        self.expected_response["wins"]["non_export"]["number"]["total"] = 5
 
         self.assertResponse()
 
@@ -271,22 +272,22 @@ class HVCGroupDetailTestCase(MiApiViewsBaseTestCase):
         for i in range(5):
             WinFactory(user=self.user, hvc=None, sector=FuzzyChoice(TEAM_SECTORS))
 
-        self.expected_response['wins']['export']['hvc']['value']['unconfirmed'] = 500000
-        self.expected_response['wins']['export']['hvc']['value']['total'] = 500000
-        self.expected_response['wins']['export']['hvc']['number']['unconfirmed'] = 5
-        self.expected_response['wins']['export']['hvc']['number']['total'] = 5
+        self.expected_response["wins"]["export"]["hvc"]["value"]["unconfirmed"] = 500000
+        self.expected_response["wins"]["export"]["hvc"]["value"]["total"] = 500000
+        self.expected_response["wins"]["export"]["hvc"]["number"]["unconfirmed"] = 5
+        self.expected_response["wins"]["export"]["hvc"]["number"]["total"] = 5
 
-        self.expected_response['wins']['export']['totals']['value']['confirmed'] = 0
-        self.expected_response['wins']['export']['totals']['value']['unconfirmed'] = 500000
-        self.expected_response['wins']['export']['totals']['value']['grand_total'] = 500000
-        self.expected_response['wins']['export']['totals']['number']['confirmed'] = 0
-        self.expected_response['wins']['export']['totals']['number']['unconfirmed'] = 5
-        self.expected_response['wins']['export']['totals']['number']['grand_total'] = 5
+        self.expected_response["wins"]["export"]["totals"]["value"]["confirmed"] = 0
+        self.expected_response["wins"]["export"]["totals"]["value"]["unconfirmed"] = 500000
+        self.expected_response["wins"]["export"]["totals"]["value"]["grand_total"] = 500000
+        self.expected_response["wins"]["export"]["totals"]["number"]["confirmed"] = 0
+        self.expected_response["wins"]["export"]["totals"]["number"]["unconfirmed"] = 5
+        self.expected_response["wins"]["export"]["totals"]["number"]["grand_total"] = 5
 
-        self.expected_response['wins']['non_export']['value']['unconfirmed'] = 11500
-        self.expected_response['wins']['non_export']['value']['total'] = 11500
-        self.expected_response['wins']['non_export']['number']['unconfirmed'] = 5
-        self.expected_response['wins']['non_export']['number']['total'] = 5
+        self.expected_response["wins"]["non_export"]["value"]["unconfirmed"] = 11500
+        self.expected_response["wins"]["non_export"]["value"]["total"] = 11500
+        self.expected_response["wins"]["non_export"]["number"]["unconfirmed"] = 5
+        self.expected_response["wins"]["non_export"]["number"]["total"] = 5
 
         self.assertResponse()
 
@@ -304,22 +305,22 @@ class HVCGroupDetailTestCase(MiApiViewsBaseTestCase):
             non_hvc_win = WinFactory(user=self.user, hvc=None, sector=FuzzyChoice(TEAM_SECTORS))
             CustomerResponseFactory(win=non_hvc_win, agree_with_win=True)
 
-        self.expected_response['wins']['export']['hvc']['value']['confirmed'] = 500000
-        self.expected_response['wins']['export']['hvc']['value']['total'] = 500000
-        self.expected_response['wins']['export']['hvc']['number']['confirmed'] = 5
-        self.expected_response['wins']['export']['hvc']['number']['total'] = 5
+        self.expected_response["wins"]["export"]["hvc"]["value"]["confirmed"] = 500000
+        self.expected_response["wins"]["export"]["hvc"]["value"]["total"] = 500000
+        self.expected_response["wins"]["export"]["hvc"]["number"]["confirmed"] = 5
+        self.expected_response["wins"]["export"]["hvc"]["number"]["total"] = 5
 
-        self.expected_response['wins']['export']['totals']['value']['confirmed'] = 500000
-        self.expected_response['wins']['export']['totals']['value']['unconfirmed'] = 0
-        self.expected_response['wins']['export']['totals']['value']['grand_total'] = 500000
-        self.expected_response['wins']['export']['totals']['number']['confirmed'] = 5
-        self.expected_response['wins']['export']['totals']['number']['unconfirmed'] = 0
-        self.expected_response['wins']['export']['totals']['number']['grand_total'] = 5
+        self.expected_response["wins"]["export"]["totals"]["value"]["confirmed"] = 500000
+        self.expected_response["wins"]["export"]["totals"]["value"]["unconfirmed"] = 0
+        self.expected_response["wins"]["export"]["totals"]["value"]["grand_total"] = 500000
+        self.expected_response["wins"]["export"]["totals"]["number"]["confirmed"] = 5
+        self.expected_response["wins"]["export"]["totals"]["number"]["unconfirmed"] = 0
+        self.expected_response["wins"]["export"]["totals"]["number"]["grand_total"] = 5
 
-        self.expected_response['wins']['non_export']['value']['confirmed'] = 11500
-        self.expected_response['wins']['non_export']['value']['total'] = 11500
-        self.expected_response['wins']['non_export']['number']['confirmed'] = 5
-        self.expected_response['wins']['non_export']['number']['total'] = 5
+        self.expected_response["wins"]["non_export"]["value"]["confirmed"] = 11500
+        self.expected_response["wins"]["non_export"]["value"]["total"] = 11500
+        self.expected_response["wins"]["non_export"]["number"]["confirmed"] = 5
+        self.expected_response["wins"]["non_export"]["number"]["total"] = 5
 
         self.assertResponse()
 
@@ -343,28 +344,28 @@ class HVCGroupDetailTestCase(MiApiViewsBaseTestCase):
         for i in range(5):
             WinFactory(user=self.user, hvc=None, sector=FuzzyChoice(TEAM_SECTORS))
 
-        self.expected_response['wins']['export']['hvc']['value']['confirmed'] = 500000
-        self.expected_response['wins']['export']['hvc']['number']['confirmed'] = 5
+        self.expected_response["wins"]["export"]["hvc"]["value"]["confirmed"] = 500000
+        self.expected_response["wins"]["export"]["hvc"]["number"]["confirmed"] = 5
 
-        self.expected_response['wins']['export']['hvc']['value']['unconfirmed'] = 500000
-        self.expected_response['wins']['export']['hvc']['number']['unconfirmed'] = 5
+        self.expected_response["wins"]["export"]["hvc"]["value"]["unconfirmed"] = 500000
+        self.expected_response["wins"]["export"]["hvc"]["number"]["unconfirmed"] = 5
 
-        self.expected_response['wins']['export']['hvc']['value']['total'] = 1000000
-        self.expected_response['wins']['export']['hvc']['number']['total'] = 10
+        self.expected_response["wins"]["export"]["hvc"]["value"]["total"] = 1000000
+        self.expected_response["wins"]["export"]["hvc"]["number"]["total"] = 10
 
-        self.expected_response['wins']['export']['totals']['value']['confirmed'] = 500000
-        self.expected_response['wins']['export']['totals']['value']['unconfirmed'] = 500000
-        self.expected_response['wins']['export']['totals']['value']['grand_total'] = 1000000
-        self.expected_response['wins']['export']['totals']['number']['confirmed'] = 5
-        self.expected_response['wins']['export']['totals']['number']['unconfirmed'] = 5
-        self.expected_response['wins']['export']['totals']['number']['grand_total'] = 10
+        self.expected_response["wins"]["export"]["totals"]["value"]["confirmed"] = 500000
+        self.expected_response["wins"]["export"]["totals"]["value"]["unconfirmed"] = 500000
+        self.expected_response["wins"]["export"]["totals"]["value"]["grand_total"] = 1000000
+        self.expected_response["wins"]["export"]["totals"]["number"]["confirmed"] = 5
+        self.expected_response["wins"]["export"]["totals"]["number"]["unconfirmed"] = 5
+        self.expected_response["wins"]["export"]["totals"]["number"]["grand_total"] = 10
 
-        self.expected_response['wins']['non_export']['value']['confirmed'] = 11500
-        self.expected_response['wins']['non_export']['value']['unconfirmed'] = 11500
-        self.expected_response['wins']['non_export']['value']['total'] = 23000
-        self.expected_response['wins']['non_export']['number']['confirmed'] = 5
-        self.expected_response['wins']['non_export']['number']['unconfirmed'] = 5
-        self.expected_response['wins']['non_export']['number']['total'] = 10
+        self.expected_response["wins"]["non_export"]["value"]["confirmed"] = 11500
+        self.expected_response["wins"]["non_export"]["value"]["unconfirmed"] = 11500
+        self.expected_response["wins"]["non_export"]["value"]["total"] = 23000
+        self.expected_response["wins"]["non_export"]["number"]["confirmed"] = 5
+        self.expected_response["wins"]["non_export"]["number"]["unconfirmed"] = 5
+        self.expected_response["wins"]["non_export"]["number"]["total"] = 10
 
         self.assertResponse()
 
@@ -400,7 +401,7 @@ class HVCGroupDetailTestCase(MiApiViewsBaseTestCase):
         response1.created = datetime.datetime(2016, 5, 3)
         response1.save()
 
-        self.assertEqual(self._api_response_data['avg_time_to_confirm'], 1.0)
+        self.assertEqual(self._api_response_data["avg_time_to_confirm"], 1.0)
 
     def test_hvc_group_detail_1_average_time_to_confirm_multiple_wins(self):
         """ Add few wins, HVC and non-HVC with different dates
@@ -448,7 +449,7 @@ class HVCGroupDetailTestCase(MiApiViewsBaseTestCase):
         for i in range(3):
             WinFactory(user=self.user, hvc=None, date=datetime.datetime(2016, 5, 1), sector=FuzzyChoice(TEAM_SECTORS))
 
-        self.assertEqual(self._api_response_data['avg_time_to_confirm'], 2.5)
+        self.assertEqual(self._api_response_data["avg_time_to_confirm"], 2.5)
 
 
 @freeze_time(MiApiViewsBaseTestCase.frozen_date)
@@ -456,7 +457,7 @@ class HVCGroupCampaignViewsTestCase(MiApiViewsBaseTestCase):
     """
     Tests covering `HVCGroup` Campaigns API endpoint
     """
-    url = reverse('mi:hvc_group_campaigns', kwargs={'group_id': 4})
+    url = reverse("mi:hvc_group_campaigns", kwargs={"group_id": 4}) + "?year=2016"
 
     expected_response = {}
 
@@ -521,7 +522,7 @@ class HVCGroupCampaignViewsTestCase(MiApiViewsBaseTestCase):
         self.expected_response["campaigns"] = campaigns
         self.expected_response["avg_time_to_confirm"] = 4.0
 
-        self.assertJSONEqual(self._api_response_json, self.expected_response)
+        self.assertResponse()
 
     def test_sector_team_campaigns_1_wins_for_all_hvcs_unconfirmed(self):
         """ Campaigns api for team 1, with wins for all HVCs"""
@@ -558,4 +559,4 @@ class HVCGroupCampaignViewsTestCase(MiApiViewsBaseTestCase):
 
         self.expected_response["campaigns"] = campaigns
 
-        self.assertJSONEqual(self._api_response_json, self.expected_response)
+        self.assertResponse()

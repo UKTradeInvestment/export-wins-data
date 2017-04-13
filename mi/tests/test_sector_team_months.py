@@ -4,6 +4,7 @@ import json
 from django.core.urlresolvers import reverse
 from freezegun import freeze_time
 
+from mi.models import FinancialYear
 from mi.tests.base_test_case import MiApiViewsBaseTestCase
 from mi.tests.test_sector_views import SectorTeamBaseTestCase
 
@@ -19,7 +20,7 @@ class SectorTeamMonthlyViewsTestCase(SectorTeamBaseTestCase):
     Tests covering SectorTeam Campaigns API endpoint
     """
 
-    url = reverse('mi:sector_team_months', kwargs={'team_id': 1})
+    url = reverse('mi:sector_team_months', kwargs={'team_id': 1}) + "?year=2016"
     expected_response = {}
 
     def setUp(self):
@@ -606,9 +607,7 @@ class SectorTeamMonthlyViewsTestCase(SectorTeamBaseTestCase):
         self._create_hvc_win(win_date=datetime.datetime(2016, 4, 1))
         self._create_hvc_win(win_date=datetime.datetime(2016, 5, 1))
 
-        api_response = self._get_api_response(self.url)
-
-        self.assertJSONEqual(api_response.content.decode("utf-8"), self.expected_response)
+        self.assertResponse()
 
     def test_sector_team_month_1_confirmed(self):
         """ Tests covering SectorTeam Campaigns API endpoint """
@@ -1174,9 +1173,7 @@ class SectorTeamMonthlyViewsTestCase(SectorTeamBaseTestCase):
                 }
             }
         ]
-        api_response = self._get_api_response(self.url)
-
-        self.assertJSONEqual(api_response.content.decode("utf-8"), self.expected_response)
+        self.assertResponse()
 
     def test_sector_team_month_1_some_wins_out_of_date(self):
         """ Check that out of date, wins that were added with date that is not within current financial year
@@ -1192,8 +1189,7 @@ class SectorTeamMonthlyViewsTestCase(SectorTeamBaseTestCase):
         for i in [1, 4, 8]:
             self._create_hvc_win(win_date=datetime.datetime(2017, i, 1))
 
-        api_response = self._get_api_response(self.url)
-        self.assertJSONEqual(api_response.content.decode("utf-8"), self.expected_response)
+            self.assertResponse()
 
     def test_months_no_wins(self):
         """
@@ -1204,7 +1200,8 @@ class SectorTeamMonthlyViewsTestCase(SectorTeamBaseTestCase):
         def _setup_empty_months_response():
             """ Helper to build response """
             self.expected_response["months"] = []
-            for item in month_iterator(get_financial_start_date()):
+            fin_year = FinancialYear.objects.get(id=2016)
+            for item in month_iterator(get_financial_start_date(fin_year)):
                 month_str = '{:d}-{:02d}'.format(*item)
                 self.expected_response["months"].append({
                     "date": month_str,
@@ -1262,9 +1259,8 @@ class SectorTeamMonthlyViewsTestCase(SectorTeamBaseTestCase):
                     }
                 })
 
-        api_response = self._get_api_response(self.url)
         _setup_empty_months_response()
-        self.assertJSONEqual(api_response.content.decode("utf-8"), self.expected_response)
+        self.assertResponse()
 
     def test_number_of_months_in_april(self):
         """
@@ -1274,7 +1270,7 @@ class SectorTeamMonthlyViewsTestCase(SectorTeamBaseTestCase):
         with freeze_time(self.fin_start_date):
             self._create_hvc_win(win_date=datetime.datetime(2016, 4, 1))
             api_response = self._get_api_response(self.url)
-            response_decoded = json.loads(api_response.content.decode("utf-8"))
+            response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
             self.assertEqual(len(response_decoded["months"]), 1)
 
     def test_number_of_months_in_april_confirmed(self):
@@ -1285,7 +1281,7 @@ class SectorTeamMonthlyViewsTestCase(SectorTeamBaseTestCase):
         with freeze_time(self.fin_start_date):
             self._create_hvc_win(win_date=datetime.datetime(2016, 4, 1), confirm=True)
             api_response = self._get_api_response(self.url)
-            response_decoded = json.loads(api_response.content.decode("utf-8"))
+            response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
             self.assertEqual(len(response_decoded["months"]), 1)
 
     def test_number_of_months_in_april_no_wins(self):
@@ -1295,7 +1291,7 @@ class SectorTeamMonthlyViewsTestCase(SectorTeamBaseTestCase):
         """
         with freeze_time(self.fin_start_date):
             api_response = self._get_api_response(self.url)
-            response_decoded = json.loads(api_response.content.decode("utf-8"))
+            response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
             self.assertEqual(len(response_decoded["months"]), 1)
 
     def test_number_of_months_in_march_with_wins(self):
@@ -1309,7 +1305,7 @@ class SectorTeamMonthlyViewsTestCase(SectorTeamBaseTestCase):
             for i in range(1, 3):
                 self._create_hvc_win(win_date=datetime.datetime(2017, i, 1))
             api_response = self._get_api_response(self.url)
-            response_decoded = json.loads(api_response.content.decode("utf-8"))
+            response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
             self.assertEqual(len(response_decoded["months"]), 12)
 
     def test_number_of_months_in_march_with_confirmed_wins(self):
@@ -1323,7 +1319,7 @@ class SectorTeamMonthlyViewsTestCase(SectorTeamBaseTestCase):
             for i in range(1, 3):
                 self._create_hvc_win(win_date=datetime.datetime(2017, i, 1), confirm=True)
             api_response = self._get_api_response(self.url)
-            response_decoded = json.loads(api_response.content.decode("utf-8"))
+            response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
             self.assertEqual(len(response_decoded["months"]), 12)
 
     def test_number_of_months_in_march_with_no_wins(self):
@@ -1333,7 +1329,7 @@ class SectorTeamMonthlyViewsTestCase(SectorTeamBaseTestCase):
         """
         with freeze_time(self.fin_end_date):
             api_response = self._get_api_response(self.url)
-            response_decoded = json.loads(api_response.content.decode("utf-8"))
+            response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
             self.assertEqual(len(response_decoded["months"]), 12)
 
     def test_number_of_months_in_april_non_hvc(self):
@@ -1344,7 +1340,7 @@ class SectorTeamMonthlyViewsTestCase(SectorTeamBaseTestCase):
         with freeze_time(self.fin_start_date):
             self._create_non_hvc_win(win_date=datetime.datetime(2016, 4, 1))
             api_response = self._get_api_response(self.url)
-            response_decoded = json.loads(api_response.content.decode("utf-8"))
+            response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
             self.assertEqual(len(response_decoded["months"]), 1)
 
     def test_number_of_months_in_march_with_wins_non_hvc(self):
@@ -1358,5 +1354,5 @@ class SectorTeamMonthlyViewsTestCase(SectorTeamBaseTestCase):
             for i in range(1, 3):
                 self._create_non_hvc_win(win_date=datetime.datetime(2017, i, 1))
             api_response = self._get_api_response(self.url)
-            response_decoded = json.loads(api_response.content.decode("utf-8"))
+            response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
             self.assertEqual(len(response_decoded["months"]), 12)

@@ -23,7 +23,6 @@ from mi.views.hvcgroup_views import (
     HVCGroupCampaignsView,
 )
 from mi.views.sector_views import (
-    AverageTimeToConfirmView,
     SectorTeamCampaignsView,
     SectorTeamDetailView,
     SectorTeamsListView,
@@ -61,5 +60,4 @@ urlpatterns = [
     url(r"^countries/(?P<country_id>\d+)/$", CountryDetailView.as_view()),
     url(r"^countries/wins/$", CountryWinsView.as_view()),
 
-    url(r"^avg_time_to_confirm/$", AverageTimeToConfirmView.as_view()),
 ]

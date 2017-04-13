@@ -18,7 +18,7 @@ class SectorTeamDetailViewsTestCase(MiApiViewsBaseTestCase):
     Tests covering SectorTeam overview and detail API endpoints
     """
 
-    url = reverse('mi:sector_team_detail', kwargs={'team_id': 1})
+    url = reverse('mi:sector_team_detail', kwargs={'team_id': 1}) + "?year=2016"
     expected_response = {}
 
     def setUp(self):
@@ -96,7 +96,7 @@ class SectorTeamDetailViewsTestCase(MiApiViewsBaseTestCase):
         }
 
     def test_no_sector_team(self):
-        no_sector_url = reverse('mi:sector_team_detail', kwargs={'team_id': 100})
+        no_sector_url = reverse('mi:sector_team_detail', kwargs={'team_id': 100}) + "?year=2016"
         no_sector_expected_response = {
             "error": "team not found"
         }

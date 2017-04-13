@@ -16,14 +16,14 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
     - hvc_groups.hvc_target_values: current, target_percentage
     """
     expected_response = {}
-    url = reverse('mi:sector_teams_overview')
+    url = reverse('mi:sector_teams_overview') + "?year=2016"
 
     def test_hvc_target_values_no_wins(self):
         """
         When no wins, hvc current export value, confirmed and unconfirmed wil be 0
         """
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['hvc']['current']['confirmed'], 0)
         self.assertEqual(team_1_data['values']['hvc']['current']['unconfirmed'], 0)
@@ -33,7 +33,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
         When no wins, hvc confirmed and unconfirmed target percentage will be 0
         """
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['hvc']['target_percent']['confirmed'], 0)
         self.assertEqual(team_1_data['values']['hvc']['target_percent']['unconfirmed'], 0)
@@ -47,7 +47,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
             self._create_hvc_win(hvc_code=hvc_code)
 
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['hvc']['current']['confirmed'], 0)
         self.assertEqual(team_1_data['values']['hvc']['current']['unconfirmed'], 1000000)
@@ -61,7 +61,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
             self._create_hvc_win(hvc_code=hvc_code)
 
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['hvc']['target_percent']['confirmed'], 0)
         self.assertEqual(team_1_data['values']['hvc']['target_percent']['unconfirmed'], 1.0)
@@ -74,7 +74,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
             self._create_non_hvc_win()
 
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['hvc']['current']['confirmed'], 0)
         self.assertEqual(team_1_data['values']['hvc']['current']['unconfirmed'], 0)
@@ -87,7 +87,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
             self._create_non_hvc_win()
 
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['hvc']['target_percent']['confirmed'], 0)
         self.assertEqual(team_1_data['values']['hvc']['target_percent']['unconfirmed'], 0)
@@ -101,7 +101,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
             self._create_non_hvc_win(confirm=True)
 
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['hvc']['current']['confirmed'], 0)
         self.assertEqual(team_1_data['values']['hvc']['current']['unconfirmed'], 0)
@@ -115,7 +115,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
             self._create_non_hvc_win(confirm=True)
 
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['hvc']['target_percent']['confirmed'], 0)
         self.assertEqual(team_1_data['values']['hvc']['target_percent']['unconfirmed'], 0)
@@ -129,7 +129,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
             self._create_hvc_win(hvc_code=hvc_code, export_value=self.CAMPAIGN_TARGET, confirm=True)
 
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
         current_value = target_value = self.CAMPAIGN_TARGET * len(self.TEAM_1_HVCS)
 
         self.assertEqual(team_1_data['values']['hvc']['current']['confirmed'], current_value)
@@ -145,7 +145,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
             self._create_hvc_win(hvc_code=hvc_code, export_value=self.CAMPAIGN_TARGET, confirm=True)
 
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['hvc']['target_percent']['confirmed'], 100)
         self.assertEqual(team_1_data['values']['hvc']['target_percent']['unconfirmed'], 0)
@@ -160,7 +160,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
             self._create_non_hvc_win(confirm=True)
 
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['hvc']['total_win_percent']['confirmed'], 50)
         self.assertEqual(team_1_data['values']['hvc']['total_win_percent']['unconfirmed'], 0)
@@ -171,7 +171,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
         and percentage must be 0 as well
         """
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['non_hvc']['current']['confirmed'], 0)
         self.assertEqual(team_1_data['values']['non_hvc']['current']['unconfirmed'], 0)
@@ -185,7 +185,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
             self._create_hvc_win(hvc_code=hvc_code)
 
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['non_hvc']['current']['confirmed'], 0)
         self.assertEqual(team_1_data['values']['non_hvc']['current']['unconfirmed'], 0)
@@ -199,7 +199,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
             self._create_non_hvc_win()
 
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['non_hvc']['current']['confirmed'], 0)
         self.assertEqual(team_1_data['values']['non_hvc']['current']['unconfirmed'], 1000000)
@@ -213,9 +213,9 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
         for _ in range(10):
             self._create_non_hvc_win(export_value=self.CAMPAIGN_TARGET, confirm=True)
 
-        current_value = target_value = self.CAMPAIGN_TARGET * 10
+        current_value = self.CAMPAIGN_TARGET * 10
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['non_hvc']['current']['confirmed'], current_value)
         self.assertEqual(team_1_data['values']['non_hvc']['current']['unconfirmed'], 0)
@@ -229,7 +229,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
             self._create_hvc_win(hvc_code=hvc_code, export_value=self.CAMPAIGN_TARGET, confirm=True)
 
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['non_hvc']['current']['confirmed'], 0)
         self.assertEqual(team_1_data['values']['non_hvc']['current']['unconfirmed'], 0)
@@ -239,7 +239,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
         When no wins, both confirmed and unconfirmed percent will be 0
         """
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['non_hvc']['total_win_percent']['confirmed'], 0)
         self.assertEqual(team_1_data['values']['non_hvc']['total_win_percent']['unconfirmed'], 0)
@@ -252,7 +252,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
             self._create_hvc_win(hvc_code=hvc_code)
 
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['non_hvc']['total_win_percent']['confirmed'], 0)
         self.assertEqual(team_1_data['values']['non_hvc']['total_win_percent']['unconfirmed'], 0)
@@ -265,7 +265,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
             self._create_non_hvc_win()
 
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['non_hvc']['total_win_percent']['confirmed'], 0)
         self.assertEqual(team_1_data['values']['non_hvc']['total_win_percent']['unconfirmed'], 100)
@@ -279,7 +279,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
             self._create_non_hvc_win(confirm=True)
 
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['non_hvc']['total_win_percent']['confirmed'], 100)
         self.assertEqual(team_1_data['values']['non_hvc']['total_win_percent']['unconfirmed'], 0)
@@ -293,7 +293,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
             self._create_hvc_win(hvc_code=hvc_code, export_value=self.CAMPAIGN_TARGET, confirm=True)
 
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['non_hvc']['total_win_percent']['confirmed'], 0)
         self.assertEqual(team_1_data['values']['non_hvc']['total_win_percent']['unconfirmed'], 0)
@@ -308,7 +308,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
             self._create_non_hvc_win(confirm=True)
 
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['non_hvc']['total_win_percent']['confirmed'], 50)
         self.assertEqual(team_1_data['values']['non_hvc']['total_win_percent']['unconfirmed'], 0)
@@ -318,7 +318,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
         When no wins, both confirmed and unconfirmed totals will be 0
         """
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['totals']['confirmed'], 0)
         self.assertEqual(team_1_data['values']['totals']['unconfirmed'], 0)
@@ -332,7 +332,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
             self._create_hvc_win(hvc_code=hvc_code)
 
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['totals']['confirmed'], 0)
         self.assertEqual(team_1_data['values']['totals']['unconfirmed'], 1000000)
@@ -346,7 +346,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
             self._create_non_hvc_win()
 
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['totals']['confirmed'], 0)
         self.assertEqual(team_1_data['values']['totals']['unconfirmed'], 1000000)
@@ -360,7 +360,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
             self._create_non_hvc_win(confirm=True)
 
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['totals']['confirmed'], 1000000)
         self.assertEqual(team_1_data['values']['totals']['unconfirmed'], 0)
@@ -374,7 +374,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
             self._create_hvc_win(hvc_code=hvc_code, export_value=self.CAMPAIGN_TARGET, confirm=True)
 
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['totals']['confirmed'], self.CAMPAIGN_TARGET * len(self.TEAM_1_HVCS))
         self.assertEqual(team_1_data['values']['totals']['unconfirmed'], 0)
@@ -389,7 +389,7 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
             self._create_non_hvc_win(confirm=True)
 
         api_response = self._get_api_response(self.url)
-        team_1_data = self._team_data(api_response.data, 1)
+        team_1_data = self._team_data(api_response.data["results"], 1)
 
         self.assertEqual(team_1_data['values']['totals']['confirmed'], 2000000)
         self.assertEqual(team_1_data['values']['totals']['unconfirmed'], 0)

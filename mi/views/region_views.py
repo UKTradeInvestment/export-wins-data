@@ -1,11 +1,7 @@
 from itertools import groupby
-from operator import attrgetter
+from operator import attrgetter, itemgetter
 
-from rest_framework.generics import ListAPIView
-
-from alice.authenticators import IsMIServer, IsMIUser
 from mi.models import OverseasRegion
-from mi.serializers import OverseasRegionSerializer
 from mi.utils import (
     get_financial_start_date,
     month_iterator,
@@ -58,23 +54,42 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
         }
 
 
-class OverseasRegionsListView(ListAPIView):
+class OverseasRegionsListView(BaseOverseasRegionsMIView):
     """ List all Overseas Regions """
-    permission_classes = (IsMIServer, IsMIUser)
-    queryset = OverseasRegion.objects.all()
-    serializer_class = OverseasRegionSerializer
+
+    def get(self, request):
+        response = self._handle_fin_year(request)
+        if response:
+            return response
+
+        if response:
+            return response
+
+        results = [
+            {
+                'id': region.id,
+                'name': region.name,
+            }
+            for region in OverseasRegion.objects.all()
+            ]
+        return self._success(sorted(results, key=itemgetter('name')))
 
 
 class OverseasRegionDetailView(BaseOverseasRegionsMIView):
     """ Overseas Region detail view along with win-breakdown"""
 
     def get(self, request, region_id):
+        response = self._handle_fin_year(request)
+        if response:
+            return response
+
         region = self._get_region(region_id)
         if not region:
             return self._invalid('region not found')
         results = self._region_result(region)
         wins = self._get_region_wins(region)
         results['wins'] = self._breakdowns(wins)
+        self._fill_date_ranges()
         return self._success(results=results)
 
 
@@ -101,7 +116,7 @@ class OverseasRegionMonthsView(BaseOverseasRegionsMIView):
             month_to_wins.append((date_str, month_wins))
 
         # Add missing months within the financial year until current month
-        for item in month_iterator(get_financial_start_date()):
+        for item in month_iterator(get_financial_start_date(self.fin_year)):
             date_str = '{:d}-{:02d}'.format(*item)
             existing = [m for m in month_to_wins if m[0] == date_str]
             if len(existing) == 0:
@@ -111,6 +126,9 @@ class OverseasRegionMonthsView(BaseOverseasRegionsMIView):
         return sorted(month_to_wins, key=lambda tup: tup[0])
 
     def get(self, request, region_id):
+        response = self._handle_fin_year(request)
+        if response:
+            return response
 
         region = self._get_region(region_id)
         if not region:
@@ -119,6 +137,7 @@ class OverseasRegionMonthsView(BaseOverseasRegionsMIView):
         results = self._region_result(region)
         wins = self._get_region_wins(region)
         results['months'] = self._month_breakdowns(wins)
+        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -140,6 +159,7 @@ class OverseasRegionCampaignsView(BaseOverseasRegionsMIView):
         return sorted_campaigns
 
     def get(self, request, region_id):
+        self._handle_fin_year(request)
 
         region = self._get_region(region_id)
         if not region:
@@ -147,6 +167,7 @@ class OverseasRegionCampaignsView(BaseOverseasRegionsMIView):
 
         results = self._region_result(region)
         results['campaigns'] = self._campaign_breakdowns(region)
+        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -154,12 +175,16 @@ class OverseasRegionsTopNonHvcWinsView(BaseOverseasRegionsMIView):
     """ Top n HVCs with win-breakdown for given Overseas Region"""
 
     def get(self, request, region_id):
+        response = self._handle_fin_year(request)
+        if response:
+            return response
         region = self._get_region(region_id)
         if not region:
             return self._invalid('region not found')
 
         non_hvc_wins_qs = self._get_region_non_hvc_wins(region)
         results = self._top_non_hvc(non_hvc_wins_qs)
+        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -212,5 +237,10 @@ class OverseasRegionOverviewView(BaseOverseasRegionsMIView):
         return result
 
     def get(self, request):
+        response = self._handle_fin_year(request)
+        if response:
+            return response
+
         result = [self._region_data(region) for region in OverseasRegion.objects.all()]
+        self._fill_date_ranges()
         return self._success(result)

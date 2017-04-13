@@ -2,25 +2,31 @@ from collections import defaultdict
 from itertools import groupby
 from operator import attrgetter, itemgetter
 
-from django.db.models import Min
-
-from mi.models import SectorTeam
+from mi.models import (
+    HVCGroup,
+    SectorTeam,
+)
 from mi.utils import (
     get_financial_start_date,
     month_iterator,
     sort_campaigns_by,
-    two_digit_float,
 )
 from mi.views.base_view import BaseWinMIView
-from wins.models import Notification
 
 
 class BaseSectorMIView(BaseWinMIView):
     """ Abstract Base for other Sector-related MI endpoints to inherit from """
 
+    def _hvc_groups_for_fin_year(self):
+        """ extracts hvc groups from targets for the given financial year """
+        return HVCGroup.objects.filter(targets__financial_year=self.fin_year).distinct()
+
+    def _sector_teams_for_fin_year(self):
+        """ Returns sector teams based on hvc groups from Targets for the given financial year """
+        return SectorTeam.objects.filter(hvc_groups__targets__financial_year=self.fin_year).distinct()
+
     def _get_team(self, team_id):
         """ Get SectorTeam object or False if invalid ID """
-
         try:
             return SectorTeam.objects.get(id=int(team_id))
         except SectorTeam.DoesNotExist:
@@ -71,40 +77,21 @@ class BaseSectorMIView(BaseWinMIView):
         }
 
 
+
 class TopNonHvcSectorCountryWinsView(BaseSectorMIView):
     """ Sector Team non-HVC Win data broken down by country """
 
     def get(self, request, team_id):
+        response = self._handle_fin_year(request)
+        if response:
+            return response
+
         team = self._get_team(team_id)
         if not team:
             return self._invalid('team not found')
         non_hvc_wins_qs = self._get_non_hvc_wins(team)
         results = self._top_non_hvc(non_hvc_wins_qs)
-        return self._success(results)
-
-
-class AverageTimeToConfirmView(BaseWinMIView):
-    """  Average number of days to confirm a Win """
-
-    average_time = 0.0
-
-    def get(self, request):
-        """
-            Average of (earliest CUSTOMER notification created date - customer response date)
-        """
-        notifications = Notification.objects.filter(
-            type__exact='c',
-            win__confirmation__created__isnull=False
-        ).annotate(Min('created')).select_related('win__confirmation')
-
-        confirm_delay = [(notification.win.confirmation.created - notification.created).days
-                         for notification in notifications]
-        total_days = sum(confirm_delay)
-        average_time = total_days / notifications.count()
-
-        results = {
-            'average': two_digit_float(average_time),
-        }
+        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -124,14 +111,18 @@ class SectorTeamsListView(BaseSectorMIView):
         return sorted(results, key=itemgetter('name'))
 
     def get(self, request):
+        response = self._handle_fin_year(request)
+        if response:
+            return response
+
         results = [
             {
                 'id': sector_team.id,
                 'name': sector_team.name,
                 'hvc_groups': self._get_hvc_groups_for_team(sector_team)
             }
-            for sector_team in SectorTeam.objects.all()
-        ]
+            for sector_team in self._sector_teams_for_fin_year()
+            ]
         return self._success(sorted(results, key=itemgetter('name')))
 
 
@@ -139,12 +130,16 @@ class SectorTeamDetailView(BaseSectorMIView):
     """ Sector Team name, targets and win-breakdown """
 
     def get(self, request, team_id):
+        response = self._handle_fin_year(request)
+        if response:
+            return response
         team = self._get_team(team_id)
         if not team:
             return self._invalid('team not found')
 
         results = self._sector_result(team)
         results['wins'] = self._team_wins_breakdown(team)
+        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -172,7 +167,7 @@ class SectorTeamMonthsView(BaseSectorMIView):
             month_to_wins.append((date_str, month_wins))
 
         # Add missing months within the financial year until current month
-        for item in month_iterator(get_financial_start_date()):
+        for item in month_iterator(get_financial_start_date(self.fin_year)):
             date_str = '{:d}-{:02d}'.format(*item)
             existing = [m for m in month_to_wins if m[0] == date_str]
             if len(existing) == 0:
@@ -181,6 +176,10 @@ class SectorTeamMonthsView(BaseSectorMIView):
         return sorted(month_to_wins, key=lambda tup: tup[0])
 
     def get(self, request, team_id):
+        response = self._handle_fin_year(request)
+        if response:
+            return response
+
         team = self._get_team(team_id)
         if not team:
             return self._invalid('team not found')
@@ -188,6 +187,7 @@ class SectorTeamMonthsView(BaseSectorMIView):
         results = self._sector_result(team)
         wins = self._get_all_wins(team)
         results['months'] = self._month_breakdowns(wins)
+        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -212,12 +212,18 @@ class SectorTeamCampaignsView(BaseSectorMIView):
         return sorted_campaigns
 
     def get(self, request, team_id):
+        response = self._handle_fin_year(request)
+        if response:
+            return response
+
+
         team = self._get_team(team_id)
         if not team:
             return self._invalid('team not found')
 
         results = self._sector_result(team)
         results['campaigns'] = self._campaign_breakdowns(team)
+        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -226,15 +232,6 @@ class SectorTeamsOverviewView(BaseSectorMIView):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # cache wins to avoid many queries
-        all_wins = self._wins()
-        self.hvc_to_wins = defaultdict(list)
-        self.sector_to_wins = defaultdict(list)
-        for win in all_wins:
-            if win.hvc:
-                self.hvc_to_wins[win.hvc].append(win)
-            else:
-                self.sector_to_wins[win.sector].append(win)
 
     def _get_cached_hvc_wins(self, charcodes):
         return [win
@@ -307,11 +304,27 @@ class SectorTeamsOverviewView(BaseSectorMIView):
         return result
 
     def get(self, request):
-        sector_team_qs = SectorTeam.objects.all().prefetch_related(
+        response = self._handle_fin_year(request)
+        if response:
+            return response
+
+        # cache wins to avoid many queries
+        all_wins = self._wins()
+        self.hvc_to_wins = defaultdict(list)
+        self.sector_to_wins = defaultdict(list)
+
+        for win in all_wins:
+            if win.hvc:
+                self.hvc_to_wins[win.hvc].append(win)
+            else:
+                self.sector_to_wins[win.sector].append(win)
+
+        sector_team_qs = self._sector_teams_for_fin_year().prefetch_related(
             'sectors',
             'targets',
             'hvc_groups',
             'hvc_groups__targets',
         )
         result = [self._sector_data(team) for team in sector_team_qs]
+        self._fill_date_ranges()
         return self._success(sorted(result, key=lambda x: (x['name'])))
