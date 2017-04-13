@@ -89,6 +89,7 @@ class OverseasRegionDetailView(BaseOverseasRegionsMIView):
         results = self._region_result(region)
         wins = self._get_region_wins(region)
         results['wins'] = self._breakdowns(wins)
+        self._fill_date_ranges()
         return self._success(results=results)
 
 

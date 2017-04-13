@@ -58,6 +58,7 @@ class HVCGroupDetailView(BaseHVCGroupMIView):
         results = self._group_result(group)
         wins = self._get_group_wins(group)
         results['wins'] = self._breakdowns(wins, include_non_hvc=False)
+        self._fill_date_ranges()
         return self._success(results)
 
 
