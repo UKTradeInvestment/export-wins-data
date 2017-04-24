@@ -56,7 +56,7 @@ class Country(models.Model):
     note that there may be few differences between DIT country names and django
     """
 
-    country = CountryField(unique=True)
+    country = CountryField()
     overseas_region = models.ForeignKey(
         OverseasRegion,
         related_name='countries',
@@ -95,7 +95,11 @@ class SectorTeam(models.Model):
     def fin_year_campaign_ids(self, fin_year):
         """ List of Campaign IDs of all HVCs belonging to the HVC Group, filtered by Financial Year """
 
-        return [t.campaign_id for t in self.targets.filtered(fin_year=fin_year)]
+        return [t.charcode for t in self.targets.filter(financial_year=fin_year)]
+
+    def fin_year_targets(self, fin_year):
+        """ `Target` objects of `SectorTeam`, filtered by `FinancialYear` """
+        return self.targets.filter(financial_year=fin_year)
 
 
 class ParentSector(models.Model):
@@ -140,7 +144,11 @@ class HVCGroup(models.Model):
     def fin_year_campaign_ids(self, fin_year):
         """ List of Campaign IDs of all HVCs belonging to the HVC Group, filtered by Financial Year """
 
-        return [t.campaign_id for t in self.targets.filtered(fin_year=fin_year)]
+        return [t.charcode for t in self.targets.filter(financial_year=fin_year)]
+
+    def fin_year_targets(self, fin_year):
+        """ `Target` objects of `HVCGroup`, filtered by `FinancialYear` """
+        return self.targets.filter(financial_year=fin_year)
 
 
 class Sector(models.Model):
@@ -181,15 +189,12 @@ class Target(models.Model):
         # don't want tight integration with win models...
         return HVC.objects.get(
             campaign_id=self.campaign_id,
-            financial_year=16,
+            financial_year=str(self.financial_year.id)[-2:],
         ).name
 
     @property
     def charcode(self):
         return self.campaign_id + str(self.financial_year.id)[-2:]
-
-    def for_fin_year(self, fin_year):
-        return self.objects.filter(financial_year=fin_year)
 
     def for_fin_year(self, fin_year):
         return self.objects.filter(financial_year=fin_year)

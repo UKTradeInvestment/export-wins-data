@@ -15,18 +15,20 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
 
     def _get_region(self, region_id):
         """ Return `OverseasRegion` object for the given region_id"""
-
         try:
             return OverseasRegion.objects.get(id=int(region_id))
         except OverseasRegion.DoesNotExist:
             return False
+
+    def _regions_for_fin_year(self):
+        """ Returns overseas region based on countries from Targets for the given financial year """
+        return OverseasRegion.objects.filter(countries__targets__financial_year=self.fin_year).distinct()
 
     def _get_region_wins(self, region):
         """
         All HVC and non-HVC wins for the `OverseasRegion`
 
         """
-
         return self._wins().filter(
             country__in=region.country_ids,
         )
@@ -70,7 +72,7 @@ class OverseasRegionsListView(BaseOverseasRegionsMIView):
                 'id': region.id,
                 'name': region.name,
             }
-            for region in OverseasRegion.objects.all()
+            for region in self._regions_for_fin_year()
             ]
         return self._success(sorted(results, key=itemgetter('name')))
 
