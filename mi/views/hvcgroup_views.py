@@ -1,5 +1,5 @@
 from itertools import groupby
-from operator import attrgetter
+from operator import attrgetter, itemgetter
 
 from mi.models import HVCGroup
 from mi.utils import (
@@ -22,8 +22,8 @@ class BaseHVCGroupMIView(BaseSectorMIView):
         """ Basic data about HVC Group - name & hvc's """
         return {
             'name': group.name,
-            'avg_time_to_confirm': self._average_confirm_time(win__hvc__in=group.campaign_ids),
-            'hvcs': self._hvc_overview(group.targets.all()),
+            'avg_time_to_confirm': self._average_confirm_time(win__hvc__in=group.fin_year_campaign_ids(self.fin_year)),
+            'hvcs': self._hvc_overview(group.fin_year_targets(fin_year=self.fin_year)),
         }
 
 
@@ -38,9 +38,9 @@ class HVCGroupsListView(BaseHVCGroupMIView):
                 'id': hvc_group.id,
                 'name': hvc_group.name,
             }
-            for hvc_group in HVCGroup.objects.all()
+            for hvc_group in self._hvc_groups_for_fin_year()
         ]
-        return self._success(results)
+        return self._success(sorted(results, key=itemgetter('name')))
 
 
 class HVCGroupDetailView(BaseHVCGroupMIView):
@@ -119,7 +119,7 @@ class HVCGroupCampaignsView(BaseHVCGroupMIView):
 
     def _campaign_breakdowns(self, group):
         wins = self._get_group_wins(group)
-        group_targets = group.targets.all()
+        group_targets = group.fin_year_targets(fin_year=self.fin_year)
         campaign_to_wins = self._group_wins_by_target(wins, group_targets)
         campaigns = [
             {
