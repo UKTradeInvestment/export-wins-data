@@ -44,14 +44,9 @@ class IsMIServer(IsServer):
 
 
 class IsMIUser(BasePermission):
-    """
-    Allows access only to MI users.
-    """
-
-    def is_member(self, user):
-        return user.groups.filter(name='mi_group').exists()
+    """ Allows access only to MI users """
 
     def has_permission(self, request, view):
         if settings.DEBUG and settings.API_DEBUG:
             return True
-        return request.user and request.user.is_authenticated() and self.is_member(request.user)
+        return request.mi_permission

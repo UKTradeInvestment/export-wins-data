@@ -1,8 +1,8 @@
 from rest_framework.generics import ListAPIView
 
-from alice.authenticators import IsMIServer, IsMIUser
 from mi.models import ParentSector, SectorTeam
 from mi.serializers import ParentSectorSerializer
+from mi.views.base_view import MI_PERMISSION_CLASSES
 from mi.views.sector_views import BaseSectorMIView
 
 
@@ -20,6 +20,6 @@ class ParentSectorListView(ListAPIView):
     """
     List of all Parent Sectors
     """
-    permission_classes = (IsMIServer, IsMIUser)
+    permission_classes = MI_PERMISSION_CLASSES
     queryset = SectorTeam.objects.all()
     serializer_class = ParentSectorSerializer

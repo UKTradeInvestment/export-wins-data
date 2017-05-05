@@ -1,14 +1,13 @@
-from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
-from django.test import TestCase, override_settings
+from django.test import override_settings
 
 from alice.tests.client import AliceClient
 from mi.models import OverseasRegion, SectorTeam, HVCGroup
-from users.factories import UserFactory
+from sso.models import ADFSUser
+from sso.tests import BaseSSOTestCase
 from wins.factories import HVCFactory
 
-
-class MIPermissionTestCase(TestCase):
+class MIPermissionTestCase(BaseSSOTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -20,19 +19,18 @@ class MIPermissionTestCase(TestCase):
         self.regions_list = reverse("mi:overseas_regions") + "?year=2016"
         self.hvc_groups_list = reverse("mi:hvc_groups") + "?year=2016"
 
-        self.alice_client = AliceClient()
+        # self.user = UserFactory.create()
+        # self.user.set_password("asdf")
+        # self.user.save()
 
-        self.user = UserFactory.create()
-        self.user.set_password("asdf")
-        self.user.save()
-
-    def _add_to_mi_group(self):
-        mi_group = Group.objects.get(name="mi_group")
-        mi_group.user_set.add(self.user)
+        # def _add_to_mi_group(self):
+        #     mi_group = Group.objects.get(name="mi_group")
+        #     mi_group.user_set.add(self.user)
 
     def _test_get_status(self, url, status, mi=False):
         if mi:
-            self._add_to_mi_group()
+            # self._add_to_mi_group()
+            self._login()
         response = self.alice_client.get(url)
         self.assertEqual(response.status_code, status)
 

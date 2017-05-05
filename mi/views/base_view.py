@@ -26,10 +26,13 @@ from mi.utils import (
 from wins.models import Notification, Win
 
 
+MI_PERMISSION_CLASSES = (IsMIServer, IsMIUser)
+
+
 class BaseMIView(APIView):
     """ Base view for other MI endpoints to inherit from """
 
-    permission_classes = (IsMIServer, IsMIUser)
+    permission_classes = MI_PERMISSION_CLASSES
     fin_year = None
     date_range = None
 
