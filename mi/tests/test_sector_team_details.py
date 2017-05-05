@@ -127,7 +127,7 @@ class SectorTeamDetailViewsTestCase(MiApiViewsBaseTestCase):
     def test_sector_team_detail_1_confirmed_wins(self):
         """ SectorTeam Details with confirmed HVC wins, all wins on same day """
         for i in range(5):
-            win = WinFactory(user=self.user, hvc=FuzzyChoice(self.TEAM_1_HVCS), confirmed=True,
+            win = WinFactory(user=self.user, hvc=FuzzyChoice(self.TEAM_1_HVCS),
                              sector=FuzzyChoice(self.TEAM_1_SECTORS))
             CustomerResponseFactory(win=win, agree_with_win=True)
 
