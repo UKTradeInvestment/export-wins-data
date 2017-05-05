@@ -1,8 +1,8 @@
-Django==1.9.13
+Django==1.10.7
 django-countries==3.4.1
-djangorestframework==3.3.3
+djangorestframework==3.6.2
 django-crispy-forms==1.6.0
-django-filter==0.13.0
+django-filter==1.0.2
 django_extensions==1.6.7
 gunicorn==19.5.0
 dj-database-url==0.4.1
