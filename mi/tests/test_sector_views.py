@@ -1,9 +1,10 @@
 import datetime
+from freezegun import freeze_time
+
 import json
 
 from django.core.urlresolvers import reverse
 from factory.fuzzy import FuzzyChoice, FuzzyDate
-from freezegun import freeze_time
 
 from mi.tests.base_test_case import MiApiViewsBaseTestCase
 from mi.utils import sort_campaigns_by
@@ -17,8 +18,13 @@ from wins.models import HVC
 
 
 class SectorTeamBaseTestCase(MiApiViewsBaseTestCase):
+    def _hvc_charcode(self, hvc_code, fin_year):
+        charcode = hvc_code + str(fin_year)[-2:]
+        return charcode
+
     def _create_win(self, hvc_code, sector_id=None, win_date=None, export_value=None,
-                    confirm=False, notify_date=None, response_date=None, country=None):
+                    confirm=False, notify_date=None, response_date=None, country=None,
+                    fin_year=2016):
         """ generic function creating `Win` """
         if not sector_id:
             sector_id = FuzzyChoice(self.TEAM_1_SECTORS)
@@ -26,13 +32,17 @@ class SectorTeamBaseTestCase(MiApiViewsBaseTestCase):
         if not win_date:
             win_date = datetime.datetime(2016, 5, 25)
 
-        win = WinFactory(user=self.user, hvc=hvc_code, sector=sector_id, date=win_date)
+        if hvc_code is not None:
+            win = WinFactory(user=self.user, hvc=hvc_code + str(fin_year)[-2:], sector=sector_id, date=win_date)
+        else:
+            win = WinFactory(user=self.user, sector=sector_id, date=win_date)
+        win.save()
 
-        if country:
+        if country is not None:
             win.country = country
             win.save()
 
-        if export_value:
+        if export_value is not None:
             win.total_expected_export_value = export_value
             win.save()
 
@@ -47,19 +57,24 @@ class SectorTeamBaseTestCase(MiApiViewsBaseTestCase):
             response = CustomerResponseFactory(win=win, agree_with_win=True)
             response.created = response_date
             response.save()
+        return win
 
     def _create_hvc_win(self, hvc_code=None, sector_id=None, win_date=None, export_value=None,
-                        confirm=False, notify_date=None, response_date=None):
+                        confirm=False, notify_date=None, response_date=None, fin_year=2016):
         """ creates a dummy HVC `Win`, confirmed or unconfirmed """
-        if not hvc_code:
-            hvc_code = FuzzyChoice(self.TEAM_1_HVCS)
+        if hvc_code is None:
+            hvc_code = FuzzyChoice(self.TEAM_1_HVCS).fuzz()
 
-        self._create_win(hvc_code, sector_id, win_date, export_value, confirm, notify_date, response_date)
+        return self._create_win(hvc_code=hvc_code, sector_id=sector_id, win_date=win_date,
+                                export_value=export_value, confirm=confirm, notify_date=notify_date,
+                                response_date=response_date, fin_year=fin_year)
 
-    def _create_non_hvc_win(self, sector_id=None, win_date=None, export_value=None,
-                            confirm=False, notify_date=None, response_date=None, country=None):
+    def _create_non_hvc_win(self, sector_id=None, win_date=None, export_value=None, confirm=False,
+                            notify_date=None, response_date=None, country=None, fin_year=2016):
         """ creates a dummy non-HVC `Win` using Factory, can be confirmed or unconfirmed """
-        self._create_win(None, sector_id, win_date, export_value, confirm, notify_date, response_date, country)
+        return self._create_win(hvc_code=None, sector_id=sector_id, win_date=win_date, export_value=export_value,
+                                confirm=confirm, notify_date=notify_date, response_date=response_date,
+                                country=country, fin_year=fin_year)
 
     def _team_data(self, teams_list, team_id=1):
         """ returns specific team's data dict out of overview response list """
@@ -331,7 +346,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
             percent = (export_value * 100) / self.CAMPAIGN_TARGET
             self._create_hvc_win(hvc_code=hvc_code, confirm=True, export_value=export_value,
                                  notify_date=datetime.datetime(2016, 5, 2), response_date=datetime.datetime(2016, 5, 6))
-            hvc = HVC.get_by_charcode(hvc_code)
+            hvc = HVC.objects.get(campaign_id=hvc_code)
 
             campaigns.append({
                 "campaign": hvc.campaign,
@@ -374,7 +389,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
             percent = (export_value * 100) / self.CAMPAIGN_TARGET
             self._create_hvc_win(hvc_code=hvc_code, export_value=export_value)
             count -= 1
-            hvc = HVC.get_by_charcode(hvc_code)
+            hvc = HVC.objects.get(campaign_id=hvc_code)
 
             campaigns.append({
                 "campaign": hvc.campaign,
@@ -529,7 +544,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
     def test_campaign_progress_colour_unconfirmed_wins_red(self):
         """ Given the 'Frozen datetime', progress colour will be Red if there are no confirmed wins """
         for _ in range(1, 11):
-            self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=100000)
+            self._create_hvc_win(hvc_code=self.TEST_CAMPAIGN_ID, export_value=100000)
 
         api_response = self._get_api_response(self.url)
         response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
@@ -538,7 +553,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
 
     def test_campaign_progress_colour_confirmed_wins_red(self):
         """ Given the 'Frozen datetime', progress colour will be Red if there are not enough confirmed wins """
-        self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=100000, confirm=True)
+        self._create_hvc_win(hvc_code=self.TEST_CAMPAIGN_ID, export_value=100000, confirm=True)
         api_response = self._get_api_response(self.url)
         response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
@@ -570,7 +585,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         if there only few confirmed wins to take runrate past 25% but still less than 45%
         """
         for _ in range(1, 3):
-            self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=1000000, confirm=True)
+            self._create_hvc_win(hvc_code=self.TEST_CAMPAIGN_ID, export_value=1000000, confirm=True)
 
         api_response = self._get_api_response(self.url)
         response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
@@ -580,7 +595,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
     def test_campaign_progress_confirmed_wins_50_green(self):
         """ Progress colour should be green if there are enough win to take runrate past 45% """
         for _ in range(1, 5):
-            self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=1000000, confirm=True)
+            self._create_hvc_win(hvc_code=self.TEST_CAMPAIGN_ID, export_value=1000000, confirm=True)
 
         api_response = self._get_api_response(self.url)
         response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
@@ -591,7 +606,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         """ Boundary Testing for Green:
         Progress colour should be green if there are enough win to take runrate past 45% """
         for _ in range(1, 11):
-            self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=263900, confirm=True)
+            self._create_hvc_win(hvc_code=self.TEST_CAMPAIGN_ID, export_value=263900, confirm=True)
 
         api_response = self._get_api_response(self.url)
         response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
@@ -604,7 +619,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         if there only few confirmed wins to take runrate past 25% but still less than 45%
         """
         for _ in range(1, 11):
-            self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=263777, confirm=True)
+            self._create_hvc_win(hvc_code=self.TEST_CAMPAIGN_ID, export_value=263777, confirm=True)
 
         api_response = self._get_api_response(self.url)
         response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
@@ -617,7 +632,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         if there only few confirmed wins to take runrate past 25% but still less than 45%
         """
         for _ in range(1, 11):
-            self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=146700, confirm=True)
+            self._create_hvc_win(hvc_code=self.TEST_CAMPAIGN_ID, export_value=146700, confirm=True)
 
         api_response = self._get_api_response(self.url)
         response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
@@ -627,7 +642,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
     def test_campaign_progress_confirmed_wins_24_red(self):
         """ Boundary testing for red: Anything less than 25% runrate of progress should be Red """
         for _ in range(1, 11):
-            self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=146516.5, confirm=True)
+            self._create_hvc_win(hvc_code=self.TEST_CAMPAIGN_ID, export_value=146516.5, confirm=True)
 
         api_response = self._get_api_response(self.url)
         response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
@@ -645,7 +660,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
     def test_campaign_progress_percent_unconfirmed_wins(self):
         """ Progress percentage will be 0, if there are no confirmed HVC wins """
         for _ in range(1, 11):
-            self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=100000)
+            self._create_hvc_win(hvc_code=self.TEST_CAMPAIGN_ID, export_value=100000)
 
         api_response = self._get_api_response(self.url)
         response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
@@ -655,7 +670,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
 
     def test_campaign_progress_percent_confirmed_wins_1(self):
         """ Test simple progress percent """
-        self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=100000, confirm=True)
+        self._create_hvc_win(hvc_code=self.TEST_CAMPAIGN_ID, export_value=100000, confirm=True)
         api_response = self._get_api_response(self.url)
         response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
@@ -687,7 +702,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
     def test_campaign_progress_percent_confirmed_wins_20(self):
         """ Check 20% progress percent """
         for _ in range(1, 3):
-            self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=1000000, confirm=True)
+            self._create_hvc_win(hvc_code=self.TEST_CAMPAIGN_ID, export_value=1000000, confirm=True)
 
         api_response = self._get_api_response(self.url)
         response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
@@ -729,7 +744,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
     def test_campaign_hvc_number_unconfirmed_wins(self):
         """ Check HVC number with unconfirmed HVC wins """
         for _ in range(1, 11):
-            self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=100000, confirm=False)
+            self._create_hvc_win(hvc_code=self.TEST_CAMPAIGN_ID, export_value=100000, confirm=False)
         api_response = self._get_api_response(self.url)
         response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
@@ -740,7 +755,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
     def test_campaign_hvc_number_confirmed_wins(self):
         """ Check HVC number with confirmed HVC wins """
         for _ in range(1, 11):
-            self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=100000, confirm=True)
+            self._create_hvc_win(hvc_code=self.TEST_CAMPAIGN_ID, export_value=100000, confirm=True)
         api_response = self._get_api_response(self.url)
         response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
@@ -751,9 +766,9 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
     def test_campaign_hvc_number_mixed_wins(self):
         """ Check HVC numbers with both confirmed and unconfirmed HVC wins """
         for _ in range(1, 11):
-            self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=100000, confirm=False)
+            self._create_hvc_win(hvc_code=self.TEST_CAMPAIGN_ID, export_value=100000, confirm=False)
         for _ in range(1, 11):
-            self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=100000, confirm=True)
+            self._create_hvc_win(hvc_code=self.TEST_CAMPAIGN_ID, export_value=100000, confirm=True)
         api_response = self._get_api_response(self.url)
         response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
@@ -795,7 +810,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
     def test_campaign_hvc_value_unconfirmed_wins(self):
         """ Check HVC value when there are unconfirmed wins """
         for _ in range(1, 11):
-            self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=100000, confirm=False)
+            self._create_hvc_win(hvc_code=self.TEST_CAMPAIGN_ID, export_value=100000, confirm=False)
         api_response = self._get_api_response(self.url)
         response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
@@ -806,7 +821,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
     def test_campaign_hvc_value_confirmed_wins(self):
         """ Check HVC value when there are confirmed wins """
         for _ in range(1, 11):
-            self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=100000, confirm=True)
+            self._create_hvc_win(hvc_code=self.TEST_CAMPAIGN_ID, export_value=100000, confirm=True)
         api_response = self._get_api_response(self.url)
         response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)
@@ -817,9 +832,9 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
     def test_campaign_hvc_value_mixed_wins(self):
         """ Check HVC value when there are both confirmed and unconfirmed wins """
         for _ in range(1, 11):
-            self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=100000, confirm=False)
+            self._create_hvc_win(hvc_code=self.TEST_CAMPAIGN_ID, export_value=100000, confirm=False)
         for _ in range(1, 11):
-            self._create_hvc_win(hvc_code=self.TEST_CHARCODE, export_value=100000, confirm=True)
+            self._create_hvc_win(hvc_code=self.TEST_CAMPAIGN_ID, export_value=100000, confirm=True)
         api_response = self._get_api_response(self.url)
         response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         campaign_data = self._campaign_data(response_decoded["campaigns"], self.TEST_CAMPAIGN_ID)

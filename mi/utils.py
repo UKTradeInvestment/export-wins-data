@@ -16,23 +16,16 @@ def _today():
     return datetime.today()
 
 
-def get_financial_start_date(fin_year):
-    """ Returns financial year start date for a given financial year. """
-    return datetime(fin_year.id, 4, 1)
-
-
-def get_financial_end_date(fin_year):
-    """ Returns financial year end date for a given financial year. """
-    return datetime(fin_year.id + 1, 3, 31)
-
-
-def month_iterator(start_date, end_date=None):
+def month_iterator(fin_year):
     """
-    Helper generator function to iterate through (year, month) between given dates,
-    both dates' months inclusive
+    Helper generator function to iterate through (year, month) in a given `FinancialYear`
     """
-    if not end_date:
-        end_date = _today()
+    start_date = fin_year.start
+    if fin_year.is_current:
+        end_date = datetime.today()
+    else:
+        end_date = fin_year.end
+
     start_month = start_date.month - 1
     start_year = start_date.year
     end_month = end_date.month
@@ -77,14 +70,10 @@ def percentage_formatted(part, total):
     return two_digit_float(percentage(part, total)) or 0
 
 
-def lookup(dict, key, *keys):
+def lookup(dictionary, key, *keys):
     """
     Helper to lookup a key or nested keys within a dictionary
-    :param dict:
-    :param key:
-    :param keys:
-    :return:
     """
     if keys:
-        return lookup(dict.get(key, {}), *keys)
-    return dict.get(key)
+        return lookup(dictionary.get(key, {}), *keys)
+    return dictionary.get(key)

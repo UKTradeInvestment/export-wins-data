@@ -6,8 +6,9 @@ import time
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Count, Sum, Q
-from django_countries.fields import Country as DjangoCountry
+from django.utils import timezone
 
+from django_countries.fields import Country as DjangoCountry
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -19,13 +20,10 @@ from mi.models import (
 )
 from mi.utils import (
     average,
-    get_financial_start_date,
-    get_financial_end_date,
     percentage,
     percentage_formatted,
 )
 from wins.models import Notification, Win
-
 
 
 class BaseMIView(APIView):
@@ -51,26 +49,25 @@ class BaseMIView(APIView):
             return self._not_found()
 
     def _date_range_start(self):
-        """ 
+        """
         Financial year start date, as datetime, is returned
         """
-        return datetime.combine(get_financial_start_date(self.fin_year), datetime.min.time())
+        return datetime.combine(self.fin_year.start, datetime.min.time())
 
     def _date_range_end(self):
         """
         If fin_year is not current one, current datetime is returned
         Else financial year end date, as datetime, is returned
         """
-        fin_year_end_date = get_financial_end_date(self.fin_year)
-        if datetime.today() < fin_year_end_date:
+        if datetime.today() < self.fin_year.end:
             return datetime.utcnow()
         else:
-            return datetime.combine(fin_year_end_date, datetime.max.time())
+            return datetime.combine(self.fin_year.end, datetime.max.time())
 
     def _fill_date_ranges(self):
         """
-        This sets up date_range for response using _date_range_start 
-        and _date_range_end functions, as epoch 
+        This sets up date_range for response using _date_range_start
+        and _date_range_end functions, as epoch
         """
         self.date_range = {
             "start": int(self._date_range_start().timestamp()),
@@ -120,36 +117,92 @@ class BaseWinMIView(BaseMIView):
     non_export_confirm_cu_number = non_export_confirm_cu_value = non_export_non_cu_number = non_export_non_cu_value = 0
 
     def _wins(self):
-        """ Helper for returning Wins used by all Endpoints """
+        """ Return queryset of Wins used by all Endpoints
 
-        return Win.objects.filter(
-            date__range=(
-                get_financial_start_date(self.fin_year),
-                get_financial_end_date(self.fin_year),
-            ),
-        ).select_related('confirmation')
+        All endpoints should derive their Wins from this single source of
+        truth.
+
+        See `_win_status` for specifics of how these Wins are used.
+
+        Note that we could filter Wins that the customer has responded to
+        here in order to exclude rejected Wins for 2017/18, but choose to do
+        it in `_win_status` so that we can later include data on rejected
+        Wins.
+
+        """
+
+        # get Wins where the customer responded in the given FY
+        win_filter = Q(confirmation__created__range=(
+            self.fin_year.start,
+            self.fin_year.end,
+        ))
+
+        # if we're in the current FY, also include unconfirmed Wins
+        # todo - does the business want a time limit on these?
+        if self.fin_year.is_current:
+            win_filter = win_filter | Q(
+                confirmation__isnull=True,
+            )
+
+        return Win.objects.filter(win_filter).select_related('confirmation')
 
     def _non_hvc_wins(self):
         return self._wins().filter(Q(hvc__isnull=True) | Q(hvc=''))
 
+    def _win_status(self, win):
+        """ Determine if Win is confirmed, unconfirmed or rejected
+
+        If Win has had notification sent, but no response, it is unconfirmed
+        and belongs in current FY, since confirmation can only happen in
+        current FY.
+
+        Note wins can only be unconfirmed in current FY, since they can only
+        be confirmed in current FY.
+
+        If Win is in 2016/17 FY, it is confirmed if the customer has
+        responded, while if it is in subsequent FY it is confirmed only if
+        customer has explicitly agreed, else it is rejected.
+
+
+        """
+
+        if not win.confirmed:
+            return 'unconfirmed'
+
+        start_of_2017_fy = datetime(
+            year=2017,
+            month=4,
+            day=1,
+            tzinfo=timezone.utc,
+        )
+        if win.confirmation.created < start_of_2017_fy:
+            return 'confirmed'
+        else:
+            if win.confirmation.agree_with_win:
+                return 'confirmed'
+            else:
+                return 'rejected'
+
     def _colours(self, hvc_wins, targets):
-        """
-        Determine colour of all HVCs
+        """ Determine colour of all HVCs based on progress toward target
 
-        Return a dict of status colour counts e.g. {'red': 3, 'amber': 2, 'green': 4, 'zero': 2}
+        Return a dict of status colour counts e.g.
+        {'red': 3, 'amber': 2, 'green': 4, 'zero': 2}
 
         """
+
+        # initialize with default
         colours = {
             'red': 0,
             'amber': 0,
             'green': 0,
-            'zero': 0
+            'zero': 0,
         }
 
         hvc_colours = []
         for t in targets:
             target_wins = [win for win in hvc_wins if win.hvc == t.charcode]
-            current_val = sum(win.total_expected_export_value for win in target_wins if win.confirmed)
+            current_val, _ = self._confirmed_unconfirmed(target_wins)
             hvc_colours.append(self._get_status_colour(t.target, current_val))
 
         colours.update(dict(Counter(hvc_colours)))
@@ -191,7 +244,7 @@ class BaseWinMIView(BaseMIView):
         unconfirmed = percentage_formatted(unconfirmed, total_target)
         return {
             'confirmed': confirmed,
-            'unconfirmed': unconfirmed
+            'unconfirmed': unconfirmed,
         }
 
     def _overview_win_percentages(self, hvc_wins, non_hvc_wins):
@@ -231,7 +284,7 @@ class BaseWinMIView(BaseMIView):
         If in case of previous ones, just return 365
         """
 
-        days_into_year = (datetime.today() - get_financial_start_date(self.fin_year)).days
+        days_into_year = (datetime.today() - self.fin_year.start).days
 
         if days_into_year > 365:
             return 365
@@ -284,10 +337,13 @@ class BaseWinMIView(BaseMIView):
             else:
                 value = win.total_expected_export_value
 
-            if win.confirmed:
+            win_status = self._win_status(win)
+            if win_status == 'confirmed':
                 confirmed.append(value)
-            else:
+            elif win_status == 'unconfirmed':
                 unconfirmed.append(value)
+            elif win_status == 'rejected':
+                pass  # todo
 
         return {
             'value': {
@@ -395,22 +451,29 @@ class BaseWinMIView(BaseMIView):
 
         for win in wins:
             export_value = win.total_expected_export_value
+            win_status = self._win_status(win)
             if win.hvc:
-                if win.confirmed:
+                if win_status == 'confirmed':
                     hvc_confirmed.append(export_value)
-                else:
+                elif win_status == 'unconfirmed':
                     hvc_unconfirmed.append(export_value)
+                elif win_status == 'rejected':
+                    pass  # todo
             else:
-                if win.confirmed:
+                if win_status == 'confirmed':
                     non_hvc_confirmed.append(export_value)
-                else:
+                elif win_status == 'unconfirmed':
                     non_hvc_unconfirmed.append(export_value)
+                elif win_status == 'rejected':
+                    pass  # todo
 
             non_export_value = win.total_expected_non_export_value
-            if win.confirmed:
+            if win_status == 'confirmed':
                 non_export_confirmed.append(non_export_value)
-            else:
+            elif win_status == 'unconfirmed':
                 non_export_unconfirmed.append(non_export_value)
+            elif win_status == 'rejected':
+                pass  # todo
 
         # these store cumulative values of each month (see class definition)
         self.hvc_confirm_cu_number += len(hvc_confirmed)
@@ -507,8 +570,8 @@ class BaseWinMIView(BaseMIView):
     def _confirmed_unconfirmed(self, wins):
         """ Find total Confirmed & Unconfirmed export value for given Wins """
 
-        confirmed = sum(w.total_expected_export_value for w in wins if w.confirmed)
-        unconfirmed = sum(w.total_expected_export_value for w in wins if not w.confirmed)
+        confirmed = sum(w.total_expected_export_value for w in wins if self._win_status(w) == 'confirmed')
+        unconfirmed = sum(w.total_expected_export_value for w in wins if self._win_status(w) == 'unconfirmed')
         return confirmed, unconfirmed
 
     def _top_non_hvc(self, non_hvc_wins_qs, records_to_retreive=5):

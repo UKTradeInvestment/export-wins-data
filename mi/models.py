@@ -1,3 +1,5 @@
+import datetime
+
 from django.db import models
 
 from django_countries.fields import CountryField
@@ -169,6 +171,43 @@ class FinancialYear(models.Model):
 
     def __str__(self):
         return self.description
+
+    @classmethod
+    def current_fy(cls):
+        now = datetime.datetime.now()
+        if now.month < 4:
+            return now.year - 1
+        return now.year
+
+    @classmethod
+    def get_financial_start_date(cls, fin_year):
+        """ Returns financial year start date for a given financial year
+
+        Pass e.g. 2016 for the 2016/17 financial year
+
+        """
+        return datetime.datetime(fin_year, 4, 1)
+
+    @classmethod
+    def get_financial_end_date(cls, fin_year):
+        """ Returns financial year end date for a given financial year
+
+        Pass e.g. 2016 for the 2016/17 financial year
+
+        """
+        return datetime.datetime(fin_year + 1, 3, 31)
+
+    @property
+    def start(self):
+        return FinancialYear.get_financial_start_date(self.id)
+
+    @property
+    def end(self):
+        return FinancialYear.get_financial_end_date(self.id)
+
+    @property
+    def is_current(self):
+        return self.id == FinancialYear.current_fy()
 
 
 class Target(models.Model):

@@ -33,25 +33,25 @@ class SectorTeamNewFinancialYearTestCase(SectorTeamBaseTestCase):
         for _ in range(batch):
             # add an unconfirmed hvc win
             random_date = self._random_date_in_fy(fin_year)
-            self._create_hvc_win(win_date=random_date)
+            self._create_hvc_win(win_date=random_date, fin_year=fin_year)
 
             # add a confirmed hvc win
             random_date = self._random_date_in_fy(fin_year)
-            self._create_hvc_win(confirm=True,
-                                 win_date=random_date,
+            self._create_hvc_win(confirm=True, win_date=random_date,
                                  notify_date=random_date + datetime.timedelta(days=2),
-                                 response_date=random_date + datetime.timedelta(days=3))
+                                 response_date=random_date + datetime.timedelta(days=3),
+                                 fin_year=fin_year)
 
             # add an unconfirmed non-hvc win
             random_date = self._random_date_in_fy(fin_year)
-            self._create_non_hvc_win(win_date=random_date)
+            self._create_non_hvc_win(win_date=random_date, fin_year=fin_year)
 
             # add a confirmed non_hvc win
             random_date = self._random_date_in_fy(fin_year)
-            self._create_non_hvc_win(confirm=True,
-                                     win_date=random_date,
+            self._create_non_hvc_win(confirm=True, win_date=random_date,
                                      notify_date=random_date + datetime.timedelta(days=2),
-                                     response_date=random_date + datetime.timedelta(days=3))
+                                     response_date=random_date + datetime.timedelta(days=3),
+                                     fin_year=fin_year)
 
     def _test_values_across_fy(self, url, check_func, *args):
         """
@@ -86,7 +86,7 @@ class SectorTeamNewFinancialYearTestCase(SectorTeamBaseTestCase):
         self.assertTrue(any(team["name"] == "Consumer & Creative" for team in sector_team_list_16))
         self.assertFalse(any(team["name"] == "Creative, Consumer and Sports" for team in sector_team_list_16))
 
-    def test_sector_details(self):
+    def _test_sector_details(self):
         """ Check Sector details are loaded as expected in new FY """
 
         def check_values(response, relate):
@@ -105,7 +105,7 @@ class SectorTeamNewFinancialYearTestCase(SectorTeamBaseTestCase):
         self._add_test_data_for_fy(fin_year=2017, batch=10)
         self._test_values_across_fy(self.detail_url_16, check_values, gt)
 
-    def test_sector_monthly(self):
+    def _test_sector_monthly(self):
         """ Check Sector team overview is loaded as expected in new FY """
 
         def check_values(response, relate):
@@ -123,7 +123,7 @@ class SectorTeamNewFinancialYearTestCase(SectorTeamBaseTestCase):
         self._add_test_data_for_fy(fin_year=2017, batch=10)
         self._test_values_across_fy(self.months_url_16, check_values, gt)
 
-    def test_sector_non_hvc_wins(self):
+    def _test_sector_non_hvc_wins(self):
         """ Check Sector team top non-hvcs is loaded as expected in new FY """
 
         def check_values(response, relate):
@@ -161,7 +161,7 @@ class SectorTeamNewFinancialYearTestCase(SectorTeamBaseTestCase):
             self.assertEqual(team_1_data_old, team_1_data_new)
             check_func(team_1_data_new, *args)
 
-    def test_sector_overview(self):
+    def _test_sector_overview(self):
         """ Check Sector team overview is loaded as expected in new FY """
 
         def check_values(response, relate):

@@ -1,19 +1,18 @@
 import datetime
 
 from django.core.urlresolvers import reverse
-from factory.fuzzy import FuzzyChoice
 from freezegun import freeze_time
 
 from mi.tests.base_test_case import MiApiViewsBaseTestCase
+from mi.tests.test_sector_views import SectorTeamBaseTestCase
 from wins.factories import (
     CustomerResponseFactory,
     NotificationFactory,
-    WinFactory,
 )
 
 
 @freeze_time(MiApiViewsBaseTestCase.frozen_date)
-class SectorTeamDetailViewsTestCase(MiApiViewsBaseTestCase):
+class SectorTeamDetailViewsTestCase(SectorTeamBaseTestCase):
     """
     Tests covering SectorTeam overview and detail API endpoints
     """
@@ -106,7 +105,7 @@ class SectorTeamDetailViewsTestCase(MiApiViewsBaseTestCase):
     def test_sector_team_detail_1_unconfirmed_wins(self):
         """ SectorTeam Details with unconfirmed HVC wins, all wins on same day """
         for i in range(5):
-            WinFactory(user=self.user, hvc=FuzzyChoice(self.TEAM_1_HVCS), sector=FuzzyChoice(self.TEAM_1_SECTORS))
+            self._create_hvc_win()
 
         self.expected_response['wins']['export']['hvc']['value']['unconfirmed'] = 500000
         self.expected_response['wins']['export']['hvc']['value']['total'] = 500000
@@ -127,9 +126,9 @@ class SectorTeamDetailViewsTestCase(MiApiViewsBaseTestCase):
     def test_sector_team_detail_1_confirmed_wins(self):
         """ SectorTeam Details with confirmed HVC wins, all wins on same day """
         for i in range(5):
-            win = WinFactory(user=self.user, hvc=FuzzyChoice(self.TEAM_1_HVCS),
-                             sector=FuzzyChoice(self.TEAM_1_SECTORS))
-            CustomerResponseFactory(win=win, agree_with_win=True)
+            self._create_hvc_win(confirm=True, win_date=datetime.datetime(2016, 5, 1),
+                                 notify_date=datetime.datetime(2016, 5, 1),
+                                 response_date=datetime.datetime(2016, 5, 1))
 
         self.expected_response['wins']['export']['hvc']['value']['confirmed'] = 500000
         self.expected_response['wins']['export']['hvc']['value']['total'] = 500000
@@ -151,10 +150,10 @@ class SectorTeamDetailViewsTestCase(MiApiViewsBaseTestCase):
     def test_sector_team_detail_1_hvc_nonhvc_unconfirmed(self):
         """ SectorTeam Details with unconfirmed wins both HVC and non-HVC, all wins on same day """
         for i in range(5):
-            WinFactory(user=self.user, hvc=FuzzyChoice(self.TEAM_1_HVCS), sector=FuzzyChoice(self.TEAM_1_SECTORS))
+            self._create_hvc_win()
 
         for i in range(5):
-            WinFactory(user=self.user, hvc=None, sector=FuzzyChoice(self.TEAM_1_SECTORS))
+            self._create_non_hvc_win()
 
         self.expected_response['wins']['export']['hvc']['value']['unconfirmed'] = 500000
         self.expected_response['wins']['export']['hvc']['value']['total'] = 500000
@@ -183,7 +182,7 @@ class SectorTeamDetailViewsTestCase(MiApiViewsBaseTestCase):
     def test_sector_team_detail_1_nonhvc_empty_hvc(self):
         """ SectorTeam Details with unconfirmed wins non-HVC, where HVC is empty string instead of None """
         for i in range(5):
-            WinFactory(user=self.user, hvc='', sector=FuzzyChoice(self.TEAM_1_SECTORS))
+            self._create_non_hvc_win()
 
         self.expected_response['wins']['export']['hvc']['value']['unconfirmed'] = 0
         self.expected_response['wins']['export']['hvc']['value']['total'] = 0
@@ -212,13 +211,14 @@ class SectorTeamDetailViewsTestCase(MiApiViewsBaseTestCase):
     def test_sector_team_detail_1_hvc_nonhvc_confirmed(self):
         """ SectorTeam Details with confirmed wins both HVC and non-HVC, all wins on same day """
         for i in range(5):
-            hvc_win = WinFactory(user=self.user, hvc=FuzzyChoice(self.TEAM_1_HVCS),
-                                 sector=FuzzyChoice(self.TEAM_1_SECTORS))
-            CustomerResponseFactory(win=hvc_win, agree_with_win=True)
+            self._create_hvc_win(confirm=True, win_date=datetime.datetime(2016, 5, 1),
+                                 notify_date=datetime.datetime(2016, 5, 1),
+                                 response_date=datetime.datetime(2016, 5, 1))
 
         for i in range(5):
-            non_hvc_win = WinFactory(user=self.user, hvc=None, sector=FuzzyChoice(self.TEAM_1_SECTORS))
-            CustomerResponseFactory(win=non_hvc_win, agree_with_win=True)
+            self._create_non_hvc_win(confirm=True, win_date=datetime.datetime(2016, 5, 1),
+                                     notify_date=datetime.datetime(2016, 5, 1),
+                                     response_date=datetime.datetime(2016, 5, 1))
 
         self.expected_response['wins']['export']['hvc']['value']['confirmed'] = 500000
         self.expected_response['wins']['export']['hvc']['value']['total'] = 500000
@@ -247,19 +247,20 @@ class SectorTeamDetailViewsTestCase(MiApiViewsBaseTestCase):
     def test_sector_team_detail_1_hvc_nonhvc_confirmed_unconfirmed(self):
         """ SectorTeam Details with confirmed wins both HVC and non-HVC, all wins on same day """
         for i in range(5):
-            hvc_win = WinFactory(user=self.user, hvc=FuzzyChoice(self.TEAM_1_HVCS),
-                                 sector=FuzzyChoice(self.TEAM_1_SECTORS))
-            CustomerResponseFactory(win=hvc_win, agree_with_win=True)
+            self._create_hvc_win(confirm=True, win_date=datetime.datetime(2016, 5, 1),
+                                 notify_date=datetime.datetime(2016, 5, 2),
+                                 response_date=datetime.datetime(2016, 5, 2))
 
         for i in range(5):
-            non_hvc_win = WinFactory(user=self.user, hvc=None, sector=FuzzyChoice(self.TEAM_1_SECTORS))
-            CustomerResponseFactory(win=non_hvc_win, agree_with_win=True)
+            self._create_non_hvc_win(confirm=True, win_date=datetime.datetime(2016, 5, 1),
+                                     notify_date=datetime.datetime(2016, 5, 2),
+                                     response_date=datetime.datetime(2016, 5, 2))
 
         for i in range(5):
-            WinFactory(user=self.user, hvc=FuzzyChoice(self.TEAM_1_HVCS), sector=FuzzyChoice(self.TEAM_1_SECTORS))
+            self._create_hvc_win()
 
         for i in range(5):
-            WinFactory(user=self.user, hvc=None, sector=FuzzyChoice(self.TEAM_1_SECTORS))
+            self._create_non_hvc_win()
 
         self.expected_response['wins']['export']['hvc']['value']['confirmed'] = 500000
         self.expected_response['wins']['export']['hvc']['number']['confirmed'] = 5
@@ -297,7 +298,7 @@ class SectorTeamDetailViewsTestCase(MiApiViewsBaseTestCase):
 
     def test_sector_team_detail_1_nonhvc_unconfirmed(self):
         """ SectorTeam Details with unconfirmed non-HVC wins, all wins on same day """
-        WinFactory(user=self.user, hvc=None, sector=58)
+        self._create_non_hvc_win(sector_id=58)
 
         self.expected_response['wins']['export']['non_hvc']['value']['unconfirmed'] = 100000
         self.expected_response['wins']['export']['non_hvc']['value']['total'] = 100000
@@ -313,8 +314,9 @@ class SectorTeamDetailViewsTestCase(MiApiViewsBaseTestCase):
 
     def test_sector_team_detail_1_nonhvc_confirmed(self):
         """ SectorTeam Details with confirmed non-HVC wins, all wins on same day """
-        win = WinFactory(user=self.user, hvc=None, sector=58)
-        CustomerResponseFactory(win=win, agree_with_win=True)
+        self._create_non_hvc_win(confirm=True, sector_id=58, win_date=datetime.datetime(2016, 5, 1),
+                                 notify_date=datetime.datetime(2016, 5, 1),
+                                 response_date=datetime.datetime(2016, 5, 1))
 
         self.expected_response['wins']['export']['non_hvc']['value']['confirmed'] = 100000
         self.expected_response['wins']['export']['non_hvc']['value']['total'] = 100000
@@ -330,27 +332,16 @@ class SectorTeamDetailViewsTestCase(MiApiViewsBaseTestCase):
 
     def test_sector_team_detail_1_average_time_to_confirm(self):
         """ Add one confirmed HVC win and check avg_time_to_confirm value """
-        win1 = WinFactory(user=self.user, hvc=FuzzyChoice(self.TEAM_1_HVCS), date=datetime.datetime(2016, 5, 1),
-                          sector=FuzzyChoice(self.TEAM_1_SECTORS))
-        notification1 = NotificationFactory(win=win1)
-        notification1.created = datetime.datetime(2016, 5, 2)
-        notification1.save()
-        response1 = CustomerResponseFactory(win=win1, agree_with_win=True)
-        response1.created = datetime.datetime(2016, 5, 3)
-        response1.save()
+        self._create_hvc_win(confirm=True,
+                             win_date=datetime.datetime(2016, 5, 1),
+                             notify_date=datetime.datetime(2016, 5, 2),
+                             response_date=datetime.datetime(2016, 5, 3))
 
         self.assertEqual(self._api_response_data['avg_time_to_confirm'], 1.0)
 
     def test_sector_team_detail_1_non_hvc_average_time_to_confirm(self):
         """ Add one confirmed non-HVC win and check avg_time_to_confirm value """
-        win1 = WinFactory(user=self.user, hvc=None, date=datetime.datetime(2016, 5, 1),
-                          sector=FuzzyChoice(self.TEAM_1_SECTORS))
-        notification1 = NotificationFactory(win=win1)
-        notification1.created = datetime.datetime(2016, 5, 2)
-        notification1.save()
-        response1 = CustomerResponseFactory(win=win1, agree_with_win=True)
-        response1.created = datetime.datetime(2016, 5, 3)
-        response1.save()
+        self._create_non_hvc_win(confirm=True)
 
         self.assertEqual(self._api_response_data['avg_time_to_confirm'], 1.0)
 
@@ -359,48 +350,16 @@ class SectorTeamDetailViewsTestCase(MiApiViewsBaseTestCase):
         Confirm some of those wins with varying confirmation dates
         Check avg_time_to_confirm value """
 
-        win1 = WinFactory(user=self.user, hvc=FuzzyChoice(self.TEAM_1_HVCS), date=datetime.datetime(2016, 5, 1),
-                          sector=FuzzyChoice(self.TEAM_1_SECTORS))
-        notification1 = NotificationFactory(win=win1)
-        notification1.created = datetime.datetime(2016, 5, 2)
-        notification1.save()
-        response1 = CustomerResponseFactory(win=win1, agree_with_win=True)
-        response1.created = datetime.datetime(2016, 5, 3)
-        response1.save()
-
-        win2 = WinFactory(user=self.user, hvc=FuzzyChoice(self.TEAM_1_HVCS), date=datetime.datetime(2016, 5, 1),
-                          sector=FuzzyChoice(self.TEAM_1_SECTORS))
-        notification2 = NotificationFactory(win=win2)
-        notification2.created = datetime.datetime(2016, 5, 2)
-        notification2.save()
-        response2 = CustomerResponseFactory(win=win2, agree_with_win=True)
-        response2.created = datetime.datetime(2016, 5, 4)
-        response2.save()
-
-        win3 = WinFactory(user=self.user, hvc=FuzzyChoice(self.TEAM_1_HVCS), date=datetime.datetime(2016, 5, 1),
-                          sector=FuzzyChoice(self.TEAM_1_SECTORS))
-        notification3 = NotificationFactory(win=win3)
-        notification3.created = datetime.datetime(2016, 5, 2)
-        notification3.save()
-        response3 = CustomerResponseFactory(win=win3, agree_with_win=True)
-        response3.created = datetime.datetime(2016, 5, 5)
-        response3.save()
-
-        win4 = WinFactory(user=self.user, hvc=FuzzyChoice(self.TEAM_1_HVCS), date=datetime.datetime(2016, 5, 1),
-                          sector=FuzzyChoice(self.TEAM_1_SECTORS))
-        notification4 = NotificationFactory(win=win4)
-        notification4.created = datetime.datetime(2016, 5, 2)
-        notification4.save()
-        response4 = CustomerResponseFactory(win=win4, agree_with_win=True)
-        response4.created = datetime.datetime(2016, 5, 6)
-        response4.save()
+        for d in [3, 4, 5, 6]:
+            self._create_hvc_win(confirm=True,
+                                 win_date=datetime.datetime(2016, 5, 1),
+                                 notify_date=datetime.datetime(2016, 5, 2),
+                                 response_date=datetime.datetime(2016, 5, d))
 
         # add a hvc win without confirmation
-        WinFactory(user=self.user, hvc=FuzzyChoice(self.TEAM_1_HVCS), date=datetime.datetime(2016, 5, 1),
-                   sector=FuzzyChoice(self.TEAM_1_SECTORS))
+        self._create_hvc_win(confirm=False, win_date=datetime.datetime(2016, 5, 1))
         for i in range(3):
-            WinFactory(user=self.user, hvc=None, date=datetime.datetime(2016, 5, 1),
-                       sector=FuzzyChoice(self.TEAM_1_SECTORS))
+            self._create_non_hvc_win(win_date=datetime.datetime(2016, 5, 1))
 
         self.assertEqual(self._api_response_data['avg_time_to_confirm'], 2.5)
 
@@ -413,18 +372,13 @@ class SectorTeamDetailViewsTestCase(MiApiViewsBaseTestCase):
         days = [3, 4, 5, 6]
 
         for day in days:
-            win1 = WinFactory(user=self.user, hvc=FuzzyChoice(self.TEAM_1_HVCS), date=datetime.datetime(2016, 5, 1),
-                              sector=FuzzyChoice(self.TEAM_1_SECTORS))
-            notification1 = NotificationFactory(win=win1)
-            notification1.created = datetime.datetime(2016, 5, 2)
-            notification1.save()
-            response1 = CustomerResponseFactory(win=win1, agree_with_win=True)
-            response1.created = datetime.datetime(2016, 5, day)
-            response1.save()
+            self._create_hvc_win(confirm=True,
+                                 win_date=datetime.datetime(2016, 5, 1),
+                                 notify_date=datetime.datetime(2016, 5, 2),
+                                 response_date=datetime.datetime(2016, 5, day))
 
         # add multiple notifications, for E006 but one customer response
-        win = WinFactory(user=self.user, hvc='E006', date=datetime.datetime(2016, 5, 1),
-                         sector=FuzzyChoice(self.TEAM_1_SECTORS))
+        win = self._create_hvc_win(hvc_code='E006', win_date=datetime.datetime(2016, 5, 1))
         for day in days:
             notification1 = NotificationFactory(win=win)
             notification1.created = datetime.datetime(2016, 5, day)
@@ -446,18 +400,13 @@ class SectorTeamDetailViewsTestCase(MiApiViewsBaseTestCase):
         days = [3, 4, 5, 6]
 
         for day in days:
-            win1 = WinFactory(user=self.user, hvc=FuzzyChoice(self.TEAM_1_HVCS), date=datetime.datetime(2016, 5, 1),
-                              sector=FuzzyChoice(self.TEAM_1_SECTORS))
-            notification1 = NotificationFactory(win=win1)
-            notification1.created = datetime.datetime(2016, 5, 2)
-            notification1.save()
-            response1 = CustomerResponseFactory(win=win1, agree_with_win=True)
-            response1.created = datetime.datetime(2016, 5, day)
-            response1.save()
+            self._create_hvc_win(confirm=True,
+                                 win_date=datetime.datetime(2016, 5, 1),
+                                 notify_date=datetime.datetime(2016, 5, 2),
+                                 response_date=datetime.datetime(2016, 5, day))
 
         # add multiple notifications, for E006 but one customer response
-        win = WinFactory(user=self.user, hvc='E006', date=datetime.datetime(2016, 5, 1),
-                         sector=FuzzyChoice(self.TEAM_1_SECTORS))
+        win = self._create_hvc_win(hvc_code='E006', win_date=datetime.datetime(2016, 5, 1))
         for day in days:
             notification1 = NotificationFactory(win=win)
             notification1.created = datetime.datetime(2016, 5, day)
@@ -467,11 +416,9 @@ class SectorTeamDetailViewsTestCase(MiApiViewsBaseTestCase):
         response1.save()
 
         # add few random hvc wins without confirmation
-        WinFactory(user=self.user, hvc=FuzzyChoice(self.TEAM_1_HVCS), date=datetime.datetime(2016, 5, 1),
-                   sector=FuzzyChoice(self.TEAM_1_SECTORS))
+        self._create_hvc_win(confirm=False, win_date=datetime.datetime(2016, 5, 1))
         for i in range(3):
-            WinFactory(user=self.user, hvc=None, date=datetime.datetime(2016, 5, 1),
-                       sector=FuzzyChoice(self.TEAM_1_SECTORS))
+            self._create_non_hvc_win(win_date=datetime.datetime(2016, 5, 1))
 
         self.assertEqual(self._api_response_data['avg_time_to_confirm'], 2.6)
 

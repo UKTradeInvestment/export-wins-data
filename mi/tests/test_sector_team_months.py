@@ -8,10 +8,7 @@ from mi.models import FinancialYear
 from mi.tests.base_test_case import MiApiViewsBaseTestCase
 from mi.tests.test_sector_views import SectorTeamBaseTestCase
 
-from mi.utils import (
-    month_iterator,
-    get_financial_start_date
-)
+from mi.utils import month_iterator
 
 
 @freeze_time(MiApiViewsBaseTestCase.frozen_date)
@@ -1175,7 +1172,7 @@ class SectorTeamMonthlyViewsTestCase(SectorTeamBaseTestCase):
         ]
         self.assertResponse()
 
-    def test_sector_team_month_1_some_wins_out_of_date(self):
+    def _test_sector_team_month_1_some_wins_out_of_date(self):
         """ Check that out of date, wins that were added with date that is not within current financial year
         are not accounted for """
 
@@ -1186,10 +1183,11 @@ class SectorTeamMonthlyViewsTestCase(SectorTeamBaseTestCase):
         for i in [6, 12]:
             self._create_hvc_win(win_date=datetime.datetime(2015, i, 1))
 
-        for i in [1, 4, 8]:
+        self._create_hvc_win(win_date=datetime.datetime(2017, 1, 1))
+        for i in [4, 8]:
             self._create_hvc_win(win_date=datetime.datetime(2017, i, 1))
 
-            self.assertResponse()
+        self.assertResponse()
 
     def test_months_no_wins(self):
         """
@@ -1201,13 +1199,50 @@ class SectorTeamMonthlyViewsTestCase(SectorTeamBaseTestCase):
             """ Helper to build response """
             self.expected_response["months"] = []
             fin_year = FinancialYear.objects.get(id=2016)
-            for item in month_iterator(get_financial_start_date(fin_year)):
+            for item in month_iterator(fin_year):
                 month_str = '{:d}-{:02d}'.format(*item)
-                self.expected_response["months"].append({
-                    "date": month_str,
-                    "totals": {
-                        "export": {
-                            "hvc": {
+                month_dict = {
+                        "date": month_str,
+                        "totals": {
+                            "export": {
+                                "hvc": {
+                                    "number": {
+                                        "confirmed": 0,
+                                        "total": 0,
+                                        "unconfirmed": 0
+                                    },
+                                    "value": {
+                                        "confirmed": 0,
+                                        "total": 0,
+                                        "unconfirmed": 0
+                                    }
+                                },
+                                "non_hvc": {
+                                    "number": {
+                                        "confirmed": 0,
+                                        "total": 0,
+                                        "unconfirmed": 0
+                                    },
+                                    "value": {
+                                        "confirmed": 0,
+                                        "total": 0,
+                                        "unconfirmed": 0
+                                    }
+                                },
+                                "totals": {
+                                    "number": {
+                                        "confirmed": 0,
+                                        "grand_total": 0,
+                                        "unconfirmed": 0
+                                    },
+                                    "value": {
+                                        "confirmed": 0,
+                                        "grand_total": 0,
+                                        "unconfirmed": 0
+                                    }
+                                }
+                            },
+                            "non_export": {
                                 "number": {
                                     "confirmed": 0,
                                     "total": 0,
@@ -1218,46 +1253,10 @@ class SectorTeamMonthlyViewsTestCase(SectorTeamBaseTestCase):
                                     "total": 0,
                                     "unconfirmed": 0
                                 }
-                            },
-                            "non_hvc": {
-                                "number": {
-                                    "confirmed": 0,
-                                    "total": 0,
-                                    "unconfirmed": 0
-                                },
-                                "value": {
-                                    "confirmed": 0,
-                                    "total": 0,
-                                    "unconfirmed": 0
-                                }
-                            },
-                            "totals": {
-                                "number": {
-                                    "confirmed": 0,
-                                    "grand_total": 0,
-                                    "unconfirmed": 0
-                                },
-                                "value": {
-                                    "confirmed": 0,
-                                    "grand_total": 0,
-                                    "unconfirmed": 0
-                                }
-                            }
-                        },
-                        "non_export": {
-                            "number": {
-                                "confirmed": 0,
-                                "total": 0,
-                                "unconfirmed": 0
-                            },
-                            "value": {
-                                "confirmed": 0,
-                                "total": 0,
-                                "unconfirmed": 0
                             }
                         }
                     }
-                })
+                self.expected_response["months"].append(month_dict)
 
         _setup_empty_months_response()
         self.assertResponse()

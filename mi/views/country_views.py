@@ -1,10 +1,6 @@
 from django_countries.fields import Country as DjangoCountry
 
 from mi.models import Country, Target
-from mi.utils import (
-    get_financial_start_date,
-    get_financial_end_date,
-)
 from mi.views.base_view import BaseWinMIView, BaseMIView
 from wins.models import Win
 

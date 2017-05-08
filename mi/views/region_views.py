@@ -2,11 +2,7 @@ from itertools import groupby
 from operator import attrgetter, itemgetter
 
 from mi.models import OverseasRegion
-from mi.utils import (
-    get_financial_start_date,
-    month_iterator,
-    sort_campaigns_by,
-)
+from mi.utils import month_iterator, sort_campaigns_by
 from mi.views.base_view import BaseWinMIView
 
 
@@ -34,17 +30,11 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
         )
 
     def _get_region_hvc_wins(self, region):
-        """
-        HVC wins alone for the `OverseasRegion`
-        """
-        return self._wins().filter(
-            hvc__in=region.campaign_ids,
-        )
+        """ HVC wins alone for the `OverseasRegion` """
+        return self._wins().filter(hvc__in=region.campaign_ids)
 
     def _get_region_non_hvc_wins(self, region):
-        """
-        non-HVC wins alone for the `OverseasRegion`
-        """
+        """ non-HVC wins alone for the `OverseasRegion` """
         return self._non_hvc_wins().filter(country__in=region.country_ids)
 
     def _region_result(self, region):
@@ -118,7 +108,7 @@ class OverseasRegionMonthsView(BaseOverseasRegionsMIView):
             month_to_wins.append((date_str, month_wins))
 
         # Add missing months within the financial year until current month
-        for item in month_iterator(get_financial_start_date(self.fin_year)):
+        for item in month_iterator(self.fin_year):
             date_str = '{:d}-{:02d}'.format(*item)
             existing = [m for m in month_to_wins if m[0] == date_str]
             if len(existing) == 0:

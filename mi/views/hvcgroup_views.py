@@ -2,10 +2,7 @@ from itertools import groupby
 from operator import attrgetter, itemgetter
 
 from mi.models import HVCGroup
-from mi.utils import (
-    get_financial_start_date,
-    month_iterator,
-)
+from mi.utils import month_iterator
 from mi.views.sector_views import BaseSectorMIView
 
 
@@ -89,7 +86,7 @@ class HVCGroupMonthsView(BaseHVCGroupMIView):
             month_to_wins.append((date_str, month_wins))
 
         # Add missing months within the financial year until current month
-        for item in month_iterator(get_financial_start_date(self.fin_year)):
+        for item in month_iterator(self.fin_year):
             date_str = '{:d}-{:02d}'.format(*item)
             existing = [m for m in month_to_wins if m[0] == date_str]
             if len(existing) == 0:

@@ -6,11 +6,7 @@ from mi.models import (
     HVCGroup,
     SectorTeam,
 )
-from mi.utils import (
-    get_financial_start_date,
-    month_iterator,
-    sort_campaigns_by,
-)
+from mi.utils import month_iterator, sort_campaigns_by
 from mi.views.base_view import BaseWinMIView
 
 
@@ -47,8 +43,7 @@ class BaseSectorMIView(BaseWinMIView):
         return self._wins().filter(hvc__in=group.fin_year_campaign_ids(self.fin_year))
 
     def _get_hvc_wins(self, team):
-        """
-        HVC wins alone for the `SectorTeam`, for given `FinancialYear`
+        """ HVC wins alone for the `SectorTeam`
 
         A `Win` is considered HVC for this team, when it falls under a Campaign that belongs to this `SectorTeam`
 
@@ -56,8 +51,7 @@ class BaseSectorMIView(BaseWinMIView):
         return self._wins().filter(hvc__in=team.fin_year_campaign_ids(self.fin_year))
 
     def _get_non_hvc_wins(self, team):
-        """
-        non-HVC wins alone for the `SectorTeam`
+        """ non-HVC wins alone for the `SectorTeam`
 
         A `Win` is a non-HVC, if no HVC was mentioned while recording it
         but it belongs to a CDMS Sector that is within this `SectorTeam`s range
@@ -79,7 +73,6 @@ class BaseSectorMIView(BaseWinMIView):
             'avg_time_to_confirm': self._average_confirm_time(win__sector__in=team.sector_ids),
             'hvcs': self._hvc_overview(team.fin_year_targets(fin_year=self.fin_year)),
         }
-
 
 
 class TopNonHvcSectorCountryWinsView(BaseSectorMIView):
@@ -171,7 +164,7 @@ class SectorTeamMonthsView(BaseSectorMIView):
             month_to_wins.append((date_str, month_wins))
 
         # Add missing months within the financial year until current month
-        for item in month_iterator(get_financial_start_date(self.fin_year)):
+        for item in month_iterator(self.fin_year):
             date_str = '{:d}-{:02d}'.format(*item)
             existing = [m for m in month_to_wins if m[0] == date_str]
             if len(existing) == 0:
