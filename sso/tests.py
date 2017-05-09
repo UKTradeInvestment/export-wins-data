@@ -19,11 +19,10 @@ class BaseSSOTestCase(TestCase):
 
     def _login(self):
         # note login side-steps SAML/XML stuff
-        self.alice_client.force_login(self.adfs_user)
+        self.alice_client.force_login(self.adfs_user, 'djangosaml2.backends.Saml2Backend')
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
     @patch('sso.middleware.get_user_attributes', lambda _: {})
-    def _get_status(self, url, status_code=200, perm=False):
+    def _get_status_no_secret(self, url, status_code=200, perm=False):
         if perm:
             with patch('sso.middleware.has_MI_permission', lambda _: True):
                 response = self.alice_client.get(url)
@@ -32,9 +31,21 @@ class BaseSSOTestCase(TestCase):
         self.assertEqual(response.status_code, status_code)
         return response
 
+    @override_settings(ADMIN_SECRET=AliceClient.SECRET)
+    def _get_status_admin_secret(self, *args, **kwargs):
+        return self._get_status_no_secret(*args, **kwargs)
+
+    @override_settings(MI_SECRET=AliceClient.SECRET)
+    def _get_status_mi_secret(self, *args, **kwargs):
+        return self._get_status_no_secret(*args, **kwargs)
+
+    @override_settings(UI_SECRET=AliceClient.SECRET)
+    def _get_status_ui_secret(self, *args, **kwargs):
+        return self._get_status_no_secret(*args, **kwargs)
+
     def _get(self, name, status_code=200, perm=False):
         url = reverse('sso:' + name)
-        return self._get_status(url, status_code, perm)
+        return self._get_status_mi_secret(url, status_code, perm)
 
     @override_settings(MI_SECRET=AliceClient.SECRET)
     def _post(self, name, post_dict, status_code=200):
@@ -42,6 +53,12 @@ class BaseSSOTestCase(TestCase):
         self.assertEqual(response.status_code, status_code)
         return response
 
+    def _get_api_response(self, url, status_code=200):
+        self._login()
+        return self._get_status_mi_secret(url, status_code=status_code, perm=True)
+
+
+# mi secret tests?
 
 class SSOTestCase(BaseSSOTestCase):
 
