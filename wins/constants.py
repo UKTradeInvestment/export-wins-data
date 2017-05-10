@@ -258,6 +258,7 @@ PROGRAMMES = (
     (67, "UK Israel Tech Hub"),
     (68, "Venture Capital"),
     (69, "Web-based Exporting Programme"),
+    (70, "Midlands Engine"),
 )
 
 RATINGS = (
