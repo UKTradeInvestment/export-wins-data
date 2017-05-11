@@ -209,7 +209,7 @@ SAML_CONFIG = {
     # full path to the xmlsec1 binary, latter is where it ends up in Heroku
     # on ubuntu install with `apt-get install xmlsec`
     # to get this into Heroku, add the following buildpack on settings page:
-    # https://github.com/strydercorp/heroku-buildpack-xmlsec
+    # https://github.com/uktrade/heroku-buildpack-xmlsec
     'xmlsec_binary': '/usr/bin/xmlsec1' if DEBUG else '/app/vendor/xmlsec1/bin/xmlsec1',
 
     # note not a real url, just a global identifier per SAML recommendations
