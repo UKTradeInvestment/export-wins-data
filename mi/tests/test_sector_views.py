@@ -6,6 +6,7 @@ import json
 from django.core.urlresolvers import reverse
 from factory.fuzzy import FuzzyChoice, FuzzyDate
 
+from fixturedb.factories.win import create_win_factory
 from mi.tests.base_test_case import MiApiViewsBaseTestCase
 from mi.utils import sort_campaigns_by
 from wins.constants import SECTORS
@@ -18,6 +19,11 @@ from wins.models import HVC
 
 
 class SectorTeamBaseTestCase(MiApiViewsBaseTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self._win_factory_function = create_win_factory(self.user, sector_choices=self.TEAM_1_SECTORS)
+
     def _hvc_charcode(self, hvc_code, fin_year):
         charcode = hvc_code + str(fin_year)[-2:]
         return charcode
@@ -26,37 +32,17 @@ class SectorTeamBaseTestCase(MiApiViewsBaseTestCase):
                     confirm=False, notify_date=None, response_date=None, country=None,
                     fin_year=2016):
         """ generic function creating `Win` """
-        if not sector_id:
-            sector_id = FuzzyChoice(self.TEAM_1_SECTORS)
-
-        if not win_date:
-            win_date = datetime.datetime(2016, 5, 25)
-
-        if hvc_code is not None:
-            win = WinFactory(user=self.user, hvc=hvc_code + str(fin_year)[-2:], sector=sector_id, date=win_date)
-        else:
-            win = WinFactory(user=self.user, sector=sector_id, date=win_date)
-        win.save()
-
-        if country is not None:
-            win.country = country
-            win.save()
-
-        if export_value is not None:
-            win.total_expected_export_value = export_value
-            win.save()
-
-        if confirm:
-            if not notify_date:
-                notify_date = datetime.datetime(2016, 5, 26)
-            notification = NotificationFactory(win=win)
-            notification.created = notify_date
-            notification.save()
-            if not response_date:
-                response_date = datetime.datetime(2016, 5, 27)
-            response = CustomerResponseFactory(win=win, agree_with_win=True)
-            response.created = response_date
-            response.save()
+        win = self._win_factory_function(
+            hvc_code,
+            sector_id=sector_id,
+            win_date=win_date,
+            export_value=export_value,
+            confirm=confirm,
+            notify_date=notify_date,
+            response_date=response_date,
+            country=country,
+            fin_year=fin_year
+        )
         return win
 
     def _create_hvc_win(self, hvc_code=None, sector_id=None, win_date=None, export_value=None,
@@ -315,6 +301,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         return campaign_data
 
     def setUp(self):
+        super().setUp()
         self.expected_response = {
             "campaigns": [],
             "name": "Financial & Professional Services",
