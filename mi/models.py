@@ -157,8 +157,8 @@ class Sector(models.Model):
     # note, there are 2 sectors in constants not in this
 
     name = models.CharField(max_length=128)
-    sector_team = models.ForeignKey(SectorTeam, related_name="sectors")
-    parent_sector = models.ForeignKey(ParentSector, related_name="sectors")
+    sector_team = models.ManyToManyField(SectorTeam, related_name="sectors")
+    parent_sector = models.ManyToManyField(ParentSector, related_name="sectors")
 
     def __str__(self):
         return 'Sector: {} ({})'.format(self.name, self.parent_sector)
