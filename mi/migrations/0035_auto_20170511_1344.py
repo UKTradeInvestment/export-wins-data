@@ -22,7 +22,11 @@ def add_2017_mi_data(apps, schema_editor):
         sector_team = SectorTeam.objects.get(name=sector_team_name)
         hvc_group_name = target["hvc_group"]
         if not HVCGroup.objects.filter(name=hvc_group_name, sector_team=sector_team).exists():
-            HVCGroup(name=hvc_group_name, sector_team=sector_team).save()
+            # The way HVCGroups were fed in originally meant, Django's auto incirmental ID is screwed up.
+            # We either have to setval('mi_hvcgroup_id_seq', (SELECT MAX(id) FROM mi_hvcgroup)) before adding any new
+            # or provide an id with each new record
+            new_hvcgroup_id = int(HVCGroup.objects.latest("id").id) + 1
+            HVCGroup(id=new_hvcgroup_id, name=hvc_group_name, sector_team=sector_team).save()
         hvc_group = HVCGroup.objects.get(name=hvc_group_name, sector_team=sector_team)
         financial_year = FinancialYear.objects.get(id=2017)
         taget_val = target["target"]
