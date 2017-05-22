@@ -99,10 +99,9 @@ class OverseasRegionMonthsView(BaseOverseasRegionsMIView):
         ]
 
     def _group_wins_by_month(self, wins):
-        date_attrgetter = attrgetter('date')
-        sorted_wins = sorted(wins, key=date_attrgetter)
+        sorted_wins = sorted(wins, key=self._win_date_for_grouping)
         month_to_wins = []
-        for k, g in groupby(sorted_wins, key=date_attrgetter):
+        for k, g in groupby(sorted_wins, key=self._win_date_for_grouping):
             month_wins = list(g)
             date_str = month_wins[0].date.strftime('%Y-%m')
             month_to_wins.append((date_str, month_wins))

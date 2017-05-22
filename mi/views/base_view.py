@@ -107,6 +107,12 @@ class BaseMIView(APIView):
             'campaigns': sorted([t.name for t in targets]),
         }
 
+    def _win_date_for_grouping(self, win):
+        if hasattr(win, 'confirmation'):
+            return win.confirmation.created.date()
+        else:
+            return win.date
+
 
 class BaseWinMIView(BaseMIView):
     """ Base view with Win-related MI helpers """
