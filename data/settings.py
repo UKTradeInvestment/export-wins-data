@@ -210,7 +210,7 @@ SAML_CONFIG = {
     # on ubuntu install with `apt-get install xmlsec`
     # to get this into Heroku, add the following buildpack on settings page:
     # https://github.com/uktrade/heroku-buildpack-xmlsec
-    'xmlsec_binary': '/usr/bin/xmlsec1' if DEBUG else '/app/vendor/xmlsec1/bin/xmlsec1',
+    'xmlsec_binary': '/usr/local/bin/xmlsec1' if DEBUG else '/app/vendor/xmlsec1/bin/xmlsec1',
 
     # note not a real url, just a global identifier per SAML recommendations
     'entityid': 'https://sso.datahub.service.trade.gov.uk/sp',
@@ -233,11 +233,16 @@ SAML_CONFIG = {
         },
     },
 
-    'valid_for': 24,  # hours the metadata is valid
+    'valid_for': 1,  # hours the metadata is valid
 
     # Created with: `openssl req -new -x509 -days 3652 -nodes -sha256 -out sp.crt -keyout saml.key`
     'key_file': keyfile_path,  # private part, loaded via env var (see above)
     'cert_file': certfile_path,  # public part
+
+    'encryption_keypairs': [{
+        'key_file': keyfile_path,  # private part
+        'cert_file': certfile_path  # public part
+    }],
 
     # remote metadata
     'metadata': {
