@@ -610,12 +610,20 @@ class SectorTeamMonthlyViewsTestCase(SectorTeamBaseTestCase):
         """ Tests covering SectorTeam Campaigns API endpoint """
 
         for i in range(4, 13):
-            self._create_hvc_win(win_date=datetime.datetime(2016, i, 1), confirm=True)
+            self._create_hvc_win(win_date=datetime.datetime(2016, i, 1), confirm=True,
+                                 notify_date=datetime.datetime(2016, i, 1),
+                                 response_date=datetime.datetime(2016, i, 2))
 
         # Add few random ones
-        self._create_hvc_win(win_date=datetime.datetime(2017, 1, 1), confirm=True)
-        self._create_hvc_win(win_date=datetime.datetime(2016, 4, 1), confirm=True)
-        self._create_hvc_win(win_date=datetime.datetime(2016, 5, 1), confirm=True)
+        self._create_hvc_win(win_date=datetime.datetime(2017, 1, 1), confirm=True,
+                             notify_date=datetime.datetime(2017, 1, 1),
+                             response_date=datetime.datetime(2017, 1, 2))
+        self._create_hvc_win(win_date=datetime.datetime(2016, 4, 1), confirm=True,
+                             notify_date=datetime.datetime(2016, 4, 1),
+                             response_date=datetime.datetime(2016, 4, 2))
+        self._create_hvc_win(win_date=datetime.datetime(2016, 5, 1), confirm=True,
+                             notify_date=datetime.datetime(2016, 5, 1),
+                             response_date=datetime.datetime(2016, 5, 2))
 
         self.expected_response["avg_time_to_confirm"] = 1.0
         self.expected_response["months"] = [
