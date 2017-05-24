@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import shutil
 
 import saml2
 import saml2.saml
@@ -184,19 +185,25 @@ SAML_USE_NAME_ID_AS_USERNAME = True
 SAML_USER_MODEL = 'sso.adfsuser'
 BASEDIR = os.path.dirname(os.path.abspath(__file__))
 
-cert_filename = 'sp_test.crt' if STAGING or DEBUG else 'sp_prod.crt'
-certfile_path = os.path.join(BASEDIR, cert_filename)
+cert_filename = 'sp_test.crt' # if STAGING or DEBUG else 'sp_prod.crt'
 
 if DEBUG:
+    certfile_path = os.path.join(BASEDIR, 'sp_test.crt')
     keyfile_path = os.path.join(BASEDIR, 'saml.test_key')
 else:
     # small hack for heroku, load key from env into file for saml config
     # since library expects key as file
+    certfile_path = os.path.join(BASEDIR, 'sp_prod.crt')
     keyfile_path = os.path.join(BASEDIR, 'saml.key')
+
     env_saml_key = os.getenv("SAML_KEY")
+    env_saml_cert = os.getenv("SAML_CERT")
     assert env_saml_key, "SAML_KEY not found"
+    assert env_saml_cert, "SAML_CERT not found"
     with open(keyfile_path, 'w') as f:
         f.write(env_saml_key)
+    with open(certfile_path, 'w') as f:
+        f.write(env_saml_cert)
 
 # domain the metadata will refer to
 if STAGING or DEBUG:
@@ -210,7 +217,7 @@ SAML_CONFIG = {
     # on ubuntu install with `apt-get install xmlsec`
     # to get this into Heroku, add the following buildpack on settings page:
     # https://github.com/uktrade/heroku-buildpack-xmlsec
-    'xmlsec_binary': '/usr/local/bin/xmlsec1' if DEBUG else '/app/vendor/xmlsec1/bin/xmlsec1',
+    'xmlsec_binary': shutil.which('xmlsec1'),
 
     # note not a real url, just a global identifier per SAML recommendations
     'entityid': 'https://sso.datahub.service.trade.gov.uk/sp',

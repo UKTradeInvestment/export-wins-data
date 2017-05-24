@@ -3,3 +3,4 @@
 .env
 .db.*
 *.key
+/data/sp_prod.crt
