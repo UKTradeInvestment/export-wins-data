@@ -2,6 +2,7 @@ import datetime
 import json
 
 from django.core.urlresolvers import reverse
+from django.urls import NoReverseMatch
 
 from factory.fuzzy import FuzzyChoice
 from freezegun import freeze_time
@@ -18,6 +19,15 @@ GROUP_4_HVCS = [code + "16" for code in ["E001", "E017", "E024", "E049", "E063",
 TEAM_SECTORS = [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35]
 GROUP_4_TARGET = 70000000
 HVC_TARGET = 10000000
+CAMPAIGNS = [
+    "HVC: E001",
+    "HVC: E017",
+    "HVC: E024",
+    "HVC: E049",
+    "HVC: E063",
+    "HVC: E107",
+    "HVC: E184"
+]
 
 
 @freeze_time(MiApiViewsBaseTestCase.frozen_date)
@@ -161,15 +171,7 @@ class HVCGroupDetailTestCase(MiApiViewsBaseTestCase):
         self.expected_response = {
             "hvcs": {
                 "target": GROUP_4_TARGET,
-                "campaigns": [
-                    "HVC: E001",
-                    "HVC: E017",
-                    "HVC: E024",
-                    "HVC: E049",
-                    "HVC: E063",
-                    "HVC: E107",
-                    "HVC: E184"
-                ]
+                "campaigns": CAMPAIGNS
             },
             "avg_time_to_confirm": 0.0,
             "wins": {
@@ -467,15 +469,7 @@ class HVCGroupCampaignViewsTestCase(MiApiViewsBaseTestCase):
             "name": "Automotive",
             "hvcs": {
                 "target": GROUP_4_TARGET,
-                "campaigns": [
-                    "HVC: E001",
-                    "HVC: E017",
-                    "HVC: E024",
-                    "HVC: E049",
-                    "HVC: E063",
-                    "HVC: E107",
-                    "HVC: E184"
-                ]
+                "campaigns": CAMPAIGNS
             },
             "avg_time_to_confirm": 0.0
         }
@@ -560,3 +554,151 @@ class HVCGroupCampaignViewsTestCase(MiApiViewsBaseTestCase):
         self.expected_response["campaigns"] = campaigns
 
         self.assertResponse()
+
+
+def make_month_data(month, confirmed=None, unconfirmed=None):
+    if not confirmed:
+        confirmed = []
+    if not unconfirmed:
+        unconfirmed = []
+
+    number_of_unconfirmed_wins = len(unconfirmed)
+    number_of_confirmed_wins = len(confirmed)
+    number_of_wins = number_of_confirmed_wins + number_of_unconfirmed_wins
+    return \
+        { 'totals':
+            {'non_export':
+                {'number': {
+                    'total': number_of_wins,
+                    'unconfirmed': number_of_unconfirmed_wins,
+                    'confirmed': number_of_confirmed_wins
+                },
+                    'value': {
+                        'total': sum([x.total_expected_non_export_value for x in  confirmed + unconfirmed]),
+                        'unconfirmed': sum([x.total_expected_non_export_value for x in unconfirmed]),
+                        'confirmed': sum([x.total_expected_non_export_value for x in confirmed])
+                    }
+                },
+                'export': {
+                    'totals': {
+                        'number': {
+                            'grand_total': number_of_wins,
+                            'unconfirmed': number_of_unconfirmed_wins,
+                            'confirmed': number_of_confirmed_wins
+                        }, 'value': {
+                            'grand_total': sum([x.total_expected_export_value for x in  confirmed + unconfirmed]),
+                            'unconfirmed': sum([x.total_expected_export_value for x in unconfirmed]),
+                            'confirmed': sum([x.total_expected_export_value for x in confirmed])
+                        }
+                    },
+                    'hvc': {
+                        'number': {
+                            'total': number_of_wins,
+                            'unconfirmed': number_of_unconfirmed_wins,
+                            'confirmed': number_of_confirmed_wins
+                        },
+                        'value': {
+                            'total': sum([x.total_expected_export_value for x in confirmed + unconfirmed if x.hvc]),
+                            'unconfirmed': sum([x.total_expected_export_value for x in unconfirmed if x.hvc]),
+                            'confirmed': sum([x.total_expected_export_value for x in confirmed if x.hvc]),
+                        }
+                    }
+                }
+            },
+            'date': '2016-{:02d}'.format(month)
+        }
+
+@freeze_time(MiApiViewsBaseTestCase.frozen_date)
+class HVCGroupMonthsView(MiApiViewsBaseTestCase):
+    """
+    Tests covering `HVCGroup` Months API endpoint
+    """
+    url = reverse("mi:hvc_group_months", kwargs={"group_id": 4}) + "?year=2016"
+
+    def setUp(self):
+
+        self.start_month = datetime.date(*map(int, self.fin_start_date.split('-'))).month
+        self.end_month = datetime.date(*map(int, self.frozen_date.split('-'))).month
+
+        month_data = [
+            make_month_data(x) for x in range(self.start_month, self.end_month + 1)
+        ]
+
+        self.expected_response = \
+            {
+                'name': 'Automotive',
+                'months': month_data,
+                'avg_time_to_confirm': 0.0,
+                'hvcs': {
+                    'target': GROUP_4_TARGET,
+                    'campaigns': CAMPAIGNS
+                },
+            }
+
+    def test_month_grouping_with_no_wins(self):
+        self.assertResponse()
+
+
+    def test_month_grouping_with_1_win_unconfirmed(self):
+        win1 = WinFactory(
+            user=self.user,
+            hvc=FuzzyChoice(GROUP_4_HVCS),
+            sector=FuzzyChoice(TEAM_SECTORS),
+            date=datetime.datetime(2016, 4, 25)
+        )
+        self.expected_response['months'] = \
+            [make_month_data(x, unconfirmed=[win1])
+                for x in range(self.start_month, self.end_month + 1)]
+        self.assertResponse()
+
+    def test_month_grouping_with_2_uncon_wins_first_month(self):
+        win1 = WinFactory(
+            user=self.user,
+            hvc=FuzzyChoice(GROUP_4_HVCS),
+            sector=FuzzyChoice(TEAM_SECTORS),
+            date=datetime.datetime(2016, 4, 25)
+        )
+
+        month1 = [make_month_data(self.start_month, unconfirmed=[win1])]
+
+        win2 = WinFactory(
+            user=self.user,
+            hvc=FuzzyChoice(GROUP_4_HVCS),
+            sector=FuzzyChoice(TEAM_SECTORS),
+            date=datetime.datetime(2016, 5, 25)
+        )
+
+        rest_months = [make_month_data(x, unconfirmed=[win1, win2])
+                       for x in range(self.start_month + 1, self.end_month + 1)]
+
+        self.expected_response['months'] = month1 + rest_months
+        self.assertResponse()
+
+
+    def test_month_grouping_with_1_win_confirmed(self):
+        win1 = WinFactory(
+            user=self.user,
+            hvc=FuzzyChoice(GROUP_4_HVCS),
+            sector=FuzzyChoice(TEAM_SECTORS),
+            date=datetime.datetime(2016, 4, 25)
+        )
+        notification1 = NotificationFactory(win=win1)
+        notification1.created = datetime.datetime(2016, 4, 25)
+        notification1.save()
+        response1 = CustomerResponseFactory(win=win1, agree_with_win=True)
+        notification1.created = datetime.datetime(2016, 4, 25)
+        response1.save()
+
+        self.expected_response['avg_time_to_confirm'] = 190
+        self.expected_response['months'] = \
+            [make_month_data(x, confirmed=[win1])
+             for x in range(self.start_month, self.end_month + 1)]
+        self.assertResponse()
+
+    def test_bad_group_id_is_400_bad_request(self):
+        bad_url = reverse("mi:hvc_group_months", kwargs={"group_id": 99}) + "?year=2016"
+        self._get_api_response(bad_url, status_code=400)
+
+    def test_no_group_id_is_not_found(self):
+        with self.assertRaises(NoReverseMatch):
+            reverse("mi:hvc_group_months") + "?year=2016"
