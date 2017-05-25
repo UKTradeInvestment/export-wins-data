@@ -5,5 +5,8 @@ addons:
   apt:
     packages:
       xmlsec1
+before_script:
+  - export SAML_KEY=`base64 -d <<< $SAML_KEY_B64`
+  - export SAML_CERT=`base64 -d <<< $SAML_CERT_B64`
 install: pip install -r requirements.txt
 script: ./manage.py test
