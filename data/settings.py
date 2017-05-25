@@ -206,10 +206,10 @@ else:
         f.write(env_saml_cert)
 
 # domain the metadata will refer to
-if STAGING or DEBUG:
-    host = 'https://export-wins-ui-mi-ithc.herokuapp.com'
-else:
-    host = 'https://mi.exportwins.service.trade.gov.uk'
+SAML_REDIRECT_RETURN_HOST = os.environ.get(
+    'SAML_REDIRECT_RETURN_HOST',
+    'https://mi.exportwins.service.trade.gov.uk'
+)
 
 
 SAML_CONFIG = {
@@ -232,7 +232,7 @@ SAML_CONFIG = {
             'name': 'Datahub SP',
             'endpoints': {
                 'assertion_consumer_service': [
-                    (host + '/saml2/acs/', saml2.BINDING_HTTP_POST),
+                    (SAML_REDIRECT_RETURN_HOST + '/saml2/acs/', saml2.BINDING_HTTP_POST),
                 ],
             },
             # this is the name id format Core responds with
