@@ -734,6 +734,8 @@ HQ_TEAM_REGION_OR_POST = tuple([
     ('obn:28', 'Thailand - British Chamber of Commerce'),
     ('obn:29', 'Turkey - British Chamber of Commerce'),
     ('obn:30', 'UAE - British Centres for Business'),
+    ('obn:32', 'USA - Altios'),
+    ('obn:33', 'USA - OCO Global'),
     ('obn:31', 'Vietnam - British Business Group'),
 
     ("other:1", "DIT Education"),
