@@ -12,6 +12,7 @@ from django.http import (
 )
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
 
 import djangosaml2
 from djangosaml2.backends import Saml2Backend
@@ -81,6 +82,8 @@ def login(request):
 
 
 def has_MI_permission(adfs_attributes):
+    if settings.SAML_DONT_CHECK_GROUP_MEMBERSHIP:
+        return True
     return 'AG-DataHub-MI' in adfs_attributes.get('group', [])
 
 

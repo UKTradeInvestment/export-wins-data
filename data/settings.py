@@ -180,6 +180,7 @@ EMAIL_BACKEND = os.getenv(
 # SAML configuration for djangosaml2 & pysaml2
 # note, we implement/hack djangosaml2 ourselves in sso.views, so cannot
 # necessarily use all available djangosaml2/pysaml2 settings here
+SAML_DONT_CHECK_GROUP_MEMBERSHIP = os.getenv('SAML_DONT_CHECK_GROUP_MEMBERSHIP', False)
 SAML_DJANGO_USER_MAIN_ATTRIBUTE = 'email'
 SAML_USE_NAME_ID_AS_USERNAME = True
 SAML_USER_MODEL = 'sso.adfsuser'
