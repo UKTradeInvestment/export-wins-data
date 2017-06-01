@@ -17,7 +17,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.getenv("DEBUG", False))
-
+TEST_RUNNER = os.getenv('TEST_RUNNER', 'django.test.runner.DiscoverRunner')
 
 # As app is running behind a host-based router supplied by Heroku or other
 # PaaS, we can open ALLOWED_HOSTS
@@ -41,12 +41,12 @@ INSTALLED_APPS = [
     "mi.apps.MiConfig",
     "wins.apps.WinsConfig",
     "users.apps.UsersConfig",
+    "fixturedb.apps.FixtureDBConfig",
 
     # drf
     "rest_framework",
     "rest_framework.authtoken",
     "crispy_forms",
-
 ]
 
 MIDDLEWARE_CLASSES = [

@@ -21,6 +21,7 @@ class SectorTeamDetailViewsTestCase(SectorTeamBaseTestCase):
     expected_response = {}
 
     def setUp(self):
+        super().setUp()
         # initialise for every test
         self.expected_response = {
             "wins": {
