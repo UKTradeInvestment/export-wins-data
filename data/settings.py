@@ -211,7 +211,8 @@ SAML_REDIRECT_RETURN_HOST = os.environ.get(
     'SAML_REDIRECT_RETURN_HOST',
     'https://mi.exportwins.service.trade.gov.uk'
 )
-
+SAML_REMOTE_METADATA = os.getenv('SAML_REMOTE_METADATA', 'ukti_federationmetadata.xml')
+SAML_METADATA_PATH = os.path.join(BASEDIR, SAML_REMOTE_METADATA)
 
 SAML_CONFIG = {
     # full path to the xmlsec1 binary, latter is where it ends up in Heroku
@@ -254,7 +255,7 @@ SAML_CONFIG = {
 
     # remote metadata
     'metadata': {
-        'local': [os.path.join(BASEDIR, 'core_federationmetadata.xml')],
+        'local': [SAML_METADATA_PATH],
     },
 }
 
