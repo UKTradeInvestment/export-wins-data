@@ -6,9 +6,12 @@ from django_countries.fields import CountryField
 
 from wins.models import HVC
 
+class OverseasRegionGroup(models.Model):
+    name = models.CharField(max_length=128)
 
 class OverseasRegion(models.Model):
     name = models.CharField(max_length=128)
+    group = models.ForeignKey(OverseasRegionGroup, related_name='regions', null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return 'OverseasRegion: {}'.format(self.name)
@@ -49,6 +52,13 @@ class OverseasRegion(models.Model):
 
         return [s.country for s in self.countries.all()]
 
+class OverseasRegionYear(models.Model):
+    country = models.ForeignKey('Country')
+    financial_year = models.ForeignKey('FinancialYear')
+    overseas_region = models.ForeignKey(OverseasRegion)
+
+    class Meta:
+        unique_together = (('financial_year', 'country'),)
 
 class Country(models.Model):
     """
@@ -58,9 +68,11 @@ class Country(models.Model):
     """
 
     country = CountryField(unique=True)
-    overseas_region = models.ForeignKey(
+    overseas_region = models.ForeignKey(OverseasRegion, related_name='countries')
+    overseas_region_new = models.ManyToManyField(
         OverseasRegion,
-        related_name='countries',
+        through=OverseasRegionYear,
+        related_name='countries_new',
     )
 
     def __str__(self):
@@ -216,7 +228,7 @@ class Target(models.Model):
     target = models.BigIntegerField()
     sector_team = models.ForeignKey(SectorTeam, related_name="targets")
     hvc_group = models.ForeignKey(HVCGroup, related_name="targets")
-    country = models.ForeignKey(Country, related_name="targets", null=True)
+    country = models.ForeignKey(Country, related_name="targets", null=True, on_delete=models.SET_NULL)
     financial_year = models.ForeignKey(FinancialYear, related_name="targets", null=False)
 
     @property
