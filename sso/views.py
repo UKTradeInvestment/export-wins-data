@@ -65,6 +65,7 @@ def login(request):
         relay_state=came_from,
         binding=saml2.BINDING_HTTP_POST,
         sign_alg=saml2.xmldsig.SIG_RSA_SHA256,
+        sign=False
     )
     oq_cache = OutstandingQueriesCache(request.session)
     oq_cache.set(session_id, came_from)
