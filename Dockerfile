@@ -8,6 +8,7 @@ COPY gunicorn /app/gunicorn
 COPY mi /app/mi
 COPY users /app/users
 COPY wins /app/wins
+COPY fixturedb /app/fixturedb
 
 COPY requirements.txt /app/requirements.txt
 COPY manage.py /app/manage.py
