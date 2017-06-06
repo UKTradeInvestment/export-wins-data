@@ -103,7 +103,7 @@ class OverseasRegionMonthsView(BaseOverseasRegionsMIView):
         month_to_wins = []
         for k, g in groupby(sorted_wins, key=self._win_date_for_grouping):
             month_wins = list(g)
-            date_str = month_wins[0].date.strftime('%Y-%m')
+            date_str = month_wins[0]['date'].strftime('%Y-%m')
             month_to_wins.append((date_str, month_wins))
 
         # Add missing months within the financial year until current month

@@ -1,5 +1,5 @@
 from django.core.checks import register, Tags, Warning
-from django.db import ProgrammingError
+from django.db import ProgrammingError, OperationalError
 
 from fixturedb.utils.hvc import get_all_hvcs_referenced_by_targets
 
@@ -8,7 +8,7 @@ from fixturedb.utils.hvc import get_all_hvcs_referenced_by_targets
 def check_for_missing_hvcs(app_configs, **kwargs):
     try:
         missing_hvcs = get_all_hvcs_referenced_by_targets()
-    except ProgrammingError:
+    except (ProgrammingError, OperationalError):
         print('skipping check as migrations have not been run yet')
         return []
 

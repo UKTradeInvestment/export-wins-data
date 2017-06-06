@@ -109,9 +109,9 @@ class BaseMIView(APIView):
 
     def _win_date_for_grouping(self, win):
         if hasattr(win, 'confirmation'):
-            return win.confirmation.created.date()
+            return win['confirmation__created'].date()
         else:
-            return win.date
+            return win['date']
 
 
 class BaseWinMIView(BaseMIView):
@@ -121,6 +121,12 @@ class BaseWinMIView(BaseMIView):
     hvc_confirm_cu_number = hvc_confirm_cu_value = hvc_non_cu_number = hvc_non_cu_value = 0
     non_hvc_confirm_cu_number = non_hvc_confirm_cu_value = non_hvc_non_cu_number = non_hvc_non_cu_value = 0
     non_export_confirm_cu_number = non_export_confirm_cu_value = non_export_non_cu_number = non_export_non_cu_value = 0
+    start_of_2017_fy = datetime(
+        year=2017,
+        month=4,
+        day=1,
+        tzinfo=timezone.utc,
+    )
 
     def _wins(self):
         """ Return queryset of Wins used by all Endpoints
@@ -150,7 +156,17 @@ class BaseWinMIView(BaseMIView):
                 confirmation__isnull=True,
             )
 
-        return Win.objects.filter(win_filter).select_related('confirmation')
+        fields = [
+            'hvc',
+            'sector',
+            'date',
+            'total_expected_export_value',
+            'total_expected_non_export_value',
+            'confirmation__created',
+            'confirmation__agree_with_win',
+        ]
+
+        return Win.objects.filter(win_filter).only(*fields).values(*fields)
 
     def _non_hvc_wins(self):
         return self._wins().filter(Q(hvc__isnull=True) | Q(hvc=''))
@@ -168,23 +184,15 @@ class BaseWinMIView(BaseMIView):
         If Win is in 2016/17 FY, it is confirmed if the customer has
         responded, while if it is in subsequent FY it is confirmed only if
         customer has explicitly agreed, else it is rejected.
-
-
         """
 
-        if not win.confirmed:
+        if not win['confirmation__created']:
             return 'unconfirmed'
 
-        start_of_2017_fy = datetime(
-            year=2017,
-            month=4,
-            day=1,
-            tzinfo=timezone.utc,
-        )
-        if win.confirmation.created < start_of_2017_fy:
+        if win['confirmation__created'] < self.start_of_2017_fy:
             return 'confirmed'
         else:
-            if win.confirmation.agree_with_win:
+            if win['confirmation__agree_with_win']:
                 return 'confirmed'
             else:
                 return 'rejected'
@@ -207,7 +215,7 @@ class BaseWinMIView(BaseMIView):
 
         hvc_colours = []
         for t in targets:
-            target_wins = [win for win in hvc_wins if win.hvc == t.charcode]
+            target_wins = [win for win in hvc_wins if win['hvc'] == t.charcode]
             current_val, _ = self._confirmed_unconfirmed(target_wins)
             hvc_colours.append(self._get_status_colour(t.target, current_val))
 
@@ -339,9 +347,9 @@ class BaseWinMIView(BaseMIView):
 
         for win in wins:
             if non_export:
-                value = win.total_expected_non_export_value
+                value = win['total_expected_non_export_value']
             else:
-                value = win.total_expected_export_value
+                value = win['total_expected_export_value']
 
             win_status = self._win_status(win)
             if win_status == 'confirmed':
@@ -388,7 +396,7 @@ class BaseWinMIView(BaseMIView):
         }
 
         """
-        hvc_wins = [win for win in wins if win.hvc]
+        hvc_wins = [win for win in wins if win['hvc']]
         result = {
             'export': {
                 'hvc': self._breakdown_wins(hvc_wins),
@@ -402,7 +410,7 @@ class BaseWinMIView(BaseMIView):
         unconfirmed_number = result['export']['hvc']['number']['unconfirmed']
 
         if include_non_hvc:
-            non_hvc_wins = [win for win in wins if not win.hvc]
+            non_hvc_wins = [win for win in wins if not win['hvc']]
             result['export']['non_hvc'] = self._breakdown_wins(non_hvc_wins)
 
             confirmed_value += result['export']['non_hvc']['value']['confirmed']
@@ -456,9 +464,9 @@ class BaseWinMIView(BaseMIView):
         non_export_unconfirmed = []
 
         for win in wins:
-            export_value = win.total_expected_export_value
+            export_value = win['total_expected_export_value']
             win_status = self._win_status(win)
-            if win.hvc:
+            if win['hvc']:
                 if win_status == 'confirmed':
                     hvc_confirmed.append(export_value)
                 elif win_status == 'unconfirmed':
@@ -473,7 +481,7 @@ class BaseWinMIView(BaseMIView):
                 elif win_status == 'rejected':
                     pass  # todo
 
-            non_export_value = win.total_expected_non_export_value
+            non_export_value = win['total_expected_non_export_value']
             if win_status == 'confirmed':
                 non_export_confirmed.append(non_export_value)
             elif win_status == 'unconfirmed':
@@ -569,15 +577,15 @@ class BaseWinMIView(BaseMIView):
         targets = sorted(targets, key=attrgetter('campaign_id'))
 
         def target_wins(target):
-            return [w for w in wins if w.hvc == target.charcode]
+            return [w for w in wins if w['hvc'] == target.charcode]
 
         return [(t, target_wins(t)) for t in targets]
 
     def _confirmed_unconfirmed(self, wins):
         """ Find total Confirmed & Unconfirmed export value for given Wins """
 
-        confirmed = sum(w.total_expected_export_value for w in wins if self._win_status(w) == 'confirmed')
-        unconfirmed = sum(w.total_expected_export_value for w in wins if self._win_status(w) == 'unconfirmed')
+        confirmed = sum(w['total_expected_export_value'] for w in wins if self._win_status(w) == 'confirmed')
+        unconfirmed = sum(w['total_expected_export_value'] for w in wins if self._win_status(w) == 'unconfirmed')
         return confirmed, unconfirmed
 
     def _top_non_hvc(self, non_hvc_wins_qs, records_to_retreive=5):

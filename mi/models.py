@@ -8,7 +8,6 @@ from wins.models import HVC
 
 
 class OverseasRegion(models.Model):
-
     name = models.CharField(max_length=128)
 
     def __str__(self):
@@ -221,8 +220,11 @@ class Target(models.Model):
     financial_year = models.ForeignKey(FinancialYear, related_name="targets", null=False)
 
     @property
+    def fy_digits(self):
+        return str(self.financial_year_id)[-2:]
+
+    @property
     def name(self):
-        # don't want tight integration with win models...
         return HVC.objects.get(
             campaign_id=self.campaign_id,
             financial_year=str(self.financial_year.id)[-2:],
@@ -230,7 +232,7 @@ class Target(models.Model):
 
     @property
     def charcode(self):
-        return self.campaign_id + str(self.financial_year.id)[-2:]
+        return self.campaign_id + self.fy_digits
 
     def for_fin_year(self, fin_year):
         return self.objects.filter(financial_year=fin_year)
