@@ -71,7 +71,7 @@ class SSOTestCase(BaseSSOTestCase):
         response = self._get('saml2_metadata')
         ElementTree.fromstring(response.content)  # check well formed
         expected = [
-            'AuthnRequestsSigned="true"',
+            'AuthnRequestsSigned="false"',
             'WantAssertionsSigned="true"',
             'entityID="https://sso.datahub.service.trade.gov.uk/sp"',
             'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified',
@@ -86,7 +86,7 @@ class SSOTestCase(BaseSSOTestCase):
             '<input type="submit" value="Log in" />',
         ]
         self._assert_response_has_strings(response, expected)
-        self.assertGreater(len(response.content), 2000)
+        self.assertGreater(len(response.content), 1300)
 
     def test_acs_not_post(self):
         self._get('saml2_acs', 400)
