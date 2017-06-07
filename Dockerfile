@@ -1,6 +1,6 @@
 FROM python:3.5
 
-RUN apt-get update && apt-get install -y postgresql-client
+RUN apt-get update && apt-get install -y postgresql-client xmlsec1
 
 RUN mkdir /app
 
@@ -11,6 +11,7 @@ COPY mi /app/mi
 COPY users /app/users
 COPY wins /app/wins
 COPY fixturedb /app/fixturedb
+COPY sso /app/sso
 
 COPY requirements.txt /app/requirements.txt
 COPY manage.py /app/manage.py

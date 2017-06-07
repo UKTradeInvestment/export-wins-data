@@ -1,6 +1,10 @@
 import logging
 import os
 import sys
+import shutil
+
+import saml2
+import saml2.saml
 
 import dj_database_url
 
@@ -17,6 +21,9 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.getenv("DEBUG", False))
+
+STAGING = bool(os.getenv("STAGING", False))
+
 TEST_RUNNER = os.getenv('TEST_RUNNER', 'django.test.runner.DiscoverRunner')
 
 # As app is running behind a host-based router supplied by Heroku or other
@@ -36,11 +43,13 @@ INSTALLED_APPS = [
     # misc 3rd party
     "django_extensions",
     "raven.contrib.django.raven_compat",
+    'djangosaml2',
 
     # local apps
     "mi.apps.MiConfig",
     "wins.apps.WinsConfig",
     "users.apps.UsersConfig",
+    "sso.apps.SsoConfig",
     "fixturedb.apps.FixtureDBConfig",
 
     # drf
@@ -57,6 +66,7 @@ MIDDLEWARE_CLASSES = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
+    'sso.middleware.SSOAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -117,6 +127,7 @@ LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_L10N = True
+
 USE_TZ = True
 
 
@@ -164,6 +175,92 @@ EMAIL_SSL_KEYFILE = os.getenv("EMAIL_SSL_KEYFILE")
 EMAIL_SSL_CERTFILE = os.getenv("EMAIL_SSL_CERTFILE")
 EMAIL_BACKEND = os.getenv(
     "EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+
+
+# SAML configuration for djangosaml2 & pysaml2
+# note, we implement/hack djangosaml2 ourselves in sso.views, so cannot
+# necessarily use all available djangosaml2/pysaml2 settings here
+SAML_DONT_CHECK_GROUP_MEMBERSHIP = os.getenv('SAML_DONT_CHECK_GROUP_MEMBERSHIP', False)
+SAML_DJANGO_USER_MAIN_ATTRIBUTE = 'email'
+SAML_USE_NAME_ID_AS_USERNAME = True
+SAML_USER_MODEL = 'sso.adfsuser'
+BASEDIR = os.path.dirname(os.path.abspath(__file__))
+
+cert_filename = 'sp_test.crt' # if STAGING or DEBUG else 'sp_prod.crt'
+
+if DEBUG:
+    certfile_path = os.path.join(BASEDIR, 'sp_test.crt')
+    keyfile_path = os.path.join(BASEDIR, 'saml.test_key')
+else:
+    # small hack for heroku, load key from env into file for saml config
+    # since library expects key as file
+    certfile_path = os.path.join(BASEDIR, 'sp_prod.crt')
+    keyfile_path = os.path.join(BASEDIR, 'saml.key')
+
+    env_saml_key = os.getenv("SAML_KEY")
+    env_saml_cert = os.getenv("SAML_CERT")
+    assert env_saml_key, "SAML_KEY not found"
+    assert env_saml_cert, "SAML_CERT not found"
+    with open(keyfile_path, 'w') as f:
+        f.write(env_saml_key)
+    with open(certfile_path, 'w') as f:
+        f.write(env_saml_cert)
+
+# domain the metadata will refer to
+SAML_REDIRECT_RETURN_HOST = os.environ.get(
+    'SAML_REDIRECT_RETURN_HOST',
+    'https://mi.exportwins.service.trade.gov.uk'
+)
+SAML_REMOTE_METADATA = os.getenv('SAML_REMOTE_METADATA', 'ukti_federationmetadata.xml')
+SAML_METADATA_PATH = os.path.join(BASEDIR, SAML_REMOTE_METADATA)
+
+SAML_CONFIG = {
+    # full path to the xmlsec1 binary, latter is where it ends up in Heroku
+    # on ubuntu install with `apt-get install xmlsec`
+    # to get this into Heroku, add the following buildpack on settings page:
+    # https://github.com/uktrade/heroku-buildpack-xmlsec
+    'xmlsec_binary': shutil.which('xmlsec1'),
+
+    # note not a real url, just a global identifier per SAML recommendations
+    'entityid': 'https://sso.datahub.service.trade.gov.uk/sp',
+
+    # directory with attribute mapping
+    'attribute_map_dir': os.path.join(BASEDIR, 'attributemaps'),
+
+    'service': {
+        'sp': {
+            'allow_unsolicited': False,
+            'authn_requests_signed': False,
+            'name': 'Datahub SP',
+            'endpoints': {
+                'assertion_consumer_service': [
+                    (SAML_REDIRECT_RETURN_HOST + '/saml2/acs/', saml2.BINDING_HTTP_POST),
+                ],
+            },
+            # this is the name id format Core responds with
+            'name_id_format': saml2.saml.NAMEID_FORMAT_UNSPECIFIED1,
+        },
+    },
+
+    'valid_for': 1,  # hours the metadata is valid
+
+    # Created with: `openssl req -new -x509 -days 3652 -nodes -sha256 -out sp.crt -keyout saml.key`
+    'key_file': keyfile_path,  # private part, loaded via env var (see above)
+    'cert_file': certfile_path,  # public part
+
+    'encryption_keypairs': [{
+        'key_file': keyfile_path,  # private part
+        'cert_file': certfile_path  # public part
+    }],
+
+    # remote metadata
+    'metadata': {
+        'local': [SAML_METADATA_PATH],
+    },
+}
+
+
+SESSION_COOKIE_SECURE = True
 
 
 # deleted wins from these users will not show up in deleted wins CSV
@@ -215,12 +312,41 @@ if DEBUG:
         'loggers': {
             'django.request': {
                 'handlers': ['console'],
-                'level': 'ERROR',
+                'level': 'DEBUG',
                 'propagate': True,
             },
             '': {
                 'handlers': ['console'],
                 'level': 'DEBUG',
+                'propagate': False,
+            },
+        }
+    }
+else:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'filters': {
+            'require_debug_false': {
+                '()': 'django.utils.log.RequireDebugFalse'
+            }
+        },
+        'handlers': {
+            'console': {
+                'level': 'INFO',
+                'class': 'logging.StreamHandler',
+                'stream': sys.stdout
+            },
+        },
+        'loggers': {
+            'django.request': {
+                'handlers': ['console'],
+                'level': 'ERROR',
+                'propagate': True,
+            },
+            '': {
+                'handlers': ['console'],
+                'level': 'ERROR',
                 'propagate': False,
             },
         }

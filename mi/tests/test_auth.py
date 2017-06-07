@@ -1,14 +1,11 @@
-from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
-from django.test import TestCase, override_settings
 
-from alice.tests.client import AliceClient
 from mi.models import OverseasRegion, SectorTeam, HVCGroup
-from users.factories import UserFactory
+from sso.tests import BaseSSOTestCase
 from wins.factories import HVCFactory
 
 
-class MIPermissionTestCase(TestCase):
+class MIPermissionTestCase(BaseSSOTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -20,58 +17,46 @@ class MIPermissionTestCase(TestCase):
         self.regions_list = reverse("mi:overseas_regions") + "?year=2016"
         self.hvc_groups_list = reverse("mi:hvc_groups") + "?year=2016"
 
-        self.alice_client = AliceClient()
-
-        self.user = UserFactory.create()
-        self.user.set_password("asdf")
-        self.user.save()
-
-    def _add_to_mi_group(self):
-        mi_group = Group.objects.get(name="mi_group")
-        mi_group.user_set.add(self.user)
-
-    def _test_get_status(self, url, status, mi=False):
-        if mi:
-            self._add_to_mi_group()
-        response = self.alice_client.get(url)
-        self.assertEqual(response.status_code, status)
+    def _test_get_status(self, url, status, mi=False, secret=None):
+        if secret == 'mi':
+            self._get_status_mi_secret(url, status, perm=mi)
+        elif secret == 'admin':
+            self._get_status_admin_secret(url, status, perm=mi)
+        elif secret == 'ui':
+            self._get_status_ui_secret(url, status, perm=mi)
+        else:
+            self._get_status_no_secret(url, status, perm=mi)
 
     # Sector Teams List
     def test_mi_st_not_allowed_without_group(self):
         self._test_get_status(self.sector_teams_list, 400)
 
     def test_mi_st_not_allowed_no_mi_secret(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
+        self._login()
         self._test_get_status(self.sector_teams_list, 400, mi=True)
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_mi_st_not_allowed_no_login(self):
-        self._test_get_status(self.sector_teams_list, 403, mi=True)
+        self._test_get_status(self.sector_teams_list, 403, mi=True, secret='mi')
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_mi_st_not_allowed_bad_login(self):
         self.alice_client.login(username="no-email", password="asdf")
-        self._test_get_status(self.sector_teams_list, 403, mi=True)
+        self._test_get_status(self.sector_teams_list, 403, mi=True, secret='mi')
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_mi_st_not_allowed_no_mi_group(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
-        self._test_get_status(self.sector_teams_list, 403, mi=False)
+        self._login()
+        self._test_get_status(self.sector_teams_list, 403, mi=False, secret='mi')
 
-    @override_settings(UI_SECRET=AliceClient.SECRET)
     def test_mi_st_not_allowed_ui_secret(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
-        self._test_get_status(self.sector_teams_list, 403, mi=True)
+        self._login()
+        self._test_get_status(self.sector_teams_list, 403, mi=True, secret='ui')
 
-    @override_settings(ADMIN_SECRET=AliceClient.SECRET)
     def test_mi_st_not_allowed_admin_secret(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
-        self._test_get_status(self.sector_teams_list, 403, mi=True)
+        self._login()
+        self._test_get_status(self.sector_teams_list, 403, mi=True, secret='admin')
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_mi_st_allowed(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
-        self._test_get_status(self.sector_teams_list, 200, mi=True)
+        self._login()
+        self._test_get_status(self.sector_teams_list, 200, mi=True, secret='mi')
 
     # specific Sector Team
     def _get_first_sector_team_url(self):
@@ -83,74 +68,62 @@ class MIPermissionTestCase(TestCase):
         self._test_get_status(self._get_first_sector_team_url(), 400)
 
     def test_mi_st_1_not_allowed_no_mi_secret(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
+        self._login()
         self._test_get_status(self._get_first_sector_team_url(), 400, mi=True)
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_mi_st_1_not_allowed_no_login(self):
-        self._test_get_status(self._get_first_sector_team_url(), 403, mi=True)
+        self._test_get_status(self._get_first_sector_team_url(), 403, mi=True, secret='mi')
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_mi_st_1_not_allowed_bad_login(self):
         self.alice_client.login(username="no-email", password="asdf")
-        self._test_get_status(self._get_first_sector_team_url(), 403, mi=True)
+        self._test_get_status(self._get_first_sector_team_url(), 403, mi=True, secret='mi')
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_mi_st_1_not_allowed_no_mi_group(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
-        self._test_get_status(self._get_first_sector_team_url(), 403, mi=False)
+        self._login()
+        self._test_get_status(self._get_first_sector_team_url(), 403, mi=False, secret='mi')
 
-    @override_settings(UI_SECRET=AliceClient.SECRET)
     def test_mi_st_1_not_allowed_ui_secret(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
-        self._test_get_status(self._get_first_sector_team_url(), 403, mi=True)
+        self._login()
+        self._test_get_status(self._get_first_sector_team_url(), 403, mi=True, secret='ui')
 
-    @override_settings(ADMIN_SECRET=AliceClient.SECRET)
     def test_mi_st_1_not_allowed_admin_secret(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
-        self._test_get_status(self._get_first_sector_team_url(), 403, mi=True)
+        self._login()
+        self._test_get_status(self._get_first_sector_team_url(), 403, mi=True, secret='admin')
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_mi_st_1_allowed(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
-        self._test_get_status(self._get_first_sector_team_url(), 200, mi=True)
+        self._login()
+        self._test_get_status(self._get_first_sector_team_url(), 200, mi=True, secret='mi')
 
     # Overseas Regions List
     def test_mi_or_not_allowed_without_group(self):
         self._test_get_status(self.regions_list, 400)
 
     def test_mi_or_not_allowed_no_mi_secret(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
+        self._login()
         self._test_get_status(self.regions_list, 400, mi=True)
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_mi_or_not_allowed_no_login(self):
-        self._test_get_status(self.regions_list, 403, mi=True)
+        self._test_get_status(self.regions_list, 403, mi=True, secret='mi')
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_mi_or_not_allowed_bad_login(self):
         self.alice_client.login(username="no-email", password="asdf")
-        self._test_get_status(self.regions_list, 403, mi=True)
+        self._test_get_status(self.regions_list, 403, mi=True, secret='mi')
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_mi_or_not_allowed_no_mi_group(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
-        self._test_get_status(self.regions_list, 403, mi=False)
+        self._login()
+        self._test_get_status(self.regions_list, 403, mi=False, secret='mi')
 
-    @override_settings(UI_SECRET=AliceClient.SECRET)
     def test_mi_or_not_allowed_ui_secret(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
-        self._test_get_status(self.regions_list, 403, mi=True)
+        self._login()
+        self._test_get_status(self.regions_list, 403, mi=True, secret='ui')
 
-    @override_settings(ADMIN_SECRET=AliceClient.SECRET)
     def test_mi_or_not_allowed_admin_secret(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
-        self._test_get_status(self.regions_list, 403, mi=True)
+        self._login()
+        self._test_get_status(self.regions_list, 403, mi=True, secret='admin')
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_mi_or_allowed(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
-        self._test_get_status(self.regions_list, 200, mi=True)
+        self._login()
+        self._test_get_status(self.regions_list, 200, mi=True, secret='mi')
 
     # specific Overseas Region
     def _get_first_region_url(self):
@@ -162,74 +135,62 @@ class MIPermissionTestCase(TestCase):
         self._test_get_status(self._get_first_region_url(), 400)
 
     def test_mi_or_1_not_allowed_no_mi_secret(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
+        self._login()
         self._test_get_status(self._get_first_region_url(), 400, mi=True)
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_mi_or_1_not_allowed_no_login(self):
-        self._test_get_status(self._get_first_region_url(), 403, mi=True)
+        self._test_get_status(self._get_first_region_url(), 403, mi=True, secret='mi')
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_mi_or_1_not_allowed_bad_login(self):
         self.alice_client.login(username="no-email", password="asdf")
-        self._test_get_status(self._get_first_region_url(), 403, mi=True)
+        self._test_get_status(self._get_first_region_url(), 403, mi=True, secret='mi')
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_mi_or_1_not_allowed_no_mi_group(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
-        self._test_get_status(self._get_first_region_url(), 403, mi=False)
+        self._login()
+        self._test_get_status(self._get_first_region_url(), 403, mi=False, secret='mi')
 
-    @override_settings(UI_SECRET=AliceClient.SECRET)
     def test_mi_or_1_not_allowed_ui_secret(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
-        self._test_get_status(self._get_first_region_url(), 403, mi=True)
+        self._login()
+        self._test_get_status(self._get_first_region_url(), 403, mi=True, secret='ui')
 
-    @override_settings(ADMIN_SECRET=AliceClient.SECRET)
     def test_mi_or_1_not_allowed_admin_secret(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
-        self._test_get_status(self._get_first_region_url(), 403, mi=True)
+        self._login()
+        self._test_get_status(self._get_first_region_url(), 403, mi=True, secret='admin')
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_mi_or_1_allowed(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
-        self._test_get_status(self._get_first_region_url(), 200, mi=True)
+        self._login()
+        self._test_get_status(self._get_first_region_url(), 200, mi=True, secret='mi')
 
     # HVC Groups List
     def test_mi_hg_not_allowed_without_group(self):
         self._test_get_status(self.hvc_groups_list, 400)
 
     def test_mi_hg_not_allowed_no_mi_secret(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
+        self._login()
         self._test_get_status(self.hvc_groups_list, 400, mi=True)
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_mi_hg_not_allowed_no_login(self):
-        self._test_get_status(self.hvc_groups_list, 403, mi=True)
+        self._test_get_status(self.hvc_groups_list, 403, mi=True, secret='mi')
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_mi_hg_not_allowed_bad_login(self):
         self.alice_client.login(username="no-email", password="asdf")
-        self._test_get_status(self.hvc_groups_list, 403, mi=True)
+        self._test_get_status(self.hvc_groups_list, 403, mi=True, secret='mi')
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_mi_hg_not_allowed_no_mi_group(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
-        self._test_get_status(self.hvc_groups_list, 403, mi=False)
+        self._login()
+        self._test_get_status(self.hvc_groups_list, 403, mi=False, secret='mi')
 
-    @override_settings(UI_SECRET=AliceClient.SECRET)
     def test_mi_hg_not_allowed_ui_secret(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
-        self._test_get_status(self.hvc_groups_list, 403, mi=True)
+        self._login()
+        self._test_get_status(self.hvc_groups_list, 403, mi=True, secret='ui')
 
-    @override_settings(ADMIN_SECRET=AliceClient.SECRET)
     def test_mi_hg_not_allowed_admin_secret(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
-        self._test_get_status(self.hvc_groups_list, 403, mi=True)
+        self._login()
+        self._test_get_status(self.hvc_groups_list, 403, mi=True, secret='admin')
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_mi_hg_allowed(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
-        self._test_get_status(self.hvc_groups_list, 200, mi=True)
+        self._login()
+        self._test_get_status(self.hvc_groups_list, 200, mi=True, secret='mi')
 
     # specific HVC Group
     def _get_first_hvc_group_url(self):
@@ -241,34 +202,28 @@ class MIPermissionTestCase(TestCase):
         self._test_get_status(self._get_first_hvc_group_url(), 400)
 
     def test_mi_hg_1_not_allowed_no_mi_secret(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
+        self._login()
         self._test_get_status(self._get_first_hvc_group_url(), 400, mi=True)
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_mi_hg_1_not_allowed_no_login(self):
-        self._test_get_status(self._get_first_hvc_group_url(), 403, mi=True)
+        self._test_get_status(self._get_first_hvc_group_url(), 403, mi=True, secret='mi')
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_mi_hg_1_not_allowed_bad_login(self):
         self.alice_client.login(username="no-email", password="asdf")
-        self._test_get_status(self._get_first_hvc_group_url(), 403, mi=True)
+        self._test_get_status(self._get_first_hvc_group_url(), 403, mi=True, secret='mi')
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_mi_hg_1_not_allowed_no_mi_group(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
-        self._test_get_status(self._get_first_hvc_group_url(), 403, mi=False)
+        self._login()
+        self._test_get_status(self._get_first_hvc_group_url(), 403, mi=False, secret='mi')
 
-    @override_settings(UI_SECRET=AliceClient.SECRET)
     def test_mi_hg_1_not_allowed_ui_secret(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
-        self._test_get_status(self._get_first_hvc_group_url(), 403, mi=True)
+        self._login()
+        self._test_get_status(self._get_first_hvc_group_url(), 403, mi=True, secret='ui')
 
-    @override_settings(ADMIN_SECRET=AliceClient.SECRET)
     def test_mi_hg_1_not_allowed_admin_secret(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
-        self._test_get_status(self._get_first_hvc_group_url(), 403, mi=True)
+        self._login()
+        self._test_get_status(self._get_first_hvc_group_url(), 403, mi=True, secret='admin')
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_mi_hg_1_allowed(self):
-        self.alice_client.login(username=self.user.email, password="asdf")
-        self._test_get_status(self._get_first_hvc_group_url(), 200, mi=True)
+        self._login()
+        self._test_get_status(self._get_first_hvc_group_url(), 200, mi=True, secret='mi')

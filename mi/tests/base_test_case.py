@@ -1,14 +1,15 @@
 import json
 
 from django.contrib.auth.models import Group
-from django.test import override_settings, TestCase
+from django.test import override_settings
 
 from alice.tests.client import AliceClient
+from sso.tests import BaseSSOTestCase
 from users.factories import UserFactory
 from wins.factories import HVCFactory
 
 
-class MiApiViewsBaseTestCase(TestCase):
+class MiApiViewsBaseTestCase(BaseSSOTestCase):
     maxDiff = None
     fin_start_date = "2016-04-01"
     frozen_date = "2016-11-01"
@@ -23,14 +24,9 @@ class MiApiViewsBaseTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.alice_client = AliceClient()
 
         cls.user = UserFactory.create()
-        cls.user.set_password("asdf")
         cls.user.save()
-
-        mi_group = Group.objects.get(name="mi_group")
-        mi_group.user_set.add(cls.user)
 
         # needed to get names of HVCs, have to do again because factory
         # remembers other tests, even if flushed from DB
@@ -39,13 +35,6 @@ class MiApiViewsBaseTestCase(TestCase):
                 campaign_id='E%03d' % (i + 1),
                 financial_year=16,
             )
-
-    @override_settings(MI_SECRET=AliceClient.SECRET)
-    def _get_api_response(self, url, status_code=200):
-        self.alice_client.login(username=self.user.email, password="asdf")
-        response = self.alice_client.get(url)
-        self.assertEqual(response.status_code, status_code)
-        return response
 
     def _get_api_response_value(self, url):
         resp = self._get_api_response(url)
