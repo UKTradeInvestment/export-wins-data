@@ -230,7 +230,7 @@ SAML_CONFIG = {
     'service': {
         'sp': {
             'allow_unsolicited': False,
-            'authn_requests_signed': True,
+            'authn_requests_signed': False,
             'name': 'Datahub SP',
             'endpoints': {
                 'assertion_consumer_service': [
