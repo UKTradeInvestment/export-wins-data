@@ -1,5 +1,7 @@
 FROM python:3.5
 
+RUN apt-get update && apt-get install -y postgresql-client
+
 RUN mkdir /app
 
 COPY alice /app/alice
@@ -13,6 +15,7 @@ COPY fixturedb /app/fixturedb
 COPY requirements.txt /app/requirements.txt
 COPY manage.py /app/manage.py
 COPY start.sh /app/start.sh
+COPY start-wait-for-db.sh /app/start-wait-for-db.sh
 
 WORKDIR /app
 RUN pip install -r /app/requirements.txt
