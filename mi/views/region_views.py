@@ -18,7 +18,10 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
 
     def _regions_for_fin_year(self):
         """ Returns overseas region based on countries from Targets for the given financial year """
-        return OverseasRegion.objects.filter(countries__targets__financial_year=self.fin_year).distinct()
+        return OverseasRegion.objects.filter(
+            countries__targets__financial_year=self.fin_year,
+            overseasregionyear__financial_year=self.fin_year
+        ).distinct()
 
     def _get_region_wins(self, region):
         """
@@ -26,7 +29,7 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
 
         """
         return self._wins().filter(
-            country__in=region.country_ids,
+            country__in=region.country_ids(self.fin_year),
         )
 
     def _get_region_hvc_wins(self, region):
@@ -35,13 +38,13 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
 
     def _get_region_non_hvc_wins(self, region):
         """ non-HVC wins alone for the `OverseasRegion` """
-        return self._non_hvc_wins().filter(country__in=region.country_ids)
+        return self._non_hvc_wins().filter(country__in=region.country_ids(self.fin_year))
 
     def _region_result(self, region):
         """ Basic data about region - name & hvc's """
         return {
             'name': region.name,
-            'avg_time_to_confirm': self._average_confirm_time(win__country__in=region.country_ids),
+            'avg_time_to_confirm': self._average_confirm_time(win__country__in=region.country_ids(self.fin_year)),
             'hvcs': self._hvc_overview(region.targets),
         }
 
@@ -186,7 +189,7 @@ class OverseasRegionOverviewView(BaseOverseasRegionsMIView):
         """ Calculate HVC & non-HVC data for an Overseas region """
 
         targets = region_obj.targets
-        country_ids = region_obj.country_ids
+        country_ids = region_obj.country_ids(self.fin_year)
         total_countries = len(country_ids)
         total_target = sum(t.target for t in targets)
 
