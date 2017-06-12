@@ -1,10 +1,25 @@
 from itertools import groupby
 from operator import attrgetter, itemgetter
 
-from mi.models import OverseasRegion
+from mi.models import OverseasRegion, OverseasRegionGroup
+from mi.serializers import OverseasRegionGroupSerializer
 from mi.utils import month_iterator, sort_campaigns_by
-from mi.views.base_view import BaseWinMIView
+from mi.views.base_view import BaseWinMIView, BaseMIView
 
+
+class BaseOverseasRegionGroupMIView(BaseMIView):
+
+    def get_queryset(self):
+        return OverseasRegionGroup.objects.all()
+
+    def get_results(self):
+        return [OverseasRegionGroupSerializer(instance=x).data for x in self.get_queryset()]
+
+    def get(self, request):
+        response = self._handle_fin_year(request)
+        if response:
+            return response
+        return self._success(self.get_results())
 
 class BaseOverseasRegionsMIView(BaseWinMIView):
     """ Abstract Base for other Region-related MI endpoints to inherit from """
@@ -48,15 +63,19 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
             'hvcs': self._hvc_overview(region.targets),
         }
 
+class OverseasRegionGroupListView(BaseOverseasRegionGroupMIView):
+    """
+    List all Overseas Region Groups for current year
+    """
+    def get_queryset(self):
+        return OverseasRegionGroup.objects.filter(overseasregiongroupyear__financial_year=self.fin_year).distinct()
+
 
 class OverseasRegionsListView(BaseOverseasRegionsMIView):
     """ List all Overseas Regions """
 
     def get(self, request):
         response = self._handle_fin_year(request)
-        if response:
-            return response
-
         if response:
             return response
 

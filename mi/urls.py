@@ -10,6 +10,7 @@ from mi.views.parent_views import (
 )
 from mi.views.region_views import (
     OverseasRegionsListView,
+    OverseasRegionGroupListView,
     OverseasRegionOverviewView,
     OverseasRegionDetailView,
     OverseasRegionMonthsView,
@@ -45,6 +46,7 @@ urlpatterns = [
     url(r"^parent_sectors/$", ParentSectorListView.as_view(), name="parent_sectors"),
 
     url(r"^os_regions/$", OverseasRegionsListView.as_view(), name="overseas_regions"),
+    url(r"^os_region_groups/$", OverseasRegionGroupListView.as_view(), name="overseas_region_groups"),
     url(r"^os_regions/overview/$", OverseasRegionOverviewView.as_view(), name="overseas_region_overview"),
     url(r"^os_regions/(?P<region_id>\d+)/$", OverseasRegionDetailView.as_view(), name="overseas_region_detail"),
     url(r"^os_regions/(?P<region_id>\d+)/months/$", OverseasRegionMonthsView.as_view()),
