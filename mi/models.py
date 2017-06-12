@@ -7,12 +7,24 @@ from django_countries.fields import CountryField
 
 from wins.models import HVC
 
+
+class OverseasRegionGroupYear(models.Model):
+    financial_year = models.ForeignKey('mi.FinancialYear')
+    region = models.ForeignKey('mi.OverseasRegion')
+    group = models.ForeignKey('mi.OverseasRegionGroup')
+
 class OverseasRegionGroup(models.Model):
     name = models.CharField(max_length=128)
+    regions = models.ManyToManyField(
+        'mi.OverseasRegion',
+        through=OverseasRegionGroupYear
+    )
+
+    def __str__(self):
+        return self.name
 
 class OverseasRegion(models.Model):
     name = models.CharField(max_length=128)
-    group = models.ForeignKey(OverseasRegionGroup, related_name='regions', null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return 'OverseasRegion: {}'.format(self.name)
@@ -68,6 +80,7 @@ class OverseasRegionYear(models.Model):
     class Meta:
         unique_together = (('financial_year', 'country'),)
 
+
 class Country(models.Model):
     """
     Represents a DIT Country
@@ -76,7 +89,6 @@ class Country(models.Model):
     """
 
     country = CountryField(unique=True)
-    # overseas_region = models.ForeignKey(OverseasRegion, related_name='countries')
     overseas_regions = models.ManyToManyField(
         OverseasRegion,
         through=OverseasRegionYear,
