@@ -1,11 +1,27 @@
 import datetime
 
 from django.db import models
+from django.utils.functional import cached_property
 
 from django_countries.fields import CountryField
 
 from wins.models import HVC
 
+
+class OverseasRegionGroupYear(models.Model):
+    financial_year = models.ForeignKey('mi.FinancialYear')
+    region = models.ForeignKey('mi.OverseasRegion')
+    group = models.ForeignKey('mi.OverseasRegionGroup')
+
+class OverseasRegionGroup(models.Model):
+    name = models.CharField(max_length=128)
+    regions = models.ManyToManyField(
+        'mi.OverseasRegion',
+        through=OverseasRegionGroupYear
+    )
+
+    def __str__(self):
+        return self.name
 
 class OverseasRegion(models.Model):
     name = models.CharField(max_length=128)
@@ -43,11 +59,26 @@ class OverseasRegion(models.Model):
 
         return [t.campaign_id for t in self.fin_year_targets(fin_year)]
 
-    @property
-    def country_ids(self):
+    def country_ids(self, year):
         """ List of all countries within the `OverseasRegion` """
+        countries = self.countries.filter(overseasregionyear__financial_year_id=year.id)
+        return countries.values_list('country', flat=True)
 
-        return [s.country for s in self.countries.all()]
+
+class OverseasRegionYear(models.Model):
+    country = models.ForeignKey('Country')
+    financial_year = models.ForeignKey('FinancialYear')
+    overseas_region = models.ForeignKey(OverseasRegion)
+
+    def __str__(self):
+        return '{country} - {year} - {overseas_region}'.format(
+            overseas_region=self.overseas_region.name,
+            year=self.financial_year.id,
+            country=self.country.country
+        )
+
+    class Meta:
+        unique_together = (('financial_year', 'country'),)
 
 
 class Country(models.Model):
@@ -58,8 +89,9 @@ class Country(models.Model):
     """
 
     country = CountryField(unique=True)
-    overseas_region = models.ForeignKey(
+    overseas_regions = models.ManyToManyField(
         OverseasRegion,
+        through=OverseasRegionYear,
         related_name='countries',
     )
 
@@ -68,6 +100,13 @@ class Country(models.Model):
             self.country.name,
             self.overseas_region,
         )
+
+    @cached_property
+    def overseas_region(self):
+        """
+        the most up to date overseas region that a country belongs to
+        """
+        return self.overseas_regions.order_by('overseasregionyear__financial_year').last()
 
 
 class SectorTeam(models.Model):
@@ -216,7 +255,7 @@ class Target(models.Model):
     target = models.BigIntegerField()
     sector_team = models.ForeignKey(SectorTeam, related_name="targets")
     hvc_group = models.ForeignKey(HVCGroup, related_name="targets")
-    country = models.ForeignKey(Country, related_name="targets", null=True)
+    country = models.ForeignKey(Country, related_name="targets", null=True, on_delete=models.SET_NULL)
     financial_year = models.ForeignKey(FinancialYear, related_name="targets", null=False)
 
     @property
