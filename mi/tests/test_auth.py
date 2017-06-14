@@ -1,3 +1,5 @@
+from optparse import OptionParser
+
 from django.core.urlresolvers import reverse
 
 from mi.models import OverseasRegion, SectorTeam, HVCGroup
@@ -13,6 +15,9 @@ class MIPermissionTestCase(BaseSSOTestCase):
         HVCFactory.create_batch(255, financial_year=16)
 
     def setUp(self):
+        from django.core.management import call_command
+        call_command('create_missing_hvcs', verbose=False)
+
         self.sector_teams_list = reverse("mi:sector_teams") + "?year=2016"
         self.regions_list = reverse("mi:overseas_regions") + "?year=2016"
         self.hvc_groups_list = reverse("mi:hvc_groups") + "?year=2016"

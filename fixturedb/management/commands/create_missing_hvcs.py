@@ -10,6 +10,8 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--dryrun', type=bool,
                             required=False, default=False)
+        parser.add_argument('--verbose', type=bool,
+                            required=False, default=True)
 
     def handle(self, *args, **options):
         to_create = get_all_hvcs_referenced_by_targets()
@@ -24,6 +26,7 @@ class Command(BaseCommand):
                     'Would create HVC {name}'.format(name=i.name)))
         else:
             created = HVC.objects.bulk_create(to_create_models)
-            for i in created:
-                self.stdout.write(self.style.SUCCESS(
-                    'Created HVC {name}'.format(name=i.name)))
+            if options['verbose']:
+                for i in created:
+                    self.stdout.write(self.style.SUCCESS(
+                        'Created HVC {name}'.format(name=i.name)))

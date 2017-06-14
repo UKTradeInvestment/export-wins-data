@@ -255,7 +255,7 @@ class Target(models.Model):
     target = models.BigIntegerField()
     sector_team = models.ForeignKey(SectorTeam, related_name="targets")
     hvc_group = models.ForeignKey(HVCGroup, related_name="targets")
-    country = models.ForeignKey(Country, related_name="targets", null=True, on_delete=models.SET_NULL)
+    country = models.ManyToManyField(Country, related_name="targets")
     financial_year = models.ForeignKey(FinancialYear, related_name="targets", null=False)
 
     @property
@@ -264,10 +264,16 @@ class Target(models.Model):
 
     @property
     def name(self):
-        return HVC.objects.get(
-            campaign_id=self.campaign_id,
-            financial_year=str(self.financial_year.id)[-2:],
-        ).name
+        try:
+            hvc = HVC.objects.get(
+                campaign_id=self.campaign_id,
+                financial_year=str(self.financial_year.id)[-2:],
+            )
+            return hvc.name
+        except HVC.DoesNotExist:
+            print(self.campaign_id)
+            print(self.financial_year.id)
+            raise
 
     @property
     def charcode(self):

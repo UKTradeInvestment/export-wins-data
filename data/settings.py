@@ -360,6 +360,8 @@ if len(sys.argv) > 1 and sys.argv[1] == 'test':
 # django countries only uses ISO countries. Wikipedia says, "XK is a
 # 'user assigned' ISO 3166 code not designated by the standard, but used by
 # the European Commission, Switzerland, the Deutsche Bundesbank..."
+# adding Global (XG) to deal with global HVCs
 COUNTRIES_OVERRIDE = {
     'XK': 'Kosovo',
+    'XG': 'Global'
 }
