@@ -100,3 +100,32 @@ class OverseasRegionGroupListViewTestCase(MiApiViewsBaseTestCase):
 
         self.assertResponse()
 
+class OverseasRegionListViewTestCase(MiApiViewsBaseTestCase):
+
+    def test_list_returns_only_countries_for_2016(self):
+        self.url = reverse('mi:overseas_regions') + '?year=2016'
+        response_data = self._api_response_data
+        self.assertEqual(
+            17,
+            len(response_data)
+        )
+        countries = {x['name'].lower() for x in response_data}
+
+        # Africa region should only be in 2017 data
+        self.assertFalse('africa' in countries)
+
+        self.assertTrue('north africa' in countries)
+
+    def test_list_only_returns_countries_for_2017(self):
+        self.url = reverse('mi:overseas_regions') + '?year=2017'
+        response_data = self._api_response_data
+        self.assertEqual(
+            15,
+            len(response_data)
+        )
+
+        countries = {x['name'].lower() for x in response_data}
+        self.assertTrue('africa' in countries)
+
+        # North Africa removed in 2017
+        self.assertTrue('north africa' in countries)
