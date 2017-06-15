@@ -100,32 +100,55 @@ class OverseasRegionGroupListViewTestCase(MiApiViewsBaseTestCase):
 
         self.assertResponse()
 
-class OverseasRegionListViewTestCase(MiApiViewsBaseTestCase):
+class OverseasRegionBaseViewTestCase(MiApiViewsBaseTestCase):
+
+    view_base_url = reverse('mi:overseas_regions')
+
+    def get_url_for_year(self, year):
+        return '{base}?year={year}'.format(base=self.view_base_url, year=year)
+
+    def assert_result_count(self, expected_length):
+        self.assertEqual(
+            expected_length,
+            len(self._api_response_data)
+        )
+
+    @property
+    def countries(self):
+        return {x['name'].lower() for x in self._api_response_data}
+
+class OverseasRegionListViewTestCase(OverseasRegionBaseViewTestCase):
+    view_base_url = reverse('mi:overseas_region_overview')
 
     def test_list_returns_only_countries_for_2016(self):
-        self.url = reverse('mi:overseas_regions') + '?year=2016'
-        response_data = self._api_response_data
-        self.assertEqual(
-            17,
-            len(response_data)
-        )
-        countries = {x['name'].lower() for x in response_data}
+        self.url = self.get_url_for_year(2016)
+        self.assert_result_count(17)
 
         # Africa region should only be in 2017 data
-        self.assertFalse('africa' in countries)
-
-        self.assertTrue('north africa' in countries)
+        self.assertFalse('africa' in self.countries)
+        self.assertTrue('north africa' in self.countries)
 
     def test_list_only_returns_countries_for_2017(self):
-        self.url = reverse('mi:overseas_regions') + '?year=2017'
-        response_data = self._api_response_data
-        self.assertEqual(
-            15,
-            len(response_data)
-        )
+        self.url = self.get_url_for_year(2017)
+        self.assert_result_count(15)
+        self.assertTrue('africa' in self.countries)
+        # North Africa still in 2017
+        self.assertTrue('north africa' in self.countries)
 
-        countries = {x['name'].lower() for x in response_data}
-        self.assertTrue('africa' in countries)
+class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
 
-        # North Africa removed in 2017
-        self.assertTrue('north africa' in countries)
+    def test_list_returns_only_countries_for_2016(self):
+        self.url = self.get_url_for_year(2016)
+        self.assert_result_count(17)
+
+        # Africa region should only be in 2017 data
+        self.assertFalse('africa' in self.countries)
+        self.assertTrue('north africa' in self.countries)
+
+    def test_list_only_returns_countries_for_2017(self):
+        self.url = self.get_url_for_year(2017)
+        self.assert_result_count(15)
+        self.assertTrue('africa' in self.countries)
+        # North Africa still in 2017
+        self.assertTrue('north africa' in self.countries)
+
