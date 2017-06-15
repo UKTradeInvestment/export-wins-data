@@ -10,11 +10,6 @@ from fixturedb.factories.win import create_win_factory
 from mi.tests.base_test_case import MiApiViewsBaseTestCase
 from mi.utils import sort_campaigns_by
 from wins.constants import SECTORS
-from wins.factories import (
-    CustomerResponseFactory,
-    NotificationFactory,
-    WinFactory,
-)
 from wins.models import HVC
 
 
