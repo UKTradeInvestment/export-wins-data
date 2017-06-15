@@ -13,7 +13,7 @@ class BaseOverseasRegionGroupMIView(BaseMIView):
         return OverseasRegionGroup.objects.all()
 
     def get_results(self):
-        return [OverseasRegionGroupSerializer(instance=x).data for x in self.get_queryset()]
+        return [OverseasRegionGroupSerializer(instance=x, year=self.fin_year).data for x in self.get_queryset().order_by('name')]
 
     def get(self, request):
         response = self._handle_fin_year(request)
@@ -68,7 +68,9 @@ class OverseasRegionGroupListView(BaseOverseasRegionGroupMIView):
     List all Overseas Region Groups for current year
     """
     def get_queryset(self):
-        return OverseasRegionGroup.objects.filter(overseasregiongroupyear__financial_year=self.fin_year).distinct()
+        return super().get_queryset().filter(
+            overseasregiongroupyear__financial_year=self.fin_year
+        ).distinct()
 
 
 class OverseasRegionsListView(BaseOverseasRegionsMIView):

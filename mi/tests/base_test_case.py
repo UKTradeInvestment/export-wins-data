@@ -57,5 +57,4 @@ class MiApiViewsBaseTestCase(BaseSSOTestCase):
         """
         assert hasattr(self, 'expected_response'),\
             'expected_response not added to TestCase class'
-        api_response_result = json.loads(self._api_response_json)["results"]
-        self.assertJSONEqual(json.dumps(api_response_result), self.expected_response)
+        self.assertJSONEqual(json.dumps(self._api_response_data), self.expected_response)

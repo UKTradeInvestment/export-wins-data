@@ -20,6 +20,9 @@ class OverseasRegionGroup(models.Model):
         through=OverseasRegionGroupYear
     )
 
+    def regions_for_year(self, fin_year):
+        return self.regions.filter(overseasregiongroupyear__financial_year=fin_year)
+
     def __str__(self):
         return self.name
 
