@@ -1,3 +1,4 @@
+from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer
 
 from .models import SectorTeam, OverseasRegion, ParentSector, OverseasRegionGroup
@@ -22,8 +23,18 @@ class OverseasRegionSerializer(ModelSerializer):
 
 
 class OverseasRegionGroupSerializer(ModelSerializer):
+    year = None
+    regions = SerializerMethodField(method_name='regions_for_year')
 
-    regions = OverseasRegionSerializer(many=True)
+    def __init__(self, *args, **kwargs):
+        self.year = kwargs.pop('year', None)
+        super().__init__(*args, **kwargs)
+
+    def regions_for_year(self, obj):
+        qs = obj.regions.all()
+        if self.year:
+            qs = qs.filter(overseasregiongroupyear__financial_year=self.year)
+        return [OverseasRegionSerializer(instance=x).data for x in qs.order_by('name')]
 
     class Meta:
         model = OverseasRegionGroup
@@ -32,6 +43,7 @@ class OverseasRegionGroupSerializer(ModelSerializer):
             'name',
             'regions'
         ]
+
 
 class ParentSectorSerializer(ModelSerializer):
     class Meta:
