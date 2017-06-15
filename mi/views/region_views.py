@@ -34,8 +34,8 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
     def _regions_for_fin_year(self):
         """ Returns overseas region based on countries from Targets for the given financial year """
         return OverseasRegion.objects.filter(
-            countries__targets__financial_year=self.fin_year,
-            overseasregionyear__financial_year=self.fin_year
+            countries__targets__financial_year_id=self.fin_year.id,
+            overseasregionyear__financial_year_id=self.fin_year.id
         ).distinct()
 
     def _get_region_wins(self, region):
