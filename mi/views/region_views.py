@@ -256,6 +256,6 @@ class OverseasRegionOverviewView(BaseOverseasRegionsMIView):
         if response:
             return response
 
-        result = [self._region_data(region) for region in OverseasRegion.objects.all()]
+        result = [self._region_data(region) for region in self._regions_for_fin_year()]
         self._fill_date_ranges()
         return self._success(result)
