@@ -40,8 +40,18 @@ class BaseSectorMIView(BaseWinMIView):
 
     def _get_group_wins(self, group):
         """ HVC wins of the HVC Group, for given `FinancialYear` """
+        campaign_ids = group.campaign_ids
+        if group.name == "Consumer and Retail":
+            other_group = HVCGroup.objects.get(name="Consumer Goods & Retail")
+            campaign_ids.extend(other_group.campaign_ids)
+        elif group.name == "Creative":
+            other_group = HVCGroup.objects.get(name="Creative Industries")
+            campaign_ids.extend(other_group.campaign_ids)
+        elif group.id == 34:  # Sports Economy has same name across
+            other_group = HVCGroup.objects.get(id=27)
+            campaign_ids.extend(other_group.campaign_ids)
 
-        return self._wins().filter(hvc__in=group.fin_year_campaign_ids(self.fin_year))
+        return self._wins().filter(hvc__in=campaign_ids)
 
     def _get_hvc_wins(self, team):
         """ HVC wins alone for the `SectorTeam`
@@ -49,7 +59,13 @@ class BaseSectorMIView(BaseWinMIView):
         A `Win` is considered HVC for this team, when it falls under a Campaign that belongs to this `SectorTeam`
 
         """
-        return self._wins().filter(hvc__in=team.fin_year_campaign_ids(self.fin_year))
+        # hack for Consumer & Creative
+        campaign_ids = team.campaign_ids
+        if team.name == "Creative, Consumer and Sports":
+            other_team = SectorTeam.objects.get(name="Consumer & Creative")
+            campaign_ids.extend(other_team.campaign_ids)
+
+        return self._wins().filter(hvc__in=campaign_ids)
 
     def _get_non_hvc_wins(self, team):
         """ non-HVC wins alone for the `SectorTeam`

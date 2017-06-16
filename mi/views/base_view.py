@@ -580,7 +580,7 @@ class BaseWinMIView(BaseMIView):
         targets = sorted(targets, key=attrgetter('campaign_id'))
 
         def target_wins(target):
-            return [w for w in wins if w['hvc'] == target.charcode]
+            return [w for w in wins if w['hvc'][:-2] == target.campaign_id]
 
         return [(t, target_wins(t)) for t in targets]
 
