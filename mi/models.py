@@ -274,8 +274,6 @@ class Target(models.Model):
             )
             return hvc.name
         except HVC.DoesNotExist:
-            print(self.campaign_id)
-            print(self.financial_year.id)
             raise
 
     @property

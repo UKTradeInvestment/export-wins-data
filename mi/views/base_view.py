@@ -218,7 +218,7 @@ class BaseWinMIView(BaseMIView):
 
         hvc_colours = []
         for t in targets:
-            target_wins = [win for win in hvc_wins if win['hvc'] == t.charcode]
+            target_wins = [win for win in hvc_wins if win['hvc'][:-2] == t.charcode[:-2]]
             current_val, _ = self._confirmed_unconfirmed(target_wins)
             hvc_colours.append(self._get_status_colour(t.target, current_val))
 

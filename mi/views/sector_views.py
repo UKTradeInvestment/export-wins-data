@@ -38,8 +38,11 @@ class BaseSectorMIView(BaseWinMIView):
 
         return self._breakdowns(self._get_all_wins(sector_team))
 
-    def _get_group_wins(self, group):
-        """ HVC wins of the HVC Group, for given `FinancialYear` """
+    def _get_group_campaigns(self, group):
+        """
+        Overriding default group.campaign_ids, to add a hack to cater for 
+        cross FY team changes. 
+        """
         campaign_ids = group.campaign_ids
         if group.name == "Consumer and Retail":
             other_group = HVCGroup.objects.get(name="Consumer Goods & Retail")
@@ -50,22 +53,30 @@ class BaseSectorMIView(BaseWinMIView):
         elif group.id == 34:  # Sports Economy has same name across
             other_group = HVCGroup.objects.get(id=27)
             campaign_ids.extend(other_group.campaign_ids)
+        return campaign_ids
 
-        return self._wins().filter(hvc__in=campaign_ids)
+    def _get_group_wins(self, group):
+        """ HVC wins of the HVC Group, for given `FinancialYear` """
 
-    def _get_hvc_wins(self, team):
-        """ HVC wins alone for the `SectorTeam`
+        return self._wins().filter(hvc__in=self._get_group_campaigns(group))
 
-        A `Win` is considered HVC for this team, when it falls under a Campaign that belongs to this `SectorTeam`
-
+    def _get_team_campaigns(self, team):
+        """
+        Overriding default team.campaign_ids, to add a hack to cater for 
+        cross FY team changes. 
         """
         # hack for Consumer & Creative
         campaign_ids = team.campaign_ids
         if team.name == "Creative, Consumer and Sports":
             other_team = SectorTeam.objects.get(name="Consumer & Creative")
             campaign_ids.extend(other_team.campaign_ids)
+        return campaign_ids
 
-        return self._wins().filter(hvc__in=campaign_ids)
+    def _get_hvc_wins(self, team):
+        """ HVC wins alone for the `SectorTeam`
+        A `Win` is considered HVC for this team, when it falls under a Campaign that belongs to this `SectorTeam`
+        """
+        return self._wins().filter(hvc__in=self._get_team_campaigns(team))
 
     def _get_non_hvc_wins(self, team):
         """ non-HVC wins alone for the `SectorTeam`
@@ -249,9 +260,9 @@ class SectorTeamsOverviewView(BaseSectorMIView):
         self.sector_to_wins = defaultdict(list)
         self.hvc_to_wins = defaultdict(list)
 
-    def _get_cached_hvc_wins(self, charcodes):
+    def _get_cached_hvc_wins(self, campaign_ids):
         return [win
-                for code, wins in self.hvc_to_wins.items() if code in charcodes
+                for code, wins in self.hvc_to_wins.items() if code in campaign_ids
                 for win in wins
                 ]
 
@@ -261,16 +272,12 @@ class SectorTeamsOverviewView(BaseSectorMIView):
                 for win in wins
                 ]
 
-    def _sector_obj_data(self, sector_obj):
+    def _sector_obj_data(self, sector_obj, campaign_ids):
         """ Get general data from SectorTeam or HVCGroup """
 
         sector_targets = self.team_targets[sector_obj]
-        charcodes = []
-        total_target = 0
-        for t in sector_targets:
-            total_target += t.target
-            charcodes.append(t.charcode)
-        hvc_wins = self._get_cached_hvc_wins(charcodes)
+        total_target = sum([t.target for t in sector_targets])
+        hvc_wins = self._get_cached_hvc_wins(campaign_ids)
         hvc_confirmed, hvc_unconfirmed = self._confirmed_unconfirmed(hvc_wins)
         hvc_colours_count = self._colours(hvc_wins, sector_targets)
 
@@ -293,9 +300,9 @@ class SectorTeamsOverviewView(BaseSectorMIView):
     def _sector_data(self, sector_team):
         """ Calculate overview for a sector team """
 
-        result = self._sector_obj_data(sector_team)
-        charcodes = [t.charcode for t in self.team_targets[sector_team]]
-        hvc_wins = self._get_cached_hvc_wins(charcodes)
+        team_campaign_ids = self._get_team_campaigns(sector_team)
+        result = self._sector_obj_data(sector_team, team_campaign_ids)
+        hvc_wins = self._get_cached_hvc_wins(team_campaign_ids)
         non_hvc_wins = self._get_cached_non_hvc_wins(sector_team.sector_ids)
         non_hvc_confirmed, non_hvc_unconfirmed = self._confirmed_unconfirmed(non_hvc_wins)
         hvc_confirmed = result['values']['hvc']['current']['confirmed']
@@ -318,7 +325,7 @@ class SectorTeamsOverviewView(BaseSectorMIView):
         result['values']['non_hvc'] = non_hvc_data
         result['values']['hvc']['total_win_percent'] = total_win_percent['hvc']
         groups = self.team_groups[sector_team]
-        result['hvc_groups'] = [self._sector_obj_data(g) for g in groups]
+        result['hvc_groups'] = [self._sector_obj_data(g, self._get_group_campaigns(g)) for g in groups]
         return result
 
     def get(self, request):
