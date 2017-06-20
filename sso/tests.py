@@ -71,7 +71,7 @@ class SSOTestCase(BaseSSOTestCase):
         response = self._get('saml2_metadata')
         ElementTree.fromstring(response.content)  # check well formed
         expected = [
-            'AuthnRequestsSigned="false"',
+            'AuthnRequestsSigned="true"',
             'WantAssertionsSigned="true"',
             'entityID="https://sso.datahub.service.trade.gov.uk/sp"',
             'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified',
