@@ -53,6 +53,15 @@ class BaseSectorMIView(BaseWinMIView):
         elif group.id == 34:  # Sports Economy has same name across
             other_group = HVCGroup.objects.get(id=27)
             campaign_ids.extend(other_group.campaign_ids)
+        elif group.id == 30:
+            fin_group = HVCGroup.objects.get(name="Financial Services")
+            campaign_ids.extend(fin_group.campaign_ids)
+            pro_group = HVCGroup.objects.get(name="Professional Services")
+            campaign_ids.extend(pro_group.campaign_ids)
+        elif group.id == 29:
+            fin_group = HVCGroup.objects.get(name="Digital Economy")
+            campaign_ids.extend(fin_group.campaign_ids)
+
         return campaign_ids
 
     def _get_group_wins(self, group):

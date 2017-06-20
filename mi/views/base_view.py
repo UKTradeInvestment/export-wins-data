@@ -591,7 +591,7 @@ class BaseWinMIView(BaseMIView):
         unconfirmed = sum(w['total_expected_export_value'] for w in wins if self._win_status(w) == 'unconfirmed')
         return confirmed, unconfirmed
 
-    def _top_non_hvc(self, non_hvc_wins_qs, records_to_retreive=5):
+    def _top_non_hvc(self, non_hvc_wins_qs, records_to_retrieve=5):
         """ Get dict of data about non-HVC wins
 
         percentComplete is based on the top value being 100%
@@ -605,7 +605,7 @@ class BaseWinMIView(BaseMIView):
         ).annotate(
             total_value=Sum('total_expected_export_value'),
             total_wins=Count('id')
-        ).order_by('-total_value')[:records_to_retreive]
+        ).order_by('-total_value')[:records_to_retrieve]
 
         # make a lookup to get names efficiently
         sector_id_to_name = {s.id: s.name for s in Sector.objects.all()}

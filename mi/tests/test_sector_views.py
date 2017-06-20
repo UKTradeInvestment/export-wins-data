@@ -319,10 +319,10 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         }
 
     @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
-    def test_cross_fy_wins_in_team_with_change(self):
+    def test_cross_fy_wins_in_team_15_with_change(self):
         """
         This is to test a in that was created in previous FY and confirmed in current FY
-        for a team who's name was changed across FYs.
+        for team 15 who's name was changed across FYs.
         """
         from django.core.management import call_command
         call_command('create_missing_hvcs', verbose=False)
@@ -331,11 +331,35 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
                              export_value=10000000,
                              win_date=datetime.datetime(2017,3, 25),
                              notify_date=datetime.datetime(2017,3, 25),
-                             response_date=datetime.datetime(2017,4, 5))
+                             response_date=datetime.datetime(2017,4, 5),
+                             fin_year=2016)
         team_15_campaign_url = reverse("mi:sector_team_campaigns", kwargs={"team_id": 15}) + "?year=2017"
         api_response = self._get_api_response(team_15_campaign_url)
         response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
         hvc_data = next((item for item in response_decoded["campaigns"] if item["campaign_id"] == "E083"), None)
+        self.assertIsNotNone(hvc_data)
+        total = hvc_data["totals"]["hvc"]["value"]["confirmed"]
+        self.assertEqual(10000000, total)
+
+    @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
+    def test_cross_fy_wins_in_team_1_with_change(self):
+        """
+        This is to test a in that was created in previous FY and confirmed in current FY
+        for a team 1 who's name hasn't changed across FYs.
+        """
+        from django.core.management import call_command
+        call_command('create_missing_hvcs', verbose=False)
+
+        self._create_hvc_win(hvc_code='E006', confirm=True,
+                             export_value=10000000,
+                             win_date=datetime.datetime(2017,3, 25),
+                             notify_date=datetime.datetime(2017,3, 25),
+                             response_date=datetime.datetime(2017,4, 5),
+                             fin_year=2016)
+        team_1_2017_campaign_url = reverse("mi:sector_team_campaigns", kwargs={"team_id": 1}) + "?year=2017"
+        api_response = self._get_api_response(team_1_2017_campaign_url)
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
+        hvc_data = next((item for item in response_decoded["campaigns"] if item["campaign_id"] == "E006"), None)
         self.assertIsNotNone(hvc_data)
         total = hvc_data["totals"]["hvc"]["value"]["confirmed"]
         self.assertEqual(10000000, total)
