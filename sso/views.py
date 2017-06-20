@@ -1,4 +1,5 @@
 import json
+import logging
 
 import saml2
 from saml2.client import Saml2Client
@@ -25,6 +26,8 @@ from djangosaml2.conf import get_config
 from rest_framework.views import APIView
 
 from mi.views.base_view import MI_PERMISSION_CLASSES
+
+logger = logging.getLogger(__name__)
 
 """
 
@@ -134,6 +137,8 @@ def assertion_consumer_service(request):
         err = {'code': 1, 'message': 'user does not have MI permission'}
         resp = HttpResponseForbidden(json.dumps(err))
         resp['Content-Type'] = 'application/json'
+        err['identity'] = adfs_attributes
+        logger.error(err)
         return resp
 
     return HttpResponse('success')
