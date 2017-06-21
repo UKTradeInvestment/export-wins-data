@@ -7,13 +7,13 @@ from django.core.urlresolvers import reverse
 from factory.fuzzy import FuzzyChoice, FuzzyDate
 
 from fixturedb.factories.win import create_win_factory
-from mi.tests.base_test_case import MiApiViewsBaseTestCase
+from mi.tests.base_test_case import MiApiViewsBaseTestCase, MiApiViewsWithWinsBaseTestCase
 from mi.utils import sort_campaigns_by
 from wins.constants import SECTORS
 from wins.models import HVC
 
 
-class SectorTeamBaseTestCase(MiApiViewsBaseTestCase):
+class SectorTeamBaseTestCase(MiApiViewsWithWinsBaseTestCase):
 
     def setUp(self):
         super().setUp()
@@ -23,40 +23,6 @@ class SectorTeamBaseTestCase(MiApiViewsBaseTestCase):
         charcode = hvc_code + str(fin_year)[-2:]
         return charcode
 
-    def _create_win(self, hvc_code, sector_id=None, win_date=None, export_value=None,
-                    confirm=False, notify_date=None, response_date=None, country=None,
-                    fin_year=2016):
-        """ generic function creating `Win` """
-        win = self._win_factory_function(
-            hvc_code,
-            sector_id=sector_id,
-            win_date=win_date,
-            export_value=export_value,
-            confirm=confirm,
-            notify_date=notify_date,
-            response_date=response_date,
-            country=country,
-            fin_year=fin_year
-        )
-        return win
-
-    def _create_hvc_win(self, hvc_code=None, sector_id=None, win_date=None, export_value=None,
-                        confirm=False, notify_date=None, response_date=None, fin_year=2016):
-        """ creates a dummy HVC `Win`, confirmed or unconfirmed """
-        if hvc_code is None:
-            hvc_code = FuzzyChoice(self.TEAM_1_HVCS).fuzz()
-
-        return self._create_win(hvc_code=hvc_code, sector_id=sector_id, win_date=win_date,
-                                export_value=export_value, confirm=confirm, notify_date=notify_date,
-                                response_date=response_date, fin_year=fin_year)
-
-    def _create_non_hvc_win(self, sector_id=None, win_date=None, export_value=None, confirm=False,
-                            notify_date=None, response_date=None, country=None, fin_year=2016):
-        """ creates a dummy non-HVC `Win` using Factory, can be confirmed or unconfirmed """
-        return self._create_win(hvc_code=None, sector_id=sector_id, win_date=win_date, export_value=export_value,
-                                confirm=confirm, notify_date=notify_date, response_date=response_date,
-                                country=country, fin_year=fin_year)
-
     def _team_data(self, teams_list, team_id=1):
         """ returns specific team's data dict out of overview response list """
         team_data = next((team_item for team_item in teams_list if team_item["id"] == team_id), None)
@@ -65,7 +31,7 @@ class SectorTeamBaseTestCase(MiApiViewsBaseTestCase):
 
 
 @freeze_time(MiApiViewsBaseTestCase.frozen_date)
-class SectorTeamListTestCase(MiApiViewsBaseTestCase):
+class SectorTeamListTestCase(SectorTeamBaseTestCase):
     """
     Tests covering SectorTeam overview and detail API endpoints
     """

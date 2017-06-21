@@ -1,10 +1,16 @@
 import json
 
-from django.urls import reverse
+from django.utils.timezone import now
 from unittest import mock
 
-from mi.models import OverseasRegionGroup, OverseasRegion, FinancialYear, OverseasRegionGroupYear
-from mi.tests.base_test_case import MiApiViewsBaseTestCase
+from freezegun import freeze_time
+
+from django.urls import reverse
+from django.core.management import call_command
+
+from fixturedb.factories.win import create_win_factory
+from mi.models import OverseasRegionGroup, OverseasRegion, FinancialYear, OverseasRegionGroupYear, OverseasRegionYear
+from mi.tests.base_test_case import MiApiViewsBaseTestCase, MiApiViewsWithWinsBaseTestCase
 from mi.views.region_views import BaseOverseasRegionGroupMIView
 
 
@@ -102,7 +108,7 @@ class OverseasRegionGroupListViewTestCase(MiApiViewsBaseTestCase):
 
         self.assertResponse()
 
-class OverseasRegionBaseViewTestCase(MiApiViewsBaseTestCase):
+class OverseasRegionBaseViewTestCase(MiApiViewsWithWinsBaseTestCase):
 
     view_base_url = reverse('mi:overseas_regions')
 
@@ -137,7 +143,19 @@ class OverseasRegionListViewTestCase(OverseasRegionBaseViewTestCase):
         # North Africa still in 2017
         self.assertTrue('north africa' in self.countries)
 
+@freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
 class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
+    view_base_url = reverse('mi:overseas_region_overview')
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        call_command('create_missing_hvcs', verbose=False)
+
+    def setUp(self):
+        super().setUp()
+        self._win_factory_function = create_win_factory(self.user, sector_choices=self.TEAM_1_SECTORS)
+        self.export_value = 777777
 
     def test_list_returns_only_countries_for_2016(self):
         self.url = self.get_url_for_year(2016)
@@ -154,9 +172,104 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
         # North Africa still in 2017
         self.assertTrue('north africa' in self.countries)
 
+    def test_overview_value_1_win(self):
+        w1 = self._create_hvc_win(hvc_code='E016', win_date=now(), confirm=True, fin_year=2017, export_value=self.export_value)
+        self.assertEqual(w1.country.code, 'CA')
+        self.url = self.get_url_for_year(2017)
+        data = self._api_response_data
+        na_data = [x for x in data if x['name'] == 'North America'][0]
+        self.assertEqual(w1.total_expected_export_value, na_data['values']['hvc']['current']['confirmed'])
+
+    def test_overview_value_2_wins_same_region(self):
+        w1 = self._create_hvc_win(hvc_code='E016', win_date=now(), confirm=True, fin_year=2017, export_value=self.export_value)
+        w2 = self._create_hvc_win(hvc_code='E016', win_date=now(), confirm=True, fin_year=2017, export_value=1)
+        self.assertEqual(w1.country.code, w2.country.code)
+        self.url = self.get_url_for_year(2017)
+        data = self._api_response_data
+        na_data = [x for x in data if x['name'] == 'North America'][0]
+        self.assertEqual(w1.total_expected_export_value + 1, na_data['values']['hvc']['current']['confirmed'])
+
+    def test_overview_value_2_wins_different_regions(self):
+        w1 = self._create_hvc_win(hvc_code='E016', win_date=now(), confirm=True, fin_year=2017, export_value=self.export_value)
+        w2 = self._create_hvc_win(hvc_code='E119', win_date=now(), confirm=True, fin_year=2017, export_value=1)
+        self.assertEqual(w1.country.code, w2.country.code)
+        self.url = self.get_url_for_year(2017)
+        data = self._api_response_data
+        na_data = [x for x in data if x['name'] == 'North America'][0]
+        we_data = [x for x in data if x['name'] == 'Western Europe'][0]
+        self.assertEqual(w1.total_expected_export_value, na_data['values']['hvc']['current']['confirmed'])
+        self.assertEqual(w2.total_expected_export_value, we_data['values']['hvc']['current']['confirmed'])
+
+    def test_overview_1_unconfirmed_and_1_confirmed_same_year(self):
+        w1 = self._create_hvc_win(hvc_code='E016', win_date=now(), confirm=True, fin_year=2017, export_value=self.export_value)
+        w2 = self._create_hvc_win(hvc_code='E016', win_date=now(), confirm=False, fin_year=2017, export_value=1)
+        self.assertEqual(w1.country.code, w2.country.code)
+        self.url = self.get_url_for_year(2017)
+        data = self._api_response_data
+        na_data = [x for x in data if x['name'] == 'North America'][0]
+        self.assertEqual(w1.total_expected_export_value, na_data['values']['hvc']['current']['confirmed'])
+        self.assertEqual(w2.total_expected_export_value, na_data['values']['hvc']['current']['unconfirmed'])
+
+    def test_overview_1_unconfirmed_in_current_year_should_not_show_up_in_last_year(self):
+        w1 = self._create_hvc_win(hvc_code='E016', win_date=now(), confirm=False, fin_year=2017, export_value=self.export_value)
+        self.url = self.get_url_for_year(2017)
+        data = self._api_response_data
+        na_data = [x for x in data if x['name'] == 'North America'][0]
+        self.assertEqual(w1.total_expected_export_value, na_data['values']['hvc']['current']['unconfirmed'])
+        self.assertEqual(0, na_data['values']['hvc']['current']['confirmed'])
+
+        self.url = self.get_url_for_year(2016)
+        data_2016 = self._api_response_data
+        na_data_2016 = [x for x in data_2016 if x['name'] == 'North America'][0]
+        self.assertEqual(0, na_data_2016['values']['hvc']['current']['confirmed'])
+        self.assertEqual(0, na_data_2016['values']['hvc']['current']['unconfirmed'])
+
+    def test_overview_1_unconfirmed_last_year_should_not_show_up_in_last_year(self):
+        w1 = self._create_hvc_win(hvc_code='E016', win_date=self.frozen_date, confirm=False, fin_year=2016, export_value=self.export_value)
+
+        self.url = self.get_url_for_year(2016)
+        data_2016 = self._api_response_data
+        na_data_2016 = [x for x in data_2016 if x['name'] == 'North America'][0]
+        self.assertEqual(0, na_data_2016['values']['hvc']['current']['confirmed'])
+        self.assertEqual(0, na_data_2016['values']['hvc']['current']['unconfirmed'])
+
+        # it should be in this year
+        self.url = self.get_url_for_year(2017)
+        data_2017 = self._api_response_data
+        na_data_2017 = [x for x in data_2017 if x['name'] == 'North America'][0]
+        self.assertEqual(w1.total_expected_export_value, na_data_2017['values']['hvc']['current']['unconfirmed'])
+
+
+    def test_overview_1_unconfirmed_last_year_should_show_up_in_new_region_if_country_has_moved_regions(self):
+        w1 = self._create_hvc_win(hvc_code='E016', win_date=self.frozen_date, confirm=False, fin_year=2016, export_value=self.export_value)
+
+        self.url = self.get_url_for_year(2016)
+        data_2016 = self._api_response_data
+        na_data_2016 = [x for x in data_2016 if x['name'] == 'North America'][0]
+        self.assertEqual(0, na_data_2016['values']['hvc']['current']['confirmed'])
+        self.assertEqual(0, na_data_2016['values']['hvc']['current']['unconfirmed'])
+        self.assertEqual(w1.country.code, 'CA')
+
+        # move Canada to a different region
+        region_year = OverseasRegionYear.objects.get(country__country='CA', financial_year_id=2017)
+        region_year.overseas_region = OverseasRegion.objects.get(name='Western Europe')
+        region_year.save()
+
+        # it should be in this year
+        self.url = self.get_url_for_year(2017)
+        data_2017 = self._api_response_data
+        na_data_2017 = [x for x in data_2017 if x['name'] == 'North America'][0]
+        we_data_2017 = [x for x in data_2017 if x['name'] == 'Western Europe'][0]
+
+        self.assertEqual(0, na_data_2017['values']['hvc']['current']['unconfirmed'])
+        self.assertEqual(w1.total_expected_export_value, we_data_2017['values']['hvc']['current']['unconfirmed'])
+
+
 class OverseasRegionCampaignsTestCase(OverseasRegionBaseViewTestCase):
-    def setUp(self):
-        from django.core.management import call_command
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
         call_command('create_missing_hvcs', verbose=False)
 
     view_base_url = reverse('mi:overseas_region_campaigns', kwargs={"region_id": 1})

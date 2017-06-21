@@ -642,8 +642,8 @@ class HVCGroupMonthsView(MiApiViewsBaseTestCase):
 
     def setUp(self):
 
-        self.start_month = datetime.date(*map(int, self.fin_start_date.split('-'))).month
-        self.end_month = datetime.date(*map(int, self.frozen_date.split('-'))).month
+        self.start_month = self.fin_start_date.date().month
+        self.end_month = self.frozen_date.date().month
 
         month_data = [
             make_month_data(x) for x in range(self.start_month, self.end_month + 1)
