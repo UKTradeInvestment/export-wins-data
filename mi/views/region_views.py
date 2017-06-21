@@ -44,7 +44,7 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
 
         """
         return self._wins().filter(
-            country__in=region.country_ids(self.fin_year),
+            country__in=region.country_ids,
         )
 
     def _get_region_hvc_wins(self, region):
@@ -53,14 +53,14 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
 
     def _get_region_non_hvc_wins(self, region):
         """ non-HVC wins alone for the `OverseasRegion` """
-        return self._non_hvc_wins().filter(country__in=region.country_ids(self.fin_year))
+        return self._non_hvc_wins().filter(country__in=region.country_ids)
 
     def _region_result(self, region):
         """ Basic data about region - name & hvc's """
         return {
             'name': region.name,
-            'avg_time_to_confirm': self._average_confirm_time(win__country__in=region.country_ids(self.fin_year)),
-            'hvcs': self._hvc_overview(region.targets),
+            'avg_time_to_confirm': self._average_confirm_time(win__country__in=region.country_ids),
+            'hvcs': self._hvc_overview(region.fin_year_targets(self.fin_year)),
         }
 
 class OverseasRegionGroupListView(BaseOverseasRegionGroupMIView):
@@ -161,7 +161,7 @@ class OverseasRegionCampaignsView(BaseOverseasRegionsMIView):
 
     def _campaign_breakdowns(self, region):
         wins = self._get_region_hvc_wins(region)
-        campaign_to_wins = self._group_wins_by_target(wins, region.targets)
+        campaign_to_wins = self._group_wins_by_target(wins, region.fin_year_targets(self.fin_year))
         campaigns = [
             {
                 'campaign': campaign.name.split(":")[0],
@@ -210,7 +210,7 @@ class OverseasRegionOverviewView(BaseOverseasRegionsMIView):
         """ Calculate HVC & non-HVC data for an Overseas region """
 
         targets = region_obj.targets
-        country_ids = region_obj.country_ids(self.fin_year)
+        country_ids = region_obj.fin_year_country_ids(self.fin_year)
         total_countries = len(country_ids)
         total_target = sum(t.target for t in targets)
 

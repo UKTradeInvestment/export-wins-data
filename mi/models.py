@@ -46,8 +46,8 @@ class OverseasRegion(models.Model):
         """ List of `Targets` of all HVCs belonging to the `OverseasRegion`, filtered by Financial Year """
 
         targets = set()
-        for country in self.countries.all():
-            for target in country.targets.filtered(fin_year):
+        for country in self.countries.filter(overseasregionyear__financial_year=fin_year):
+            for target in country.targets.filter(financial_year=fin_year):
                 targets.add(target)
         return targets
 
@@ -62,7 +62,13 @@ class OverseasRegion(models.Model):
 
         return [t.campaign_id for t in self.fin_year_targets(fin_year)]
 
-    def country_ids(self, year):
+    @property
+    def country_ids(self):
+        """ List of all countries within the `OverseasRegion` """
+        countries = self.countries.all()
+        return countries.values_list('country', flat=True)
+
+    def fin_year_country_ids(self, year):
         """ List of all countries within the `OverseasRegion` """
         countries = self.countries.filter(overseasregionyear__financial_year_id=year.id)
         return countries.values_list('country', flat=True)

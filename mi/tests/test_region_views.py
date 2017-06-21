@@ -1,3 +1,5 @@
+import json
+
 from django.urls import reverse
 from unittest import mock
 
@@ -152,3 +154,23 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
         # North Africa still in 2017
         self.assertTrue('north africa' in self.countries)
 
+class OverseasRegionCampaignsTestCase(OverseasRegionBaseViewTestCase):
+    def setUp(self):
+        from django.core.management import call_command
+        call_command('create_missing_hvcs', verbose=False)
+
+    view_base_url = reverse('mi:overseas_region_campaigns', kwargs={"region_id": 1})
+
+    def test_campaigns_list_2016(self):
+        self.url = self.get_url_for_year(2016)
+        api_response = self._get_api_response(self.url)
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
+        self.assertEqual(len(response_decoded["campaigns"]), len(response_decoded["hvcs"]["campaigns"]))
+        self.assertEqual(len(response_decoded["campaigns"]), 2)
+
+    def test_campaigns_list_2017(self):
+        self.url = self.get_url_for_year(2017)
+        api_response = self._get_api_response(self.url)
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
+        self.assertEqual(len(response_decoded["campaigns"]), len(response_decoded["hvcs"]["campaigns"]))
+        self.assertEqual(len(response_decoded["campaigns"]), 8)
