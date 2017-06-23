@@ -1,4 +1,5 @@
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 from collections import Counter
 from itertools import groupby
 from operator import attrgetter, itemgetter
@@ -153,9 +154,11 @@ class BaseWinMIView(BaseMIView):
         ))
 
         # if we're in the current FY, also include unconfirmed Wins
-        # todo - does the business want a time limit on these?
+        # these wins are now limited for past 12 months
         if self.fin_year.is_current:
+            unconfirmed_cutoff = datetime.utcnow() - relativedelta(years=1)
             win_filter = win_filter | Q(
+                date__gte=unconfirmed_cutoff,
                 confirmation__isnull=True,
             )
 
