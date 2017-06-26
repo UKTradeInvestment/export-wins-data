@@ -1,6 +1,8 @@
 from itertools import groupby
 from operator import attrgetter, itemgetter
 
+from django.db.models import Q
+
 from mi.models import OverseasRegion, OverseasRegionGroup
 from mi.serializers import OverseasRegionGroupSerializer
 from mi.utils import month_iterator, sort_campaigns_by
@@ -49,7 +51,11 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
 
     def _get_region_hvc_wins(self, region):
         """ HVC wins alone for the `OverseasRegion` """
-        return self._wins().filter(hvc__in=region.campaign_ids)
+        charcodes_for_current_year = region.fin_year_charcodes(self.fin_year)
+        region_filter = Q(hvc__in=charcodes_for_current_year)
+        wins = self._wins().filter(region_filter)
+        return wins
+
 
     def _get_region_non_hvc_wins(self, region):
         """ non-HVC wins alone for the `OverseasRegion` """
@@ -209,7 +215,7 @@ class OverseasRegionOverviewView(BaseOverseasRegionsMIView):
     def _region_data(self, region_obj):
         """ Calculate HVC & non-HVC data for an Overseas region """
 
-        targets = region_obj.targets
+        targets = region_obj.fin_year_targets(self.fin_year)
         country_ids = region_obj.fin_year_country_ids(self.fin_year)
         total_countries = len(country_ids)
         total_target = sum(t.target for t in targets)
