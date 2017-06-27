@@ -4,12 +4,14 @@ from django.utils.timezone import now
 from unittest import mock
 
 from freezegun import freeze_time
+from jmespath import search as s
 
 from django.urls import reverse
 from django.core.management import call_command
 
 from fixturedb.factories.win import create_win_factory
-from mi.models import OverseasRegionGroup, OverseasRegion, FinancialYear, OverseasRegionGroupYear, OverseasRegionYear
+from mi.models import OverseasRegionGroup, OverseasRegion, FinancialYear, OverseasRegionGroupYear, OverseasRegionYear, \
+    Country
 from mi.tests.base_test_case import MiApiViewsBaseTestCase, MiApiViewsWithWinsBaseTestCase
 from mi.views.region_views import BaseOverseasRegionGroupMIView
 
@@ -220,18 +222,20 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
 
         self.url = self.get_url_for_year(2016)
         data_2016 = self._api_response_data
-        na_data_2016 = [x for x in data_2016 if x['name'] == 'North America'][0]
-        self.assertEqual(0, na_data_2016['values']['hvc']['current']['confirmed'])
-        self.assertEqual(0, na_data_2016['values']['hvc']['current']['unconfirmed'])
+        self.assertEqual(
+            0,
+            s("sum([?name=='North America'].values.*.current[].[confirmed,unconfirmed][])", data_2016)
+        )
 
     def test_overview_1_unconfirmed_last_year_should_not_show_up_in_last_year(self):
         w1 = self._create_hvc_win(hvc_code='E016', win_date=self.frozen_date, confirm=False, fin_year=2016, export_value=self.export_value)
 
         self.url = self.get_url_for_year(2016)
         data_2016 = self._api_response_data
-        na_data_2016 = [x for x in data_2016 if x['name'] == 'North America'][0]
-        self.assertEqual(0, na_data_2016['values']['hvc']['current']['confirmed'])
-        self.assertEqual(0, na_data_2016['values']['hvc']['current']['unconfirmed'])
+        self.assertEqual(
+            0,
+            s("sum([?name=='North America'].values.*.current[].[confirmed,unconfirmed][])", data_2016)
+        )
 
         # it should be in this year
         self.url = self.get_url_for_year(2017)
@@ -258,12 +262,110 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
         # it should be in this year
         self.url = self.get_url_for_year(2017)
         data_2017 = self._api_response_data
-        na_data_2017 = [x for x in data_2017 if x['name'] == 'North America'][0]
-        we_data_2017 = [x for x in data_2017 if x['name'] == 'Western Europe'][0]
+        na_data_2017 = s("[?name=='North America']|[0]", data_2017)
+        we_data_2017 = s("[?name=='Western Europe']|[0]", data_2017)
 
         self.assertEqual(0, na_data_2017['values']['hvc']['current']['unconfirmed'])
         self.assertEqual(w1.total_expected_export_value, we_data_2017['values']['hvc']['current']['unconfirmed'])
 
+    # Non HVC
+    def test_non_hvc_win_in_overview_confirmed_current_year(self):
+        w1 = self._create_non_hvc_win(win_date=self.frozen_date_17, export_value=self.export_value, confirm=True, country='CA', fin_year=2017)
+        self.url = self.get_url_for_year(2017)
+        data_2017 = self._api_response_data
+        na_data_2017 = s("[?name=='North America']|[0]", data_2017)
+        self.assertEqual(w1.total_expected_export_value, na_data_2017['values']['non_hvc']['current']['confirmed'])
+
+        self.url = self.get_url_for_year(2016)
+        data_2016 = self._api_response_data
+        self.assertEqual(
+            0,
+            s("sum([?name=='North America'].values.*.current[].[confirmed,unconfirmed][])", data_2016)
+        )
+
+    def test_non_hvc_win_in_overview_unconfirmed_current_year(self):
+        w1 = self._create_non_hvc_win(win_date=self.frozen_date_17, export_value=self.export_value, confirm=False, country='CA', fin_year=2017)
+        self.url = self.get_url_for_year(2017)
+        data_2017 = self._api_response_data
+        na_data_2017 = s("[?name=='North America']|[0]", data_2017)
+        self.assertEqual(w1.total_expected_export_value, na_data_2017['values']['non_hvc']['current']['unconfirmed'])
+
+        self.url = self.get_url_for_year(2016)
+        data_2016 = self._api_response_data
+        self.assertEqual(
+            0,
+            s("sum([?name=='North America'].values.*.current[].[confirmed,unconfirmed][])", data_2016)
+        )
+
+    def test_2_non_hvc_win_in_overview_both_confirmed_current_year(self):
+        self._create_non_hvc_win(win_date=self.frozen_date_17, export_value=self.export_value + 1, confirm=True, country='CA', fin_year=2017)
+        self._create_non_hvc_win(win_date=self.frozen_date_17, export_value=self.export_value - 1, confirm=True, country='CA', fin_year=2017)
+        self.url = self.get_url_for_year(2017)
+        data_2017 = self._api_response_data
+        na_data_2017 = s("[?name=='North America']|[0]", data_2017)
+
+        self.assertEqual(self.export_value * 2, na_data_2017['values']['non_hvc']['current']['confirmed'])
+
+        self.url = self.get_url_for_year(2016)
+        data_2016 = self._api_response_data
+        self.assertEqual(
+            0,
+            s("sum([?name=='North America'].values.*.current[].[confirmed,unconfirmed][])", data_2016)
+        )
+
+    def test_2_non_hvc_win_in_overview_confirmed_and_unconfirmed_current_year(self):
+        w1 = self._create_non_hvc_win(win_date=self.frozen_date_17, export_value=self.export_value + 1, confirm=True, country='CA', fin_year=2017)
+        w2 = self._create_non_hvc_win(win_date=self.frozen_date_17, export_value=self.export_value - 1, confirm=False, country='CA', fin_year=2017)
+        self.url = self.get_url_for_year(2017)
+        data_2017 = self._api_response_data
+        na_data_2017 = s("[?name=='North America']|[0]", data_2017)
+        self.assertEqual(w1.total_expected_export_value, na_data_2017['values']['non_hvc']['current']['confirmed'])
+        self.assertEqual(w2.total_expected_export_value, na_data_2017['values']['non_hvc']['current']['unconfirmed'])
+
+    def test_5_non_hvc_win_in_overview_confirmed_2016_for_2016(self):
+        num_to_create = 5
+        for i in range(num_to_create):
+            self._create_non_hvc_win(win_date=self.frozen_date, export_value=self.export_value, confirm=True, country='CA', fin_year=2016)
+
+        # should not be in 2017
+        self.url = self.get_url_for_year(2017)
+        data_2017 = self._api_response_data
+        self.assertEqual(
+            0,
+            s("sum([?name=='North America'].values.*.current[].[confirmed,unconfirmed][])", data_2017)
+        )
+
+        # should show up in 2016
+        self.url = self.get_url_for_year(2016)
+        data_2016 = self._api_response_data
+        na_data_2016 = s("[?name=='North America']|[0]", data_2016)
+        self.assertEqual(self.export_value * num_to_create, na_data_2016['values']['non_hvc']['current']['confirmed'])
+
+    def test_overview_non_hvc_1_unconfirmed_last_year_should_show_up_in_new_region_if_country_has_moved_regions(self):
+        w1 = self._create_non_hvc_win(win_date=self.frozen_date, confirm=False, fin_year=2016, export_value=self.export_value, country='CA')
+
+        self.url = self.get_url_for_year(2016)
+        data_2016 = self._api_response_data
+        na_data_2016 = s("[?name=='North America']|[0]", data_2016)
+        self.assertEqual(
+            0,
+            s("sum(values.non_hvc.current.[*][])", na_data_2016)
+        )
+        self.assertEqual(w1.country.code, 'CA')
+
+        # move Canada to a different region
+        region_year = OverseasRegionYear.objects.get(country__country='CA', financial_year_id=2017)
+        region_year.overseas_region = OverseasRegion.objects.get(name='Western Europe')
+        region_year.save()
+
+        # it should be in this year
+        self.url = self.get_url_for_year(2017)
+        data_2017 = self._api_response_data
+        na_data_2017 = s("[?name=='North America']|[0]", data_2017)
+        we_data_2017 = s("[?name=='Western Europe']|[0]", data_2017)
+
+        self.assertEqual(0, na_data_2017['values']['non_hvc']['current']['unconfirmed'])
+        self.assertEqual(w1.total_expected_export_value, we_data_2017['values']['non_hvc']['current']['unconfirmed'])
 
 class OverseasRegionCampaignsTestCase(OverseasRegionBaseViewTestCase):
 

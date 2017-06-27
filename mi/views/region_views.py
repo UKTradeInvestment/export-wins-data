@@ -1,3 +1,5 @@
+import operator
+from functools import reduce
 from itertools import groupby
 from operator import attrgetter, itemgetter
 
@@ -51,15 +53,17 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
 
     def _get_region_hvc_wins(self, region):
         """ HVC wins alone for the `OverseasRegion` """
-        charcodes_for_current_year = region.fin_year_charcodes(self.fin_year)
-        region_filter = Q(hvc__in=charcodes_for_current_year)
+        region_filter = Q(
+            Q(reduce(operator.or_, [Q(hvc__startswith=t) for t in region.fin_year_campaign_ids(self.fin_year)]))
+            | Q(hvc__in=region.fin_year_charcodes(self.fin_year))
+        )
         wins = self._wins().filter(region_filter)
         return wins
 
 
     def _get_region_non_hvc_wins(self, region):
         """ non-HVC wins alone for the `OverseasRegion` """
-        return self._non_hvc_wins().filter(country__in=region.country_ids)
+        return self._non_hvc_wins().filter(country__in=region.fin_year_country_ids(self.fin_year))
 
     def _region_result(self, region):
         """ Basic data about region - name & hvc's """

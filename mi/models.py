@@ -47,7 +47,7 @@ class OverseasRegion(models.Model):
 
         targets = set()
         for country in self.countries.filter(overseasregionyear__financial_year=fin_year):
-            for target in country.targets.all():
+            for target in country.targets.filter(financial_year=fin_year):
                 targets.add(target)
         return targets
 
@@ -62,10 +62,10 @@ class OverseasRegion(models.Model):
 
         return [t.campaign_id for t in self.fin_year_targets(fin_year)]
 
-    def fin_year_charcodes(self, fin_year, filter_targets_by_year=False):
+    def fin_year_charcodes(self, fin_year):
         """ List of Charcodes of all HVCs belonging to the `OverseasRegion`, filtered by Financial Year """
 
-        return {t.charcode for t in self.fin_year_targets(fin_year)}
+        return [t.charcode for t in self.fin_year_targets(fin_year)]
 
     @property
     def country_ids(self):
