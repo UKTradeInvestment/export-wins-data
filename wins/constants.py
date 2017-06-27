@@ -716,6 +716,7 @@ HQ_TEAM_REGION_OR_POST = tuple([
     ('obn:9', 'India - UKIBC'),
     ('obn:10', 'Indonesia - British Chamber of Commerce'),
     ('obn:11', 'Kazakhstan - British Chamber of Commerce'),
+    ('obn:34', 'Kenya - British Chamber of Commerce Kenya'),
     ('obn:12', 'Kuwait - Kuwait British Business Centre'),
     ('obn:13', 'Malaysia - British Malaysian Chamber of Commerce'),
     ('obn:14', 'Morocco - British Chamber of Commerce'),
