@@ -1,7 +1,7 @@
 import operator
 from functools import reduce
 from itertools import groupby
-from operator import attrgetter, itemgetter
+from operator import itemgetter
 
 from django.db.models import Q
 
@@ -60,7 +60,6 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
         wins = self._wins().filter(region_filter)
         return wins
 
-
     def _get_region_non_hvc_wins(self, region):
         """ non-HVC wins alone for the `OverseasRegion` """
         return self._non_hvc_wins().filter(country__in=region.fin_year_country_ids(self.fin_year))
@@ -72,6 +71,7 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
             'avg_time_to_confirm': self._average_confirm_time(win__country__in=region.country_ids),
             'hvcs': self._hvc_overview(region.fin_year_targets(self.fin_year)),
         }
+
 
 class OverseasRegionGroupListView(BaseOverseasRegionGroupMIView):
     """

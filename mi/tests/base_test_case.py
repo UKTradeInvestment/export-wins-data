@@ -1,12 +1,9 @@
 import json
 
-from django.contrib.auth.models import Group
-from django.test import override_settings
 from django.utils.datetime_safe import datetime
 from django.utils.timezone import get_current_timezone
 from factory.fuzzy import FuzzyChoice
 
-from alice.tests.client import AliceClient
 from fixturedb.factories.win import create_win_factory
 from sso.tests import BaseSSOTestCase
 from users.factories import UserFactory
@@ -68,13 +65,13 @@ class MiApiViewsBaseTestCase(BaseSSOTestCase):
             'expected_response not added to TestCase class'
         self.assertJSONEqual(json.dumps(self._api_response_data), self.expected_response)
 
+
 class MiApiViewsWithWinsBaseTestCase(MiApiViewsBaseTestCase):
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls._win_factory_function = create_win_factory(cls.user)
-
 
     def _create_win(self, hvc_code, sector_id=None, win_date=None, export_value=None,
                     confirm=False, notify_date=None, response_date=None, country=None,

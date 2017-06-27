@@ -4,7 +4,7 @@ from freezegun import freeze_time
 import json
 
 from django.core.urlresolvers import reverse
-from factory.fuzzy import FuzzyChoice, FuzzyDate
+from factory.fuzzy import FuzzyDate
 
 from fixturedb.factories.win import create_win_factory
 from mi.tests.base_test_case import MiApiViewsBaseTestCase, MiApiViewsWithWinsBaseTestCase
@@ -295,9 +295,9 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
 
         self._create_hvc_win(hvc_code="E083", confirm=True,
                              export_value=10000000,
-                             win_date=datetime.datetime(2017,3, 25),
-                             notify_date=datetime.datetime(2017,3, 25),
-                             response_date=datetime.datetime(2017,4, 5),
+                             win_date=datetime.datetime(2017, 3, 25),
+                             notify_date=datetime.datetime(2017, 3, 25),
+                             response_date=datetime.datetime(2017, 4, 5),
                              fin_year=2016)
         team_15_campaign_url = reverse("mi:sector_team_campaigns", kwargs={"team_id": 15}) + "?year=2017"
         api_response = self._get_api_response(team_15_campaign_url)
@@ -318,9 +318,9 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
 
         self._create_hvc_win(hvc_code='E006', confirm=True,
                              export_value=10000000,
-                             win_date=datetime.datetime(2017,3, 25),
-                             notify_date=datetime.datetime(2017,3, 25),
-                             response_date=datetime.datetime(2017,4, 5),
+                             win_date=datetime.datetime(2017, 3, 25),
+                             notify_date=datetime.datetime(2017, 3, 25),
+                             response_date=datetime.datetime(2017, 4, 5),
                              fin_year=2016)
         team_1_2017_campaign_url = reverse("mi:sector_team_campaigns", kwargs={"team_id": 1}) + "?year=2017"
         api_response = self._get_api_response(team_1_2017_campaign_url)
