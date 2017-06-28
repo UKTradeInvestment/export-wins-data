@@ -259,7 +259,7 @@ class SectorTeamDetailViewsTestCase(SectorTeamBaseTestCase):
 
     @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
     def test_no_unconfirmed_wins_from_older_than_12_months_2(self):
-        """ 
+        """
         Make sure unconfirmed wins from last FY that are older than 12 months are not accounted for this FY
         Boundary testing
         """

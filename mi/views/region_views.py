@@ -1,5 +1,9 @@
+import operator
+from functools import reduce
 from itertools import groupby
-from operator import attrgetter, itemgetter
+from operator import itemgetter
+
+from django.db.models import Q
 
 from mi.models import OverseasRegion, OverseasRegionGroup
 from mi.serializers import OverseasRegionGroupSerializer
@@ -49,11 +53,16 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
 
     def _get_region_hvc_wins(self, region):
         """ HVC wins alone for the `OverseasRegion` """
-        return self._wins().filter(hvc__in=region.campaign_ids)
+        region_filter = Q(
+            Q(reduce(operator.or_, [Q(hvc__startswith=t) for t in region.fin_year_campaign_ids(self.fin_year)]))
+            | Q(hvc__in=region.fin_year_charcodes(self.fin_year))
+        )
+        wins = self._wins().filter(region_filter)
+        return wins
 
     def _get_region_non_hvc_wins(self, region):
         """ non-HVC wins alone for the `OverseasRegion` """
-        return self._non_hvc_wins().filter(country__in=region.country_ids)
+        return self._non_hvc_wins().filter(country__in=region.fin_year_country_ids(self.fin_year))
 
     def _region_result(self, region):
         """ Basic data about region - name & hvc's """
@@ -62,6 +71,7 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
             'avg_time_to_confirm': self._average_confirm_time(win__country__in=region.country_ids),
             'hvcs': self._hvc_overview(region.fin_year_targets(self.fin_year)),
         }
+
 
 class OverseasRegionGroupListView(BaseOverseasRegionGroupMIView):
     """
@@ -209,7 +219,7 @@ class OverseasRegionOverviewView(BaseOverseasRegionsMIView):
     def _region_data(self, region_obj):
         """ Calculate HVC & non-HVC data for an Overseas region """
 
-        targets = region_obj.targets
+        targets = region_obj.fin_year_targets(self.fin_year)
         country_ids = region_obj.fin_year_country_ids(self.fin_year)
         total_countries = len(country_ids)
         total_target = sum(t.target for t in targets)

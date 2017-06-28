@@ -1,9 +1,10 @@
 import json
 
-from django.contrib.auth.models import Group
-from django.test import override_settings
+from django.utils.datetime_safe import datetime
+from django.utils.timezone import get_current_timezone
+from factory.fuzzy import FuzzyChoice
 
-from alice.tests.client import AliceClient
+from fixturedb.factories.win import create_win_factory
 from sso.tests import BaseSSOTestCase
 from users.factories import UserFactory
 from wins.factories import HVCFactory
@@ -11,10 +12,10 @@ from wins.factories import HVCFactory
 
 class MiApiViewsBaseTestCase(BaseSSOTestCase):
     maxDiff = None
-    fin_start_date = "2016-04-01"
-    frozen_date = "2016-11-01"
-    fin_end_date = "2017-03-31"
-    frozen_date_17 = "2017-05-01"
+    fin_start_date = datetime(2016, 4, 1, tzinfo=get_current_timezone())
+    frozen_date = datetime(2016, 11, 1, tzinfo=get_current_timezone())
+    fin_end_date = datetime(2017, 3, 31, tzinfo=get_current_timezone())
+    frozen_date_17 = datetime(2017, 5, 1, tzinfo=get_current_timezone())
 
     TEAM_1_HVCS = ['E006', 'E019', 'E031', 'E072', 'E095', 'E115', 'E128', 'E160', 'E167', 'E191']
     TEAM_15_HVCS = ['E025', 'E026', 'E051', 'E058', 'E066', 'E067', 'E083', 'E132', 'E149',
@@ -33,7 +34,6 @@ class MiApiViewsBaseTestCase(BaseSSOTestCase):
 
         cls.user = UserFactory.create()
         cls.user.save()
-
         # needed to get names of HVCs, have to do again because factory
         # remembers other tests, even if flushed from DB
         for i in range(255):
@@ -64,3 +64,45 @@ class MiApiViewsBaseTestCase(BaseSSOTestCase):
         assert hasattr(self, 'expected_response'),\
             'expected_response not added to TestCase class'
         self.assertJSONEqual(json.dumps(self._api_response_data), self.expected_response)
+
+
+class MiApiViewsWithWinsBaseTestCase(MiApiViewsBaseTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._win_factory_function = create_win_factory(cls.user)
+
+    def _create_win(self, hvc_code, sector_id=None, win_date=None, export_value=None,
+                    confirm=False, notify_date=None, response_date=None, country=None,
+                    fin_year=2016):
+        """ generic function creating `Win` """
+        win = self._win_factory_function(
+            hvc_code,
+            sector_id=sector_id,
+            win_date=win_date,
+            export_value=export_value,
+            confirm=confirm,
+            notify_date=notify_date,
+            response_date=response_date,
+            country=country,
+            fin_year=fin_year
+        )
+        return win
+
+    def _create_hvc_win(self, hvc_code=None, sector_id=None, win_date=None, export_value=None,
+                        confirm=False, notify_date=None, response_date=None, fin_year=2016):
+        """ creates a dummy HVC `Win`, confirmed or unconfirmed """
+        if hvc_code is None:
+            hvc_code = FuzzyChoice(self.TEAM_1_HVCS).fuzz()
+
+        return self._create_win(hvc_code=hvc_code, sector_id=sector_id, win_date=win_date,
+                                export_value=export_value, confirm=confirm, notify_date=notify_date,
+                                response_date=response_date, fin_year=fin_year)
+
+    def _create_non_hvc_win(self, sector_id=None, win_date=None, export_value=None, confirm=False,
+                            notify_date=None, response_date=None, country=None, fin_year=2016):
+        """ creates a dummy non-HVC `Win` using Factory, can be confirmed or unconfirmed """
+        return self._create_win(hvc_code=None, sector_id=sector_id, win_date=win_date, export_value=export_value,
+                                confirm=confirm, notify_date=notify_date, response_date=response_date,
+                                country=country, fin_year=fin_year)

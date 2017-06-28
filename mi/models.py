@@ -62,6 +62,11 @@ class OverseasRegion(models.Model):
 
         return [t.campaign_id for t in self.fin_year_targets(fin_year)]
 
+    def fin_year_charcodes(self, fin_year):
+        """ List of Charcodes of all HVCs belonging to the `OverseasRegion`, filtered by Financial Year """
+
+        return [t.charcode for t in self.fin_year_targets(fin_year)]
+
     @property
     def country_ids(self):
         """ List of all countries within the `OverseasRegion` """

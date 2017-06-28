@@ -1,5 +1,6 @@
 from datetime import timedelta
 import django.utils.datetime_safe as datetime
+from django.utils.timezone import get_current_timezone
 from factory.fuzzy import FuzzyChoice
 
 from wins.constants import SECTORS
@@ -8,7 +9,7 @@ from wins.factories import WinFactory, NotificationFactory, CustomerResponseFact
 
 def create_win_factory(user, sector_choices=None, default_date=None):
     if not default_date:
-        default_date = datetime.datetime(2016, 5, 25)
+        default_date = datetime.datetime(2016, 5, 25, tzinfo=get_current_timezone())
 
     if not sector_choices:
         sector_choices = dict(SECTORS).keys()
@@ -39,7 +40,7 @@ def create_win_factory(user, sector_choices=None, default_date=None):
 
         if confirm:
             if not notify_date:
-                notify_date = default_date + timedelta(days=1)
+                notify_date = win_date + timedelta(days=1)
             notification = NotificationFactory(win=win)
             notification.created = notify_date
             notification.save()
