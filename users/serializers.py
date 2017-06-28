@@ -6,6 +6,7 @@ from django.utils.timezone import now
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework import serializers
 
+from sso.models import ADFSUser
 from .models import User, LoginFailure
 
 
@@ -38,3 +39,9 @@ class LoggingAuthTokenSerializer(AuthTokenSerializer):
         except Exception as e:
             LoginFailure.objects.create(email=email)
             raise e
+
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ADFSUser
+        fields = ('email', 'last_login')

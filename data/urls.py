@@ -2,7 +2,7 @@ from django.conf.urls import url, include
 
 from rest_framework.routers import DefaultRouter
 
-from users.views import IsLoggedIn, LoginView
+from users.views import IsLoggedIn, LoginView, UserRetrieveViewSet
 
 from wins.views import (
     WinViewSet, BreakdownViewSet, AdvisorViewSet, ConfirmationViewSet,
@@ -59,6 +59,7 @@ urlpatterns = [
     url(r"^auth/login/$", LoginView.as_view(), name="login"),
 
     url(r"^auth/is-logged-in/$", IsLoggedIn.as_view(), name="is-logged-in"),
+    url(r"^user/me/$", UserRetrieveViewSet.as_view({'get': 'retrieve'}), name="user_profile"),
 
     url(r"^auth/", include('rest_framework.urls', namespace="rest_framework")),
 
