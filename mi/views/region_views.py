@@ -1,10 +1,29 @@
+import operator
+from functools import reduce
 from itertools import groupby
-from operator import attrgetter, itemgetter
+from operator import itemgetter
 
-from mi.models import OverseasRegion
+from django.db.models import Q
+
+from mi.models import OverseasRegion, OverseasRegionGroup
+from mi.serializers import OverseasRegionGroupSerializer
 from mi.utils import month_iterator, sort_campaigns_by
-from mi.views.base_view import BaseWinMIView
+from mi.views.base_view import BaseWinMIView, BaseMIView
 
+
+class BaseOverseasRegionGroupMIView(BaseMIView):
+
+    def get_queryset(self):
+        return OverseasRegionGroup.objects.all()
+
+    def get_results(self):
+        return [OverseasRegionGroupSerializer(instance=x, year=self.fin_year).data for x in self.get_queryset().order_by('name')]
+
+    def get(self, request):
+        response = self._handle_fin_year(request)
+        if response:
+            return response
+        return self._success(self.get_results())
 
 class BaseOverseasRegionsMIView(BaseWinMIView):
     """ Abstract Base for other Region-related MI endpoints to inherit from """
@@ -18,7 +37,10 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
 
     def _regions_for_fin_year(self):
         """ Returns overseas region based on countries from Targets for the given financial year """
-        return OverseasRegion.objects.filter(countries__targets__financial_year=self.fin_year).distinct()
+        return OverseasRegion.objects.filter(
+            countries__targets__financial_year_id=self.fin_year.id,
+            overseasregionyear__financial_year_id=self.fin_year.id
+        ).distinct()
 
     def _get_region_wins(self, region):
         """
@@ -31,19 +53,34 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
 
     def _get_region_hvc_wins(self, region):
         """ HVC wins alone for the `OverseasRegion` """
-        return self._wins().filter(hvc__in=region.campaign_ids)
+        region_filter = Q(
+            Q(reduce(operator.or_, [Q(hvc__startswith=t) for t in region.fin_year_campaign_ids(self.fin_year)]))
+            | Q(hvc__in=region.fin_year_charcodes(self.fin_year))
+        )
+        wins = self._wins().filter(region_filter)
+        return wins
 
     def _get_region_non_hvc_wins(self, region):
         """ non-HVC wins alone for the `OverseasRegion` """
-        return self._non_hvc_wins().filter(country__in=region.country_ids)
+        return self._non_hvc_wins().filter(country__in=region.fin_year_country_ids(self.fin_year))
 
     def _region_result(self, region):
         """ Basic data about region - name & hvc's """
         return {
             'name': region.name,
             'avg_time_to_confirm': self._average_confirm_time(win__country__in=region.country_ids),
-            'hvcs': self._hvc_overview(region.targets),
+            'hvcs': self._hvc_overview(region.fin_year_targets(self.fin_year)),
         }
+
+
+class OverseasRegionGroupListView(BaseOverseasRegionGroupMIView):
+    """
+    List all Overseas Region Groups for current year
+    """
+    def get_queryset(self):
+        return super().get_queryset().filter(
+            overseasregiongroupyear__financial_year=self.fin_year
+        ).distinct()
 
 
 class OverseasRegionsListView(BaseOverseasRegionsMIView):
@@ -51,9 +88,6 @@ class OverseasRegionsListView(BaseOverseasRegionsMIView):
 
     def get(self, request):
         response = self._handle_fin_year(request)
-        if response:
-            return response
-
         if response:
             return response
 
@@ -103,7 +137,7 @@ class OverseasRegionMonthsView(BaseOverseasRegionsMIView):
         month_to_wins = []
         for k, g in groupby(sorted_wins, key=self._win_date_for_grouping):
             month_wins = list(g)
-            date_str = month_wins[0].date.strftime('%Y-%m')
+            date_str = month_wins[0]['date'].strftime('%Y-%m')
             month_to_wins.append((date_str, month_wins))
 
         # Add missing months within the financial year until current month
@@ -137,7 +171,7 @@ class OverseasRegionCampaignsView(BaseOverseasRegionsMIView):
 
     def _campaign_breakdowns(self, region):
         wins = self._get_region_hvc_wins(region)
-        campaign_to_wins = self._group_wins_by_target(wins, region.targets)
+        campaign_to_wins = self._group_wins_by_target(wins, region.fin_year_targets(self.fin_year))
         campaigns = [
             {
                 'campaign': campaign.name.split(":")[0],
@@ -185,8 +219,8 @@ class OverseasRegionOverviewView(BaseOverseasRegionsMIView):
     def _region_data(self, region_obj):
         """ Calculate HVC & non-HVC data for an Overseas region """
 
-        targets = region_obj.targets
-        country_ids = region_obj.country_ids
+        targets = region_obj.fin_year_targets(self.fin_year)
+        country_ids = region_obj.fin_year_country_ids(self.fin_year)
         total_countries = len(country_ids)
         total_target = sum(t.target for t in targets)
 
@@ -232,6 +266,6 @@ class OverseasRegionOverviewView(BaseOverseasRegionsMIView):
         if response:
             return response
 
-        result = [self._region_data(region) for region in OverseasRegion.objects.all()]
+        result = [self._region_data(region) for region in self._regions_for_fin_year()]
         self._fill_date_ranges()
         return self._success(result)

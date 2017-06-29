@@ -1,4 +1,7 @@
+import datetime
+
 from django.core.urlresolvers import reverse
+from factory.fuzzy import FuzzyChoice
 from freezegun import freeze_time
 
 from mi.tests.base_test_case import MiApiViewsBaseTestCase
@@ -135,6 +138,42 @@ class SectorTeamOverviewTestCase(SectorTeamBaseTestCase):
         self.assertEqual(team_1_data['values']['hvc']['current']['confirmed'], current_value)
         self.assertEqual(team_1_data['values']['hvc']['current']['unconfirmed'], 0)
         self.assertEqual(team_1_data['values']['hvc']['target'], target_value)
+
+    @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
+    def test_hvc_target_values_confirmed_hvc_wins_one_from_earlier_fy(self):
+        """
+        When there are confirmed HVC wins, current export value should be positively
+        effected
+        """
+        from django.core.management import call_command
+        call_command('create_missing_hvcs', verbose=False)
+
+        for hvc_code in self.TEAM_15_HVCS:
+            self._create_hvc_win(hvc_code=hvc_code, confirm=True,
+                                 export_value=10000000,
+                                 sector_id=FuzzyChoice(self.TEAM_1_SECTORS).fuzz(),
+                                 win_date=datetime.datetime(2017, 4, 5),
+                                 notify_date=datetime.datetime(2017, 4, 5),
+                                 response_date=datetime.datetime(2017, 4, 15),
+                                 fin_year=2017)
+
+        # Add a win that was created in earlier FY and confirmed in new FY
+        self._create_hvc_win(hvc_code="E083", confirm=True,
+                             export_value=10000000,
+                             sector_id=FuzzyChoice(self.TEAM_1_SECTORS).fuzz(),
+                             win_date=datetime.datetime(2017, 3, 25),
+                             notify_date=datetime.datetime(2017, 3, 25),
+                             response_date=datetime.datetime(2017, 4, 5),
+                             fin_year=2016)
+
+        overview_fy_17_url = reverse('mi:sector_teams_overview') + "?year=2017"
+        api_response = self._get_api_response(overview_fy_17_url)
+        team_15_data = self._team_data(api_response.data["results"], 15)
+        current_value = self.CAMPAIGN_TARGET * (len(self.TEAM_15_HVCS) + 1)
+
+        self.assertEqual(team_15_data['values']['hvc']['current']['confirmed'], current_value)
+        self.assertEqual(team_15_data['values']['hvc']['current']['unconfirmed'], 0)
+
 
     def test_confirmed_percent_values_confirmed_hvc_wins(self):
         """

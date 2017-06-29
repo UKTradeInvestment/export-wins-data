@@ -4,77 +4,24 @@ from freezegun import freeze_time
 import json
 
 from django.core.urlresolvers import reverse
-from factory.fuzzy import FuzzyChoice, FuzzyDate
+from factory.fuzzy import FuzzyDate
 
-from mi.tests.base_test_case import MiApiViewsBaseTestCase
+from fixturedb.factories.win import create_win_factory
+from mi.tests.base_test_case import MiApiViewsBaseTestCase, MiApiViewsWithWinsBaseTestCase
 from mi.utils import sort_campaigns_by
 from wins.constants import SECTORS
-from wins.factories import (
-    CustomerResponseFactory,
-    NotificationFactory,
-    WinFactory,
-)
 from wins.models import HVC
 
 
-class SectorTeamBaseTestCase(MiApiViewsBaseTestCase):
+class SectorTeamBaseTestCase(MiApiViewsWithWinsBaseTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self._win_factory_function = create_win_factory(self.user, sector_choices=self.TEAM_1_SECTORS)
+
     def _hvc_charcode(self, hvc_code, fin_year):
         charcode = hvc_code + str(fin_year)[-2:]
         return charcode
-
-    def _create_win(self, hvc_code, sector_id=None, win_date=None, export_value=None,
-                    confirm=False, notify_date=None, response_date=None, country=None,
-                    fin_year=2016):
-        """ generic function creating `Win` """
-        if not sector_id:
-            sector_id = FuzzyChoice(self.TEAM_1_SECTORS)
-
-        if not win_date:
-            win_date = datetime.datetime(2016, 5, 25)
-
-        if hvc_code is not None:
-            win = WinFactory(user=self.user, hvc=hvc_code + str(fin_year)[-2:], sector=sector_id, date=win_date)
-        else:
-            win = WinFactory(user=self.user, sector=sector_id, date=win_date)
-        win.save()
-
-        if country is not None:
-            win.country = country
-            win.save()
-
-        if export_value is not None:
-            win.total_expected_export_value = export_value
-            win.save()
-
-        if confirm:
-            if not notify_date:
-                notify_date = datetime.datetime(2016, 5, 26)
-            notification = NotificationFactory(win=win)
-            notification.created = notify_date
-            notification.save()
-            if not response_date:
-                response_date = datetime.datetime(2016, 5, 27)
-            response = CustomerResponseFactory(win=win, agree_with_win=True)
-            response.created = response_date
-            response.save()
-        return win
-
-    def _create_hvc_win(self, hvc_code=None, sector_id=None, win_date=None, export_value=None,
-                        confirm=False, notify_date=None, response_date=None, fin_year=2016):
-        """ creates a dummy HVC `Win`, confirmed or unconfirmed """
-        if hvc_code is None:
-            hvc_code = FuzzyChoice(self.TEAM_1_HVCS).fuzz()
-
-        return self._create_win(hvc_code=hvc_code, sector_id=sector_id, win_date=win_date,
-                                export_value=export_value, confirm=confirm, notify_date=notify_date,
-                                response_date=response_date, fin_year=fin_year)
-
-    def _create_non_hvc_win(self, sector_id=None, win_date=None, export_value=None, confirm=False,
-                            notify_date=None, response_date=None, country=None, fin_year=2016):
-        """ creates a dummy non-HVC `Win` using Factory, can be confirmed or unconfirmed """
-        return self._create_win(hvc_code=None, sector_id=sector_id, win_date=win_date, export_value=export_value,
-                                confirm=confirm, notify_date=notify_date, response_date=response_date,
-                                country=country, fin_year=fin_year)
 
     def _team_data(self, teams_list, team_id=1):
         """ returns specific team's data dict out of overview response list """
@@ -84,7 +31,7 @@ class SectorTeamBaseTestCase(MiApiViewsBaseTestCase):
 
 
 @freeze_time(MiApiViewsBaseTestCase.frozen_date)
-class SectorTeamListTestCase(MiApiViewsBaseTestCase):
+class SectorTeamListTestCase(SectorTeamBaseTestCase):
     """
     Tests covering SectorTeam overview and detail API endpoints
     """
@@ -315,6 +262,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         return campaign_data
 
     def setUp(self):
+        super().setUp()
         self.expected_response = {
             "campaigns": [],
             "name": "Financial & Professional Services",
@@ -335,6 +283,52 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
             },
             "avg_time_to_confirm": 0.0
         }
+
+    @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
+    def test_cross_fy_wins_in_team_15_with_change(self):
+        """
+        This is to test a in that was created in previous FY and confirmed in current FY
+        for team 15 who's name was changed across FYs.
+        """
+        from django.core.management import call_command
+        call_command('create_missing_hvcs', verbose=False)
+
+        self._create_hvc_win(hvc_code="E083", confirm=True,
+                             export_value=10000000,
+                             win_date=datetime.datetime(2017, 3, 25),
+                             notify_date=datetime.datetime(2017, 3, 25),
+                             response_date=datetime.datetime(2017, 4, 5),
+                             fin_year=2016)
+        team_15_campaign_url = reverse("mi:sector_team_campaigns", kwargs={"team_id": 15}) + "?year=2017"
+        api_response = self._get_api_response(team_15_campaign_url)
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
+        hvc_data = next((item for item in response_decoded["campaigns"] if item["campaign_id"] == "E083"), None)
+        self.assertIsNotNone(hvc_data)
+        total = hvc_data["totals"]["hvc"]["value"]["confirmed"]
+        self.assertEqual(10000000, total)
+
+    @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
+    def test_cross_fy_wins_in_team_1_with_change(self):
+        """
+        This is to test a in that was created in previous FY and confirmed in current FY
+        for a team 1 who's name hasn't changed across FYs.
+        """
+        from django.core.management import call_command
+        call_command('create_missing_hvcs', verbose=False)
+
+        self._create_hvc_win(hvc_code='E006', confirm=True,
+                             export_value=10000000,
+                             win_date=datetime.datetime(2017, 3, 25),
+                             notify_date=datetime.datetime(2017, 3, 25),
+                             response_date=datetime.datetime(2017, 4, 5),
+                             fin_year=2016)
+        team_1_2017_campaign_url = reverse("mi:sector_team_campaigns", kwargs={"team_id": 1}) + "?year=2017"
+        api_response = self._get_api_response(team_1_2017_campaign_url)
+        response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
+        hvc_data = next((item for item in response_decoded["campaigns"] if item["campaign_id"] == "E006"), None)
+        self.assertIsNotNone(hvc_data)
+        total = hvc_data["totals"]["hvc"]["value"]["confirmed"]
+        self.assertEqual(10000000, total)
 
     def test_sector_team_campaigns_1_wins_for_all_hvcs(self):
         """ Campaigns api for team 1, with wins for all HVCs"""

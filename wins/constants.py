@@ -616,6 +616,7 @@ HQ_TEAM_REGION_OR_POST = tuple([
     ("team:69", "ST - North America - East Asia - Australasia - Caribbean"),
     ("team:70", "ST - Europe"),
     ("team:71", "ST - Group Resources - Support Team"),
+    ("team:72", "ST - E-Exporting Programme"),
 
     ("investment:1", "ITFG - E-Business Projects Team"),
     ("investment:2", "ITFG - Overseas Resources Team"),
@@ -715,6 +716,7 @@ HQ_TEAM_REGION_OR_POST = tuple([
     ('obn:9', 'India - UKIBC'),
     ('obn:10', 'Indonesia - British Chamber of Commerce'),
     ('obn:11', 'Kazakhstan - British Chamber of Commerce'),
+    ('obn:34', 'Kenya - British Chamber of Commerce Kenya'),
     ('obn:12', 'Kuwait - Kuwait British Business Centre'),
     ('obn:13', 'Malaysia - British Malaysian Chamber of Commerce'),
     ('obn:14', 'Morocco - British Chamber of Commerce'),
@@ -737,6 +739,7 @@ HQ_TEAM_REGION_OR_POST = tuple([
     ('obn:32', 'USA - Altios'),
     ('obn:33', 'USA - OCO Global'),
     ('obn:31', 'Vietnam - British Business Group'),
+    ('obn:32', 'Kenya - British Chamber of Commerce Kenya'),
 
     ("other:1", "DIT Education"),
     ("other:2", "Healthcare UK"),

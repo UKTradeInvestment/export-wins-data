@@ -1,14 +1,39 @@
+cffi==1.9.1
+contextlib2==0.5.4
+cryptography==1.7.2
+decorator==4.0.11
+defusedxml==0.4.1
+dj-database-url==0.4.1
 Django==1.10.7
 django-countries==3.4.1
-djangorestframework==3.6.2
 django-crispy-forms==1.6.0
+django-extensions==1.6.7
 django-filter==1.0.2
-django_extensions==1.6.7
+djangorestframework==3.6.2
+djangosaml2==0.15.0
+factory-boy==2.8.1
+Faker==0.7.7
+future==0.16.0
 gunicorn==19.5.0
-dj-database-url==0.4.1
+Paste==2.0.3
 psycopg2==2.6.1
 python-dateutil==2.6.0
 whitenoise==3.1
+idna==2.2
+py==1.4.31
+pyasn1==0.2.2
+pycparser==2.17
+pycryptodomex==3.4.3
+pyOpenSSL==16.2.0
+pysaml2==4.4.0
+pytz==2016.10
+repoze.who==2.3
+requests==2.13.0
+six==1.10.0
+termcolor==1.1.0
+WebOb==1.7.1
+whitenoise==3.1
+zope.interface==4.3.3
 
 # Tests
 Faker==0.7.7
@@ -18,3 +43,4 @@ pytest-django==2.9.1
 pytest-sugar==0.7.1
 raven==5.19.0
 freezegun==0.3.8
+jmespath==0.9.3

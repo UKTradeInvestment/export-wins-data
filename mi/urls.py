@@ -10,6 +10,7 @@ from mi.views.parent_views import (
 )
 from mi.views.region_views import (
     OverseasRegionsListView,
+    OverseasRegionGroupListView,
     OverseasRegionOverviewView,
     OverseasRegionDetailView,
     OverseasRegionMonthsView,
@@ -45,11 +46,14 @@ urlpatterns = [
     url(r"^parent_sectors/$", ParentSectorListView.as_view(), name="parent_sectors"),
 
     url(r"^os_regions/$", OverseasRegionsListView.as_view(), name="overseas_regions"),
+    url(r"^os_region_groups/$", OverseasRegionGroupListView.as_view(), name="overseas_region_groups"),
     url(r"^os_regions/overview/$", OverseasRegionOverviewView.as_view(), name="overseas_region_overview"),
     url(r"^os_regions/(?P<region_id>\d+)/$", OverseasRegionDetailView.as_view(), name="overseas_region_detail"),
-    url(r"^os_regions/(?P<region_id>\d+)/months/$", OverseasRegionMonthsView.as_view()),
-    url(r"^os_regions/(?P<region_id>\d+)/campaigns/$", OverseasRegionCampaignsView.as_view()),
-    url(r"^os_regions/(?P<region_id>\d+)/top_non_hvcs/$", OverseasRegionsTopNonHvcWinsView.as_view()),
+    url(r"^os_regions/(?P<region_id>\d+)/months/$", OverseasRegionMonthsView.as_view(), name="overseas_region_monthly"),
+    url(r"^os_regions/(?P<region_id>\d+)/campaigns/$", OverseasRegionCampaignsView.as_view(),
+        name="overseas_region_campaigns"),
+    url(r"^os_regions/(?P<region_id>\d+)/top_non_hvcs/$", OverseasRegionsTopNonHvcWinsView.as_view(),
+        name="overseas_region_top_nonhvc"),
 
     url(r"^hvc_groups/$", HVCGroupsListView.as_view(), name="hvc_groups"),
     url(r"^hvc_groups/(?P<group_id>\d+)/$", HVCGroupDetailView.as_view(), name="hvc_group_detail"),

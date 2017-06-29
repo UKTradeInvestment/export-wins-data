@@ -21,6 +21,7 @@ class SectorTeamMonthlyViewsTestCase(SectorTeamBaseTestCase):
     expected_response = {}
 
     def setUp(self):
+        super().setUp()
         self.expected_response = {
             "avg_time_to_confirm": 0.0,
             "hvcs": {

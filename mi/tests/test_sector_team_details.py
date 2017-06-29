@@ -1,6 +1,8 @@
 import datetime
 
+from django.core.management import call_command
 from django.core.urlresolvers import reverse
+
 from freezegun import freeze_time
 
 from mi.tests.base_test_case import MiApiViewsBaseTestCase
@@ -17,10 +19,17 @@ class SectorTeamDetailViewsTestCase(SectorTeamBaseTestCase):
     Tests covering SectorTeam overview and detail API endpoints
     """
 
+    view_base_url = reverse('mi:sector_team_detail', kwargs={'team_id': 1})
     url = reverse('mi:sector_team_detail', kwargs={'team_id': 1}) + "?year=2016"
     expected_response = {}
 
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        call_command('create_missing_hvcs', verbose=False)
+
     def setUp(self):
+        super().setUp()
         # initialise for every test
         self.expected_response = {
             "wins": {
@@ -94,6 +103,9 @@ class SectorTeamDetailViewsTestCase(SectorTeamBaseTestCase):
             "avg_time_to_confirm": 0.0
         }
 
+    def get_url_for_year(self, year):
+        return '{base}?year={year}'.format(base=self.view_base_url, year=year)
+
     def test_no_sector_team(self):
         no_sector_url = reverse('mi:sector_team_detail', kwargs={'team_id': 100}) + "?year=2016"
         no_sector_expected_response = {
@@ -146,6 +158,148 @@ class SectorTeamDetailViewsTestCase(SectorTeamBaseTestCase):
         self.expected_response['wins']['non_export']['number']['total'] = 5
 
         self.assertResponse()
+
+    @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
+    def test_unconfirmed_wins_from_last_fy_in_current_fy(self):
+        """ Make sure unconfirmed wins from last FY are accounted for in current FY """
+        # create few confirmed wins last FY
+        for i in range(5):
+            self._create_hvc_win(confirm=True, win_date=datetime.datetime(2016, 5, 1),
+                                 notify_date=datetime.datetime(2016, 5, 1),
+                                 response_date=datetime.datetime(2016, 5, 1))
+        # create few unconfirmed wins from last FY
+        for i in range(5):
+            self._create_hvc_win(confirm=False, win_date=datetime.datetime(2016, 5, 1))
+        # create few confirmed wins this FY
+        for i in range(5):
+            self._create_hvc_win(confirm=True, win_date=datetime.datetime(2017, 4, 1),
+                                 notify_date=datetime.datetime(2017, 4, 1),
+                                 response_date=datetime.datetime(2017, 4, 10))
+        # create few unconfirmed wins this FY
+        for i in range(5):
+            self._create_hvc_win(confirm=False, win_date=datetime.datetime(2017, 4, 1))
+
+        self.url = self.get_url_for_year(2017)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['value']['confirmed'], 500000)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['value']['confirmed'], 500000)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['number']['confirmed'], 5)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['value']['unconfirmed'], 1000000)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['number']['unconfirmed'], 10)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['value']['total'], 1500000)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['number']['total'], 15)
+
+    @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
+    def test_unconfirmed_wins_from_last_fy_in_last_fy(self):
+        """ Make sure unconfirmed wins from last FY are not accounted for in last FY """
+        # create few confirmed wins last FY
+        for i in range(5):
+            self._create_hvc_win(confirm=True, win_date=datetime.datetime(2016, 5, 1),
+                                 notify_date=datetime.datetime(2016, 5, 1),
+                                 response_date=datetime.datetime(2016, 5, 1))
+        # create few unconfirmed wins from last FY
+        for i in range(5):
+            self._create_hvc_win(confirm=False, win_date=datetime.datetime(2016, 5, 1))
+        # create few confirmed wins this FY
+        for i in range(5):
+            self._create_hvc_win(confirm=True, win_date=datetime.datetime(2017, 4, 1),
+                                 notify_date=datetime.datetime(2017, 4, 1),
+                                 response_date=datetime.datetime(2017, 4, 10))
+        # create few unconfirmed wins this FY
+        for i in range(5):
+            self._create_hvc_win(confirm=False, win_date=datetime.datetime(2017, 4, 1))
+
+        self.url = self.get_url_for_year(2016)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['value']['confirmed'], 500000)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['value']['confirmed'], 500000)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['number']['confirmed'], 5)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['value']['unconfirmed'], 0)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['number']['unconfirmed'], 0)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['value']['total'], 500000)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['number']['total'], 5)
+
+    @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
+    def test_no_unconfirmed_wins_from_older_than_12_months_1(self):
+        """ Make sure unconfirmed wins from last FY that are older than 12 months are not accounted for this FY """
+        # create few confirmed wins last FY
+        for i in range(5):
+            self._create_hvc_win(confirm=True, win_date=datetime.datetime(2016, 5, 1),
+                                 notify_date=datetime.datetime(2016, 5, 1),
+                                 response_date=datetime.datetime(2016, 5, 1))
+        # create few unconfirmed wins from last FY May
+        for i in range(5):
+            self._create_hvc_win(confirm=False, win_date=datetime.datetime(2016, 5, 1))
+        # create few confirmed wins this FY
+        for i in range(5):
+            self._create_hvc_win(confirm=True, win_date=datetime.datetime(2017, 4, 1),
+                                 notify_date=datetime.datetime(2017, 4, 1),
+                                 response_date=datetime.datetime(2017, 4, 10))
+        # create few unconfirmed wins this FY
+        for i in range(5):
+            self._create_hvc_win(confirm=False, win_date=datetime.datetime(2017, 4, 1))
+
+        self.url = self.get_url_for_year(2017)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['value']['confirmed'], 500000)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['value']['confirmed'], 500000)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['number']['confirmed'], 5)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['value']['unconfirmed'], 1000000)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['number']['unconfirmed'], 10)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['value']['total'], 1500000)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['number']['total'], 15)
+
+        # once its past May 2017, previous year's unconfirmed wins that are older than 12 months,
+        # should be ignored
+        with freeze_time(datetime.datetime(2017, 6, 1)):
+            self.assertEqual(self._api_response_data['wins']['export']['hvc']['value']['confirmed'], 500000)
+            self.assertEqual(self._api_response_data['wins']['export']['hvc']['value']['confirmed'], 500000)
+            self.assertEqual(self._api_response_data['wins']['export']['hvc']['number']['confirmed'], 5)
+            self.assertEqual(self._api_response_data['wins']['export']['hvc']['value']['unconfirmed'], 500000)
+            self.assertEqual(self._api_response_data['wins']['export']['hvc']['number']['unconfirmed'], 5)
+            self.assertEqual(self._api_response_data['wins']['export']['hvc']['value']['total'], 1000000)
+            self.assertEqual(self._api_response_data['wins']['export']['hvc']['number']['total'], 10)
+
+    @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
+    def test_no_unconfirmed_wins_from_older_than_12_months_2(self):
+        """
+        Make sure unconfirmed wins from last FY that are older than 12 months are not accounted for this FY
+        Boundary testing
+        """
+        # create few confirmed wins last FY
+        for i in range(5):
+            self._create_hvc_win(confirm=True, win_date=datetime.datetime(2016, 5, 1),
+                                 notify_date=datetime.datetime(2016, 5, 1),
+                                 response_date=datetime.datetime(2016, 5, 1))
+        # create few unconfirmed wins from last FY April/May
+        self._create_hvc_win(confirm=False, win_date=datetime.datetime(2016, 4, 21))
+        self._create_hvc_win(confirm=False, win_date=datetime.datetime(2016, 5, 1))
+        self._create_hvc_win(confirm=False, win_date=datetime.datetime(2016, 5, 2))
+        # create few confirmed wins this FY
+        for i in range(5):
+            self._create_hvc_win(confirm=True, win_date=datetime.datetime(2017, 4, 1),
+                                 notify_date=datetime.datetime(2017, 4, 1),
+                                 response_date=datetime.datetime(2017, 4, 10))
+        # create few unconfirmed wins this FY
+        for i in range(5):
+            self._create_hvc_win(confirm=False, win_date=datetime.datetime(2017, 4, 1))
+
+        self.url = self.get_url_for_year(2017)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['value']['confirmed'], 500000)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['value']['confirmed'], 500000)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['number']['confirmed'], 5)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['value']['unconfirmed'], 700000)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['number']['unconfirmed'], 7)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['value']['total'], 1200000)
+        self.assertEqual(self._api_response_data['wins']['export']['hvc']['number']['total'], 12)
+
+        # once its past May 2017, previous year's unconfirmed wins that are older than 12 months,
+        # should be ignored
+        with freeze_time(datetime.datetime(2017, 5, 2)):
+            self.assertEqual(self._api_response_data['wins']['export']['hvc']['value']['confirmed'], 500000)
+            self.assertEqual(self._api_response_data['wins']['export']['hvc']['value']['confirmed'], 500000)
+            self.assertEqual(self._api_response_data['wins']['export']['hvc']['number']['confirmed'], 5)
+            self.assertEqual(self._api_response_data['wins']['export']['hvc']['value']['unconfirmed'], 600000)
+            self.assertEqual(self._api_response_data['wins']['export']['hvc']['number']['unconfirmed'], 6)
+            self.assertEqual(self._api_response_data['wins']['export']['hvc']['value']['total'], 1100000)
+            self.assertEqual(self._api_response_data['wins']['export']['hvc']['number']['total'], 11)
 
     def test_sector_team_detail_1_hvc_nonhvc_unconfirmed(self):
         """ SectorTeam Details with unconfirmed wins both HVC and non-HVC, all wins on same day """

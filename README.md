@@ -22,6 +22,7 @@ FEEDBACK_ADDRESS='feedback@example.com'
 
 ## Dependencies
 
+### Database
 You need a Postgres database to connect to, to run Postgres in a docker container run:
 
 ```bash
@@ -33,6 +34,43 @@ Now set your DATABASE_URL to include the default user `postgres`:
 ```bash
 export DATABASE_URL='postgres://postgres@127.0.0.1:5432/export-wins-data'
 ```
+#### Dummy data
+
+Once you have a database you'll need some data.
+
+##### Start with the migrate command to set-up your tables:
+
+```bash
+$ ./manage.py migrate
+```
+
+This means you have some MI targets and all the wins tables set up but no users or wins
+
+##### Create a user:
+
+```bash
+$ ./manage.py create_mi_user --email foo@bar.com
+User foo@bar.com created with password: ********
+User foo@bar.com added to mi_group
+```
+
+##### Create missing HVCs:
+
+```bash
+$ ./manage.py create_missing_hvcs
+```
+
+##### Create some wins:
+
+the following command will create 1000 confirmed wins across all sectors as the last
+user that was added to the system
+
+```bash
+$ ./manage.py generate_fake_db 1000
+```
+
+This currently only creates wins for FY2015/2016 so you'll need to view that year if
+you want to see any data.
 
 ## Docker
 

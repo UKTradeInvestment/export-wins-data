@@ -71,8 +71,12 @@ db.sqlite3
 .env
 
 # misc data
-.json
-.csv
-.bak
+*.json
+*.csv
+*.bak
+*.key
+
+# mac folder config
 .DS_Store
 mi/.DS_Store
+/data/sp_prod.crt
