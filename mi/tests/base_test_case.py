@@ -91,14 +91,14 @@ class MiApiViewsWithWinsBaseTestCase(MiApiViewsBaseTestCase):
         return win
 
     def _create_hvc_win(self, hvc_code=None, sector_id=None, win_date=None, export_value=None,
-                        confirm=False, notify_date=None, response_date=None, fin_year=2016):
+                        confirm=False, notify_date=None, response_date=None, country=None, fin_year=2016):
         """ creates a dummy HVC `Win`, confirmed or unconfirmed """
         if hvc_code is None:
             hvc_code = FuzzyChoice(self.TEAM_1_HVCS).fuzz()
 
         return self._create_win(hvc_code=hvc_code, sector_id=sector_id, win_date=win_date,
                                 export_value=export_value, confirm=confirm, notify_date=notify_date,
-                                response_date=response_date, fin_year=fin_year)
+                                response_date=response_date, country=country, fin_year=fin_year)
 
     def _create_non_hvc_win(self, sector_id=None, win_date=None, export_value=None, confirm=False,
                             notify_date=None, response_date=None, country=None, fin_year=2016):

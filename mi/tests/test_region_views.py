@@ -1,6 +1,7 @@
+import datetime
 import json
 
-from django.utils.timezone import now
+from django.utils.timezone import now, get_current_timezone
 from unittest import mock
 
 from freezegun import freeze_time
@@ -451,3 +452,621 @@ class OverseasRegionCampaignsTestCase(OverseasRegionBaseViewTestCase):
         self.assertEqual(len(response_decoded["campaigns"]), len(
             response_decoded["hvcs"]["campaigns"]))
         self.assertEqual(len(response_decoded["campaigns"]), 8)
+
+
+@freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
+class OverseasRegionDetailsTestCase(OverseasRegionBaseViewTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        call_command('create_missing_hvcs', verbose=False)
+
+    def setUp(self):
+        super().setUp()
+        self._win_factory_function = create_win_factory(
+            self.user, sector_choices=self.TEAM_1_SECTORS)
+        self.export_value = 100000
+        self.view_base_url = self.cen_region_url
+        self.win_date_2017 = datetime.datetime(2017, 5, 25, tzinfo=get_current_timezone())
+        self.win_date_2016 = datetime.datetime(2016, 5, 25, tzinfo=get_current_timezone())
+        self.fy_2016_last_date = datetime.datetime(2017, 3, 31, tzinfo=get_current_timezone())
+
+    we_region_url = reverse('mi:overseas_region_detail', kwargs={"region_id": 5})
+    cen_region_url = reverse('mi:overseas_region_detail', kwargs={"region_id": 10})
+    region_url_2016_only = reverse('mi:overseas_region_detail', kwargs={"region_id": 15})
+    region_url_2017_only = reverse('mi:overseas_region_detail', kwargs={"region_id": 18})
+
+    def test_2017_region_in_2016_404(self):
+        self.view_base_url = self.region_url_2017_only
+        self.url = self.get_url_for_year(2016)
+        self._get_api_response(self.url, status_code=404)
+
+    def test_2016_region_in_2017_404(self):
+        self.view_base_url = self.region_url_2016_only
+        self.url = self.get_url_for_year(2017)
+        self._get_api_response(self.url, status_code=404)
+
+    def test_details_no_wins_2016(self):
+        self.url = self.get_url_for_year(2016)
+        api_response = self._api_response_data
+        self.assertEqual(api_response["wins"]["export"]["hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(api_response["wins"]["export"]["hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(api_response["wins"]["export"]["hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(api_response["wins"]["export"]["hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(api_response["wins"]["export"]["hvc"]["value"]["total"], 0)
+        self.assertEqual(api_response["wins"]["export"]["hvc"]["number"]["total"], 0)
+
+        self.assertEqual(api_response["wins"]["export"]["non_hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(api_response["wins"]["export"]["non_hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(api_response["wins"]["export"]["non_hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(api_response["wins"]["export"]["non_hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(api_response["wins"]["export"]["non_hvc"]["value"]["total"], 0)
+        self.assertEqual(api_response["wins"]["export"]["non_hvc"]["number"]["total"], 0)
+
+        self.assertEqual(api_response["wins"]["non_export"]["value"]["confirmed"], 0)
+        self.assertEqual(api_response["wins"]["non_export"]["number"]["confirmed"], 0)
+        self.assertEqual(api_response["wins"]["non_export"]["value"]["unconfirmed"], 0)
+        self.assertEqual(api_response["wins"]["non_export"]["number"]["unconfirmed"], 0)
+        self.assertEqual(api_response["wins"]["non_export"]["value"]["total"], 0)
+        self.assertEqual(api_response["wins"]["non_export"]["number"]["total"], 0)
+
+    def test_details_no_wins_2017(self):
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertEqual(api_response["wins"]["export"]["hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(api_response["wins"]["export"]["hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(api_response["wins"]["export"]["hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(api_response["wins"]["export"]["hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(api_response["wins"]["export"]["hvc"]["value"]["total"], 0)
+        self.assertEqual(api_response["wins"]["export"]["hvc"]["number"]["total"], 0)
+
+        self.assertEqual(api_response["wins"]["export"]["non_hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(api_response["wins"]["export"]["non_hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(api_response["wins"]["export"]["non_hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(api_response["wins"]["export"]["non_hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(api_response["wins"]["export"]["non_hvc"]["value"]["total"], 0)
+        self.assertEqual(api_response["wins"]["export"]["non_hvc"]["number"]["total"], 0)
+
+        self.assertEqual(api_response["wins"]["non_export"]["value"]["confirmed"], 0)
+        self.assertEqual(api_response["wins"]["non_export"]["number"]["confirmed"], 0)
+        self.assertEqual(api_response["wins"]["non_export"]["value"]["unconfirmed"], 0)
+        self.assertEqual(api_response["wins"]["non_export"]["number"]["unconfirmed"], 0)
+        self.assertEqual(api_response["wins"]["non_export"]["value"]["total"], 0)
+        self.assertEqual(api_response["wins"]["non_export"]["number"]["total"], 0)
+
+    def test_details_cen_hvc_win_for_2017_in_2017(self):
+        self._create_hvc_win(
+            hvc_code='E017',
+            win_date=now(),
+            confirm=True,
+            fin_year=2017,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["confirmed"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["confirmed"], 1)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["total"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["total"], 1)
+
+    def test_details_cen_hvc_win_for_2017_in_2016(self):
+        self._create_hvc_win(
+            hvc_code='E017',
+            win_date=now(),
+            confirm=True,
+            fin_year=2017,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2016)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["total"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["total"], 0)
+
+    def test_details_cen_hvc_win_for_2016_in_2016(self):
+        self._create_hvc_win(
+            hvc_code='E017',
+            win_date=self.win_date_2016,
+            confirm=True,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2016)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["confirmed"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["confirmed"], 1)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["total"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["total"], 1)
+
+    def test_details_cen_hvc_win_for_2016_in_2017(self):
+        self._create_hvc_win(
+            hvc_code='E017',
+            win_date=self.win_date_2016,
+            confirm=True,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["total"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["total"], 0)
+
+    def test_details_cen_hvc_win_confirmed_in_2016_appears_in_2016(self):
+        self._create_hvc_win(
+            hvc_code='E017',
+            win_date=self.win_date_2016,
+            confirm=True,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2016)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["confirmed"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["confirmed"], 1)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["total"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["total"], 1)
+
+    def test_details_cen_hvc_win_confirmed_in_2016_doesnt_appears_in_2017(self):
+        self._create_hvc_win(
+            hvc_code='E017',
+            win_date=self.win_date_2016,
+            confirm=True,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["total"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["total"], 0)
+
+    def test_details_cen_hvc_win_from_2016_confirmed_in_2017_doesnt_appears_in_2016(self):
+        self._create_hvc_win(
+            hvc_code='E017',
+            win_date=self.win_date_2016,
+            response_date=self.win_date_2017,
+            confirm=True,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2016)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["total"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["total"], 0)
+
+    def test_details_cen_hvc_win_from_2016_confirmed_in_2017_appears_in_2017(self):
+        self._create_hvc_win(
+            hvc_code='E017',
+            win_date=self.win_date_2016,
+            response_date=self.win_date_2017,
+            confirm=True,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["confirmed"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["confirmed"], 1)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["total"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["total"], 1)
+
+    def test_details_hvc_win_from_other_region_but_cen_country_doesnt_appear_in_cen(self):
+        self._create_hvc_win(
+            hvc_code='E016',
+            win_date=self.win_date_2017,
+            confirm=True,
+            fin_year=2017,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["total"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["total"], 0)
+
+    def test_details_hvc_win_from_other_region_other_country_doesnt_appear_in_cen(self):
+        self._create_hvc_win(
+            hvc_code='E016',
+            win_date=self.win_date_2017,
+            confirm=True,
+            fin_year=2017,
+            export_value=self.export_value,
+            country='CA'
+        )
+        self.url = self.get_url_for_year(2017)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["total"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["total"], 0)
+
+    def test_details_cen_hvc_win_unconfirmed_in_2016_appears_in_2017(self):
+        self._create_hvc_win(
+            hvc_code='E017',
+            win_date=self.win_date_2016,
+            confirm=False,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2016)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["total"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["total"], 0)
+
+        self.url = self.get_url_for_year(2017)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["unconfirmed"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["unconfirmed"], 1)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["total"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["total"], 1)
+
+    def test_details_cen_hvc_win_unconfirmed_in_2017_appears_in_2017(self):
+        self._create_hvc_win(
+            hvc_code='E017',
+            win_date=self.win_date_2017,
+            confirm=False,
+            fin_year=2017,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2016)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["total"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["total"], 0)
+
+        self.url = self.get_url_for_year(2017)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["unconfirmed"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["unconfirmed"], 1)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["total"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["total"], 1)
+
+    def test_details_unconfirmed_hvc_win_last_year_should_show_up_in_new_region_if_country_has_moved_regions(self):
+        w1 = self._create_hvc_win(
+            hvc_code='E017',
+            win_date=self.win_date_2016,
+            confirm=False,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        # check in CEN first
+        self.view_base_url = self.cen_region_url
+        self.url = self.get_url_for_year(2017)
+        data_2016 = self._api_response_data
+        self.assertEqual(data_2016["wins"]["export"]["hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(data_2016["wins"]["export"]["hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(data_2016["wins"]["export"]["hvc"]["value"]["unconfirmed"], self.export_value)
+        self.assertEqual(data_2016["wins"]["export"]["hvc"]["number"]["unconfirmed"], 1)
+        self.assertEqual(data_2016["wins"]["export"]["hvc"]["value"]["total"], self.export_value)
+        self.assertEqual(data_2016["wins"]["export"]["hvc"]["number"]["total"], 1)
+
+        # move HU to a different region
+        region_year = OverseasRegionYear.objects.get(
+            country__country='HU', financial_year_id=2017)
+        region_year.overseas_region = OverseasRegion.objects.get(
+            name='Western Europe')
+        region_year.save()
+
+        # it should be in within Western Europe region this year
+        self.view_base_url = self.we_region_url
+        self.url = self.get_url_for_year(2017)
+        data_2017 = self._api_response_data
+        self.assertEqual(data_2017["wins"]["export"]["hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(data_2017["wins"]["export"]["hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(data_2017["wins"]["export"]["hvc"]["value"]["unconfirmed"], self.export_value)
+        self.assertEqual(data_2017["wins"]["export"]["hvc"]["number"]["unconfirmed"], 1)
+        self.assertEqual(data_2017["wins"]["export"]["hvc"]["value"]["total"], self.export_value)
+        self.assertEqual(data_2017["wins"]["export"]["hvc"]["number"]["total"], 1)
+
+    # Non-HVC
+    def test_details_cen_non_hvc_win_for_2017_in_2017(self):
+        self._create_non_hvc_win(
+            win_date=now(),
+            confirm=True,
+            fin_year=2017,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["confirmed"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["confirmed"], 1)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["total"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["total"], 1)
+
+    def test_details_cen_non_hvc_win_for_2017_in_2016(self):
+        self._create_non_hvc_win(
+            win_date=now(),
+            confirm=True,
+            fin_year=2017,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2016)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["total"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["total"], 0)
+
+    def test_details_cen_non_hvc_win_for_2016_in_2016(self):
+        self._create_non_hvc_win(
+            win_date=self.win_date_2016,
+            confirm=True,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2016)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["confirmed"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["confirmed"], 1)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["total"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["total"], 1)
+
+    def test_details_cen_non_hvc_win_for_2016_in_2017(self):
+        self._create_non_hvc_win(
+            win_date=self.win_date_2016,
+            confirm=True,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["total"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["total"], 0)
+
+    def test_details_cen_non_hvc_win_confirmed_in_2016_appears_in_2016(self):
+        self._create_non_hvc_win(
+            win_date=self.win_date_2016,
+            confirm=True,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2016)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["confirmed"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["confirmed"], 1)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["total"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["total"], 1)
+
+    def test_details_cen_non_hvc_win_confirmed_in_2016_doesnt_appears_in_2017(self):
+        self._create_non_hvc_win(
+            win_date=self.win_date_2016,
+            confirm=True,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["total"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["total"], 0)
+
+    def test_details_cen_non_hvc_win_from_2016_confirmed_in_2017_doesnt_appears_in_2016(self):
+        self._create_non_hvc_win(
+            win_date=self.win_date_2016,
+            response_date=self.win_date_2017,
+            confirm=True,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2016)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["total"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["total"], 0)
+
+    def test_details_cen_non_hvc_win_from_2016_confirmed_in_2017_appears_in_2017(self):
+        self._create_non_hvc_win(
+            win_date=self.win_date_2016,
+            response_date=self.win_date_2017,
+            confirm=True,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["confirmed"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["confirmed"], 1)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["total"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["total"], 1)
+
+    def test_details_non_hvc_win_from_other_region_other_country_doesnt_appear_in_cen(self):
+        self._create_non_hvc_win(
+            win_date=self.win_date_2017,
+            confirm=True,
+            fin_year=2017,
+            export_value=self.export_value,
+            country='CA'
+        )
+        self.url = self.get_url_for_year(2017)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["total"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["total"], 0)
+
+    def _test_details_non_hvc_win_from_cen_region_other_country_doesnt_appear_in_cen(self):
+        self._create_non_hvc_win(
+            win_date=self.win_date_2017,
+            confirm=True,
+            fin_year=2017,
+            export_value=self.export_value,
+            country='CA'
+        )
+        self.url = self.get_url_for_year(2017)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["total"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["total"], 0)
+
+    def test_details_cen_non_hvc_win_unconfirmed_in_2016_appears_in_2017(self):
+        self._create_non_hvc_win(
+            win_date=self.win_date_2016,
+            confirm=False,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2016)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["total"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["total"], 0)
+
+        self.url = self.get_url_for_year(2017)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["unconfirmed"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["unconfirmed"], 1)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["total"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["total"], 1)
+
+    def test_details_cen_non_hvc_win_unconfirmed_in_2017_appears_in_2017(self):
+        self._create_non_hvc_win(
+            win_date=self.win_date_2017,
+            confirm=False,
+            fin_year=2017,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2016)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["total"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["total"], 0)
+
+        self.url = self.get_url_for_year(2017)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["unconfirmed"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["unconfirmed"], 1)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["total"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["total"], 1)
+
+    def test_details_unconfirmed_non_hvc_win_last_year_should_show_up_in_new_region_if_country_has_moved_regions(self):
+        w1 = self._create_non_hvc_win(
+            win_date=self.win_date_2016,
+            confirm=False,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        # check in CEN first
+        self.view_base_url = self.cen_region_url
+        self.url = self.get_url_for_year(2017)
+        data_2016 = self._api_response_data
+        self.assertEqual(data_2016["wins"]["export"]["non_hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(data_2016["wins"]["export"]["non_hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(data_2016["wins"]["export"]["non_hvc"]["value"]["unconfirmed"], self.export_value)
+        self.assertEqual(data_2016["wins"]["export"]["non_hvc"]["number"]["unconfirmed"], 1)
+        self.assertEqual(data_2016["wins"]["export"]["non_hvc"]["value"]["total"], self.export_value)
+        self.assertEqual(data_2016["wins"]["export"]["non_hvc"]["number"]["total"], 1)
+
+        # move HU to a different region
+        region_year = OverseasRegionYear.objects.get(
+            country__country='HU', financial_year_id=2017)
+        region_year.overseas_region = OverseasRegion.objects.get(
+            name='Western Europe')
+        region_year.save()
+
+        # it should be in within Western Europe region this year
+        self.view_base_url = self.we_region_url
+        self.url = self.get_url_for_year(2017)
+        data_2017 = self._api_response_data
+        self.assertEqual(data_2017["wins"]["export"]["non_hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(data_2017["wins"]["export"]["non_hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(data_2017["wins"]["export"]["non_hvc"]["value"]["unconfirmed"], self.export_value)
+        self.assertEqual(data_2017["wins"]["export"]["non_hvc"]["number"]["unconfirmed"], 1)
+        self.assertEqual(data_2017["wins"]["export"]["non_hvc"]["value"]["total"], self.export_value)
+        self.assertEqual(data_2017["wins"]["export"]["non_hvc"]["number"]["total"], 1)
