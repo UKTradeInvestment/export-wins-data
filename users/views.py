@@ -49,6 +49,7 @@ class IsLoggedIn(APIView):
     def get(self, request):
         return HttpResponse(json.dumps(bool(request.user.is_authenticated())))
 
+
 class UserRetrieveViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     permission_classes = (IsMIServer, IsMIUser)
     serializer_class = UserSerializer
