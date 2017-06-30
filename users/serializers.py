@@ -40,6 +40,7 @@ class LoggingAuthTokenSerializer(AuthTokenSerializer):
             LoginFailure.objects.create(email=email)
             raise e
 
+
 class UserSerializer(serializers.ModelSerializer):
 
     class Meta:

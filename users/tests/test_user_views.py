@@ -1,8 +1,7 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import now
-from rest_framework import status
 
 from sso.models import ADFSUser
 from test_helpers.base import AliceAPIRequestFactory
@@ -41,17 +40,17 @@ class UserViewsTestCase(TestCase):
         _, cache_control = resp._headers['cache-control']
         self.assertRegex(cache_control, r'^max-age=.*$')
 
-
-    def test_anonymous_user_returns_404(self):
+    @override_settings(API_DEBUG=True)
+    def test_anonymous_user_returns_dummy_user(self):
         """
-        This should only happen if API_DEBUG is True, but this tests
+        This should only happen if API_DEBUG is Flas, but this tests
         that even in that scenario we define sensible behaviour
         """
         anon_factory = AliceAPIRequestFactory()
         req = anon_factory.get(self.url)
         resp = self.view(req)
-        self.assertEqual(
-            resp.status_code,
-            status.HTTP_404_NOT_FOUND
-        )
-
+        self.assertIn('cache-control', resp._headers.keys())
+        _, cache_control = resp._headers['cache-control']
+        self.assertRegex(cache_control, r'^max-age=.*$')
+        self.assertEqual(resp.data['email'], 'api_debug@true')
+        self.assertEqual(resp.data['last_login'], None)

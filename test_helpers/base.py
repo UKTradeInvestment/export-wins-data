@@ -32,7 +32,7 @@ class AliceAPIRequestFactory(APIRequestFactory):
         req.server_name = 'mi'
         req.mi_permission = True
         s = SessionStore()
-        s.expire_date=now() + timedelta(days=1)
+        s.expire_date = now() + timedelta(days=1)
         s.create()
         req.session = s
         return req
