@@ -77,3 +77,11 @@ def lookup(dictionary, key, *keys):
     if keys:
         return lookup(dictionary.get(key, {}), *keys)
     return dictionary.get(key)
+
+def print_csv(wins):
+    import csv
+    keys = wins[0].keys()
+    with open('wins.csv', 'w') as output_file:
+        dict_writer = csv.DictWriter(output_file, keys)
+        dict_writer.writeheader()
+        dict_writer.writerows(wins)

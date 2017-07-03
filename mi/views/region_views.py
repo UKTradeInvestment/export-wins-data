@@ -183,6 +183,7 @@ class OverseasRegionCampaignsView(BaseOverseasRegionsMIView):
         campaigns = [
             {
                 'campaign': campaign.name.split(":")[0],
+                'campaign_id': campaign.campaign_id,
                 'totals': self._progress_breakdown(campaign_wins, campaign.target),
             }
             for campaign, campaign_wins in campaign_to_wins
