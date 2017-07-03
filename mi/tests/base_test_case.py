@@ -8,6 +8,7 @@ from fixturedb.factories.win import create_win_factory
 from sso.tests import BaseSSOTestCase
 from users.factories import UserFactory
 from wins.factories import HVCFactory
+from wins.models import Win
 
 
 class MiApiViewsBaseTestCase(BaseSSOTestCase):
@@ -76,7 +77,9 @@ class MiApiViewsWithWinsBaseTestCase(MiApiViewsBaseTestCase):
     def _create_win(self, hvc_code, sector_id=None, win_date=None, export_value=None,
                     confirm=False, notify_date=None, response_date=None, country=None,
                     fin_year=2016):
-        """ generic function creating `Win` """
+        """ generic function creating `Win`
+        :rtype: `Win`
+        """
         win = self._win_factory_function(
             hvc_code,
             sector_id=sector_id,
