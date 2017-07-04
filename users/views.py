@@ -6,6 +6,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.http import HttpResponse
 
 from rest_framework import parsers, renderers, mixins, viewsets
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -57,9 +58,12 @@ class UserRetrieveViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
     def get_object(self):
         u = self.request.user
-        if isinstance(u, AnonymousUser) and settings.API_DEBUG:
-            u.email = 'api_debug@true'
-            u.last_login = None
+        if isinstance(u, AnonymousUser):
+            if settings.API_DEBUG:
+                u.email = 'api_debug@true'
+                u.last_login = None
+            else:
+                raise PermissionDenied()
         return u
 
     def get_queryset(self):

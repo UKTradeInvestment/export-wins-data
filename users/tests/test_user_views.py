@@ -2,6 +2,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import now
+from rest_framework import status
 
 from sso.models import ADFSUser
 from test_helpers.base import AliceAPIRequestFactory
@@ -54,3 +55,14 @@ class UserViewsTestCase(TestCase):
         self.assertRegex(cache_control, r'^max-age=.*$')
         self.assertEqual(resp.data['email'], 'api_debug@true')
         self.assertEqual(resp.data['last_login'], None)
+
+    @override_settings(API_DEBUG=False)
+    def test_anonymous_user_returns_403(self):
+        """
+        This should only happen if API_DEBUG is Flas, but this tests
+        that even in that scenario we define sensible behaviour
+        """
+        anon_factory = AliceAPIRequestFactory()
+        req = anon_factory.get(self.url)
+        resp = self.view(req)
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
