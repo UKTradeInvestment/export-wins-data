@@ -62,6 +62,8 @@ class UserRetrieveViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
             if settings.API_DEBUG:
                 u.email = 'api_debug@true'
                 u.last_login = None
+            elif hasattr(self.request, 'adfs_attributes'):
+                u.email = self.request.adfs_attributes['emailaddress'][0]
             else:
                 raise PermissionDenied()
         return u
