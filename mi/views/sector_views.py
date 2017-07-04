@@ -1,6 +1,6 @@
 from collections import defaultdict
 from itertools import groupby
-from operator import itemgetter, attrgetter
+from operator import itemgetter
 
 from mi.models import (
     HVCGroup,

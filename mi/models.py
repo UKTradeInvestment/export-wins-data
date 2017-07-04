@@ -247,7 +247,7 @@ class FinancialYear(models.Model):
         Pass e.g. 2016 for the 2016/17 financial year
 
         """
-        return datetime.datetime(fin_year + 1, 3, 31)
+        return datetime.datetime(fin_year + 1, 3, 31, 23, 59, 59)
 
     @property
     def start(self):
