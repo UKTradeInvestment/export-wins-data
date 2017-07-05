@@ -50,4 +50,6 @@ def create_win_factory(user, sector_choices=None, default_date=None):
             response.created = response_date
             response.save()
         return win
+
+    inner.sector_choices = sector_choices
     return inner

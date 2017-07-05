@@ -1,9 +1,10 @@
 import datetime
 
+from dateutil.relativedelta import relativedelta
 from django.utils.timezone import now, get_current_timezone
 from unittest import mock
 
-from factory.fuzzy import FuzzyDate
+from factory.fuzzy import FuzzyDate, FuzzyInteger, FuzzyChoice
 from freezegun import freeze_time
 from jmespath import search as s
 
@@ -184,8 +185,12 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
         self.assertTrue('north africa' in self.countries)
 
     def test_overview_value_1_win(self):
-        w1 = self._create_hvc_win(hvc_code='E016', win_date=now(
-        ), confirm=True, fin_year=2017, export_value=self.export_value)
+        w1 = self._create_hvc_win(
+            hvc_code='E016', win_date=now(),
+            confirm=True,
+            fin_year=2017,
+            export_value=self.export_value
+        )
         self.assertEqual(w1.country.code, 'CA')
         self.url = self.get_url_for_year(2017)
         data = self._api_response_data
@@ -194,10 +199,20 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
             'values']['hvc']['current']['confirmed'])
 
     def test_overview_value_2_wins_same_region(self):
-        w1 = self._create_hvc_win(hvc_code='E016', win_date=now(
-        ), confirm=True, fin_year=2017, export_value=self.export_value)
-        w2 = self._create_hvc_win(hvc_code='E016', win_date=now(
-        ), confirm=True, fin_year=2017, export_value=1)
+        w1 = self._create_hvc_win(
+            hvc_code='E016',
+            win_date=now(),
+            confirm=True,
+            fin_year=2017,
+            export_value=self.export_value
+        )
+        w2 = self._create_hvc_win(
+            hvc_code='E016',
+            win_date=now(),
+            confirm=True,
+            fin_year=2017,
+            export_value=1
+        )
         self.assertEqual(w1.country.code, w2.country.code)
         self.url = self.get_url_for_year(2017)
         data = self._api_response_data
@@ -206,10 +221,14 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
                          na_data['values']['hvc']['current']['confirmed'])
 
     def test_overview_value_2_wins_different_regions(self):
-        w1 = self._create_hvc_win(hvc_code='E016', win_date=now(
-        ), confirm=True, fin_year=2017, export_value=self.export_value)
-        w2 = self._create_hvc_win(hvc_code='E119', win_date=now(
-        ), confirm=True, fin_year=2017, export_value=1)
+        w1 = self._create_hvc_win(
+            hvc_code='E016', win_date=now(), confirm=True,
+            fin_year=2017, export_value=self.export_value
+        )
+        w2 = self._create_hvc_win(
+            hvc_code='E119', win_date=now(),
+            confirm=True, fin_year=2017, export_value=1
+        )
         self.assertEqual(w1.country.code, w2.country.code)
         self.url = self.get_url_for_year(2017)
         data = self._api_response_data
@@ -221,10 +240,14 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
             'values']['hvc']['current']['confirmed'])
 
     def test_overview_1_unconfirmed_and_1_confirmed_same_year(self):
-        w1 = self._create_hvc_win(hvc_code='E016', win_date=now(
-        ), confirm=True, fin_year=2017, export_value=self.export_value)
-        w2 = self._create_hvc_win(hvc_code='E016', win_date=now(
-        ), confirm=False, fin_year=2017, export_value=1)
+        w1 = self._create_hvc_win(
+            hvc_code='E016', win_date=now(), confirm=True,
+            fin_year=2017, export_value=self.export_value
+        )
+        w2 = self._create_hvc_win(
+            hvc_code='E016', win_date=now(), confirm=False,
+            fin_year=2017, export_value=1
+        )
         self.assertEqual(w1.country.code, w2.country.code)
         self.url = self.get_url_for_year(2017)
         data = self._api_response_data
@@ -235,8 +258,12 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
             'values']['hvc']['current']['unconfirmed'])
 
     def test_overview_1_unconfirmed_in_current_year_should_not_show_up_in_last_year(self):
-        w1 = self._create_hvc_win(hvc_code='E016', win_date=now(
-        ), confirm=False, fin_year=2017, export_value=self.export_value)
+        w1 = self._create_hvc_win(
+            hvc_code='E016', win_date=now(),
+            confirm=False,
+            fin_year=2017,
+            export_value=self.export_value
+        )
         self.url = self.get_url_for_year(2017)
         data = self._api_response_data
         na_data = [x for x in data if x['name'] == 'North America'][0]
@@ -252,8 +279,10 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
         )
 
     def test_overview_1_unconfirmed_last_year_should_not_show_up_in_last_year(self):
-        w1 = self._create_hvc_win(hvc_code='E016', win_date=self.frozen_date,
-                                  confirm=False, fin_year=2016, export_value=self.export_value)
+        w1 = self._create_hvc_win(
+            hvc_code='E016', win_date=self.frozen_date,
+            confirm=False, fin_year=2016, export_value=self.export_value
+        )
 
         self.url = self.get_url_for_year(2016)
         data_2016 = self._api_response_data
@@ -271,8 +300,10 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
             'values']['hvc']['current']['unconfirmed'])
 
     def test_overview_1_unconfirmed_last_year_should_show_up_in_new_region_if_country_has_moved_regions(self):
-        w1 = self._create_hvc_win(hvc_code='E016', win_date=self.frozen_date,
-                                  confirm=False, fin_year=2016, export_value=self.export_value)
+        w1 = self._create_hvc_win(
+            hvc_code='E016', win_date=self.frozen_date,
+            confirm=False, fin_year=2016, export_value=self.export_value
+        )
 
         self.url = self.get_url_for_year(2016)
         data_2016 = self._api_response_data
@@ -305,12 +336,14 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
     # Non HVC
     def test_non_hvc_win_in_overview_confirmed_current_year(self):
         w1 = self._create_non_hvc_win(
-            win_date=self.frozen_date_17, export_value=self.export_value, confirm=True, country='CA', fin_year=2017)
+            win_date=self.frozen_date_17, export_value=self.export_value,
+            confirm=True, country='CA', fin_year=2017
+        )
         self.url = self.get_url_for_year(2017)
         data_2017 = self._api_response_data
         na_data_2017 = s("[?name=='North America']|[0]", data_2017)
-        self.assertEqual(w1.total_expected_export_value, na_data_2017[
-            'values']['non_hvc']['current']['confirmed'])
+        self.assertEqual(w1.total_expected_export_value,
+                         na_data_2017['values']['non_hvc']['current']['confirmed'])
 
         self.url = self.get_url_for_year(2016)
         data_2016 = self._api_response_data
@@ -321,12 +354,14 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
 
     def test_non_hvc_win_in_overview_unconfirmed_current_year(self):
         w1 = self._create_non_hvc_win(
-            win_date=self.frozen_date_17, export_value=self.export_value, confirm=False, country='CA', fin_year=2017)
+            win_date=self.frozen_date_17, export_value=self.export_value,
+            confirm=False, country='CA', fin_year=2017
+        )
         self.url = self.get_url_for_year(2017)
         data_2017 = self._api_response_data
         na_data_2017 = s("[?name=='North America']|[0]", data_2017)
-        self.assertEqual(w1.total_expected_export_value, na_data_2017[
-            'values']['non_hvc']['current']['unconfirmed'])
+        self.assertEqual(w1.total_expected_export_value,
+                         na_data_2017['values']['non_hvc']['current']['unconfirmed'])
 
         self.url = self.get_url_for_year(2016)
         data_2016 = self._api_response_data
@@ -336,16 +371,28 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
         )
 
     def test_2_non_hvc_win_in_overview_both_confirmed_current_year(self):
-        self._create_non_hvc_win(win_date=self.frozen_date_17,
-                                 export_value=self.export_value + 1, confirm=True, country='CA', fin_year=2017)
-        self._create_non_hvc_win(win_date=self.frozen_date_17,
-                                 export_value=self.export_value - 1, confirm=True, country='CA', fin_year=2017)
+        self._create_non_hvc_win(
+            win_date=self.frozen_date_17,
+            export_value=self.export_value + 1,
+            confirm=True,
+            country='CA',
+            fin_year=2017
+        )
+        self._create_non_hvc_win(
+            win_date=self.frozen_date_17,
+            export_value=self.export_value - 1,
+            confirm=True,
+            country='CA',
+            fin_year=2017
+        )
         self.url = self.get_url_for_year(2017)
         data_2017 = self._api_response_data
         na_data_2017 = s("[?name=='North America']|[0]", data_2017)
 
-        self.assertEqual(self.export_value * 2,
-                         na_data_2017['values']['non_hvc']['current']['confirmed'])
+        self.assertEqual(
+            self.export_value * 2,
+            na_data_2017['values']['non_hvc']['current']['confirmed']
+        )
 
         self.url = self.get_url_for_year(2016)
         data_2016 = self._api_response_data
@@ -381,7 +428,12 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
         num_to_create = 5
         for i in range(num_to_create):
             self._create_non_hvc_win(
-                win_date=self.frozen_date, export_value=self.export_value, confirm=True, country='CA', fin_year=2016)
+                win_date=self.frozen_date,
+                export_value=self.export_value,
+                confirm=True,
+                country='CA',
+                fin_year=2016
+            )
 
         # should not be in 2017
         self.url = self.get_url_for_year(2017)
@@ -399,8 +451,13 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
                          na_data_2016['values']['non_hvc']['current']['confirmed'])
 
     def test_overview_non_hvc_1_unconfirmed_last_year_should_show_up_in_new_region_if_country_has_moved_regions(self):
-        w1 = self._create_non_hvc_win(win_date=self.frozen_date, confirm=False,
-                                      fin_year=2016, export_value=self.export_value, country='CA')
+        w1 = self._create_non_hvc_win(
+            win_date=self.frozen_date,
+            confirm=False,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='CA'
+        )
 
         self.url = self.get_url_for_year(2016)
         data_2016 = self._api_response_data
@@ -424,10 +481,14 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
         na_data_2017 = s("[?name=='North America']|[0]", data_2017)
         we_data_2017 = s("[?name=='Western Europe']|[0]", data_2017)
 
-        self.assertEqual(0, na_data_2017['values'][
-            'non_hvc']['current']['unconfirmed'])
-        self.assertEqual(w1.total_expected_export_value, we_data_2017[
-            'values']['non_hvc']['current']['unconfirmed'])
+        self.assertEqual(
+            0,
+            na_data_2017['values']['non_hvc']['current']['unconfirmed']
+        )
+        self.assertEqual(
+            w1.total_expected_export_value,
+            we_data_2017['values']['non_hvc']['current']['unconfirmed']
+        )
 
 
 @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
@@ -1767,3 +1828,282 @@ class OverseasRegionDetailsTestCase(OverseasRegionBaseViewTestCase):
         self.assertEqual(data_2017["wins"]["export"]["non_hvc"]["number"]["unconfirmed"], 1)
         self.assertEqual(data_2017["wins"]["export"]["non_hvc"]["value"]["total"], self.export_value)
         self.assertEqual(data_2017["wins"]["export"]["non_hvc"]["number"]["total"], 1)
+
+
+@freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
+class OverseasRegionMonthsTestCase(OverseasRegionBaseViewTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        call_command('create_missing_hvcs', verbose=False)
+
+    def setUp(self):
+        super().setUp()
+        self._win_factory_function = create_win_factory(
+            self.user, sector_choices=self.TEAM_1_SECTORS)
+        self.test_region = OverseasRegion.objects.get(name='Western Europe')
+        self.view_base_url = reverse('mi:overseas_region_monthly', kwargs={'region_id': self.test_region.id})
+
+    def test_get_with_no_data(self):
+        self.url = self.get_url_for_year(2017)
+        data = self._api_response_data
+
+        # there should be no wins
+        number_of_wins = s('sum(months[].totals.*[].*[].number.*[])', data)
+        self.assertEqual(number_of_wins, 0)
+
+        # every value in the wins breakdown should be 0
+        value_of_wins = s('sum(months[].totals.*[].*[].*[].*[])', data)
+        self.assertEqual(value_of_wins, 0)
+
+    def test_get_with_1_win(self):
+        export_value = 123456
+
+        self._create_hvc_win(
+            hvc_code='E011', win_date=now(),
+            confirm=True, fin_year=2017, export_value=export_value)
+
+        self.url = self.get_url_for_year(2017)
+        data = self._api_response_data
+
+        number_of_wins_2017_05 = s("months[?date=='2017-05'].totals.export.hvc.number.total | [0]", data)
+        number_of_wins_2017_04 = s("months[?date=='2017-04'].totals.export.hvc.number.total | [0]", data)
+
+        # there should be no wins for 'last' month
+        self.assertEqual(number_of_wins_2017_04, 0)
+
+        # there should be 1 for this month
+        self.assertEqual(number_of_wins_2017_05, 1)
+
+        # value should match the win we created
+        value_of_wins = s("sum(months[].totals.export.hvc.value.total)", data)
+        self.assertEqual(value_of_wins, export_value)
+
+    def test_group_by_month_from_data(self):
+        export_value = 123456
+
+        self._create_hvc_win(
+            hvc_code='E011', win_date=now(),
+            confirm=True, fin_year=2017, export_value=export_value)
+
+        self._create_hvc_win(
+            hvc_code='E011', win_date=now() + relativedelta(months=-1),
+            confirm=True, fin_year=2017, export_value=export_value)
+
+        self.url = self.get_url_for_year(2017)
+        data = self._api_response_data
+
+        number_of_wins_2017_05 = s("months[?date=='2017-05'].totals.export.hvc.number.total | [0]", data)
+        number_of_wins_2017_04 = s("months[?date=='2017-04'].totals.export.hvc.number.total | [0]", data)
+
+        # there should be no wins for 'last' month
+        self.assertEqual(number_of_wins_2017_04, 1)
+
+        # there should be 2 for this month (cumulative) take the one
+        # from last month and add to the one from this month
+        self.assertEqual(number_of_wins_2017_05, 2)
+
+        # value should match the win we created for
+        # month 1, then 2x value for month 2 therefore
+        # sum of all totals will be 3x export_value
+        value_of_wins = s("sum(months[].totals.export.hvc.value.total)", data)
+        self.assertEqual(value_of_wins, export_value * 3)
+
+
+@freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
+class OverseasRegionsTopNonHvcWinsTestCase(OverseasRegionBaseViewTestCase):
+
+    export_value = 9999
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        call_command('create_missing_hvcs', verbose=False)
+
+    def setUp(self):
+        super().setUp()
+        self._win_factory_function = create_win_factory(
+            self.user, sector_choices=self.TEAM_1_SECTORS)
+        self.test_region = OverseasRegion.objects.get(name='Western Europe')
+        self.view_base_url = reverse('mi:overseas_region_top_nonhvc', kwargs={
+            'region_id': self.test_region.id
+        })
+
+    def test_values_1_win(self):
+        self.url = self.get_url_for_year(2016)
+        w1 = self._create_non_hvc_win(
+            win_date=self.win_date_2016,
+            confirm=True,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='FR'
+        )
+
+        data = self._api_response_data
+
+        # should be one sector
+        self.assertEqual(len(data), 1)
+        sector1 = data[0]
+
+        # if there is only 1 win, it should be 100%
+        self.assertEqual(sector1['averageWinPercent'], 100)
+
+        # name is correctly translated
+        self.assertEqual(sector1['region'], 'France')
+
+        # sector matches win
+        self.assertEqual(sector1['sector'], w1.get_sector_display())
+
+        # should match value
+        self.assertEqual(sector1['totalValue'], self.export_value)
+
+        # should only be 1 win
+        self.assertEqual(sector1['totalWins'], 1)
+
+        # only 1 win so average should be same as total
+        self.assertEqual(sector1['averageWinValue'], self.export_value)
+
+        # only 1 win so average win percent should be 100%
+        self.assertEqual(sector1['averageWinPercent'], 100)
+
+    def test_annotated_total_value_top_non_hvc(self):
+        """
+        Check that annotation from database for total_value works
+        """
+        self.url = self.get_url_for_year(2016)
+        fuzz = FuzzyInteger(0, high=99999)
+        exp_vals = [fuzz.fuzz() for _ in range(2)]
+
+        # create two wins in same sector
+        w1 = self._create_non_hvc_win(
+            win_date=self.win_date_2016,
+            confirm=True,
+            fin_year=2016,
+            export_value=exp_vals[0],
+            country='FR'
+        )
+        self._create_non_hvc_win(
+            win_date=self.win_date_2016,
+            confirm=True,
+            fin_year=2016,
+            export_value=exp_vals[1],
+            country='FR',
+            sector_id=w1.sector,
+        )
+
+        data = self._api_response_data
+        # should be one sector
+        self.assertEqual(len(data), 1)
+        sector1 = data[0]
+
+        self.assertEqual(
+            sector1['totalValue'],
+            sum(exp_vals)
+        )
+
+    def test_annotated_count_top_non_hvc(self):
+        self.url = self.get_url_for_year(2016)
+        fuzz = FuzzyInteger(0, high=99999)
+        exp_vals = [fuzz.fuzz() for _ in range(2)]
+
+        # create two wins in same sector
+        w1 = self._create_non_hvc_win(
+            win_date=self.win_date_2016,
+            confirm=True,
+            fin_year=2016,
+            export_value=exp_vals[0],
+            country='FR'
+        )
+        self._create_non_hvc_win(
+            win_date=self.win_date_2016,
+            confirm=True,
+            fin_year=2016,
+            export_value=exp_vals[1],
+            country='FR',
+            sector_id=w1.sector,
+        )
+
+        data = self._api_response_data
+        # should be one sector
+        self.assertEqual(len(data), 1)
+        sector1 = data[0]
+
+        self.assertEqual(
+            sector1['totalWins'],
+            len(exp_vals)
+        )
+
+        other_sectors = set(self._win_factory_function.sector_choices) - {w1.sector}
+
+        w3_sector = FuzzyChoice(other_sectors).fuzz()
+        exp_vals.append(fuzz.fuzz())
+
+        w3 = self._create_non_hvc_win(
+            win_date=self.win_date_2016,
+            confirm=True,
+            fin_year=2016,
+            export_value=exp_vals[2],
+            country='FR',
+            sector_id=w3_sector,
+        )
+
+        data = self._api_response_data
+
+        # should be two sectors
+        self.assertEqual(len(data), 2)
+        sector_with_2_wins = s("[?sector=='{}']|[0]".format(w1.get_sector_display()), data)
+        sector_with_1_win = s("[?sector=='{}']|[0]".format(w3.get_sector_display()), data)
+        self.assertEqual(sector_with_2_wins['totalWins'], 2)
+        self.assertEqual(sector_with_1_win['totalWins'], 1)
+
+    def test_non_hvc_order_by_value_desc(self):
+        self.url = self.get_url_for_year(2016)
+
+        # create two wins in same sector
+        w1 = self._create_non_hvc_win(
+            win_date=self.win_date_2016,
+            confirm=True,
+            fin_year=2016,
+            export_value=1,
+            country='FR'
+        )
+        self._create_non_hvc_win(
+            win_date=self.win_date_2016,
+            confirm=True,
+            fin_year=2016,
+            export_value=1,
+            country='FR',
+            sector_id=w1.sector,
+        )
+
+        other_sectors = set(self._win_factory_function.sector_choices) - {w1.sector}
+
+        w3_sector = FuzzyChoice(other_sectors).fuzz()
+
+        w3 = self._create_non_hvc_win(
+            win_date=self.win_date_2016,
+            confirm=True,
+            fin_year=2016,
+            export_value=10,
+            country='FR',
+            sector_id=w3_sector,
+        )
+
+        data = self._api_response_data
+        self.assertEqual(len(data), 2)
+
+        # sector with higher value should be first
+        self.assertEqual(
+            data[0]['sector'],
+            w3.get_sector_display()
+        )
+        self.assertEqual(
+            data[1]['sector'],
+            w1.get_sector_display()
+        )
+
+        self.assertGreater(
+            data[0]['totalValue'],
+            data[1]['totalValue']
+        )
