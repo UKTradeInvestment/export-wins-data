@@ -295,8 +295,7 @@ class Target(models.Model):
         return self.objects.filter(financial_year=fin_year)
 
     def __str__(self):
-        return 'Target: {} - {} - {}'.format(
+        return 'Target: {} - {}'.format(
             self.name,
             self.target,
-            self.country,
         )

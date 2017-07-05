@@ -78,10 +78,12 @@ def lookup(dictionary, key, *keys):
         return lookup(dictionary.get(key, {}), *keys)
     return dictionary.get(key)
 
-def print_csv(wins):
+def print_csv(wins, file_name=None):
     import csv
     keys = wins[0].keys()
-    with open('wins.csv', 'w') as output_file:
+    if file_name is None:
+        file_name = "wins.csv"
+    with open(file_name, 'w') as output_file:
         dict_writer = csv.DictWriter(output_file, keys)
         dict_writer.writeheader()
         dict_writer.writerows(wins)
