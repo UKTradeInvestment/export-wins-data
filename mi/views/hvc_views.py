@@ -1,5 +1,8 @@
-from mi.models import Target
-from mi.utils import percentage_formatted
+from django.db.models import Count, Sum, Q
+from django_countries.fields import Country as DjangoCountry
+
+from mi.models import Target, Sector
+from mi.utils import percentage_formatted, percentage
 from mi.views.base_view import BaseWinMIView
 
 
@@ -79,7 +82,7 @@ class HVCDetailView(BaseHVCDetailView):
             'progress': {
                 'confirmed_percent': confirmed_percent,
                 'unconfirmed_percent': unconfirmed_percent,
-                'status': self._get_status_colour(campaign.target,confirmed_value),
+                'status': self._get_status_colour(campaign.target, confirmed_value),
             }
         }
         return result
@@ -94,5 +97,52 @@ class HVCDetailView(BaseHVCDetailView):
 
         results = self._campaign_result(campaign)
         results['wins'] = self._campaign_wins_breakdown(campaign)
+        self._fill_date_ranges()
+        return self._success(results)
+
+
+class HVCWinsByMarketSectorView(BaseHVCDetailView):
+    def _wins_by_top_sector_market(self, hvc_wins_qs):
+        """ Get dict of data about HVC wins by market and sector
+
+        percentComplete is based on the top value being 100%
+        averageWinValue is total non_hvc win value for the sector/total number of wins during the financial year
+        averageWinPercent is therefore averageWinValue * 100/Total win value for the sector/market
+
+        """
+        hvc_wins = hvc_wins_qs.values(
+            'country',
+            'sector'
+        ).annotate(
+            total_value=Sum('total_expected_export_value'),
+            total_wins=Count('id')
+        ).order_by('-total_value')
+
+        # make a lookup to get names efficiently
+        sector_id_to_name = {s.id: s.name for s in Sector.objects.all()}
+        top_value = int(hvc_wins[0]['total_value']) if hvc_wins else None
+        return [
+            {
+                'region': DjangoCountry(w['country']).name,
+                'sector': sector_id_to_name[w['sector']],
+                'totalValue': w['total_value'],
+                'totalWins': w['total_wins'],
+                'percentComplete': int(percentage(w['total_value'], top_value)),
+                'averageWinValue': int(w['total_value'] / w['total_wins']),
+                'averageWinPercent': int(percentage((w['total_value'] / w['total_wins']), top_value)),
+            }
+            for w in hvc_wins
+        ]
+
+    def get(self, request, campaign_id):
+        response = self._handle_fin_year(request)
+        if response:
+            return response
+        campaign = self._get_campaign(campaign_id)
+        if not campaign:
+            return self._not_found()
+
+        hvc_wins_qs = self._get_hvc_wins(campaign)
+        results = self._wins_by_top_sector_market(hvc_wins_qs)
         self._fill_date_ranges()
         return self._success(results)
