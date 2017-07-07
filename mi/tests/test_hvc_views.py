@@ -9,6 +9,7 @@ from django.core.management import call_command
 
 from fixturedb.factories.win import create_win_factory
 from mi.tests.base_test_case import MiApiViewsBaseTestCase, MiApiViewsWithWinsBaseTestCase
+from wins.constants import SECTORS
 
 
 class HVCBaseViewTestCase(MiApiViewsWithWinsBaseTestCase):
@@ -352,3 +353,394 @@ class HVCDetailsTestCase(HVCBaseViewTestCase):
         self.assertEqual(cen_response["wins"]["totals"]["number"]["unconfirmed"], 1)
         self.assertEqual(cen_response["wins"]["totals"]["value"]["grand_total"], self.export_value)
         self.assertEqual(cen_response["wins"]["totals"]["number"]["grand_total"], 1)
+
+
+@freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
+class HVCTopHvcForMarketAndSectorTestCase(HVCBaseViewTestCase):
+    TEST_CAMPAIGN_ID = "E017"
+    TARGET_E017_17 = 30000000
+    PRORATED_TARGET_17 = 2465760  # target based on the frozen date
+    cen_campaign_url = reverse('mi:hvc_top_wins', kwargs={"campaign_id": "E017"})
+    campaign_url_2016_only = reverse('mi:hvc_top_wins', kwargs={"campaign_id": "E177"})
+    campaign_url_2017_only = reverse('mi:hvc_top_wins', kwargs={"campaign_id": "E218"})
+    expected_response = {}
+    SECTOR_58 = 58
+    SECTOR_59 = 59
+    SECTORS_DICT = dict(SECTORS)
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        call_command('create_missing_hvcs', verbose=False)
+
+    def setUp(self):
+        super().setUp()
+        self._win_factory_function = create_win_factory(
+            self.user, sector_choices=self.TEAM_1_SECTORS)
+        self.view_base_url = self.cen_campaign_url
+
+    def test_top_hvc_with_no_wins(self):
+        """ Top hvc wins will be empty if there are no wins """
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertEqual(len(api_response), 0)
+
+    def test_top_hvc_with_conformed_non_hvc_wins(self):
+        """ Top hvc wins will be empty when there are only confirmed non-hvc wins """
+        for _ in range(1, 10):
+            self._create_non_hvc_win(
+                win_date=self.win_date_2017,
+                confirm=True,
+                fin_year=2017,
+                export_value=self.export_value,
+                country='HU'
+            )
+
+        self.url = self.get_url_for_year(2017)
+
+        api_response = self._api_response_data
+        self.assertEqual(len(api_response), 0)
+
+    def test_top_hvc_with_unconformed_non_hvc_wins(self):
+        """ Top hvc wins will be empty when there are only unconfirmed non-hvc wins """
+        for _ in range(1, 10):
+            self._create_non_hvc_win(
+                win_date=self.win_date_2017,
+                confirm=True,
+                fin_year=2017,
+                export_value=self.export_value,
+                country='HU'
+            )
+
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertEqual(len(api_response), 0)
+
+    def test_top_hvc_with_unconfirmed_hvc_wins(self):
+        """ Top hvc wins consider unconfirmed hvc wins as well """
+        for _ in range(1, 10):
+            self._create_hvc_win(
+                hvc_code='E017',
+                win_date=self.win_date_2017,
+                confirm=False,
+                fin_year=2017,
+                export_value=self.export_value,
+                country='HU'
+            )
+
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertTrue(len(api_response) > 0)
+
+    def test_top_hvc_with_confirmed_hvc_wins(self):
+        """ Top hvc wins consider confirmed hvc wins as well """
+        for _ in range(1, 10):
+            self._create_hvc_win(
+                hvc_code='E017',
+                win_date=self.win_date_2017,
+                confirm=True,
+                fin_year=2017,
+                export_value=self.export_value,
+                country='HU'
+            )
+
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertTrue(len(api_response) > 0)
+
+    def test_top_hvc_with_confirmed_hvc_wins_one_sector_country(self):
+        """ Number of Top hvc win items will only be 1 
+        when there are confirmed hvc wins of one country/sector """
+        for _ in range(1, 10):
+            self._create_hvc_win(
+                hvc_code='E017',
+                export_value=100000,
+                sector_id=self.SECTOR_58,
+                country="HU",
+                confirm=True,
+                win_date=self.win_date_2017,
+            )
+
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertEqual(len(api_response), 1)
+
+    def test_top_hvc_with_confirmed_hvc_wins_one_country(self):
+        """
+        Check number of hvc wins when there are more confirmed hvc
+        wins of diff sector one country
+        """
+        for sector_id in range(1, 6):
+            self._create_hvc_win(
+                hvc_code='E017',
+                export_value=100000,
+                country="HU",
+                confirm=True,
+                sector_id=sector_id,
+                win_date=self.win_date_2017,
+            )
+
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertEqual(len(api_response), 5)
+
+    def test_top_hvc_with_confirmed_hvc_wins_one_country_more_than_5(self):
+        """
+        Check number of hvc wins when there are more than 5 hvc wins
+        of diff sector one country, show them all
+        """
+        for sector_id in range(10, 21):
+            self._create_hvc_win(
+                hvc_code='E017',
+                export_value=100000,
+                country="HU",
+                confirm=True,
+                sector_id=sector_id,
+                win_date=self.win_date_2017,
+            )
+
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertTrue(len(api_response) > 5)
+
+    def test_top_hvc_with_confirmed_hvc_wins_one_sector_diff_country(self):
+        """ Number of Top hvc wins will be more than 1 when there are 
+        confirmed hvc wins of diff country one sector """
+        for code in ['BS', 'GQ', 'VA', 'AQ', 'SA', 'EG', 'LU', 'ER', 'GA', 'MP']:
+            self._create_hvc_win(
+                hvc_code='E017',
+                export_value=100000,
+                country=code,
+                sector_id=self.SECTOR_58,
+                confirm=True,
+                win_date=self.win_date_2017,
+            )
+
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertEqual(len(api_response), 10)
+
+    def test_top_hvc_with_confirmed_hvc_wins_one_sector_one_country(self):
+        """ Number of Top hvc wins will be 1 when there are 
+        confirmed hvc wins of diff country one sector """
+        for _ in range(1, 10):
+            self._create_hvc_win(
+                hvc_code='E017',
+                export_value=100000,
+                country="HU",
+                sector_id=self.SECTOR_58,
+                confirm=True,
+                win_date=self.win_date_2017,
+            )
+
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertEqual(len(api_response), 1)
+
+    def test_values_top_hvc_top_win_with_confirmed_hvc_wins(self):
+        """ Check top win is what is expected and its value, percentages are correct """
+        expected_top_team = self.SECTOR_58
+        for _ in range(0, 5):
+            self._create_hvc_win(
+                hvc_code='E017',
+                export_value=100000,
+                country="HU",
+                sector_id=expected_top_team,
+                confirm=True,
+                win_date=self.win_date_2017,
+            )
+        for _ in range(1, 10):
+            self._create_hvc_win(
+                hvc_code='E017',
+                export_value=100000,
+                country="HU",
+                confirm=True,
+                win_date=self.win_date_2017,
+            )
+
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertTrue(len(api_response) > 5)
+        top_item = api_response[0]
+        self.assertEqual(top_item["sector"], self.SECTORS_DICT[expected_top_team])
+        self.assertEqual(top_item["totalValue"], 100000 * 5)
+        self.assertEqual(top_item["averageWinValue"], 100000)
+        self.assertEqual(top_item["percentComplete"], 100)
+
+    def test_top_hvc_compare_second_top_win_with_top(self):
+        """ Check second top win with top, its value, percentages are correct """
+        expected_top_team = self.SECTOR_58
+        expected_second_team = self.SECTOR_59
+        for _ in range(0, 5):
+            self._create_hvc_win(
+                hvc_code='E017',
+                export_value=100000,
+                country="HU",
+                sector_id=expected_top_team,
+                confirm=True,
+                win_date=self.win_date_2017,
+            )
+        for _ in range(0, 4):
+            self._create_hvc_win(
+                hvc_code='E017',
+                export_value=100000,
+                sector_id=expected_second_team,
+                confirm=True,
+                country="HU",
+                win_date=self.win_date_2017,
+            )
+        for _ in range(1, 10):
+            self._create_hvc_win(
+                hvc_code='E017',
+                export_value=100000,
+                confirm=True,
+                country="HU",
+                win_date=self.win_date_2017,
+            )
+
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertTrue(len(api_response) >= 5)
+        second_top_item = api_response[1]
+        percent_complete = int((100000 * 4 * 100) / (100000 * 5))
+        self.assertEqual(second_top_item["sector"], self.SECTORS_DICT[expected_second_team])
+        self.assertEqual(second_top_item["totalValue"], 100000 * 4)
+        self.assertEqual(second_top_item["averageWinValue"], 100000)
+        self.assertEqual(second_top_item["percentComplete"], percent_complete)
+
+    def test_top_hvc_check_items_percent_is_descending(self):
+        """ Check percentage value is in descending order """
+        for i in range(6, 1, -1):
+            for _ in range(0, i):
+                self._create_hvc_win(
+                    hvc_code='E017',
+                    export_value=100000,
+                    sector_id=self.TEAM_1_SECTORS[i],
+                    country="HU",
+                    confirm=True,
+                    win_date=self.win_date_2017,
+                )
+
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertTrue(len(api_response) >= 5)
+        self.assertTrue(api_response[0]["percentComplete"] >= api_response[1]["percentComplete"])
+        self.assertTrue(api_response[1]["percentComplete"] >= api_response[2]["percentComplete"])
+        self.assertTrue(api_response[2]["percentComplete"] >= api_response[3]["percentComplete"])
+        self.assertTrue(api_response[3]["percentComplete"] >= api_response[4]["percentComplete"])
+
+    def test_top_hvc_check_items_totalValue_is_descending(self):
+        """ Check total value is in descending order """
+        for i in range(6, 1, -1):
+            for _ in range(0, i):
+                self._create_hvc_win(
+                    hvc_code='E017',
+                    export_value=100000,
+                    sector_id=self.TEAM_1_SECTORS[i],
+                    country="HU",
+                    confirm=True,
+                    win_date=self.win_date_2017,
+                )
+
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertTrue(len(api_response) >= 5)
+        self.assertTrue(api_response[0]["totalValue"] >= api_response[1]["totalValue"])
+        self.assertTrue(api_response[1]["totalValue"] >= api_response[2]["totalValue"])
+        self.assertTrue(api_response[2]["totalValue"] >= api_response[3]["totalValue"])
+        self.assertTrue(api_response[3]["totalValue"] >= api_response[4]["totalValue"])
+
+    def test_top_hvc_check_items_averageWinValue_is_descending(self):
+        """ Check average Win Value is in descending order """
+        for i in range(6, 1, -1):
+            for _ in range(0, i):
+                self._create_hvc_win(
+                    hvc_code='E017',
+                    export_value=100000,
+                    sector_id=self.TEAM_1_SECTORS[i],
+                    country="HU",
+                    confirm=True,
+                    win_date=self.win_date_2017,
+                )
+
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertTrue(len(api_response) >= 5)
+        self.assertTrue(api_response[0]["averageWinValue"] >= api_response[1]["averageWinValue"])
+        self.assertTrue(api_response[1]["averageWinValue"] >= api_response[2]["averageWinValue"])
+        self.assertTrue(api_response[2]["averageWinValue"] >= api_response[3]["averageWinValue"])
+        self.assertTrue(api_response[3]["averageWinValue"] >= api_response[4]["averageWinValue"])
+
+    def test_top_hvc_with_hvc_wins_from_diff_campaign(self):
+        for code in self.TEAM_1_HVCS:
+            self._create_hvc_win(
+                hvc_code=code,
+                win_date=self.win_date_2017,
+                confirm=True,
+                fin_year=2017,
+                export_value=self.export_value,
+                country='HU'
+            )
+
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertEqual(len(api_response), 0)
+
+    def test_top_hvc_with_hvc_wins_from_2016(self):
+        for _ in range(1, 10):
+            self._create_hvc_win(
+                hvc_code='E017',
+                win_date=self.win_date_2016,
+                response_date=self.win_date_2016,
+                confirm=True,
+                fin_year=2016,
+                export_value=self.export_value,
+                country='HU'
+            )
+
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertEqual(len(api_response), 0)
+
+    def test_top_hvc_with_hvc_wins_from_2017_in_2016(self):
+        for _ in range(1, 10):
+            self._create_hvc_win(
+                hvc_code='E017',
+                win_date=self.win_date_2017,
+                confirm=True,
+                fin_year=2017,
+                export_value=self.export_value,
+                country='HU'
+            )
+
+        self.url = self.get_url_for_year(2016)
+        api_response = self._api_response_data
+        self.assertEqual(len(api_response), 0)
+
+    def test_top_hvc_hvc_win_from_2016_confirmed_in_2017_doesnt_appears_in_2016(self):
+        self._create_hvc_win(
+            hvc_code='E017',
+            win_date=self.win_date_2016,
+            response_date=self.win_date_2017,
+            confirm=True,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2016)
+        api_response = self._api_response_data
+        self.assertEqual(len(api_response), 0)
+
+    def test_top_hvc_hvc_win_from_2016_confirmed_in_2017_appears_in_2017(self):
+        self._create_hvc_win(
+            hvc_code='E017',
+            win_date=self.win_date_2016,
+            response_date=self.win_date_2017,
+            confirm=True,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertEqual(len(api_response), 1)
