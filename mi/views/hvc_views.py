@@ -33,7 +33,7 @@ class BaseHVCDetailView(BaseWinMIView):
 
 
 class HVCDetailView(BaseHVCDetailView):
-    """ Sector Team name, targets and win-breakdown """
+    """ HVC name, targets and win-breakdown """
 
     def _campaign_wins_breakdown(self, campaign):
         """ 
@@ -144,5 +144,58 @@ class HVCWinsByMarketSectorView(BaseHVCDetailView):
 
         hvc_wins_qs = self._get_hvc_wins(campaign)
         results = self._wins_by_top_sector_market(hvc_wins_qs)
+        self._fill_date_ranges()
+        return self._success(results)
+
+
+class WinTableView(BaseHVCDetailView):
+    """ Wins for table view for HVC"""
+    def get(self, request, campaign_id):
+        def confirmed_date(win):
+            if not win['confirmation__created']:
+                return 'unconfirmed'
+            else:
+                return win['confirmation__created']
+
+        def status(win):
+            if not win['notifications__created']:
+                return 0
+            elif not win['confirmation__created']:
+                return 1
+            elif win["confirmation__agree_with_win"]:
+                return 2
+            else:
+                return 3
+
+
+        response = self._handle_fin_year(request)
+        if response:
+            return response
+        campaign = self._get_campaign(campaign_id)
+        if not campaign:
+            return self._not_found()
+
+        wins = self._get_hvc_wins(campaign)
+        results = [
+            {
+                "id": win["id"],
+                "company": {
+                    "name": win["company_name"],
+                    "cdms_id": win["cdms_reference"]
+                },
+                "hvc": {
+                    "code": campaign_id,
+                    "name": campaign.name
+                },
+                "lead_officer": {
+                    "name": win["lead_officer_name"],
+                },
+                "credit": self._win_status(win),
+                "win_date": confirmed_date(win),
+                "export_amount": win["total_expected_export_value"],
+                "status": status(win)
+            }
+            for win in wins
+        ]
         self._fill_date_ranges()
         return self._success(results)
