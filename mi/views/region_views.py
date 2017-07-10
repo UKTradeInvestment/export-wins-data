@@ -3,6 +3,7 @@ from functools import reduce
 from itertools import groupby
 from operator import itemgetter
 
+from collections import defaultdict
 from django.db.models import Q
 
 from mi.models import OverseasRegion, OverseasRegionGroup
@@ -41,6 +42,9 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
             countries__targets__financial_year_id=self.fin_year.id,
             overseasregionyear__financial_year_id=self.fin_year.id
         ).distinct()
+
+    def _countries_for_fin_year(self):
+        return Countries.objects.filter()
 
     def _region_hvc_filter(self, region):
         """ filter to include all HVCs, irrespective of FY """
@@ -225,6 +229,13 @@ class OverseasRegionsTopNonHvcWinsView(BaseOverseasRegionsMIView):
 class OverseasRegionOverviewView(BaseOverseasRegionsMIView):
     """ Overview view for all Overseas Regions """
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.region_countries = defaultdict(list)
+        self.team_targets = defaultdict(list)
+        self.country_to_wins = defaultdict(list)
+        self.hvc_to_wins = defaultdict(list)
+
     def _region_data(self, region_obj):
         """ Calculate HVC & non-HVC data for an Overseas region """
 
@@ -275,6 +286,22 @@ class OverseasRegionOverviewView(BaseOverseasRegionsMIView):
         if response:
             return response
 
-        result = [self._region_data(region) for region in self._regions_for_fin_year()]
+        # cache wins to avoid many queries
+        wins = list(self._wins())
+        for win in wins:
+            if win['hvc']:
+                self.hvc_to_wins[win['hvc']].append(win)
+            else:
+                self.country_to_wins[win['country']].append(win)
+
+        for country in self._countries_for_fin_year(self.fin_year):
+            self.region_countries[country.overseas_region].append(country)
+
+        region_qs = self._regions_for_fin_year().prefetch_related(
+            'countries',
+            'countries__targets'
+        )
+
+        result = [self._region_data(region) for region in region_qs]
         self._fill_date_ranges()
         return self._success(result)
