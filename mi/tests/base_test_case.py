@@ -74,8 +74,8 @@ class MiApiViewsWithWinsBaseTestCase(MiApiViewsBaseTestCase):
         super().setUpClass()
         cls._win_factory_function = create_win_factory(cls.user)
 
-    def _create_win(self, hvc_code, agree_with_win, sector_id=None, win_date=None, export_value=None,
-                    confirm=False, notify_date=None, response_date=None, country=None,
+    def _create_win(self, hvc_code, sector_id=None, win_date=None, export_value=None,
+                    confirm=False, agree_with_win=True, notify_date=None, response_date=None, country=None,
                     fin_year=2016):
         """ generic function creating `Win`
         :rtype: `Win`
