@@ -16,7 +16,7 @@ def create_win_factory(user, sector_choices=None, default_date=None):
 
     def inner(hvc_code, sector_id=None, win_date=None, export_value=None,
               confirm=False, notify_date=None, response_date=None, country=None,
-              fin_year=2016):
+              fin_year=2016, agree_with_win=True):
         """ generic function creating `Win` """
         if not sector_id:
             sector_id = FuzzyChoice(sector_choices)
@@ -46,7 +46,7 @@ def create_win_factory(user, sector_choices=None, default_date=None):
             notification.save()
             if not response_date:
                 response_date = notify_date + timedelta(days=1)
-            response = CustomerResponseFactory(win=win, agree_with_win=True)
+            response = CustomerResponseFactory(win=win, agree_with_win=agree_with_win)
             response.created = response_date
             response.save()
         return win

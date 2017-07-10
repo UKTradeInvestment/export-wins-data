@@ -67,7 +67,7 @@ urlpatterns = [
 
     url(r"^hvc/(?P<campaign_id>[\w\-]+)/$", HVCDetailView.as_view(), name="hvc_campaign_detail"),
     url(r"^hvc/(?P<campaign_id>[\w\-]+)/top_wins/$", HVCWinsByMarketSectorView.as_view(), name="hvc_top_wins"),
-    url(r"^hvc/(?P<campaign_id>[\w\-]+)/wins_table/$", WinTableView.as_view(), name="hvc_win_table"),
+    url(r"^hvc/(?P<campaign_id>[\w\-]+)/win_table/$", WinTableView.as_view(), name="hvc_win_table"),
 
     url(r"^countries/$", CountryListView.as_view(), name="countries"),
     url(r"^countries/(?P<country_id>\d+)/$", CountryDetailView.as_view()),

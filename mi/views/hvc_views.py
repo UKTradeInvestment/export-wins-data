@@ -1,4 +1,4 @@
-from django.db.models import Count, Sum, Q
+from django.db.models import Count, Sum
 from django_countries.fields import Country as DjangoCountry
 
 from mi.models import Target, Sector
@@ -167,7 +167,6 @@ class WinTableView(BaseHVCDetailView):
             else:
                 return 3
 
-
         response = self._handle_fin_year(request)
         if response:
             return response
@@ -185,7 +184,7 @@ class WinTableView(BaseHVCDetailView):
                 },
                 "hvc": {
                     "code": campaign_id,
-                    "name": campaign.name
+                    "name": campaign.name,
                 },
                 "lead_officer": {
                     "name": win["lead_officer_name"],
