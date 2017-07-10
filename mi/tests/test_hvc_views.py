@@ -744,3 +744,174 @@ class HVCTopHvcForMarketAndSectorTestCase(HVCBaseViewTestCase):
         self.url = self.get_url_for_year(2017)
         api_response = self._api_response_data
         self.assertEqual(len(api_response), 1)
+
+
+@freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
+class HVCWinTableTestCase(HVCBaseViewTestCase):
+    TEST_CAMPAIGN_ID = "E002"
+    cen_win_table_url = reverse('mi:hvc_win_table', kwargs={"campaign_id": "E002"})
+    win_table_url_2016_only = reverse('mi:hvc_win_table', kwargs={"campaign_id": "E177"})
+    win_table_url_2017_only = reverse('mi:hvc_win_table', kwargs={"campaign_id": "E218"})
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        call_command('create_missing_hvcs', verbose=False)
+
+    def setUp(self):
+        super().setUp()
+        self._win_factory_function = create_win_factory(
+            self.user, sector_choices=self.TEAM_1_SECTORS)
+        self.view_base_url = self.cen_win_table_url
+
+    def test_2017_win_table_in_2016_404(self):
+        self.view_base_url = self.win_table_url_2017_only
+        self.url = self.get_url_for_year(2016)
+        self._get_api_response(self.url, status_code=404)
+
+    def test_2016_win_table_in_2017_404(self):
+        self.view_base_url = self.win_table_url_2016_only
+        self.url = self.get_url_for_year(2017)
+        self._get_api_response(self.url, status_code=404)
+
+    def test_win_table_json_2016_no_wins(self):
+        self.url = self.get_url_for_year(2016)
+        self.expected_response = []
+        self.assertResponse()
+
+    def test_win_table_json_2017_no_wins(self):
+        self.url = self.get_url_for_year(2017)
+        self.expected_response = []
+        self.assertResponse()
+
+    def test_win_table_2017_one_confirmed_hvc_win(self):
+        self._create_hvc_win(
+            hvc_code='E002',
+            win_date=self.win_date_2017,
+            response_date=self.win_date_2017,
+            confirm=True,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertTrue(len(api_response) == 1)
+        win_item = api_response[0]
+        self.assertEqual(win_item["export_amount"], self.export_value)
+        self.assertEqual(win_item["status"], 2)
+        self.assertEqual(win_item["hvc"]["code"], "E002")
+        self.assertEqual(win_item["hvc"]["name"], "E00217")
+        self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
+        self.assertEqual(win_item["company"]["name"], "company name")
+        self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
+        self.assertEqual(win_item["credit"], "confirmed")
+
+    def test_win_table_2017_one_unconfirmed_hvc_win(self):
+        self._create_hvc_win(
+            hvc_code='E002',
+            win_date=self.win_date_2017,
+            confirm=False,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertTrue(len(api_response) == 1)
+        win_item = api_response[0]
+        self.assertEqual(win_item["export_amount"], self.export_value)
+        self.assertEqual(win_item["status"], 0)
+        self.assertEqual(win_item["hvc"]["code"], "E002")
+        self.assertEqual(win_item["hvc"]["name"], "E00217")
+        self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
+        self.assertEqual(win_item["company"]["name"], "company name")
+        self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
+        self.assertEqual(win_item["credit"], "unconfirmed")
+
+    def test_win_table_2017_one_confirmed_rejected_hvc_win(self):
+        self._create_hvc_win(
+            hvc_code='E002',
+            win_date=self.win_date_2017,
+            response_date=self.win_date_2017,
+            confirm=True,
+            agree_with_win=False,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertTrue(len(api_response) == 1)
+        win_item = api_response[0]
+        self.assertEqual(win_item["export_amount"], self.export_value)
+        self.assertEqual(win_item["status"], 2)
+        self.assertEqual(win_item["hvc"]["code"], "E002")
+        self.assertEqual(win_item["hvc"]["name"], "E00217")
+        self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
+        self.assertEqual(win_item["company"]["name"], "company name")
+        self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
+        self.assertEqual(win_item["credit"], "confirmed")
+
+    def test_win_table_2017_one_hvc_win_from_2016_confirmed_in_2017(self):
+        self._create_hvc_win(
+            hvc_code='E002',
+            win_date=self.win_date_2016,
+            response_date=self.win_date_2017,
+            confirm=True,
+            agree_with_win=False,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertTrue(len(api_response) == 1)
+        win_item = api_response[0]
+        self.assertEqual(win_item["export_amount"], self.export_value)
+        self.assertEqual(win_item["status"], 2)
+        self.assertEqual(win_item["hvc"]["code"], "E002")
+        self.assertEqual(win_item["hvc"]["name"], "E00217")
+        self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
+        self.assertEqual(win_item["company"]["name"], "company name")
+        self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
+        self.assertEqual(win_item["credit"], "confirmed")
+
+    def test_win_table_2017_one_hvc_win_from_2016_confirmed_in_2016_no_result(self):
+        self._create_hvc_win(
+            hvc_code='E002',
+            win_date=self.win_date_2016,
+            response_date=self.win_date_2016,
+            confirm=True,
+            agree_with_win=False,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        self.expected_response = []
+        self.assertResponse()
+
+    def test_win_table_2017_confirmed_non_hvc_empty_result(self):
+        self._create_non_hvc_win(
+            win_date=self.win_date_2017,
+            confirm=True,
+            fin_year=2017,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        self.expected_response = []
+        self.assertResponse()
+
+    def test_win_table_2017_unconfirmed_non_hvc_empty_result(self):
+        self._create_non_hvc_win(
+            win_date=self.win_date_2017,
+            confirm=False,
+            fin_year=2017,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        self.expected_response = []
+        self.assertResponse()

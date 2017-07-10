@@ -75,7 +75,7 @@ class MiApiViewsWithWinsBaseTestCase(MiApiViewsBaseTestCase):
         cls._win_factory_function = create_win_factory(cls.user)
 
     def _create_win(self, hvc_code, sector_id=None, win_date=None, export_value=None,
-                    confirm=False, notify_date=None, response_date=None, country=None,
+                    confirm=False, agree_with_win=True, notify_date=None, response_date=None, country=None,
                     fin_year=2016):
         """ generic function creating `Win`
         :rtype: `Win`
@@ -94,18 +94,20 @@ class MiApiViewsWithWinsBaseTestCase(MiApiViewsBaseTestCase):
         return win
 
     def _create_hvc_win(self, hvc_code=None, sector_id=None, win_date=None, export_value=None,
-                        confirm=False, notify_date=None, response_date=None, country=None, fin_year=2016):
+                        confirm=False, agree_with_win=True, notify_date=None, response_date=None,
+                        country=None, fin_year=2016):
         """ creates a dummy HVC `Win`, confirmed or unconfirmed """
         if hvc_code is None:
             hvc_code = FuzzyChoice(self.TEAM_1_HVCS).fuzz()
 
         return self._create_win(hvc_code=hvc_code, sector_id=sector_id, win_date=win_date,
-                                export_value=export_value, confirm=confirm, notify_date=notify_date,
-                                response_date=response_date, country=country, fin_year=fin_year)
+                                export_value=export_value, confirm=confirm, agree_with_win=agree_with_win,
+                                notify_date=notify_date, response_date=response_date, country=country,
+                                fin_year=fin_year)
 
     def _create_non_hvc_win(self, sector_id=None, win_date=None, export_value=None, confirm=False,
-                            notify_date=None, response_date=None, country=None, fin_year=2016):
+                            agree_with_win=True, notify_date=None, response_date=None, country=None, fin_year=2016):
         """ creates a dummy non-HVC `Win` using Factory, can be confirmed or unconfirmed """
         return self._create_win(hvc_code=None, sector_id=sector_id, win_date=win_date, export_value=export_value,
-                                confirm=confirm, notify_date=notify_date, response_date=response_date,
-                                country=country, fin_year=fin_year)
+                                confirm=confirm, agree_with_win=agree_with_win, notify_date=notify_date,
+                                response_date=response_date, country=country, fin_year=fin_year)
