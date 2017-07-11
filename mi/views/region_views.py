@@ -31,7 +31,7 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
     def _get_region(self, region_id):
         """ Return `OverseasRegion` object for the given region_id"""
         try:
-            return OverseasRegion.objects.get(id=int(region_id))
+            return self._regions_for_fin_year().get(id=int(region_id))
         except OverseasRegion.DoesNotExist:
             return False
 
@@ -42,27 +42,35 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
             overseasregionyear__financial_year_id=self.fin_year.id
         ).distinct()
 
-    def _get_region_wins(self, region):
-        """
-        All HVC and non-HVC wins for the `OverseasRegion`
-
-        """
-        return self._wins().filter(
-            country__in=region.country_ids,
-        )
-
-    def _get_region_hvc_wins(self, region):
-        """ HVC wins alone for the `OverseasRegion` """
-        region_filter = Q(
+    def _region_hvc_filter(self, region):
+        """ filter to include all HVCs, irrespective of FY """
+        region_hvc_filter = Q(
             Q(reduce(operator.or_, [Q(hvc__startswith=t) for t in region.fin_year_campaign_ids(self.fin_year)]))
             | Q(hvc__in=region.fin_year_charcodes(self.fin_year))
         )
-        wins = self._wins().filter(region_filter)
+        return region_hvc_filter
+
+    def _region_non_hvc_filter(self, region):
+        """ specific filter for non-HVC, with all countries for the given region """
+        region_non_hvc_filter = Q(Q(hvc__isnull=True) | Q(hvc='')) & Q(country__in=region.fin_year_country_ids(self.fin_year))
+        return region_non_hvc_filter
+
+    def _get_region_wins(self, region):
+        """
+        All HVC and non-HVC wins for the `OverseasRegion`
+        """
+        all_wins_filter = Q(self._region_hvc_filter(region) | self._region_non_hvc_filter(region))
+        wins = self._wins().filter(all_wins_filter)
+        return wins
+
+    def _get_region_hvc_wins(self, region):
+        """ HVC wins alone for the `OverseasRegion` """
+        wins = self._wins().filter(self._region_hvc_filter(region))
         return wins
 
     def _get_region_non_hvc_wins(self, region):
         """ non-HVC wins alone for the `OverseasRegion` """
-        return self._non_hvc_wins().filter(country__in=region.fin_year_country_ids(self.fin_year))
+        return self._non_hvc_wins().filter(self._region_non_hvc_filter(region))
 
     def _region_result(self, region):
         """ Basic data about region - name & hvc's """
@@ -111,7 +119,7 @@ class OverseasRegionDetailView(BaseOverseasRegionsMIView):
 
         region = self._get_region(region_id)
         if not region:
-            return self._invalid('region not found')
+            return self._not_found()
         results = self._region_result(region)
         wins = self._get_region_wins(region)
         results['wins'] = self._breakdowns(wins)
@@ -175,6 +183,7 @@ class OverseasRegionCampaignsView(BaseOverseasRegionsMIView):
         campaigns = [
             {
                 'campaign': campaign.name.split(":")[0],
+                'campaign_id': campaign.campaign_id,
                 'totals': self._progress_breakdown(campaign_wins, campaign.target),
             }
             for campaign, campaign_wins in campaign_to_wins

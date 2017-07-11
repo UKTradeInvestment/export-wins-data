@@ -287,7 +287,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
     @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
     def test_cross_fy_wins_in_team_15_with_change(self):
         """
-        This is to test a in that was created in previous FY and confirmed in current FY
+        This is to test a win that was created in previous FY and confirmed in current FY
         for team 15 who's name was changed across FYs.
         """
         from django.core.management import call_command
@@ -310,7 +310,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
     @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
     def test_cross_fy_wins_in_team_1_with_change(self):
         """
-        This is to test a in that was created in previous FY and confirmed in current FY
+        This is to test a win that was created in previous FY and confirmed in current FY
         for a team 1 who's name hasn't changed across FYs.
         """
         from django.core.management import call_command

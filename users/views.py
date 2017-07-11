@@ -1,14 +1,18 @@
 import json
 
+from django.conf import settings
 from django.contrib.auth import login
+from django.contrib.auth.models import AnonymousUser
 from django.http import HttpResponse
 
-from rest_framework import parsers, renderers
+from rest_framework import parsers, renderers, mixins, viewsets
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .serializers import LoggingAuthTokenSerializer
+from alice.authenticators import IsMIServer, IsMIUser
+from .serializers import LoggingAuthTokenSerializer, UserSerializer
 
 
 class LoginView(APIView):
@@ -45,3 +49,29 @@ class IsLoggedIn(APIView):
 
     def get(self, request):
         return HttpResponse(json.dumps(bool(request.user.is_authenticated())))
+
+
+class UserRetrieveViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    permission_classes = (IsMIServer, IsMIUser)
+    serializer_class = UserSerializer
+    http_method_names = ('get')
+
+    def get_object(self):
+        u = self.request.user
+        if isinstance(u, AnonymousUser):
+            if settings.API_DEBUG:
+                u.email = 'api_debug@true'
+                u.last_login = None
+            elif hasattr(self.request, 'adfs_attributes'):
+                u.email = self.request.adfs_attributes['emailaddress'][0]
+            else:
+                raise PermissionDenied()
+        return u
+
+    def get_queryset(self):
+        return []
+
+    def retrieve(self, request, *args, **kwargs):
+        resp = super().retrieve(request, *args, **kwargs)
+        resp['Cache-Control'] = 'max-age={}'.format(request.session.get_expiry_age())
+        return resp

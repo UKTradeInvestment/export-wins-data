@@ -17,6 +17,11 @@ from mi.views.region_views import (
     OverseasRegionCampaignsView,
     OverseasRegionsTopNonHvcWinsView,
 )
+from mi.views.hvc_views import (
+    HVCDetailView,
+    HVCWinsByMarketSectorView,
+    WinTableView,
+)
 from mi.views.hvcgroup_views import (
     HVCGroupsListView,
     HVCGroupDetailView,
@@ -59,6 +64,10 @@ urlpatterns = [
     url(r"^hvc_groups/(?P<group_id>\d+)/$", HVCGroupDetailView.as_view(), name="hvc_group_detail"),
     url(r"^hvc_groups/(?P<group_id>\d+)/months/$", HVCGroupMonthsView.as_view(), name="hvc_group_months"),
     url(r"^hvc_groups/(?P<group_id>\d+)/campaigns/$", HVCGroupCampaignsView.as_view(), name="hvc_group_campaigns"),
+
+    url(r"^hvc/(?P<campaign_id>[\w\-]+)/$", HVCDetailView.as_view(), name="hvc_campaign_detail"),
+    url(r"^hvc/(?P<campaign_id>[\w\-]+)/top_wins/$", HVCWinsByMarketSectorView.as_view(), name="hvc_top_wins"),
+    url(r"^hvc/(?P<campaign_id>[\w\-]+)/win_table/$", WinTableView.as_view(), name="hvc_win_table"),
 
     url(r"^countries/$", CountryListView.as_view(), name="countries"),
     url(r"^countries/(?P<country_id>\d+)/$", CountryDetailView.as_view()),

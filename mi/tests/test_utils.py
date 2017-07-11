@@ -19,7 +19,7 @@ class UtilTests(TestCase):
     @freeze_time("2016-05-01")
     def test_financial_year_end_date(self):
         fin_year = FinancialYear.objects.get(id=2016)
-        self.assertEqual(fin_year.end, datetime(2017, 3, 31))
+        self.assertEqual(fin_year.end, datetime(2017, 3, 31, 23, 59, 59))
 
     @freeze_time("2016-05-01")
     def test_month_iterator_with_current_date_as_end_date(self):

@@ -163,13 +163,19 @@ class BaseWinMIView(BaseMIView):
             )
 
         fields = [
+            "id",
             'hvc',
             'sector',
             'date',
             'total_expected_export_value',
             'total_expected_non_export_value',
+            'notifications__created',
             'confirmation__created',
             'confirmation__agree_with_win',
+            'company_name',
+            'cdms_reference',
+            'lead_officer_name',
+            'location'
         ]
 
         return Win.objects.filter(win_filter).only(*fields).values(*fields)
