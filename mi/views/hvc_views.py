@@ -1,10 +1,14 @@
+from operator import itemgetter
+
 from django.db.models import Count, Sum
 from django_countries.fields import Country as DjangoCountry
 
 from mi.models import Target, Sector
 from mi.utils import percentage_formatted, percentage
-from mi.views.base_view import BaseWinMIView
+from mi.views.base_view import BaseWinMIView, BaseMIView
+from wins.models import HVC
 
+GLOBAL_COUNTRY_CODE='XG'
 
 class BaseHVCDetailView(BaseWinMIView):
     def _get_campaign(self, campaign_id):
@@ -102,6 +106,7 @@ class HVCDetailView(BaseHVCDetailView):
 
 
 class HVCWinsByMarketSectorView(BaseHVCDetailView):
+
     def _wins_by_top_sector_market(self, hvc_wins_qs):
         """ Get dict of data about HVC wins by market and sector
 
@@ -198,3 +203,29 @@ class WinTableView(BaseHVCDetailView):
         ]
         self._fill_date_ranges()
         return self._success(results)
+
+
+class GlobalHVCListView(BaseMIView):
+
+    def _get_global_hvcs(self):
+        return HVC.objects.filter(campaign_id__in=
+            Target.objects.for_fin_year(
+                fin_year=self.fin_year)
+                    .filter(country__country=GLOBAL_COUNTRY_CODE)
+                    .values_list('campaign_id')
+        )
+
+    def get(self, request):
+        response = self._handle_fin_year(request)
+        if response:
+            return response
+
+        results = [
+            {
+                'code': hvc.campaign_id,
+                'name': hvc.name,
+            }
+            for hvc in self._get_global_hvcs()
+        ]
+        self._fill_date_ranges()
+        return self._success(sorted(results, key=itemgetter('name')))
