@@ -1,6 +1,7 @@
 import datetime
 
 from django.utils.timezone import get_current_timezone
+from factory.fuzzy import FuzzyChoice
 
 from freezegun import freeze_time
 
@@ -8,6 +9,8 @@ from django.urls import reverse
 from django.core.management import call_command
 
 from fixturedb.factories.win import create_win_factory
+from mi.factories import TargetFactory, SectorTeamFactory
+from mi.models import FinancialYear, Country, HVCGroup
 from mi.tests.base_test_case import MiApiViewsBaseTestCase, MiApiViewsWithWinsBaseTestCase
 from wins.constants import SECTORS
 
@@ -915,3 +918,47 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
         self.url = self.get_url_for_year(2017)
         self.expected_response = []
         self.assertResponse()
+
+
+class TestGlobalHVCList(MiApiViewsBaseTestCase):
+
+    url = reverse('mi:global_hvcs') + "?year=2017"
+
+    def create_global_hvc(self):
+        fy2017 = FinancialYear.objects.get(id=2017)
+        sector_team = SectorTeamFactory.create()
+        hvc_group = FuzzyChoice(HVCGroup.objects.all())
+
+        target = TargetFactory.create(campaign_id='E225', financial_year=fy2017, hvc_group=hvc_group, sector_team=sector_team)
+        target.country.add(Country.objects.get(country='XG'))
+        return target
+
+    def test_2017_returns_1_hvcs(self):
+        self.create_global_hvc()
+        data = self._api_response_data
+
+        self.assertEqual(
+            data,
+            [{
+                "code": "E225",
+                "name": "HVC: E225"
+            }]
+        )
+
+    def test_2016_returns_0_hvcs(self):
+        self.create_global_hvc()
+        self.url = reverse('mi:global_hvcs') + "?year=2016"
+        data = self._api_response_data
+
+        self.assertEqual(
+            data,
+            []
+        )
+
+    def test_2017_returns_0_hvs_if_none_exist(self):
+        data = self._api_response_data
+
+        self.assertEqual(
+            data,
+            []
+        )
