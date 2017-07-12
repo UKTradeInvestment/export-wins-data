@@ -26,6 +26,8 @@ STAGING = bool(os.getenv("STAGING", False))
 
 TEST_RUNNER = os.getenv('TEST_RUNNER', 'django.test.runner.DiscoverRunner')
 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 # As app is running behind a host-based router supplied by Heroku or other
 # PaaS, we can open ALLOWED_HOSTS
 ALLOWED_HOSTS = ['*']
@@ -59,7 +61,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE_CLASSES = [
-    'django.middleware.security.SecurityMiddleware',
+    'data.middleware.HttpsSecurityMiddleware',
     'alice.middleware.SignatureRejectionMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
