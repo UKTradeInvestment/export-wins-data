@@ -3,7 +3,11 @@ import os
 import sys
 
 if __name__ == "__main__":
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "data.settings")
+    if len(sys.argv) > 1 and sys.argv[1] == "test":
+        os.environ.setdefault("DJANGO_SETTINGS_MODULE", "data.test_settings")
+        print("testing with settings: {}".format(os.environ.get("DJANGO_SETTINGS_MODULE")))
+    else:
+        os.environ.setdefault("DJANGO_SETTINGS_MODULE", "data.settings")
 
     from django.core.management import execute_from_command_line
 
