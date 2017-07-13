@@ -801,6 +801,7 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
         api_response = self._api_response_data
         self.assertTrue(len(api_response) == 1)
         win_item = api_response[0]
+        self.assertIsNotNone(win_item["win_date"])
         self.assertEqual(win_item["export_amount"], self.export_value)
         self.assertEqual(win_item["status"], "customer_confirmed")
         self.assertEqual(win_item["hvc"]["code"], "E002")
@@ -848,6 +849,7 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
         api_response = self._api_response_data
         self.assertTrue(len(api_response) == 1)
         win_item = api_response[0]
+        self.assertIsNotNone(win_item["win_date"])
         self.assertEqual(win_item["export_amount"], self.export_value)
         self.assertEqual(win_item["status"], "customer_rejected")
         self.assertEqual(win_item["hvc"]["code"], "E002")
@@ -872,6 +874,7 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
         api_response = self._api_response_data
         self.assertTrue(len(api_response) == 1)
         win_item = api_response[0]
+        self.assertIsNotNone(win_item["win_date"])
         self.assertEqual(win_item["export_amount"], self.export_value)
         self.assertEqual(win_item["status"], "customer_rejected")
         self.assertEqual(win_item["hvc"]["code"], "E002")
