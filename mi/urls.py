@@ -38,6 +38,8 @@ from mi.views.sector_views import (
     TopNonHvcSectorCountryWinsView,
 )
 
+from mi.views.base_view import GlobalWinsView
+
 urlpatterns = [
     url(r"^sector_teams/$", SectorTeamsListView.as_view(), name="sector_teams"),
     url(r"^sector_teams/overview/$", SectorTeamsOverviewView.as_view(), name="sector_teams_overview"),
@@ -71,6 +73,7 @@ urlpatterns = [
     url(r"^hvc/(?P<campaign_id>[\w\-]+)/win_table/$", WinTableView.as_view(), name="hvc_win_table"),
 
     url(r"^global_hvcs/$", GlobalHVCListView.as_view(), name="global_hvcs"),
+    url(r"^global_wins/$", GlobalWinsView.as_view(), name="global_wins"),
     url(r"^countries/$", CountryListView.as_view(), name="countries"),
     url(r"^countries/(?P<country_id>\d+)/$", CountryDetailView.as_view()),
     url(r"^countries/wins/$", CountryWinsView.as_view()),
