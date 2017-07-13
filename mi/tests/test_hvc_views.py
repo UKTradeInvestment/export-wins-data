@@ -781,8 +781,8 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
         self.url = self.get_url_for_year(2016)
         self.expected_response = {
                 "hvc": {
-                    "code": "E225",
-                    "name": "HVC: E225",
+                    "code": "E002",
+                    "name": "HVC: E002",
                 },
                 "wins": []
             }
@@ -792,8 +792,8 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
         self.url = self.get_url_for_year(2017)
         self.expected_response = {
                 "hvc": {
-                    "code": "E225",
-                    "name": "HVC: E225",
+                    "code": "E002",
+                    "name": "E00217",
                 },
                 "wins": []
             }
@@ -908,7 +908,13 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
             country='HU'
         )
         self.url = self.get_url_for_year(2017)
-        self.expected_response = []
+        self.expected_response = {
+            'wins': [],
+            'hvc': {
+                'code': 'E002',
+                'name': 'E00217'
+            }
+        }
         self.assertResponse()
 
     def test_win_table_2017_confirmed_non_hvc_empty_result(self):
@@ -920,7 +926,14 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
             country='HU'
         )
         self.url = self.get_url_for_year(2017)
-        self.expected_response = []
+        self.expected_response = {
+            'wins': [],
+            'hvc':
+                {
+                    'code': 'E002',
+                    'name': 'E00217'
+                }
+        }
         self.assertResponse()
 
     def test_win_table_2017_unconfirmed_non_hvc_empty_result(self):
@@ -932,7 +945,14 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
             country='HU'
         )
         self.url = self.get_url_for_year(2017)
-        self.expected_response = []
+        self.expected_response = {
+            'wins': [],
+            'hvc':
+                {
+                    'code': 'E002',
+                    'name': 'E00217'
+                }
+        }
         self.assertResponse()
 
 
@@ -955,13 +975,10 @@ class TestGlobalHVCList(MiApiViewsBaseTestCase):
 
         self.assertEqual(
             data,
-            {
-                "hvc": {
-                    "code": "E225",
-                    "name": "HVC: E225",
-                },
-                "wins": []
-            }
+            [{
+                "code": "E225",
+                "name": "HVC: E225"
+            }]
         )
 
     def test_2016_returns_0_hvcs(self):
@@ -971,13 +988,7 @@ class TestGlobalHVCList(MiApiViewsBaseTestCase):
 
         self.assertEqual(
             data,
-            {
-                "hvc": {
-                    "code": "E225",
-                    "name": "HVC: E225",
-                },
-                "wins": []
-            }
+            []
         )
 
     def test_2017_returns_0_hvs_if_none_exist(self):
@@ -985,11 +996,5 @@ class TestGlobalHVCList(MiApiViewsBaseTestCase):
 
         self.assertEqual(
             data,
-            {
-                "hvc": {
-                    "code": "E225",
-                    "name": "HVC: E225",
-                },
-                "wins": []
-            }
+            []
         )
