@@ -8,7 +8,7 @@ from mi.utils import percentage_formatted, percentage
 from mi.views.base_view import BaseWinMIView, BaseMIView
 from wins.models import HVC
 
-GLOBAL_COUNTRY_CODE='XG'
+GLOBAL_COUNTRY_CODE="XG"
 
 class BaseHVCDetailView(BaseWinMIView):
     def _get_campaign(self, campaign_id):
@@ -21,10 +21,10 @@ class BaseHVCDetailView(BaseWinMIView):
         """ Basic data about HVC campaign """
 
         return {
-            'name': campaign.name,
-            'campaign_id': campaign.campaign_id,
-            'avg_time_to_confirm': self._average_confirm_time(win__hvc=campaign.charcode),
-            'hvcs': self._hvc_overview([campaign]),
+            "name": campaign.name,
+            "campaign_id": campaign.campaign_id,
+            "avg_time_to_confirm": self._average_confirm_time(win__hvc=campaign.charcode),
+            "hvcs": self._hvc_overview([campaign]),
         }
 
     def _get_hvc_wins(self, campaign):
@@ -64,29 +64,29 @@ class HVCDetailView(BaseHVCDetailView):
         """
 
         breakdown = self._breakdowns(self._get_hvc_wins(campaign), include_non_hvc=False)
-        confirmed_value = breakdown['export']['hvc']['value']['confirmed']
-        unconfirmed_value = breakdown['export']['hvc']['value']['unconfirmed']
-        confirmed_number = breakdown['export']['hvc']['number']['confirmed']
-        unconfirmed_number = breakdown['export']['hvc']['number']['unconfirmed']
+        confirmed_value = breakdown["export"]["hvc"]["value"]["confirmed"]
+        unconfirmed_value = breakdown["export"]["hvc"]["value"]["unconfirmed"]
+        confirmed_number = breakdown["export"]["hvc"]["number"]["confirmed"]
+        unconfirmed_number = breakdown["export"]["hvc"]["number"]["unconfirmed"]
         confirmed_percent = percentage_formatted(confirmed_value, campaign.target)
         unconfirmed_percent = percentage_formatted(unconfirmed_value, campaign.target)
         result = {
-            'totals': {
-                'value': {
-                    'confirmed': confirmed_value,
-                    'unconfirmed': unconfirmed_value,
-                    'grand_total': confirmed_value + unconfirmed_value,
+            "totals": {
+                "value": {
+                    "confirmed": confirmed_value,
+                    "unconfirmed": unconfirmed_value,
+                    "grand_total": confirmed_value + unconfirmed_value,
                 },
-                'number': {
-                    'confirmed': confirmed_number,
-                    'unconfirmed': unconfirmed_number,
-                    'grand_total': confirmed_number + unconfirmed_number,
+                "number": {
+                    "confirmed": confirmed_number,
+                    "unconfirmed": unconfirmed_number,
+                    "grand_total": confirmed_number + unconfirmed_number,
                 },
             },
-            'progress': {
-                'confirmed_percent': confirmed_percent,
-                'unconfirmed_percent': unconfirmed_percent,
-                'status': self._get_status_colour(campaign.target, confirmed_value),
+            "progress": {
+                "confirmed_percent": confirmed_percent,
+                "unconfirmed_percent": unconfirmed_percent,
+                "status": self._get_status_colour(campaign.target, confirmed_value),
             }
         }
         return result
@@ -100,7 +100,7 @@ class HVCDetailView(BaseHVCDetailView):
             return self._not_found()
 
         results = self._campaign_result(campaign)
-        results['wins'] = self._campaign_wins_breakdown(campaign)
+        results["wins"] = self._campaign_wins_breakdown(campaign)
         self._fill_date_ranges()
         return self._success(results)
 
@@ -116,25 +116,25 @@ class HVCWinsByMarketSectorView(BaseHVCDetailView):
 
         """
         hvc_wins = hvc_wins_qs.values(
-            'country',
-            'sector'
+            "country",
+            "sector"
         ).annotate(
-            total_value=Sum('total_expected_export_value'),
-            total_wins=Count('id')
-        ).order_by('-total_value')
+            total_value=Sum("total_expected_export_value"),
+            total_wins=Count("id")
+        ).order_by("-total_value")
 
         # make a lookup to get names efficiently
         sector_id_to_name = {s.id: s.name for s in Sector.objects.all()}
-        top_value = int(hvc_wins[0]['total_value']) if hvc_wins else None
+        top_value = int(hvc_wins[0]["total_value"]) if hvc_wins else None
         return [
             {
-                'region': DjangoCountry(w['country']).name,
-                'sector': sector_id_to_name[w['sector']],
-                'totalValue': w['total_value'],
-                'totalWins': w['total_wins'],
-                'percentComplete': int(percentage(w['total_value'], top_value)),
-                'averageWinValue': int(w['total_value'] / w['total_wins']),
-                'averageWinPercent': int(percentage((w['total_value'] / w['total_wins']), top_value)),
+                "region": DjangoCountry(w["country"]).name,
+                "sector": sector_id_to_name[w["sector"]],
+                "totalValue": w["total_value"],
+                "totalWins": w["total_wins"],
+                "percentComplete": int(percentage(w["total_value"], top_value)),
+                "averageWinValue": int(w["total_value"] / w["total_wins"]),
+                "averageWinPercent": int(percentage((w["total_value"] / w["total_wins"]), top_value)),
             }
             for w in hvc_wins
         ]
@@ -157,23 +157,23 @@ class WinTableView(BaseHVCDetailView):
     """ Wins for table view for HVC"""
     def get(self, request, campaign_id):
         def confirmed_date(win):
-            if not win['confirmation__created']:
+            if not win["confirmation__created"]:
                 return None
             else:
-                return win['confirmation__created']
+                return win["confirmation__created"]
 
         def status(win):
-            if not win['notifications__created']:
-                return 'email_not_sent'
-            elif not win['confirmation__created']:
-                return 'response_not_received'
+            if not win["notifications__created"]:
+                return "email_not_sent"
+            elif not win["confirmation__created"]:
+                return "response_not_received"
             elif win["confirmation__agree_with_win"]:
-                return 'customer_confirmed'
+                return "customer_confirmed"
             else:
-                return 'customer_rejected'
+                return "customer_rejected"
 
         def credit(win):
-            return self._win_status(win) == 'confirmed'
+            return self._win_status(win) == "confirmed"
 
         response = self._handle_fin_year(request)
         if response:
@@ -183,27 +183,29 @@ class WinTableView(BaseHVCDetailView):
             return self._not_found()
 
         wins = self._get_hvc_wins(campaign)
-        results = [
-            {
-                "id": win["id"],
-                "company": {
-                    "name": win["company_name"],
-                    "cdms_id": win["cdms_reference"]
-                },
+        results = {
                 "hvc": {
                     "code": campaign_id,
                     "name": campaign.name,
                 },
-                "lead_officer": {
-                    "name": win["lead_officer_name"],
-                },
-                "credit": credit(win),
-                "win_date": confirmed_date(win),
-                "export_amount": win["total_expected_export_value"],
-                "status": status(win)
-            }
-            for win in wins
-        ]
+                "wins": [
+                {
+                    "id": win["id"],
+                    "company": {
+                        "name": win["company_name"],
+                        "cdms_id": win["cdms_reference"]
+                    },
+                    "lead_officer": {
+                        "name": win["lead_officer_name"],
+                    },
+                    "credit": credit(win),
+                    "win_date": confirmed_date(win),
+                    "export_amount": win["total_expected_export_value"],
+                    "status": status(win)
+                }
+                for win in wins
+            ]
+        }
         self._fill_date_ranges()
         return self._success(results)
 
@@ -215,7 +217,7 @@ class GlobalHVCListView(BaseMIView):
             Target.objects.for_fin_year(
                 fin_year=self.fin_year)
                     .filter(country__country=GLOBAL_COUNTRY_CODE)
-                    .values_list('campaign_id')
+                    .values_list("campaign_id")
         )
 
     def get(self, request):
@@ -225,10 +227,10 @@ class GlobalHVCListView(BaseMIView):
 
         results = [
             {
-                'code': hvc.campaign_id,
-                'name': hvc.name,
+                "code": hvc.campaign_id,
+                "name": hvc.name,
             }
             for hvc in self._get_global_hvcs()
         ]
         self._fill_date_ranges()
-        return self._success(sorted(results, key=itemgetter('name')))
+        return self._success(sorted(results, key=itemgetter("name")))
