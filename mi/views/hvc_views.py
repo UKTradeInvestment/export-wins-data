@@ -158,19 +158,22 @@ class WinTableView(BaseHVCDetailView):
     def get(self, request, campaign_id):
         def confirmed_date(win):
             if not win['confirmation__created']:
-                return 'unconfirmed'
+                return None
             else:
                 return win['confirmation__created']
 
         def status(win):
             if not win['notifications__created']:
-                return 0
+                return 'email_not_sent'
             elif not win['confirmation__created']:
-                return 1
+                return 'response_not_received'
             elif win["confirmation__agree_with_win"]:
-                return 2
+                return 'customer_confirmed'
             else:
-                return 3
+                return 'customer_rejected'
+
+        def credit(win):
+            return self._win_status(win) == 'confirmed'
 
         response = self._handle_fin_year(request)
         if response:
@@ -194,7 +197,7 @@ class WinTableView(BaseHVCDetailView):
                 "lead_officer": {
                     "name": win["lead_officer_name"],
                 },
-                "credit": self._win_status(win),
+                "credit": credit(win),
                 "win_date": confirmed_date(win),
                 "export_amount": win["total_expected_export_value"],
                 "status": status(win)

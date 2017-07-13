@@ -86,6 +86,7 @@ class MiApiViewsWithWinsBaseTestCase(MiApiViewsBaseTestCase):
             win_date=win_date,
             export_value=export_value,
             confirm=confirm,
+            agree_with_win=agree_with_win,
             notify_date=notify_date,
             response_date=response_date,
             country=country,
