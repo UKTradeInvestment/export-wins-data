@@ -38,7 +38,7 @@ from mi.views.sector_views import (
     TopNonHvcSectorCountryWinsView,
 )
 
-from mi.views.base_view import GlobalWinsView
+from mi.views.global_views import GlobalWinsView
 
 urlpatterns = [
     url(r"^sector_teams/$", SectorTeamsListView.as_view(), name="sector_teams"),
