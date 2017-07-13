@@ -801,14 +801,15 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
         api_response = self._api_response_data
         self.assertTrue(len(api_response) == 1)
         win_item = api_response[0]
+        self.assertIsNotNone(win_item["win_date"])
         self.assertEqual(win_item["export_amount"], self.export_value)
-        self.assertEqual(win_item["status"], 2)
+        self.assertEqual(win_item["status"], "customer_confirmed")
         self.assertEqual(win_item["hvc"]["code"], "E002")
         self.assertEqual(win_item["hvc"]["name"], "E00217")
         self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
         self.assertEqual(win_item["company"]["name"], "company name")
         self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
-        self.assertEqual(win_item["credit"], "confirmed")
+        self.assertTrue(win_item["credit"])
 
     def test_win_table_2017_one_unconfirmed_hvc_win(self):
         self._create_hvc_win(
@@ -823,14 +824,15 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
         api_response = self._api_response_data
         self.assertTrue(len(api_response) == 1)
         win_item = api_response[0]
+        self.assertIsNone(win_item["win_date"])
         self.assertEqual(win_item["export_amount"], self.export_value)
-        self.assertEqual(win_item["status"], 0)
+        self.assertEqual(win_item["status"], "email_not_sent")
         self.assertEqual(win_item["hvc"]["code"], "E002")
         self.assertEqual(win_item["hvc"]["name"], "E00217")
         self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
         self.assertEqual(win_item["company"]["name"], "company name")
         self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
-        self.assertEqual(win_item["credit"], "unconfirmed")
+        self.assertFalse(win_item["credit"])
 
     def test_win_table_2017_one_confirmed_rejected_hvc_win(self):
         self._create_hvc_win(
@@ -847,14 +849,15 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
         api_response = self._api_response_data
         self.assertTrue(len(api_response) == 1)
         win_item = api_response[0]
+        self.assertIsNotNone(win_item["win_date"])
         self.assertEqual(win_item["export_amount"], self.export_value)
-        self.assertEqual(win_item["status"], 2)
+        self.assertEqual(win_item["status"], "customer_rejected")
         self.assertEqual(win_item["hvc"]["code"], "E002")
         self.assertEqual(win_item["hvc"]["name"], "E00217")
         self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
         self.assertEqual(win_item["company"]["name"], "company name")
         self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
-        self.assertEqual(win_item["credit"], "confirmed")
+        self.assertFalse(win_item["credit"])
 
     def test_win_table_2017_one_hvc_win_from_2016_confirmed_in_2017(self):
         self._create_hvc_win(
@@ -871,14 +874,15 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
         api_response = self._api_response_data
         self.assertTrue(len(api_response) == 1)
         win_item = api_response[0]
+        self.assertIsNotNone(win_item["win_date"])
         self.assertEqual(win_item["export_amount"], self.export_value)
-        self.assertEqual(win_item["status"], 2)
+        self.assertEqual(win_item["status"], "customer_rejected")
         self.assertEqual(win_item["hvc"]["code"], "E002")
         self.assertEqual(win_item["hvc"]["name"], "E00217")
         self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
         self.assertEqual(win_item["company"]["name"], "company name")
         self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
-        self.assertEqual(win_item["credit"], "confirmed")
+        self.assertFalse(win_item["credit"])
 
     def test_win_table_2017_one_hvc_win_from_2016_confirmed_in_2016_no_result(self):
         self._create_hvc_win(
