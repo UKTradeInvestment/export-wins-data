@@ -33,7 +33,7 @@ class BaseHVCDetailView(BaseWinMIView):
         using startswith campaign_id instead of charcode 
         to cover last FYs wins that were confirmed this FY 
         """
-        return self._wins().filter(hvc__startswith=campaign.campaign_id)
+        return self._wins_for_win_table().filter(hvc__startswith=campaign.campaign_id)
 
 
 class HVCDetailView(BaseHVCDetailView):
