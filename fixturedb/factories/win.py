@@ -5,6 +5,7 @@ from factory.fuzzy import FuzzyChoice
 
 from wins.constants import SECTORS
 from wins.factories import WinFactory, NotificationFactory, CustomerResponseFactory
+from wins.models import Notification
 
 
 def create_win_factory(user, sector_choices=None, default_date=None):
@@ -42,6 +43,7 @@ def create_win_factory(user, sector_choices=None, default_date=None):
             if not notify_date:
                 notify_date = win_date + timedelta(days=1)
             notification = NotificationFactory(win=win)
+            notification.type = Notification.TYPE_CUSTOMER
             notification.created = notify_date
             notification.save()
             if not response_date:

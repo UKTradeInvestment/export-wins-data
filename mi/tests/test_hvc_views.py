@@ -13,6 +13,8 @@ from mi.factories import TargetFactory, SectorTeamFactory
 from mi.models import FinancialYear, Country, HVCGroup
 from mi.tests.base_test_case import MiApiViewsBaseTestCase, MiApiViewsWithWinsBaseTestCase
 from wins.constants import SECTORS
+from wins.factories import NotificationFactory
+from wins.models import Notification
 
 
 class HVCBaseViewTestCase(MiApiViewsWithWinsBaseTestCase):
@@ -357,6 +359,36 @@ class HVCDetailsTestCase(HVCBaseViewTestCase):
         self.assertEqual(cen_response["wins"]["totals"]["value"]["grand_total"], self.export_value)
         self.assertEqual(cen_response["wins"]["totals"]["number"]["grand_total"], 1)
 
+    def test_details_cen_hvc_win_unconfirmed_multi_notifications_no_duplicates(self):
+        win = self._create_hvc_win(
+            hvc_code='E017',
+            win_date=self.win_date_2017,
+            confirm=False,
+            fin_year=2017,
+            export_value=self.export_value,
+            country='HU'
+        )
+        # add couple of customer notifications
+        notify_date = self.win_date_2017 + datetime.timedelta(days=1)
+        notification = NotificationFactory(win=win)
+        notification.type = Notification.TYPE_CUSTOMER
+        notification.created = notify_date
+        notification.save()
+
+        notify_date = self.win_date_2017 + datetime.timedelta(days=2)
+        notification = NotificationFactory(win=win)
+        notification.type = Notification.TYPE_CUSTOMER
+        notification.created = notify_date
+        notification.save()
+
+        self.url = self.get_url_for_year(2017)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["totals"]["value"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["totals"]["number"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["totals"]["value"]["unconfirmed"], self.export_value)
+        self.assertEqual(cen_response["wins"]["totals"]["number"]["unconfirmed"], 1)
+        self.assertEqual(cen_response["wins"]["totals"]["value"]["grand_total"], self.export_value)
+        self.assertEqual(cen_response["wins"]["totals"]["number"]["grand_total"], 1)
 
 @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
 class HVCTopHvcForMarketAndSectorTestCase(HVCBaseViewTestCase):
@@ -780,23 +812,23 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
     def test_win_table_json_2016_no_wins(self):
         self.url = self.get_url_for_year(2016)
         self.expected_response = {
-                "hvc": {
-                    "code": "E002",
-                    "name": "HVC: E002",
-                },
-                "wins": []
-            }
+            "hvc": {
+                "code": "E002",
+                "name": "HVC: E002",
+            },
+            "wins": []
+        }
         self.assertResponse()
 
     def test_win_table_json_2017_no_wins(self):
         self.url = self.get_url_for_year(2017)
         self.expected_response = {
-                "hvc": {
-                    "code": "E002",
-                    "name": "E00217",
-                },
-                "wins": []
-            }
+            "hvc": {
+                "code": "E002",
+                "name": "E00217",
+            },
+            "wins": []
+        }
         self.assertResponse()
 
     def test_win_table_2017_one_confirmed_hvc_win(self):
@@ -845,6 +877,61 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
         self.assertEqual(win_item["company"]["name"], "company name")
         self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
         self.assertFalse(win_item["credit"])
+
+    def test_win_table_2017_one_unconfirmed_hvc_win_with_multiple_customer_notifications(self):
+        win = self._create_hvc_win(
+            hvc_code='E002',
+            win_date=self.win_date_2017,
+            confirm=False,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+
+        # add couple of customer notifications
+        notify_date = self.win_date_2017 + datetime.timedelta(days=1)
+        notification = NotificationFactory(win=win)
+        notification.type = Notification.TYPE_CUSTOMER
+        notification.created = notify_date
+        notification.save()
+
+        notify_date = self.win_date_2017 + datetime.timedelta(days=2)
+        notification = NotificationFactory(win=win)
+        notification.type = Notification.TYPE_CUSTOMER
+        notification.created = notify_date
+        notification.save()
+
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertTrue(len(api_response["wins"]) == 1)
+
+    def test_win_table_2017_one_unconfirmed_hvc_win_with_multiple_mixed_notifications(self):
+        win = self._create_hvc_win(
+            hvc_code='E002',
+            win_date=self.win_date_2017,
+            confirm=False,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+
+        # add a customer notification
+        notify_date = self.win_date_2017 + datetime.timedelta(days=1)
+        notification = NotificationFactory(win=win)
+        notification.type = Notification.TYPE_CUSTOMER
+        notification.created = notify_date
+        notification.save()
+
+        # add an officer notification
+        notify_date = self.win_date_2017 + datetime.timedelta(days=2)
+        notification = NotificationFactory(win=win)
+        notification.type = Notification.TYPE_OFFICER
+        notification.created = notify_date
+        notification.save()
+
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertTrue(len(api_response["wins"]) == 1)
 
     def test_win_table_2017_one_confirmed_rejected_hvc_win(self):
         self._create_hvc_win(

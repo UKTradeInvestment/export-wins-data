@@ -6,7 +6,7 @@ from operator import attrgetter, itemgetter
 import time
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Count, Sum, Q
+from django.db.models import Count, Sum, Q, Max
 from django.utils import timezone
 
 from django_countries.fields import Country as DjangoCountry
@@ -132,21 +132,12 @@ class BaseWinMIView(BaseMIView):
         tzinfo=timezone.utc,
     )
 
-    def _wins(self):
-        """ Return queryset of Wins used by all Endpoints
-
-        All endpoints should derive their Wins from this single source of
-        truth.
-
-        See `_win_status` for specifics of how these Wins are used.
-
-        Note that we could filter Wins that the customer has responded to
-        here in order to exclude rejected Wins for 2017/18, but choose to do
-        it in `_win_status` so that we can later include data on rejected
-        Wins.
-
+    def _wins_filter(self):
         """
-
+        Commonalities of generic wins functions are extracted into this filter
+        function.
+        :return: A wins QuerySet for the financial year and unconfjrmed wins
+        """
         # get Wins where the customer responded in the given FY
         win_filter = Q(confirmation__created__range=(
             self.fin_year.start,
@@ -162,6 +153,22 @@ class BaseWinMIView(BaseMIView):
                 confirmation__isnull=True,
             )
 
+        return win_filter
+
+    def _wins(self):
+        """ Return queryset of Wins used by all Endpoints
+
+        All endpoints should derive their Wins from this single source of
+        truth.
+
+        See `_win_status` for specifics of how these Wins are used.
+
+        Note that we could filter Wins that the customer has responded to
+        here in order to exclude rejected Wins for 2017/18, but choose to do
+        it in `_win_status` so that we can later include data on rejected
+        Wins.
+
+        """
         fields = [
             "id",
             'hvc',
@@ -169,7 +176,25 @@ class BaseWinMIView(BaseMIView):
             'date',
             'total_expected_export_value',
             'total_expected_non_export_value',
-            'notifications__created',
+            'confirmation__created',
+            'confirmation__agree_with_win',
+        ]
+
+        return Win.objects.filter(self._wins_filter()).only(*fields).values(*fields)
+
+    def _wins_for_win_table(self):
+        """ 
+        This is a variant of _wins function specific to Win Table, 
+        as it requires some additional fields that others don't.
+        It also requires to obtain Max notifications__created for each win
+        """
+        fields = [
+            "id",
+            'hvc',
+            'sector',
+            'date',
+            'total_expected_export_value',
+            'total_expected_non_export_value',
             'confirmation__created',
             'confirmation__agree_with_win',
             'company_name',
@@ -178,7 +203,8 @@ class BaseWinMIView(BaseMIView):
             'location'
         ]
 
-        return Win.objects.filter(win_filter).only(*fields).values(*fields)
+        return Win.objects.filter(self._wins_filter()).only(*fields).values(*fields).annotate(
+            notifications__created=Max('notifications__created'))
 
     def _non_hvc_wins(self):
         return self._wins().filter(Q(hvc__isnull=True) | Q(hvc=''))
