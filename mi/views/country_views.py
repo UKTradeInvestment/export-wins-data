@@ -14,12 +14,18 @@ class BaseCountriesMIView(BaseWinMIView):
         except Country.DoesNotExist:
             return False
 
-    def _get_country_wins(self, country):
+    def _wins(self, country):
         dj_country = DjangoCountry(country.country.code)
-        return Win.objects.filter(
+        return super()._wins().filter(
             country__exact=dj_country,
             date__range=(get_financial_start_date(), get_financial_end_date()),
         ).select_related('confirmation')
+
+    def _get_hvc_wins(self, country):
+        return self._wins(country).hvc(fin_year=self.fin_year)
+
+    def _get_non_hvc_wins(self, country):
+        return self._wins(country).non_hvc(fin_year=self.fin_year)
 
     def _country_result(self, country):
         """ Basic data about countries - name & hvc's """
@@ -43,6 +49,7 @@ class CountryListView(BaseMIView):
 
 
 class CountryDetailView(BaseCountriesMIView):
+
     def get(self, request, country_id):
 
         country = self._get_country(country_id)
@@ -55,19 +62,21 @@ class CountryDetailView(BaseCountriesMIView):
             total_target += target.target
 
         results = self._country_result(country)
-        wins = self._get_country_wins(country)
-        results['wins'] = self._breakdowns(wins)
+        hvc_wins = self._get_hvc_wins(country)
+        non_hvc_wins = self._get_non_hvc_wins(country)
+        results['wins'] = self._breakdowns(hvc_wins, non_hvc_wins=non_hvc_wins)
         return self._success(results)
 
 
 class CountryWinsView(BaseCountriesMIView):
+
     def get(self, request):
         results = [
             {
                 'id': c.id,
                 'code': c.country.code,
                 'name': c.country.name,
-                'wins': self._breakdowns(self._get_country_wins(c))
+                'wins': self._breakdowns(self._get_hvc_wins(c), non_hvc_wins=self._get_non_hvc_wins(c))
             }
             for c in Country.objects.all()
             ]

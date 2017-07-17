@@ -24,8 +24,7 @@ from mi.utils import (
     percentage,
     percentage_formatted,
 )
-from wins.models import Notification, Win
-
+from wins.models import Notification, Win, _get_open_hvcs
 
 MI_PERMISSION_CLASSES = (IsMIServer, IsMIUser)
 
@@ -207,7 +206,10 @@ class BaseWinMIView(BaseMIView):
             notifications__created=Max('notifications__created'))
 
     def _non_hvc_wins(self):
-        return self._wins().filter(Q(hvc__isnull=True) | Q(hvc=''))
+        return self._wins().non_hvc(fin_year=self.fin_year)
+
+    def _hvc_wins(self):
+        return self._wins().hvc(fin_year=self.fin_year)
 
     def _win_status(self, win):
         """ Determine if Win is confirmed, unconfirmed or rejected
@@ -411,7 +413,7 @@ class BaseWinMIView(BaseMIView):
 
         }
 
-    def _breakdowns(self, wins, include_non_hvc=True):
+    def _breakdowns(self, hvc_wins, non_hvc_wins=None, include_non_hvc=True):
         """ Get breakdown of data for wins
 
         Result looks like:
@@ -434,7 +436,6 @@ class BaseWinMIView(BaseMIView):
         }
 
         """
-        hvc_wins = [win for win in wins if win['hvc']]
         result = {
             'export': {
                 'hvc': self._breakdown_wins(hvc_wins),
@@ -448,7 +449,6 @@ class BaseWinMIView(BaseMIView):
         unconfirmed_number = result['export']['hvc']['number']['unconfirmed']
 
         if include_non_hvc:
-            non_hvc_wins = [win for win in wins if not win['hvc']]
             result['export']['non_hvc'] = self._breakdown_wins(non_hvc_wins)
 
             confirmed_value += result['export']['non_hvc']['value']['confirmed']
@@ -500,11 +500,12 @@ class BaseWinMIView(BaseMIView):
         non_hvc_unconfirmed = []
         non_export_confirmed = []
         non_export_unconfirmed = []
+        open_hvcs = set(_get_open_hvcs(self.fin_year))
 
         for win in wins:
             export_value = win['total_expected_export_value']
             win_status = self._win_status(win)
-            if win['hvc']:
+            if win['hvc'] and win['hvc'][:-2] in open_hvcs:
                 if win_status == 'confirmed':
                     hvc_confirmed.append(export_value)
                 elif win_status == 'unconfirmed':

@@ -3,6 +3,7 @@ from mi.views.base_view import BaseWinMIView
 
 
 class GlobalWinsView(BaseWinMIView):
+
     def value_and_number(self, wins):
         confirmed_value = sum(w["total_expected_export_value"] for w in wins)
         confirmed_number = len(wins)
@@ -16,18 +17,18 @@ class GlobalWinsView(BaseWinMIView):
         hvc_unconfirmed = []
         non_hvc_confirmed = []
         non_hvc_unconfirmed = []
-        wins = list(self._wins())
-        for win in wins:
-            if win["hvc"]:
-                if self._win_status(win) == "confirmed":
-                    hvc_confirmed.append(win)
-                else:
-                    hvc_unconfirmed.append(win)
+        hvc_wins = self._hvc_wins()
+        non_hvc_wins = self._non_hvc_wins()
+        for win in hvc_wins:
+            if self._win_status(win) == "confirmed":
+                hvc_confirmed.append(win)
             else:
-                if self._win_status(win) == "confirmed":
-                    non_hvc_confirmed.append(win)
-                else:
-                    non_hvc_unconfirmed.append(win)
+                hvc_unconfirmed.append(win)
+        for win in non_hvc_wins:
+            if self._win_status(win) == "confirmed":
+                non_hvc_confirmed.append(win)
+            else:
+                non_hvc_unconfirmed.append(win)
 
         hvc_confirmed_value,hvc_confirmed_number = self.value_and_number(hvc_confirmed)
         hvc_unconfirmed_value, hvc_unconfirmed_number = self.value_and_number(hvc_unconfirmed)

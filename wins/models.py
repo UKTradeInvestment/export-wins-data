@@ -1,9 +1,12 @@
 import datetime
+import operator
 import uuid
+from functools import reduce
 
-
+from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.models import Max, Q
 from django.db.utils import OperationalError, ProgrammingError
 from django_countries.fields import CountryField
 
@@ -116,6 +119,60 @@ class HVC(models.Model):
             # migrations need to initialize models
             return (('dev', 'dev'),)
 
+
+def normalize_year(fin_year):
+    if isinstance(fin_year, models.Model):
+        fin_year = fin_year.id
+    if fin_year > 2000:
+        fin_year = fin_year - 2000
+    return fin_year
+
+
+def _get_open_hvcs(fin_year):
+    """
+    Gives you a list of valid HVCs given a financial year
+
+    :type fin_year: Union[int, FinancialYear]
+    """
+
+    CACHE_TIMEOUT = 20
+    fin_year = normalize_year(fin_year)
+    cache_key = '_get_open_hvcs_{fin_year}'.format(fin_year=fin_year)
+    cached_result = cache.get(cache_key)
+
+    if cached_result:
+        return cached_result
+
+    max_hvc_years = HVC.objects.values('campaign_id').annotate(Max('financial_year'))
+    open_hvcs_for_fin_year = \
+        set(max_hvc_years.filter(financial_year__max__gte=fin_year).values_list('campaign_id', flat=True))
+    cache.set(cache_key, open_hvcs_for_fin_year, CACHE_TIMEOUT)
+    return open_hvcs_for_fin_year
+
+
+class WinQuerySet(models.QuerySet):
+
+
+    def _get_open_hvcs_filter(self, fin_year):
+        # normalize financial_year to the short format used by HVC table
+        open_hvcs_for_fin_year = _get_open_hvcs(fin_year)
+        return reduce(operator.or_, [Q(hvc__startswith=x) for x in open_hvcs_for_fin_year])
+
+    def hvc(self, fin_year=None):
+        base_filter = Q(hvc__isnull=False) & ~Q(hvc='')
+        if not fin_year:
+            return self.filter(base_filter)
+        return self.filter(base_filter).filter(self._get_open_hvcs_filter(fin_year=fin_year))
+
+
+    def non_hvc(self, fin_year=None):
+        base_filter = Q(Q(hvc__isnull=True) | Q(hvc=''))
+        if not fin_year:
+            return self.filter(base_filter)
+        qs = self.filter(base_filter | ~self._get_open_hvcs_filter(fin_year=fin_year))
+        return qs
+
+WinManager = SoftDeleteManager.from_queryset(WinQuerySet)
 
 class Win(SoftDeleteModel):
     """ Information about a given "export win", submitted by an officer """
@@ -248,6 +305,8 @@ class Win(SoftDeleteModel):
     updated = models.DateTimeField(auto_now=True, null=True)
     complete = models.BooleanField()  # has an email been sent to the customer?
     audit = models.TextField(null=True)
+
+    objects = WinManager()
 
     def add_audit(self, text):
         """ Add text to audit field with timestamp """
