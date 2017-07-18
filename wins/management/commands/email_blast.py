@@ -28,7 +28,6 @@ class Command(BaseCommand):
             customer_notifications=Count('notifications')).exclude(
             customer_notifications__gte=4)
 
-
         for win in to_remind_wins:
             send_customer_email(win)
             notification = Notification(

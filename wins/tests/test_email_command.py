@@ -8,6 +8,7 @@ from wins.models import Win, Notification
 
 
 class CommandsTestCase(TestCase):
+    """ Testing email_blast Django management command """
     def _call_command(self):
         args = []
         opts = {}
