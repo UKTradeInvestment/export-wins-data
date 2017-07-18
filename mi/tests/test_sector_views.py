@@ -1,12 +1,17 @@
 import datetime
+
+from django.core.management import call_command
 from freezegun import freeze_time
 
 import json
+from dateutil.relativedelta import relativedelta
 
 from django.core.urlresolvers import reverse
 from factory.fuzzy import FuzzyDate
+from jmespath import search as s
 
 from fixturedb.factories.win import create_win_factory
+from mi.models import Target
 from mi.tests.base_test_case import MiApiViewsBaseTestCase, MiApiViewsWithWinsBaseTestCase
 from mi.utils import sort_campaigns_by
 from wins.constants import SECTORS
@@ -261,6 +266,11 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         self.assertIsNotNone(campaign_data)
         return campaign_data
 
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        call_command('create_missing_hvcs', verbose=False)
+
     def setUp(self):
         super().setUp()
         self.expected_response = {
@@ -340,7 +350,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
             percent = (export_value * 100) / self.CAMPAIGN_TARGET
             self._create_hvc_win(hvc_code=hvc_code, confirm=True, export_value=export_value,
                                  notify_date=datetime.datetime(2016, 5, 2), response_date=datetime.datetime(2016, 5, 6))
-            hvc = HVC.objects.get(campaign_id=hvc_code)
+            hvc = HVC.objects.get(campaign_id=hvc_code, financial_year=16)
 
             campaigns.append({
                 "campaign": hvc.campaign,
@@ -383,7 +393,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
             percent = (export_value * 100) / self.CAMPAIGN_TARGET
             self._create_hvc_win(hvc_code=hvc_code, export_value=export_value)
             count -= 1
-            hvc = HVC.objects.get(campaign_id=hvc_code)
+            hvc = HVC.objects.get(campaign_id=hvc_code, financial_year=16)
 
             campaigns.append({
                 "campaign": hvc.campaign,
@@ -835,6 +845,79 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         self.assertEqual(campaign_data["totals"]["hvc"]["value"]["confirmed"], 1000000)
         self.assertEqual(campaign_data["totals"]["hvc"]["value"]["unconfirmed"], 1000000)
         self.assertEqual(campaign_data["totals"]["hvc"]["value"]["total"], 2000000)
+
+    @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
+    def test_campaign_hvc_win_added_previous_fy_but_no_hvc_this_year_should_be_non_hvc(self):
+        self.url = reverse("mi:sector_team_campaigns", kwargs={"team_id": 1}) + "?year=2017"
+        t = Target.objects.get(campaign_id=self.TEST_CAMPAIGN_ID, financial_year_id=2017)
+
+        w1 = self._create_hvc_win(
+            hvc_code=self.TEST_CAMPAIGN_ID,
+            export_value=100000,
+            response_date=self.frozen_date_17 + relativedelta(weeks=-1),
+            win_date=self.frozen_date_17 + relativedelta(months=-10),
+            fin_year=2016,
+            agree_with_win=True,
+            confirm=True
+        )
+
+        # if there is a target for 2017
+        data = self._api_response_data
+        self.assertEqual(
+            s('sum(campaigns[].totals[].hvc.value.confirmed)', data),
+            w1.total_expected_export_value
+        )
+        t.delete()
+        data = self._api_response_data
+        self.assertEqual(
+            s('sum(campaigns[].totals[].hvc.value.confirmed)', data),
+            0
+        )
+
+@freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
+class SectorOverviewTestCase(SectorTeamBaseTestCase):
+    url = reverse('mi:sector_teams_overview') + "?year=2017"
+    TEST_CAMPAIGN_ID = 'E006'
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        call_command('create_missing_hvcs', verbose=False)
+
+    def test_overview_closed_hvc_is_treated_as_non_hvc(self):
+        hvc = HVC.objects.get(campaign_id=self.TEST_CAMPAIGN_ID, financial_year=17)
+
+        w1 = self._create_hvc_win(
+            hvc_code=self.TEST_CAMPAIGN_ID,
+            export_value=100000,
+            response_date=self.frozen_date_17 + relativedelta(weeks=-1),
+            win_date=self.frozen_date_17 + relativedelta(months=-10),
+            fin_year=2016,
+            agree_with_win=True,
+            confirm=True
+        )
+
+        # if there is a hvc for 2017
+        data = self._api_response_data
+        self.assertEqual(
+            s("[?name == 'Financial & Professional Services'].values.hvc.current.confirmed | [0]", data),
+            w1.total_expected_export_value
+        )
+        self.assertEqual(
+            s("[?name == 'Financial & Professional Services'].values.non_hvc.current.confirmed | [0]", data),
+            0
+        )
+
+        hvc.delete()
+        data = self._api_response_data
+        self.assertEqual(
+            s("[?name == 'Financial & Professional Services'].values.hvc.current.confirmed | [0]", data),
+            0
+        )
+        self.assertEqual(
+            s("[?name == 'Financial & Professional Services'].values.non_hvc.current.confirmed | [0]", data),
+            w1.total_expected_export_value
+        )
 
 
 @freeze_time(MiApiViewsBaseTestCase.frozen_date)

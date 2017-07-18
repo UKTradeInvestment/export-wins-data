@@ -1,5 +1,7 @@
 import datetime
 
+from django.test import TestCase
+
 from django.utils.timezone import get_current_timezone
 from factory.fuzzy import FuzzyChoice
 
@@ -13,8 +15,8 @@ from mi.factories import TargetFactory, SectorTeamFactory
 from mi.models import FinancialYear, Country, HVCGroup
 from mi.tests.base_test_case import MiApiViewsBaseTestCase, MiApiViewsWithWinsBaseTestCase
 from wins.constants import SECTORS
-from wins.factories import NotificationFactory
-from wins.models import Notification
+from wins.factories import NotificationFactory, HVCFactory
+from wins.models import Notification, _get_open_hvcs, normalize_year, HVC
 
 
 class HVCBaseViewTestCase(MiApiViewsWithWinsBaseTestCase):
@@ -1084,4 +1086,90 @@ class TestGlobalHVCList(MiApiViewsBaseTestCase):
         self.assertEqual(
             data,
             []
+        )
+
+class TestOpenHVCs(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        call_command('create_missing_hvcs', verbose=False)
+
+    def test_open_hvcs_can_accept_year_in_2_digit_format(self):
+        fin_year = normalize_year(16)
+        self.assertEqual(
+            16,
+            fin_year
+        )
+
+    def test_open_hvcs_can_accept_year_in_4_digit_format(self):
+        fin_year = normalize_year(2016)
+        self.assertEqual(
+            fin_year,
+            16
+        )
+
+    def test_open_hvcs_can_accept_year_in_django_model_format(self):
+        fy2016 = FinancialYear.objects.get(id=2016)
+        fin_year = normalize_year(fy2016)
+        self.assertEqual(
+            fin_year,
+            16
+        )
+
+    def test_hvc_in_2016_show_up_in_open_hvcs_list(self):
+        open_hvcs = _get_open_hvcs(2017)
+        hvcs2017 = set(HVC.objects.filter(financial_year=17).values_list('campaign_id', flat=True))
+        self.assertEqual(
+            open_hvcs,
+            hvcs2017
+        )
+
+    def test_both2016and2017hvcs_in_2016_open_hvcs_list(self):
+        open_hvcs = _get_open_hvcs(2016)
+        hvcs2017 = set(HVC.objects.filter(financial_year=17).values_list('campaign_id', flat=True))
+        hvcs2016 = set(HVC.objects.filter(financial_year=16).values_list('campaign_id', flat=True))
+        self.assertEqual(
+            open_hvcs,
+            hvcs2017.union(hvcs2016)
+        )
+
+    def test_make_new_financial_year_test_2016_fin_year_is_unaffected(self):
+        open_hvcs_for_2016 = _get_open_hvcs(2016)
+
+        for i in range(10):
+            HVCFactory.create(
+                campaign_id='E%03d' % (i + 1),
+                financial_year=normalize_year(2018)
+            )
+
+        self.assertEqual(
+            open_hvcs_for_2016,
+            _get_open_hvcs(2016)
+        )
+
+    def test_make_new_financial_year_test_2018_fin_year_is_correct(self):
+        for i in range(10):
+            HVCFactory.create(
+                campaign_id='E%03d' % (i + 1),
+                financial_year=normalize_year(2018)
+            )
+
+        open_hvcs_for_2018 = _get_open_hvcs(2018)
+        self.assertEqual(
+            open_hvcs_for_2018,
+            {'E%03d' % (x + 1) for x in range(10)}
+        )
+
+    def test_make_new_financial_year_test_2017_fin_year_is_correct(self):
+        open_hvcs_for_2017 = _get_open_hvcs(2017)
+        for i in range(10):
+            HVCFactory.create(
+                campaign_id='E%03d' % (i + 1),
+                financial_year=normalize_year(2018)
+            )
+
+        self.assertEqual(
+            open_hvcs_for_2017,
+            _get_open_hvcs(2017)
         )

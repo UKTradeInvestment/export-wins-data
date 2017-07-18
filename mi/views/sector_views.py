@@ -1,6 +1,8 @@
 from collections import defaultdict
-from itertools import groupby
+from itertools import groupby, chain
 from operator import itemgetter
+
+from django.db.models import F
 
 from mi.models import (
     HVCGroup,
@@ -35,8 +37,10 @@ class BaseSectorMIView(BaseWinMIView):
 
     def _team_wins_breakdown(self, sector_team):
         """ Breakdown of team's HVC, non-HVC and non-export Wins """
-
-        return self._breakdowns(self._get_all_wins(sector_team))
+        return self._breakdowns(
+            self._get_hvc_wins(sector_team),
+            non_hvc_wins=self._get_non_hvc_wins(sector_team)
+        )
 
     def _get_group_campaigns(self, group):
         """
@@ -67,7 +71,7 @@ class BaseSectorMIView(BaseWinMIView):
     def _get_group_wins(self, group):
         """ HVC wins of the HVC Group, for given `FinancialYear` """
 
-        return self._wins().filter(hvc__in=self._get_group_campaigns(group))
+        return self._hvc_wins().filter(hvc__in=self._get_group_campaigns(group))
 
     def _get_team_campaigns(self, team):
         """
@@ -85,7 +89,7 @@ class BaseSectorMIView(BaseWinMIView):
         """ HVC wins alone for the `SectorTeam`
         A `Win` is considered HVC for this team, when it falls under a Campaign that belongs to this `SectorTeam`
         """
-        return self._wins().filter(hvc__in=self._get_team_campaigns(team))
+        return self._hvc_wins().filter(hvc__in=self._get_team_campaigns(team))
 
     def _get_non_hvc_wins(self, team):
         """ non-HVC wins alone for the `SectorTeam`
@@ -99,8 +103,7 @@ class BaseSectorMIView(BaseWinMIView):
     def _get_all_wins(self, sector_team):
         """ Get HVC and non-HVC Wins of a Sector Team """
 
-        return (list(self._get_hvc_wins(sector_team)) +
-                list(self._get_non_hvc_wins(sector_team)))
+        return self._get_hvc_wins(sector_team) | self._get_non_hvc_wins(sector_team)
 
     def _sector_result(self, team):
         """ Basic data about sector team - name & hvc's """
@@ -262,8 +265,8 @@ class SectorTeamCampaignsView(BaseSectorMIView):
 class SectorTeamsOverviewView(BaseSectorMIView):
     """ Overview of HVCs, targets etc. for each SectorTeam """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.team_groups = defaultdict(list)
         self.team_targets = defaultdict(list)
         self.sector_to_wins = defaultdict(list)
@@ -344,12 +347,11 @@ class SectorTeamsOverviewView(BaseSectorMIView):
             return response
 
         # cache wins to avoid many queries
-        wins = list(self._wins())
-        for win in wins:
-            if win['hvc']:
-                self.hvc_to_wins[win['hvc']].append(win)
-            else:
-                self.sector_to_wins[win['sector']].append(win)
+        hvc_wins, non_hvc_wins = self._wins().hvc(fin_year=self.fin_year), self._wins().non_hvc(fin_year=self.fin_year)
+        for win in hvc_wins:
+            self.hvc_to_wins[win['hvc']].append(win)
+        for win in non_hvc_wins:
+            self.sector_to_wins[win['sector']].append(win)
 
         # cache targets
         targets = Target.objects.filter(financial_year=self.fin_year).select_related('hvc_group', 'sector_team')

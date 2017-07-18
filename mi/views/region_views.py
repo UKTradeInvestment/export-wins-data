@@ -65,7 +65,7 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
 
     def _get_region_hvc_wins(self, region):
         """ HVC wins alone for the `OverseasRegion` """
-        wins = self._wins().filter(self._region_hvc_filter(region))
+        wins = self._hvc_wins().filter(self._region_hvc_filter(region))
         return wins
 
     def _get_region_non_hvc_wins(self, region):
@@ -121,8 +121,8 @@ class OverseasRegionDetailView(BaseOverseasRegionsMIView):
         if not region:
             return self._not_found()
         results = self._region_result(region)
-        wins = self._get_region_wins(region)
-        results['wins'] = self._breakdowns(wins)
+        hvc_wins, non_hvc_wins = self._get_region_hvc_wins(region), self._get_region_non_hvc_wins(region)
+        results['wins'] = self._breakdowns(hvc_wins, non_hvc_wins=non_hvc_wins)
         self._fill_date_ranges()
         return self._success(results=results)
 
@@ -169,6 +169,7 @@ class OverseasRegionMonthsView(BaseOverseasRegionsMIView):
 
         results = self._region_result(region)
         wins = self._get_region_wins(region)
+
         results['months'] = self._month_breakdowns(wins)
         self._fill_date_ranges()
         return self._success(results)
