@@ -14,17 +14,11 @@ class Command(BaseCommand):
 
         - have had at least one email
         - last reminded a while ago
+        - reminded not more than 4 times
         - haven't completed response form
 
         """
         time_ago = datetime.date.today() - datetime.timedelta(days=7)
-        to_remind_wins = Win.objects.filter(
-            confirmation__isnull=True,
-            complete=True,
-        ).exclude(
-            notifications__type='c',
-            notifications__created__gt=time_ago,
-        )
 
         to_remind_wins = Win.objects.filter(
             confirmation__isnull=True,
@@ -32,7 +26,7 @@ class Command(BaseCommand):
             notifications__type='c',
             notifications__created__gt=time_ago,).annotate(
             customer_notifications=Count('notifications')).exclude(
-            customer_notifications__gt=4)
+            customer_notifications__gte=4)
 
 
         for win in to_remind_wins:
