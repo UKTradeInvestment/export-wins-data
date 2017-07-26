@@ -184,27 +184,29 @@ class WinTableView(BaseHVCDetailView):
 
         wins = self._get_hvc_wins(campaign)
         results = {
-                "hvc": {
-                    "code": campaign_id,
-                    "name": campaign.name,
-                },
-                "wins": [
-                {
-                    "id": win["id"],
-                    "company": {
-                        "name": win["company_name"],
-                        "cdms_id": win["cdms_reference"]
-                    },
-                    "lead_officer": {
-                        "name": win["lead_officer_name"],
-                    },
-                    "credit": credit(win),
-                    "win_date": confirmed_date(win),
-                    "export_amount": win["total_expected_export_value"],
-                    "status": status(win)
-                }
-                for win in wins
-            ]
+            "hvc": {
+                "code": campaign_id,
+                "name": campaign.name,
+            },
+            "wins": {
+                "hvc": [
+                    {
+                        "id": win["id"],
+                        "company": {
+                            "name": win["company_name"],
+                            "cdms_id": win["cdms_reference"]
+                        },
+                        "lead_officer": {
+                            "name": win["lead_officer_name"],
+                        },
+                        "credit": credit(win),
+                        "win_date": confirmed_date(win),
+                        "export_amount": win["total_expected_export_value"],
+                        "status": status(win)
+                    }
+                    for win in wins
+                ]
+            }
         }
         self._fill_date_ranges()
         return self._success(results)
