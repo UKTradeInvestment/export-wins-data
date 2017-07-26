@@ -621,7 +621,7 @@ class AlicePermissionTestCase(TestCase):
             self.customerresponses_list,
             self.CUSTOMER_RESPONSES_POST_SAMPLE,
             'win',
-            'Incorrect type. Expected pk value, received str.',
+            "'not valid!' is not a valid UUID.",
         )
 
     def test_breakdowns_post_fail_bad_data(self):
@@ -629,7 +629,7 @@ class AlicePermissionTestCase(TestCase):
             self.breakdowns_list,
             self.BREAKDOWNS_POST_SAMPLE,
             'win',
-            'Incorrect type. Expected pk value, received str.',
+            "'not valid!' is not a valid UUID.",
         )
 
     def test_advisors_post_fail_bad_data(self):
