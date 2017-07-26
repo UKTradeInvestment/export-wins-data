@@ -8,8 +8,10 @@ import time
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Count, Sum, Q, Max
 from django.utils import timezone
+from django.utils.timezone import now, get_current_timezone
 
 from django_countries.fields import Country as DjangoCountry
+from pytz import UTC
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -55,7 +57,7 @@ class BaseMIView(APIView):
         """
         Financial year start date, as datetime, is returned
         """
-        return datetime.combine(self.fin_year.start, datetime.min.time())
+        return datetime.combine(self.fin_year.start, datetime.min.time()).replace(tzinfo=UTC)
 
     def _date_range_end(self):
         """
@@ -63,9 +65,9 @@ class BaseMIView(APIView):
         Else financial year end date, as datetime, is returned
         """
         if datetime.today() < self.fin_year.end:
-            return datetime.utcnow()
+            return now()
         else:
-            return datetime.combine(self.fin_year.end, datetime.max.time())
+            return datetime.combine(self.fin_year.end, datetime.max.time()).replace(tzinfo=UTC)
 
     def _fill_date_ranges(self):
         """
@@ -73,8 +75,8 @@ class BaseMIView(APIView):
         and _date_range_end functions, as epoch
         """
         self.date_range = {
-            "start": int(self._date_range_start().timestamp()),
-            "end": int(self._date_range_end().timestamp()),
+            "start": self._date_range_start(),
+            "end": self._date_range_end(),
         }
 
     def _invalid(self, msg):
@@ -83,7 +85,7 @@ class BaseMIView(APIView):
     def _success(self, results):
         if self.fin_year is not None:
             response = {
-                "timestamp": time.time(),
+                "timestamp": now(),
                 "financial_year": {
                     "id": self.fin_year.id,
                     "description": self.fin_year.description,
