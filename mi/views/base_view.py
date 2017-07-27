@@ -13,6 +13,7 @@ from django.utils.timezone import now, get_current_timezone
 from django_countries.fields import Country as DjangoCountry
 from pytz import UTC
 from rest_framework import status
+from rest_framework.exceptions import ParseError, NotFound
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -46,12 +47,12 @@ class BaseMIView(APIView):
         """
         year = request.GET.get("year", None)
         if not year:
-            return self._invalid("missing argument: year")
+            self._invalid("missing argument: year")
         try:
+            year = int(year)
             self.fin_year = FinancialYear.objects.get(id=year)
-            return None
-        except ObjectDoesNotExist:
-            return self._not_found()
+        except (ObjectDoesNotExist, ValueError):
+            self._not_found()
 
     def _date_range_start(self):
         """
@@ -80,7 +81,7 @@ class BaseMIView(APIView):
         }
 
     def _invalid(self, msg):
-        return Response({'error': msg}, status=status.HTTP_400_BAD_REQUEST)
+        raise ParseError({'error': msg})
 
     def _success(self, results):
         if self.fin_year is not None:
@@ -102,7 +103,12 @@ class BaseMIView(APIView):
         return Response(response, status=status.HTTP_200_OK)
 
     def _not_found(self):
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        raise NotFound()
+
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+        self._handle_fin_year(request)
+        self._fill_date_ranges()
 
     def _hvc_overview(self, targets):
         """ Make an overview dict for a list of targets """

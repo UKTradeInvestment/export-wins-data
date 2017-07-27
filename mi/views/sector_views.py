@@ -117,16 +117,11 @@ class TopNonHvcSectorCountryWinsView(BaseSectorMIView):
     """ Sector Team non-HVC Win data broken down by country """
 
     def get(self, request, team_id):
-        response = self._handle_fin_year(request)
-        if response:
-            return response
-
         team = self._get_team(team_id)
         if not team:
             return self._invalid('team not found')
         non_hvc_wins_qs = self._get_non_hvc_wins(team)
         results = self._top_non_hvc(non_hvc_wins_qs)
-        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -146,10 +141,6 @@ class SectorTeamsListView(BaseSectorMIView):
         return sorted(results, key=itemgetter('name'))
 
     def get(self, request):
-        response = self._handle_fin_year(request)
-        if response:
-            return response
-
         results = [
             {
                 'id': sector_team.id,
@@ -165,16 +156,12 @@ class SectorTeamDetailView(BaseSectorMIView):
     """ Sector Team name, targets and win-breakdown """
 
     def get(self, request, team_id):
-        response = self._handle_fin_year(request)
-        if response:
-            return response
         team = self._get_team(team_id)
         if not team:
             return self._invalid('team not found')
 
         results = self._sector_result(team)
         results['wins'] = self._team_wins_breakdown(team)
-        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -210,10 +197,6 @@ class SectorTeamMonthsView(BaseSectorMIView):
         return sorted(month_to_wins, key=lambda tup: tup[0])
 
     def get(self, request, team_id):
-        response = self._handle_fin_year(request)
-        if response:
-            return response
-
         team = self._get_team(team_id)
         if not team:
             return self._invalid('team not found')
@@ -221,7 +204,6 @@ class SectorTeamMonthsView(BaseSectorMIView):
         results = self._sector_result(team)
         wins = self._get_all_wins(team)
         results['months'] = self._month_breakdowns(wins)
-        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -246,17 +228,12 @@ class SectorTeamCampaignsView(BaseSectorMIView):
         return sorted_campaigns
 
     def get(self, request, team_id):
-        response = self._handle_fin_year(request)
-        if response:
-            return response
-
         team = self._get_team(team_id)
         if not team:
             return self._invalid('team not found')
 
         results = self._sector_result(team)
         results['campaigns'] = self._campaign_breakdowns(team)
-        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -340,10 +317,6 @@ class SectorTeamsOverviewView(BaseSectorMIView):
 
     def get(self, request):
 
-        response = self._handle_fin_year(request)
-        if response:
-            return response
-
         # cache wins to avoid many queries
         hvc_wins, non_hvc_wins = self._wins().hvc(fin_year=self.fin_year), self._wins().non_hvc(fin_year=self.fin_year)
         for win in hvc_wins:
@@ -369,7 +342,6 @@ class SectorTeamsOverviewView(BaseSectorMIView):
         )
 
         result = [self._sector_data(team) for team in sector_team_qs]
-        self._fill_date_ranges()
 
         return self._success(sorted(result, key=itemgetter('name')))
 

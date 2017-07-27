@@ -92,16 +92,12 @@ class HVCDetailView(BaseHVCDetailView):
         return result
 
     def get(self, request, campaign_id):
-        response = self._handle_fin_year(request)
-        if response:
-            return response
         campaign = self._get_campaign(campaign_id)
         if not campaign:
             return self._not_found()
 
         results = self._campaign_result(campaign)
         results["wins"] = self._campaign_wins_breakdown(campaign)
-        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -140,25 +136,37 @@ class HVCWinsByMarketSectorView(BaseHVCDetailView):
         ]
 
     def get(self, request, campaign_id):
-        response = self._handle_fin_year(request)
-        if response:
-            return response
         campaign = self._get_campaign(campaign_id)
         if not campaign:
-            return self._not_found()
+            self._not_found()
 
         hvc_wins_qs = self._get_hvc_wins(campaign)
         results = self._wins_by_top_sector_market(hvc_wins_qs)
-        self._fill_date_ranges()
         return self._success(results)
 
 
 class HVCWinTableView(BaseHVCDetailView):
     """ Wins for table view for HVC"""
     def get(self, request, campaign_id):
-        response = self._handle_fin_year(request)
-        if response:
-            return response
+        def confirmed_date(win):
+            if not win["confirmation__created"]:
+                return None
+            else:
+                return win["confirmation__created"]
+
+        def status(win):
+            if not win["notifications__created"]:
+                return "email_not_sent"
+            elif not win["confirmation__created"]:
+                return "response_not_received"
+            elif win["confirmation__agree_with_win"]:
+                return "customer_confirmed"
+            else:
+                return "customer_rejected"
+
+        def credit(win):
+            return self._win_status(win) == "confirmed"
+
         campaign = self._get_campaign(campaign_id)
         if not campaign:
             return self._not_found()
@@ -171,7 +179,6 @@ class HVCWinTableView(BaseHVCDetailView):
             },
             "wins": self._win_table_wins(wins)
         }
-        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -186,9 +193,6 @@ class GlobalHVCListView(BaseMIView):
         )
 
     def get(self, request):
-        response = self._handle_fin_year(request)
-        if response:
-            return response
 
         results = [
             {
@@ -197,5 +201,4 @@ class GlobalHVCListView(BaseMIView):
             }
             for hvc in self._get_global_hvcs()
         ]
-        self._fill_date_ranges()
         return self._success(sorted(results, key=itemgetter("name")))
