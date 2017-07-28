@@ -290,7 +290,7 @@ class OverseasRegionWinTableView(BaseOverseasRegionsMIView):
             return self._not_found()
 
         results = {
-            "sector_team": {
+            "os_region": {
                 "id": region_id,
                 "name": region.name,
             },
