@@ -16,18 +16,20 @@ from mi.views.region_views import (
     OverseasRegionMonthsView,
     OverseasRegionCampaignsView,
     OverseasRegionsTopNonHvcWinsView,
+    OverseasRegionWinTableView,
 )
 from mi.views.hvc_views import (
     HVCDetailView,
     HVCWinsByMarketSectorView,
-    WinTableView,
-    GlobalHVCListView
+    HVCWinTableView,
+    GlobalHVCListView,
 )
 from mi.views.hvcgroup_views import (
     HVCGroupsListView,
     HVCGroupDetailView,
     HVCGroupMonthsView,
     HVCGroupCampaignsView,
+    HVCGroupWinTableView,
 )
 from mi.views.sector_views import (
     SectorTeamCampaignsView,
@@ -36,6 +38,7 @@ from mi.views.sector_views import (
     SectorTeamMonthsView,
     SectorTeamsOverviewView,
     TopNonHvcSectorCountryWinsView,
+    SectorTeamWinTableView,
 )
 
 from mi.views.global_views import GlobalWinsView
@@ -50,6 +53,8 @@ urlpatterns = [
         name="sector_team_months"),
     url(r"^sector_teams/(?P<team_id>\d+)/top_non_hvcs/$", TopNonHvcSectorCountryWinsView.as_view(),
         name="sector_team_top_non_hvc"),
+    url(r"^sector_teams/(?P<team_id>\d+)/win_table/$", SectorTeamWinTableView.as_view(),
+        name="sector_team_win_table"),
 
     url(r"^parent_sectors/$", ParentSectorListView.as_view(), name="parent_sectors"),
 
@@ -62,18 +67,22 @@ urlpatterns = [
         name="overseas_region_campaigns"),
     url(r"^os_regions/(?P<region_id>\d+)/top_non_hvcs/$", OverseasRegionsTopNonHvcWinsView.as_view(),
         name="overseas_region_top_nonhvc"),
+    url(r"^os_regions/(?P<region_id>\d+)/win_table/$", OverseasRegionWinTableView.as_view(),
+        name="overseas_region_win_table"),
 
     url(r"^hvc_groups/$", HVCGroupsListView.as_view(), name="hvc_groups"),
     url(r"^hvc_groups/(?P<group_id>\d+)/$", HVCGroupDetailView.as_view(), name="hvc_group_detail"),
     url(r"^hvc_groups/(?P<group_id>\d+)/months/$", HVCGroupMonthsView.as_view(), name="hvc_group_months"),
     url(r"^hvc_groups/(?P<group_id>\d+)/campaigns/$", HVCGroupCampaignsView.as_view(), name="hvc_group_campaigns"),
+    url(r"^hvc_groups/(?P<group_id>\d+)/win_table/$", HVCGroupWinTableView.as_view(), name="hvc_group_win_table"),
 
     url(r"^hvc/(?P<campaign_id>[\w\-]+)/$", HVCDetailView.as_view(), name="hvc_campaign_detail"),
     url(r"^hvc/(?P<campaign_id>[\w\-]+)/top_wins/$", HVCWinsByMarketSectorView.as_view(), name="hvc_top_wins"),
-    url(r"^hvc/(?P<campaign_id>[\w\-]+)/win_table/$", WinTableView.as_view(), name="hvc_win_table"),
+    url(r"^hvc/(?P<campaign_id>[\w\-]+)/win_table/$", HVCWinTableView.as_view(), name="hvc_win_table"),
 
     url(r"^global_hvcs/$", GlobalHVCListView.as_view(), name="global_hvcs"),
     url(r"^global_wins/$", GlobalWinsView.as_view(), name="global_wins"),
+    
     url(r"^countries/$", CountryListView.as_view(), name="countries"),
     url(r"^countries/(?P<country_id>\d+)/$", CountryDetailView.as_view()),
     url(r"^countries/wins/$", CountryWinsView.as_view()),

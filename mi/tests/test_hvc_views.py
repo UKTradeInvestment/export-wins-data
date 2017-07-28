@@ -20,6 +20,7 @@ from wins.models import Notification, _get_open_hvcs, normalize_year, HVC
 
 
 class HVCBaseViewTestCase(MiApiViewsWithWinsBaseTestCase):
+    """ HVC Detail page base test case """
     view_base_url = reverse('mi:hvc_campaign_detail', kwargs={"campaign_id": "E017"})
     export_value = 100000
     win_date_2017 = datetime.datetime(2017, 5, 25, tzinfo=get_current_timezone())
@@ -818,7 +819,9 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
                 "code": "E002",
                 "name": "HVC: E002",
             },
-            "wins": []
+            "wins": {
+                "hvc": []
+            }
         }
         self.assertResponse()
 
@@ -829,7 +832,10 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
                 "code": "E002",
                 "name": "E00217",
             },
-            "wins": []
+            "wins": {
+                "hvc": []
+            }
+
         }
         self.assertResponse()
 
@@ -845,8 +851,8 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
         )
         self.url = self.get_url_for_year(2017)
         api_response = self._api_response_data
-        self.assertTrue(len(api_response["wins"]) == 1)
-        win_item = api_response["wins"][0]
+        self.assertTrue(len(api_response["wins"]["hvc"]) == 1)
+        win_item = api_response["wins"]["hvc"][0]
         self.assertEqual(api_response["hvc"]["code"], "E002")
         self.assertEqual(api_response["hvc"]["name"], "E00217")
         self.assertIsNotNone(win_item["win_date"])
@@ -868,8 +874,8 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
         )
         self.url = self.get_url_for_year(2017)
         api_response = self._api_response_data
-        self.assertTrue(len(api_response["wins"]) == 1)
-        win_item = api_response["wins"][0]
+        self.assertTrue(len(api_response["wins"]["hvc"]) == 1)
+        win_item = api_response["wins"]["hvc"][0]
         self.assertEqual(api_response["hvc"]["code"], "E002")
         self.assertEqual(api_response["hvc"]["name"], "E00217")
         self.assertIsNone(win_item["win_date"])
@@ -905,7 +911,7 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
 
         self.url = self.get_url_for_year(2017)
         api_response = self._api_response_data
-        self.assertTrue(len(api_response["wins"]) == 1)
+        self.assertTrue(len(api_response["wins"]["hvc"]) == 1)
 
     def test_win_table_2017_one_unconfirmed_hvc_win_with_multiple_mixed_notifications(self):
         win = self._create_hvc_win(
@@ -933,7 +939,7 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
 
         self.url = self.get_url_for_year(2017)
         api_response = self._api_response_data
-        self.assertTrue(len(api_response["wins"]) == 1)
+        self.assertTrue(len(api_response["wins"]["hvc"]) == 1)
 
     def test_win_table_2017_one_confirmed_rejected_hvc_win(self):
         self._create_hvc_win(
@@ -948,8 +954,8 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
         )
         self.url = self.get_url_for_year(2017)
         api_response = self._api_response_data
-        self.assertTrue(len(api_response["wins"]) == 1)
-        win_item = api_response["wins"][0]
+        self.assertTrue(len(api_response["wins"]["hvc"]) == 1)
+        win_item = api_response["wins"]["hvc"][0]
         self.assertEqual(api_response["hvc"]["code"], "E002")
         self.assertEqual(api_response["hvc"]["name"], "E00217")
         self.assertIsNotNone(win_item["win_date"])
@@ -973,8 +979,8 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
         )
         self.url = self.get_url_for_year(2017)
         api_response = self._api_response_data
-        self.assertTrue(len(api_response["wins"]) == 1)
-        win_item = api_response["wins"][0]
+        self.assertTrue(len(api_response["wins"]["hvc"]) == 1)
+        win_item = api_response["wins"]["hvc"][0]
         self.assertEqual(api_response["hvc"]["code"], "E002")
         self.assertEqual(api_response["hvc"]["name"], "E00217")
         self.assertIsNotNone(win_item["win_date"])
@@ -998,7 +1004,9 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
         )
         self.url = self.get_url_for_year(2017)
         self.expected_response = {
-            'wins': [],
+            "wins": {
+                "hvc": []
+            },
             'hvc': {
                 'code': 'E002',
                 'name': 'E00217'
@@ -1016,7 +1024,9 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
         )
         self.url = self.get_url_for_year(2017)
         self.expected_response = {
-            'wins': [],
+            "wins": {
+                "hvc": []
+            },
             'hvc':
                 {
                     'code': 'E002',
@@ -1035,7 +1045,9 @@ class HVCWinTableTestCase(HVCBaseViewTestCase):
         )
         self.url = self.get_url_for_year(2017)
         self.expected_response = {
-            'wins': [],
+            "wins": {
+                "hvc": []
+            },
             'hvc':
                 {
                     'code': 'E002',
