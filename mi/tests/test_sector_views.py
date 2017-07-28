@@ -1,6 +1,7 @@
 import datetime
 
 from django.core.management import call_command
+from django.utils.timezone import get_current_timezone
 from freezegun import freeze_time
 
 import json
@@ -34,6 +35,9 @@ class SectorTeamBaseTestCase(MiApiViewsWithWinsBaseTestCase):
         team_data = next((team_item for team_item in teams_list if team_item["id"] == team_id), None)
         self.assertIsNotNone(team_data)
         return team_data
+
+    def get_url_for_year(self, year, base_url=None):
+        return '{base}?year={year}'.format(base=base_url, year=year)
 
 
 @freeze_time(MiApiViewsBaseTestCase.frozen_date)
@@ -1074,8 +1078,11 @@ class SectorTeamTopNonHvcTestCase(SectorTeamBaseTestCase):
 
 @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
 class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
+    win_date_2017 = datetime.datetime(2017, 5, 25, tzinfo=get_current_timezone())
+    win_date_2016 = datetime.datetime(2016, 5, 25, tzinfo=get_current_timezone())
     st_win_table_url = reverse('mi:sector_team_win_table', kwargs={"team_id": 1})
     st_win_table_url_invalid = reverse('mi:sector_team_win_table', kwargs={"team_id": 100})
+    export_value = 100000
 
     @classmethod
     def setUpClass(cls):
@@ -1086,7 +1093,7 @@ class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
         super().setUp()
         self._win_factory_function = create_win_factory(
             self.user, sector_choices=self.TEAM_1_SECTORS)
-        self.view_base_url = self.cen_win_table_url
+        self.view_base_url = self.st_win_table_url
 
     def test_2017_win_table_in_2016_404(self):
         self.view_base_url = self.st_win_table_url_invalid
@@ -1127,7 +1134,7 @@ class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
 
     def test_win_table_2017_one_confirmed_hvc_win(self):
         self._create_hvc_win(
-            hvc_code='E002',
+            hvc_code='E006',
             win_date=self.win_date_2017,
             response_date=self.win_date_2017,
             confirm=True,
@@ -1139,8 +1146,8 @@ class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
         api_response = self._api_response_data
         self.assertTrue(len(api_response["wins"]["hvc"]) == 1)
         win_item = api_response["wins"]["hvc"][0]
-        self.assertEqual(api_response["hvc"]["code"], "E002")
-        self.assertEqual(api_response["hvc"]["name"], "E00217")
+        self.assertEqual(api_response["hvc"]["code"], "E006")
+        self.assertEqual(api_response["hvc"]["name"], "E00617")
         self.assertIsNotNone(win_item["win_date"])
         self.assertEqual(win_item["export_amount"], self.export_value)
         self.assertEqual(win_item["status"], "customer_confirmed")
@@ -1151,7 +1158,7 @@ class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
 
     def test_win_table_2017_one_unconfirmed_hvc_win(self):
         self._create_hvc_win(
-            hvc_code='E002',
+            hvc_code='E006',
             win_date=self.win_date_2017,
             confirm=False,
             fin_year=2016,
@@ -1162,8 +1169,8 @@ class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
         api_response = self._api_response_data
         self.assertTrue(len(api_response["wins"]["hvc"]) == 1)
         win_item = api_response["wins"]["hvc"][0]
-        self.assertEqual(api_response["hvc"]["code"], "E002")
-        self.assertEqual(api_response["hvc"]["name"], "E00217")
+        self.assertEqual(api_response["hvc"]["code"], "E006")
+        self.assertEqual(api_response["hvc"]["name"], "E00617")
         self.assertIsNone(win_item["win_date"])
         self.assertEqual(win_item["export_amount"], self.export_value)
         self.assertEqual(win_item["status"], "email_not_sent")
@@ -1174,7 +1181,7 @@ class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
 
     def test_win_table_2017_one_unconfirmed_hvc_win_with_multiple_customer_notifications(self):
         win = self._create_hvc_win(
-            hvc_code='E002',
+            hvc_code='E006',
             win_date=self.win_date_2017,
             confirm=False,
             fin_year=2016,
@@ -1201,7 +1208,7 @@ class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
 
     def test_win_table_2017_one_unconfirmed_hvc_win_with_multiple_mixed_notifications(self):
         win = self._create_hvc_win(
-            hvc_code='E002',
+            hvc_code='E006',
             win_date=self.win_date_2017,
             confirm=False,
             fin_year=2016,
@@ -1229,7 +1236,7 @@ class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
 
     def test_win_table_2017_one_confirmed_rejected_hvc_win(self):
         self._create_hvc_win(
-            hvc_code='E002',
+            hvc_code='E006',
             win_date=self.win_date_2017,
             response_date=self.win_date_2017,
             confirm=True,
@@ -1242,8 +1249,8 @@ class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
         api_response = self._api_response_data
         self.assertTrue(len(api_response["wins"]["hvc"]) == 1)
         win_item = api_response["wins"]["hvc"][0]
-        self.assertEqual(api_response["hvc"]["code"], "E002")
-        self.assertEqual(api_response["hvc"]["name"], "E00217")
+        self.assertEqual(api_response["hvc"]["code"], "E006")
+        self.assertEqual(api_response["hvc"]["name"], "E00617")
         self.assertIsNotNone(win_item["win_date"])
         self.assertEqual(win_item["export_amount"], self.export_value)
         self.assertEqual(win_item["status"], "customer_rejected")
@@ -1254,7 +1261,7 @@ class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
 
     def test_win_table_2017_one_hvc_win_from_2016_confirmed_in_2017(self):
         self._create_hvc_win(
-            hvc_code='E002',
+            hvc_code='E006',
             win_date=self.win_date_2016,
             response_date=self.win_date_2017,
             confirm=True,
@@ -1267,8 +1274,8 @@ class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
         api_response = self._api_response_data
         self.assertTrue(len(api_response["wins"]["hvc"]) == 1)
         win_item = api_response["wins"]["hvc"][0]
-        self.assertEqual(api_response["hvc"]["code"], "E002")
-        self.assertEqual(api_response["hvc"]["name"], "E00217")
+        self.assertEqual(api_response["hvc"]["code"], "E006")
+        self.assertEqual(api_response["hvc"]["name"], "E00617")
         self.assertIsNotNone(win_item["win_date"])
         self.assertEqual(win_item["export_amount"], self.export_value)
         self.assertEqual(win_item["status"], "customer_rejected")
@@ -1279,7 +1286,7 @@ class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
 
     def test_win_table_2017_one_hvc_win_from_2016_confirmed_in_2016_no_result(self):
         self._create_hvc_win(
-            hvc_code='E002',
+            hvc_code='E006',
             win_date=self.win_date_2016,
             response_date=self.win_date_2016,
             confirm=True,
@@ -1294,13 +1301,13 @@ class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
                 "hvc": []
             },
             'hvc': {
-                'code': 'E002',
-                'name': 'E00217'
+                'code': 'E006',
+                'name': 'E00617'
             }
         }
         self.assertResponse()
 
-    def test_win_table_2017_confirmed_non_hvc_empty_result(self):
+    def test_win_table_2017_confirmed_non_hvc(self):
         self._create_non_hvc_win(
             win_date=self.win_date_2017,
             confirm=True,
@@ -1309,19 +1316,18 @@ class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
             country='HU'
         )
         self.url = self.get_url_for_year(2017)
-        self.expected_response = {
-            "wins": {
-                "hvc": []
-            },
-            'hvc':
-                {
-                    'code': 'E002',
-                    'name': 'E00217'
-                }
-        }
-        self.assertResponse()
+        api_response = self._api_response_data
+        self.assertTrue(len(api_response["wins"]["non_hvc"]) == 1)
+        win_item = api_response["wins"]["non_hvc"][0]
+        self.assertIsNotNone(win_item["win_date"])
+        self.assertEqual(win_item["export_amount"], self.export_value)
+        self.assertEqual(win_item["status"], "customer_confirmed")
+        self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
+        self.assertEqual(win_item["company"]["name"], "company name")
+        self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
+        self.assertFalse(win_item["credit"])
 
-    def test_win_table_2017_unconfirmed_non_hvc_empty_result(self):
+    def test_win_table_2017_unconfirmed_non_hvc(self):
         self._create_non_hvc_win(
             win_date=self.win_date_2017,
             confirm=False,
@@ -1330,14 +1336,13 @@ class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
             country='HU'
         )
         self.url = self.get_url_for_year(2017)
-        self.expected_response = {
-            "wins": {
-                "hvc": []
-            },
-            'hvc':
-                {
-                    'code': 'E002',
-                    'name': 'E00217'
-                }
-        }
-        self.assertResponse()
+        api_response = self._api_response_data
+        self.assertTrue(len(api_response["wins"]["non_hvc"]) == 1)
+        win_item = api_response["wins"]["non_hvc"][0]
+        self.assertIsNotNone(win_item["win_date"])
+        self.assertEqual(win_item["export_amount"], self.export_value)
+        self.assertEqual(win_item["status"], "response_not_received")
+        self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
+        self.assertEqual(win_item["company"]["name"], "company name")
+        self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
+        self.assertFalse(win_item["credit"])
