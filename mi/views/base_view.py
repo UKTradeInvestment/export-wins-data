@@ -13,7 +13,8 @@ from django.utils.timezone import now, get_current_timezone
 from django_countries.fields import Country as DjangoCountry
 from pytz import UTC
 from rest_framework import status
-from rest_framework.exceptions import ParseError, NotFound
+from rest_framework.exceptions import ParseError, NotFound, ValidationError
+from rest_framework.fields import DateTimeField, DateField
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -39,6 +40,9 @@ class BaseMIView(APIView):
     fin_year = None
     date_range = None
 
+    date_start = None
+    date_end = None
+
     def _handle_fin_year(self, request):
         """
         Checks and makes sure if year query param is supplied within request object
@@ -58,6 +62,9 @@ class BaseMIView(APIView):
         """
         Financial year start date, as datetime, is returned
         """
+        if self.date_start:
+            return self.date_start
+
         return datetime.combine(self.fin_year.start, datetime.min.time()).replace(tzinfo=UTC)
 
     def _date_range_end(self):
@@ -65,7 +72,10 @@ class BaseMIView(APIView):
         If fin_year is not current one, current datetime is returned
         Else financial year end date, as datetime, is returned
         """
-        if datetime.today() < self.fin_year.end:
+        if self.date_end:
+            return self.date_end
+
+        if datetime.today().replace(tzinfo=UTC) < self.fin_year.end:
             return now()
         else:
             return datetime.combine(self.fin_year.end, datetime.max.time()).replace(tzinfo=UTC)
@@ -108,6 +118,7 @@ class BaseMIView(APIView):
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
         self._handle_fin_year(request)
+        self._handle_query_param_dates(request)
         self._fill_date_ranges()
 
     def _hvc_overview(self, targets):
@@ -123,6 +134,38 @@ class BaseMIView(APIView):
             return win['confirmation__created'].date()
         else:
             return win['date']
+
+    def _handle_query_param_dates(self, request):
+        def validate_inside_fin_year(name, value):
+            end = self.fin_year.end.replace(tzinfo=UTC)
+            start = self.fin_year.start.replace(tzinfo=UTC)
+            if not end >= value >= start:
+                raise ValidationError(
+                    "{name}: {value} must be in Financial Year: {fin_year}. Between {start} and {end}".format(
+                        value=value,
+                        fin_year=self.fin_year,
+                        start=start,
+                        end=end,
+                        name=name
+                    )
+                )
+
+        dtf = DateTimeField()
+        df = DateField()
+        date_params = [
+            ('date_start', datetime.min.time()),
+            ('date_end', datetime.max.time())
+        ]
+        for query_param, default_time in date_params:
+            raw_value = request.GET.get(query_param)
+            if raw_value:
+                try:
+                    parsed_value = dtf.to_internal_value(raw_value)
+                except ValidationError:
+                    parsed_value = datetime.combine(df.to_internal_value(raw_value), default_time).replace(tzinfo=UTC)
+
+                validate_inside_fin_year(query_param, parsed_value)
+                setattr(self, query_param, parsed_value)
 
 
 class BaseWinMIView(BaseMIView):
@@ -327,7 +370,7 @@ class BaseWinMIView(BaseMIView):
         If in case of previous ones, just return 365
         """
 
-        days_into_year = (datetime.today() - self.fin_year.start).days
+        days_into_year = (datetime.today().replace(tzinfo=UTC) - self.fin_year.start).days
 
         if days_into_year > 365:
             return 365

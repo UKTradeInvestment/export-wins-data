@@ -4,6 +4,7 @@ from django.db import models
 from django.utils.functional import cached_property
 
 from django_countries.fields import CountryField
+from pytz import UTC
 
 from wins.models import HVC
 
@@ -238,7 +239,7 @@ class FinancialYear(models.Model):
         Pass e.g. 2016 for the 2016/17 financial year
 
         """
-        return datetime.datetime(fin_year, 4, 1)
+        return datetime.datetime(fin_year, 4, 1).replace(tzinfo=UTC)
 
     @classmethod
     def get_financial_end_date(cls, fin_year):
@@ -247,7 +248,7 @@ class FinancialYear(models.Model):
         Pass e.g. 2016 for the 2016/17 financial year
 
         """
-        return datetime.datetime(fin_year + 1, 3, 31, 23, 59, 59)
+        return datetime.datetime.combine(datetime.date(fin_year + 1, 3, 31), datetime.datetime.max.time()).replace(tzinfo=UTC)
 
     @property
     def start(self):
