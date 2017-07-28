@@ -147,8 +147,8 @@ class BaseWinMIView(BaseMIView):
         """
         # get Wins where the customer responded in the given FY
         win_filter = Q(confirmation__created__range=(
-            self.fin_year.start,
-            self.fin_year.end,
+            self._date_range_start(),
+            self._date_range_end()
         ))
 
         # if we're in the current FY, also include unconfirmed Wins

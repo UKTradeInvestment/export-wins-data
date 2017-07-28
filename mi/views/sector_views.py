@@ -346,12 +346,8 @@ class SectorTeamsOverviewView(BaseSectorMIView):
         return self._success(sorted(result, key=itemgetter('name')))
 
 class SectorTeamWinTableView(BaseSectorMIView):
-    """ """
+
     def get(self, request, team_id):
-        """ """
-        response = self._handle_fin_year(request)
-        if response:
-            return response
         team = self._get_team(team_id)
         if not team:
             return self._not_found()
@@ -363,5 +359,4 @@ class SectorTeamWinTableView(BaseSectorMIView):
             },
             "wins": self._win_table_wins(self._get_hvc_wins(team), self._get_non_hvc_wins(team))
         }
-        self._fill_date_ranges()
         return self._success(results)

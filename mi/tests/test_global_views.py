@@ -9,7 +9,7 @@ from fixturedb.factories.win import create_win_factory
 from mi.tests.base_test_case import MiApiViewsWithWinsBaseTestCase, MiApiViewsBaseTestCase
 
 
-@freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
+@freeze_time(MiApiViewsBaseTestCase.frozen_date_17 + datetime.timedelta(weeks=5))
 class GlobalWinsViewTestCase(MiApiViewsWithWinsBaseTestCase):
     """ Tests to test global win aggregate view `GlobalWinsView` """
 

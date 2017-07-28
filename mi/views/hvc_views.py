@@ -148,25 +148,6 @@ class HVCWinsByMarketSectorView(BaseHVCDetailView):
 class HVCWinTableView(BaseHVCDetailView):
     """ Wins for table view for HVC"""
     def get(self, request, campaign_id):
-        def confirmed_date(win):
-            if not win["confirmation__created"]:
-                return None
-            else:
-                return win["confirmation__created"]
-
-        def status(win):
-            if not win["notifications__created"]:
-                return "email_not_sent"
-            elif not win["confirmation__created"]:
-                return "response_not_received"
-            elif win["confirmation__agree_with_win"]:
-                return "customer_confirmed"
-            else:
-                return "customer_rejected"
-
-        def credit(win):
-            return self._win_status(win) == "confirmed"
-
         campaign = self._get_campaign(campaign_id)
         if not campaign:
             return self._not_found()

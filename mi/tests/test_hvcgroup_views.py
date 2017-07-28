@@ -737,6 +737,7 @@ class HVCGroupBaseViewTestCase(MiApiViewsWithWinsBaseTestCase):
     win_date_2017 = datetime.datetime(2017, 5, 25, tzinfo=get_current_timezone())
     win_date_2016 = datetime.datetime(2016, 5, 25, tzinfo=get_current_timezone())
     fy_2016_last_date = datetime.datetime(2017, 3, 31, tzinfo=get_current_timezone())
+    frozen_date_17 = datetime.datetime(2017, 5, 31, tzinfo=get_current_timezone())
 
     def get_url_for_year(self, year, base_url=None):
         if not base_url:
@@ -744,7 +745,7 @@ class HVCGroupBaseViewTestCase(MiApiViewsWithWinsBaseTestCase):
         return '{base}?year={year}'.format(base=base_url, year=year)
 
 
-@freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
+@freeze_time(HVCGroupBaseViewTestCase.frozen_date_17)
 class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase):
     TEST_CAMPAIGN_ID = "E001"
     win_table_url = reverse('mi:hvc_group_win_table', kwargs={"group_id": 4})

@@ -21,6 +21,7 @@ from wins.models import HVC, Notification
 
 
 class SectorTeamBaseTestCase(MiApiViewsWithWinsBaseTestCase):
+    frozen_date_17 = datetime.datetime(2017, 5, 28, tzinfo=get_current_timezone())
 
     def setUp(self):
         super().setUp()
@@ -853,7 +854,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
         self.assertEqual(campaign_data["totals"]["hvc"]["value"]["unconfirmed"], 1000000)
         self.assertEqual(campaign_data["totals"]["hvc"]["value"]["total"], 2000000)
 
-    @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
+    @freeze_time(SectorTeamBaseTestCase.frozen_date_17)
     def test_campaign_hvc_win_added_previous_fy_but_no_hvc_this_year_should_be_non_hvc(self):
         self.url = reverse("mi:sector_team_campaigns", kwargs={"team_id": 1}) + "?year=2017"
         t = Target.objects.get(campaign_id=self.TEST_CAMPAIGN_ID, financial_year_id=2017)
@@ -862,7 +863,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
             hvc_code=self.TEST_CAMPAIGN_ID,
             export_value=100000,
             response_date=self.frozen_date_17 + relativedelta(weeks=-1),
-            win_date=self.frozen_date_17 + relativedelta(months=-10),
+            win_date=self.frozen_date_17 + relativedelta(months=-9),
             fin_year=2016,
             agree_with_win=True,
             confirm=True
@@ -881,7 +882,7 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
             0
         )
 
-@freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
+@freeze_time(SectorTeamBaseTestCase.frozen_date_17)
 class SectorOverviewTestCase(SectorTeamBaseTestCase):
     url = reverse('mi:sector_teams_overview') + "?year=2017"
     TEST_CAMPAIGN_ID = 'E006'
@@ -898,7 +899,7 @@ class SectorOverviewTestCase(SectorTeamBaseTestCase):
             hvc_code=self.TEST_CAMPAIGN_ID,
             export_value=100000,
             response_date=self.frozen_date_17 + relativedelta(weeks=-1),
-            win_date=self.frozen_date_17 + relativedelta(months=-10),
+            win_date=self.frozen_date_17 + relativedelta(months=-9),
             fin_year=2016,
             agree_with_win=True,
             confirm=True
@@ -1078,7 +1079,7 @@ class SectorTeamTopNonHvcTestCase(SectorTeamBaseTestCase):
         self.assertTrue(response_decoded[2]["averageWinValue"] >= response_decoded[3]["averageWinValue"])
         self.assertTrue(response_decoded[3]["averageWinValue"] >= response_decoded[4]["averageWinValue"])
 
-@freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
+@freeze_time(SectorTeamBaseTestCase.frozen_date_17)
 class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
     win_date_2017 = datetime.datetime(2017, 5, 25, tzinfo=get_current_timezone())
     win_date_2016 = datetime.datetime(2016, 5, 25, tzinfo=get_current_timezone())
