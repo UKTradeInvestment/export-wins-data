@@ -13,8 +13,7 @@ from django.utils.timezone import now, get_current_timezone
 from django_countries.fields import Country as DjangoCountry
 from pytz import UTC
 from rest_framework import status
-from rest_framework.exceptions import ParseError, NotFound, ValidationError
-from rest_framework.fields import DateTimeField, DateField
+from rest_framework.exceptions import ParseError, NotFound
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -23,6 +22,7 @@ from mi.models import (
     FinancialYear,
     Sector
 )
+from mi.serializers import DateRangeSerializer
 from mi.utils import (
     average,
     percentage,
@@ -136,37 +136,12 @@ class BaseMIView(APIView):
             return win['date']
 
     def _handle_query_param_dates(self, request):
-        def validate_inside_fin_year(name, value):
-            end = self.fin_year.end.replace(tzinfo=UTC)
-            start = self.fin_year.start.replace(tzinfo=UTC)
-            if not end >= value >= start:
-                raise ValidationError(
-                    "{name}: {value} must be in Financial Year: {fin_year}. Between {start} and {end}".format(
-                        value=value,
-                        fin_year=self.fin_year,
-                        start=start,
-                        end=end,
-                        name=name
-                    )
-                )
-
-        dtf = DateTimeField()
-        df = DateField()
-        date_params = [
-            ('date_start', datetime.min.time()),
-            ('date_end', datetime.max.time())
-        ]
-        for query_param, default_time in date_params:
-            raw_value = request.GET.get(query_param)
-            if raw_value:
-                try:
-                    parsed_value = dtf.to_internal_value(raw_value)
-                except ValidationError:
-                    parsed_value = datetime.combine(df.to_internal_value(raw_value), default_time).replace(tzinfo=UTC)
-
-                validate_inside_fin_year(query_param, parsed_value)
-                setattr(self, query_param, parsed_value)
-
+        serializer = DateRangeSerializer(financial_year=self.fin_year, data=request.GET)
+        if serializer.is_valid():
+            for param, value in serializer.validated_data.items():
+                setattr(self, param, value)
+        else:
+            self._invalid(serializer.errors)
 
 class BaseWinMIView(BaseMIView):
     """ Base view with Win-related MI helpers """
