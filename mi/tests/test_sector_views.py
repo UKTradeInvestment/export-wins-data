@@ -1111,7 +1111,7 @@ class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
         self.url = self.get_url_for_year(2016)
         self.expected_response = {
             "sector_team": {
-                "code": "1",
+                "id": "1",
                 "name": "Financial & Professional Services",
             },
             "wins": {
@@ -1124,7 +1124,7 @@ class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
         self.url = self.get_url_for_year(2017)
         self.expected_response = {
             "sector_team": {
-                "code": "1",
+                "id": "1",
                 "name": "Financial & Professional Services",
             },
             "wins": {
@@ -1303,7 +1303,7 @@ class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
                 "hvc": []
             },
             "sector_team": {
-                "code": "1",
+                "id": "1",
                 "name": "Financial & Professional Services",
             }
         }

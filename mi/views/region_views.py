@@ -291,7 +291,7 @@ class OverseasRegionWinTableView(BaseOverseasRegionsMIView):
 
         results = {
             "os_region": {
-                "code": region_id,
+                "id": region_id,
                 "name": region.name,
             },
             "wins": self._win_table_wins(self._get_region_hvc_wins(region), self._get_region_non_hvc_wins(region))

@@ -17,7 +17,6 @@ from wins.factories import (
     WinFactory,
 )
 from wins.models import HVC
-from wins.factories import NotificationFactory
 from wins.models import Notification
 
 GROUP_4_HVCS = [code + "16" for code in ["E001", "E017", "E024", "E049", "E063", "E107", "E184"]]
@@ -776,7 +775,7 @@ class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase):
         self.url = self.get_url_for_year(2016)
         self.expected_response = {
             "hvc_group": {
-                "code": "4",
+                "id": "4",
                 "name": "Automotive",
             },
             "wins": {
@@ -789,7 +788,7 @@ class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase):
         self.url = self.get_url_for_year(2017)
         self.expected_response = {
             "hvc_group": {
-                "code": "4",
+                "id": "4",
                 "name": "Automotive",
             },
             "wins": {
@@ -968,7 +967,7 @@ class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase):
                 "hvc": []
             },
             "hvc_group": {
-                    "code": "4",
+                    "id": "4",
                     "name": "Automotive"
             }
         }
@@ -988,7 +987,7 @@ class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase):
                 "hvc": []
             },
             "hvc_group": {
-                    "code": "4",
+                    "id": "4",
                     "name": "Automotive"
             }
         }
@@ -1008,7 +1007,7 @@ class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase):
                 "hvc": []
             },
             "hvc_group": {
-                    "code": "4",
+                    "id": "4",
                     "name": "Automotive"
             }
         }
