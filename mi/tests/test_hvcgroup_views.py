@@ -1,20 +1,24 @@
 import datetime
 import json
 
+from django.core.management import call_command
 from django.core.urlresolvers import reverse
 from django.urls import NoReverseMatch
+from django.utils.timezone import now, get_current_timezone
 
 from factory.fuzzy import FuzzyChoice
 from freezegun import freeze_time
 
 from fixturedb.factories.win import create_win_factory
-from mi.tests.base_test_case import MiApiViewsBaseTestCase
+from mi.tests.base_test_case import MiApiViewsBaseTestCase, MiApiViewsWithWinsBaseTestCase
 from wins.factories import (
     CustomerResponseFactory,
     NotificationFactory,
     WinFactory,
 )
 from wins.models import HVC
+from wins.factories import NotificationFactory
+from wins.models import Notification
 
 GROUP_4_HVCS = [code + "16" for code in ["E001", "E017", "E024", "E049", "E063", "E107", "E184"]]
 TEAM_SECTORS = [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35]
@@ -727,3 +731,285 @@ class HVCGroupMonthsView(MiApiViewsBaseTestCase):
     def test_no_group_id_is_not_found(self):
         with self.assertRaises(NoReverseMatch):
             reverse("mi:hvc_group_months") + "?year=2016"
+
+
+class HVCGroupBaseViewTestCase(MiApiViewsWithWinsBaseTestCase):
+    export_value = 100000
+    win_date_2017 = datetime.datetime(2017, 5, 25, tzinfo=get_current_timezone())
+    win_date_2016 = datetime.datetime(2016, 5, 25, tzinfo=get_current_timezone())
+    fy_2016_last_date = datetime.datetime(2017, 3, 31, tzinfo=get_current_timezone())
+
+    def get_url_for_year(self, year, base_url=None):
+        if not base_url:
+            base_url = self.view_base_url
+        return '{base}?year={year}'.format(base=base_url, year=year)
+
+
+@freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
+class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase):
+    TEST_CAMPAIGN_ID = "E001"
+    win_table_url = reverse('mi:hvc_group_win_table', kwargs={"group_id": 4})
+    win_table_url_invalid = reverse('mi:hvc_group_win_table', kwargs={"group_id": 100})
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        call_command('create_missing_hvcs', verbose=False)
+
+    def setUp(self):
+        super().setUp()
+        self._win_factory_function = create_win_factory(
+            self.user, sector_choices=self.TEAM_1_SECTORS)
+        self.view_base_url = self.win_table_url
+
+    def test_2017_win_table_in_2016_404(self):
+        self.view_base_url = self.win_table_url_invalid
+        self.url = self.get_url_for_year(2016)
+        self._get_api_response(self.url, status_code=404)
+
+    def test_2016_win_table_in_2017_404(self):
+        self.view_base_url = self.win_table_url_invalid
+        self.url = self.get_url_for_year(2017)
+        self._get_api_response(self.url, status_code=404)
+
+    def test_win_table_json_2016_no_wins(self):
+        self.url = self.get_url_for_year(2016)
+        self.expected_response = {
+            "hvc_group": {
+                "code": "4",
+                "name": "Automotive",
+            },
+            "wins": {
+                "hvc": []
+            }
+        }
+        self.assertResponse()
+
+    def test_win_table_json_2017_no_wins(self):
+        self.url = self.get_url_for_year(2017)
+        self.expected_response = {
+            "hvc_group": {
+                "code": "4",
+                "name": "Automotive",
+            },
+            "wins": {
+                "hvc": []
+            }
+
+        }
+        self.assertResponse()
+
+    def test_win_table_2017_one_confirmed_hvc_win(self):
+        self._create_hvc_win(
+            hvc_code='E001',
+            win_date=self.win_date_2017,
+            response_date=self.win_date_2017,
+            confirm=True,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertTrue(len(api_response["wins"]["hvc"]) == 1)
+        win_item = api_response["wins"]["hvc"][0]
+        self.assertEqual(win_item["hvc"]["code"], "E001")
+        self.assertEqual(win_item["hvc"]["name"], "HVC: E001")
+        self.assertIsNotNone(win_item["win_date"])
+        self.assertEqual(win_item["export_amount"], self.export_value)
+        self.assertEqual(win_item["status"], "customer_confirmed")
+        self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
+        self.assertEqual(win_item["company"]["name"], "company name")
+        self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
+        self.assertTrue(win_item["credit"])
+
+    def test_win_table_2017_one_unconfirmed_hvc_win(self):
+        self._create_hvc_win(
+            hvc_code='E001',
+            win_date=self.win_date_2017,
+            confirm=False,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertTrue(len(api_response["wins"]["hvc"]) == 1)
+        win_item = api_response["wins"]["hvc"][0]
+        self.assertEqual(win_item["hvc"]["code"], "E001")
+        self.assertEqual(win_item["hvc"]["name"], "HVC: E001")
+        self.assertIsNone(win_item["win_date"])
+        self.assertEqual(win_item["export_amount"], self.export_value)
+        self.assertEqual(win_item["status"], "email_not_sent")
+        self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
+        self.assertEqual(win_item["company"]["name"], "company name")
+        self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
+        self.assertFalse(win_item["credit"])
+
+    def test_win_table_2017_one_unconfirmed_hvc_win_with_multiple_customer_notifications(self):
+        win = self._create_hvc_win(
+            hvc_code='E001',
+            win_date=self.win_date_2017,
+            confirm=False,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+
+        # add couple of customer notifications
+        notify_date = self.win_date_2017 + datetime.timedelta(days=1)
+        notification = NotificationFactory(win=win)
+        notification.type = Notification.TYPE_CUSTOMER
+        notification.created = notify_date
+        notification.save()
+
+        notify_date = self.win_date_2017 + datetime.timedelta(days=2)
+        notification = NotificationFactory(win=win)
+        notification.type = Notification.TYPE_CUSTOMER
+        notification.created = notify_date
+        notification.save()
+
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertTrue(len(api_response["wins"]["hvc"]) == 1)
+
+    def test_win_table_2017_one_unconfirmed_hvc_win_with_multiple_mixed_notifications(self):
+        win = self._create_hvc_win(
+            hvc_code='E001',
+            win_date=self.win_date_2017,
+            confirm=False,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+
+        # add a customer notification
+        notify_date = self.win_date_2017 + datetime.timedelta(days=1)
+        notification = NotificationFactory(win=win)
+        notification.type = Notification.TYPE_CUSTOMER
+        notification.created = notify_date
+        notification.save()
+
+        # add an officer notification
+        notify_date = self.win_date_2017 + datetime.timedelta(days=2)
+        notification = NotificationFactory(win=win)
+        notification.type = Notification.TYPE_OFFICER
+        notification.created = notify_date
+        notification.save()
+
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertTrue(len(api_response["wins"]["hvc"]) == 1)
+
+    def test_win_table_2017_one_confirmed_rejected_hvc_win(self):
+        self._create_hvc_win(
+            hvc_code='E001',
+            win_date=self.win_date_2017,
+            response_date=self.win_date_2017,
+            confirm=True,
+            agree_with_win=False,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertTrue(len(api_response["wins"]["hvc"]) == 1)
+        win_item = api_response["wins"]["hvc"][0]
+        self.assertEqual(win_item["hvc"]["code"], "E001")
+        self.assertEqual(win_item["hvc"]["name"], "HVC: E001")
+        self.assertIsNotNone(win_item["win_date"])
+        self.assertEqual(win_item["export_amount"], self.export_value)
+        self.assertEqual(win_item["status"], "customer_rejected")
+        self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
+        self.assertEqual(win_item["company"]["name"], "company name")
+        self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
+        self.assertFalse(win_item["credit"])
+
+    def test_win_table_2017_one_hvc_win_from_2016_confirmed_in_2017(self):
+        self._create_hvc_win(
+            hvc_code='E001',
+            win_date=self.win_date_2016,
+            response_date=self.win_date_2017,
+            confirm=True,
+            agree_with_win=False,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertTrue(len(api_response["wins"]["hvc"]) == 1)
+        win_item = api_response["wins"]["hvc"][0]
+        self.assertEqual(win_item["hvc"]["code"], "E001")
+        self.assertEqual(win_item["hvc"]["name"], "HVC: E001")
+        self.assertIsNotNone(win_item["win_date"])
+        self.assertEqual(win_item["export_amount"], self.export_value)
+        self.assertEqual(win_item["status"], "customer_rejected")
+        self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
+        self.assertEqual(win_item["company"]["name"], "company name")
+        self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
+        self.assertFalse(win_item["credit"])
+
+    def test_win_table_2017_one_hvc_win_from_2016_confirmed_in_2016_no_result(self):
+        self._create_hvc_win(
+            hvc_code='E001',
+            win_date=self.win_date_2016,
+            response_date=self.win_date_2016,
+            confirm=True,
+            agree_with_win=False,
+            fin_year=2016,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        self.expected_response = {
+            "wins": {
+                "hvc": []
+            },
+            "hvc_group": {
+                    "code": "4",
+                    "name": "Automotive"
+            }
+        }
+        self.assertResponse()
+
+    def test_win_table_2017_confirmed_non_hvc_empty_result(self):
+        self._create_non_hvc_win(
+            win_date=self.win_date_2017,
+            confirm=True,
+            fin_year=2017,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        self.expected_response = {
+            "wins": {
+                "hvc": []
+            },
+            "hvc_group": {
+                    "code": "4",
+                    "name": "Automotive"
+            }
+        }
+        self.assertResponse()
+
+    def test_win_table_2017_unconfirmed_non_hvc_empty_result(self):
+        self._create_non_hvc_win(
+            win_date=self.win_date_2017,
+            confirm=False,
+            fin_year=2017,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        self.expected_response = {
+            "wins": {
+                "hvc": []
+            },
+            "hvc_group": {
+                    "code": "4",
+                    "name": "Automotive"
+            }
+        }
+        self.assertResponse()

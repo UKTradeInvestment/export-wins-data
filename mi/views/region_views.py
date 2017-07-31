@@ -279,3 +279,22 @@ class OverseasRegionOverviewView(BaseOverseasRegionsMIView):
         result = [self._region_data(region) for region in self._regions_for_fin_year()]
         self._fill_date_ranges()
         return self._success(result)
+
+class OverseasRegionWinTableView(BaseOverseasRegionsMIView):
+    def get(self, request, region_id):
+        response = self._handle_fin_year(request)
+        if response:
+            return response
+        region = self._get_region(region_id)
+        if not region:
+            return self._not_found()
+
+        results = {
+            "os_region": {
+                "code": region_id,
+                "name": region.name,
+            },
+            "wins": self._win_table_wins(self._get_region_hvc_wins(region), self._get_region_non_hvc_wins(region))
+        }
+        self._fill_date_ranges()
+        return self._success(results)

@@ -33,7 +33,7 @@ class BaseHVCDetailView(BaseWinMIView):
         using startswith campaign_id instead of charcode 
         to cover last FYs wins that were confirmed this FY 
         """
-        return self._wins_for_win_table().filter(hvc__startswith=campaign.campaign_id)
+        return self._wins().filter(hvc__startswith=campaign.campaign_id)
 
 
 class HVCDetailView(BaseHVCDetailView):
@@ -153,28 +153,9 @@ class HVCWinsByMarketSectorView(BaseHVCDetailView):
         return self._success(results)
 
 
-class WinTableView(BaseHVCDetailView):
+class HVCWinTableView(BaseHVCDetailView):
     """ Wins for table view for HVC"""
     def get(self, request, campaign_id):
-        def confirmed_date(win):
-            if not win["confirmation__created"]:
-                return None
-            else:
-                return win["confirmation__created"]
-
-        def status(win):
-            if not win["notifications__created"]:
-                return "email_not_sent"
-            elif not win["confirmation__created"]:
-                return "response_not_received"
-            elif win["confirmation__agree_with_win"]:
-                return "customer_confirmed"
-            else:
-                return "customer_rejected"
-
-        def credit(win):
-            return self._win_status(win) == "confirmed"
-
         response = self._handle_fin_year(request)
         if response:
             return response
@@ -184,27 +165,11 @@ class WinTableView(BaseHVCDetailView):
 
         wins = self._get_hvc_wins(campaign)
         results = {
-                "hvc": {
-                    "code": campaign_id,
-                    "name": campaign.name,
-                },
-                "wins": [
-                {
-                    "id": win["id"],
-                    "company": {
-                        "name": win["company_name"],
-                        "cdms_id": win["cdms_reference"]
-                    },
-                    "lead_officer": {
-                        "name": win["lead_officer_name"],
-                    },
-                    "credit": credit(win),
-                    "win_date": confirmed_date(win),
-                    "export_amount": win["total_expected_export_value"],
-                    "status": status(win)
-                }
-                for win in wins
-            ]
+            "hvc": {
+                "code": campaign_id,
+                "name": campaign.name,
+            },
+            "wins": self._win_table_wins(wins)
         }
         self._fill_date_ranges()
         return self._success(results)

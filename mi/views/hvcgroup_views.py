@@ -149,3 +149,22 @@ class HVCGroupCampaignsView(BaseHVCGroupMIView):
         results['campaigns'] = self._campaign_breakdowns(group)
         self._fill_date_ranges()
         return self._success(results)
+
+class HVCGroupWinTableView(BaseHVCGroupMIView):
+    def get(self, request, group_id):
+        response = self._handle_fin_year(request)
+        if response:
+            return response
+        group = self._get_hvc_group(group_id)
+        if not group:
+            return self._not_found()
+
+        results = {
+            "hvc_group": {
+                "code": group_id,
+                "name": group.name,
+            },
+            "wins": self._win_table_wins(self._get_group_wins(group))
+        }
+        self._fill_date_ranges()
+        return self._success(results)

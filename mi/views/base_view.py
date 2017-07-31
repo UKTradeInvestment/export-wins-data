@@ -24,7 +24,7 @@ from mi.utils import (
     percentage,
     percentage_formatted,
 )
-from wins.models import Notification, Win, _get_open_hvcs
+from wins.models import Notification, Win, _get_open_hvcs, HVC
 
 MI_PERMISSION_CLASSES = (IsMIServer, IsMIUser)
 
@@ -167,25 +167,6 @@ class BaseWinMIView(BaseMIView):
         it in `_win_status` so that we can later include data on rejected
         Wins.
 
-        """
-        fields = [
-            "id",
-            'hvc',
-            'sector',
-            'date',
-            'total_expected_export_value',
-            'total_expected_non_export_value',
-            'confirmation__created',
-            'confirmation__agree_with_win',
-        ]
-
-        return Win.objects.filter(self._wins_filter()).only(*fields).values(*fields)
-
-    def _wins_for_win_table(self):
-        """ 
-        This is a variant of _wins function specific to Win Table, 
-        as it requires some additional fields that others don't.
-        It also requires to obtain Max notifications__created for each win
         """
         fields = [
             "id",
@@ -658,3 +639,70 @@ class BaseWinMIView(BaseMIView):
             }
             for w in non_hvc_wins
         ]
+
+    def _win_table_wins(self, hvc_wins, non_hvc_wins=None):
+        all_hvcs = {"{}{}".format(x["campaign_id"], x["financial_year"]):x["name"]
+                    for x in HVC.objects.all().values("campaign_id", "financial_year", "name")}
+
+        def confirmed_date(win):
+            if win["confirmation__created"]:
+                return win["confirmation__created"]
+
+            return None
+
+        def status(win):
+            if not win["notifications__created"]:
+                return "email_not_sent"
+            elif not win["confirmation__created"]:
+                return "response_not_received"
+            elif win["confirmation__agree_with_win"]:
+                return "customer_confirmed"
+            else:
+                return "customer_rejected"
+
+        def credit(win):
+            return self._win_status(win) == "confirmed"
+
+        results = {
+                "hvc": [
+                    {
+                        "id": win["id"],
+                        "hvc": {
+                            "code": win["hvc"][:4],
+                            "name": all_hvcs[win["hvc"]]
+                        },
+                        "company": {
+                            "name": win["company_name"],
+                            "cdms_id": win["cdms_reference"]
+                        },
+                        "lead_officer": {
+                            "name": win["lead_officer_name"],
+                        },
+                        "credit": credit(win),
+                        "win_date": confirmed_date(win),
+                        "export_amount": win["total_expected_export_value"],
+                        "status": status(win)
+                    }
+                    for win in hvc_wins
+                ],
+            }
+        if non_hvc_wins:
+            results["non_hvc"] = [
+                    {
+                        "id": win["id"],
+                        "company": {
+                            "name": win["company_name"],
+                            "cdms_id": win["cdms_reference"]
+                        },
+                        "lead_officer": {
+                            "name": win["lead_officer_name"],
+                        },
+                        "credit": credit(win),
+                        "win_date": confirmed_date(win),
+                        "export_amount": win["total_expected_export_value"],
+                        "status": status(win)
+                    }
+                    for win in non_hvc_wins
+                ]
+
+        return results
