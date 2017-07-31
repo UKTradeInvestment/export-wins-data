@@ -37,6 +37,8 @@ class SectorTeamBaseTestCase(MiApiViewsWithWinsBaseTestCase):
         return team_data
 
     def get_url_for_year(self, year, base_url=None):
+        if not base_url:
+            base_url = self.view_base_url
         return '{base}?year={year}'.format(base=base_url, year=year)
 
 
@@ -1146,8 +1148,8 @@ class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
         api_response = self._api_response_data
         self.assertTrue(len(api_response["wins"]["hvc"]) == 1)
         win_item = api_response["wins"]["hvc"][0]
-        self.assertEqual(api_response["hvc"]["code"], "E006")
-        self.assertEqual(api_response["hvc"]["name"], "E00617")
+        self.assertEqual(win_item["hvc"]["code"], "E006")
+        self.assertEqual(win_item["hvc"]["name"], "HVC: E006")
         self.assertIsNotNone(win_item["win_date"])
         self.assertEqual(win_item["export_amount"], self.export_value)
         self.assertEqual(win_item["status"], "customer_confirmed")
@@ -1169,8 +1171,8 @@ class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
         api_response = self._api_response_data
         self.assertTrue(len(api_response["wins"]["hvc"]) == 1)
         win_item = api_response["wins"]["hvc"][0]
-        self.assertEqual(api_response["hvc"]["code"], "E006")
-        self.assertEqual(api_response["hvc"]["name"], "E00617")
+        self.assertEqual(win_item["hvc"]["code"], "E006")
+        self.assertEqual(win_item["hvc"]["name"], "HVC: E006")
         self.assertIsNone(win_item["win_date"])
         self.assertEqual(win_item["export_amount"], self.export_value)
         self.assertEqual(win_item["status"], "email_not_sent")
@@ -1249,8 +1251,8 @@ class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
         api_response = self._api_response_data
         self.assertTrue(len(api_response["wins"]["hvc"]) == 1)
         win_item = api_response["wins"]["hvc"][0]
-        self.assertEqual(api_response["hvc"]["code"], "E006")
-        self.assertEqual(api_response["hvc"]["name"], "E00617")
+        self.assertEqual(win_item["hvc"]["code"], "E006")
+        self.assertEqual(win_item["hvc"]["name"], "HVC: E006")
         self.assertIsNotNone(win_item["win_date"])
         self.assertEqual(win_item["export_amount"], self.export_value)
         self.assertEqual(win_item["status"], "customer_rejected")
@@ -1274,8 +1276,8 @@ class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
         api_response = self._api_response_data
         self.assertTrue(len(api_response["wins"]["hvc"]) == 1)
         win_item = api_response["wins"]["hvc"][0]
-        self.assertEqual(api_response["hvc"]["code"], "E006")
-        self.assertEqual(api_response["hvc"]["name"], "E00617")
+        self.assertEqual(win_item["hvc"]["code"], "E006")
+        self.assertEqual(win_item["hvc"]["name"], "HVC: E006")
         self.assertIsNotNone(win_item["win_date"])
         self.assertEqual(win_item["export_amount"], self.export_value)
         self.assertEqual(win_item["status"], "customer_rejected")
@@ -1325,7 +1327,7 @@ class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
         self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
         self.assertEqual(win_item["company"]["name"], "company name")
         self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
-        self.assertFalse(win_item["credit"])
+        self.assertTrue(win_item["credit"])
 
     def test_win_table_2017_unconfirmed_non_hvc(self):
         self._create_non_hvc_win(
@@ -1339,9 +1341,9 @@ class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
         api_response = self._api_response_data
         self.assertTrue(len(api_response["wins"]["non_hvc"]) == 1)
         win_item = api_response["wins"]["non_hvc"][0]
-        self.assertIsNotNone(win_item["win_date"])
+        self.assertIsNone(win_item["win_date"])
         self.assertEqual(win_item["export_amount"], self.export_value)
-        self.assertEqual(win_item["status"], "response_not_received")
+        self.assertEqual(win_item["status"], "email_not_sent")
         self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
         self.assertEqual(win_item["company"]["name"], "company name")
         self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")

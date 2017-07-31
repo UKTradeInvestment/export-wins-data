@@ -386,7 +386,7 @@ class SectorTeamWinTableView(BaseSectorMIView):
 
         results = {
             "sector_team": {
-                "id": team_id,
+                "code": team_id,
                 "name": team.name,
             },
             "wins": self._win_table_wins(self._get_hvc_wins(team), self._get_non_hvc_wins(team))
