@@ -2148,7 +2148,7 @@ class OverseasRegionsWinTableTestCase(OverseasRegionBaseViewTestCase):
         self.url = self.get_url_for_year(2016)
         self.expected_response = {
             "os_region": {
-                "code": str(self.test_region.id),
+                "id": str(self.test_region.id),
                 "name": self.test_region.name,
             },
             "wins": {
@@ -2161,7 +2161,7 @@ class OverseasRegionsWinTableTestCase(OverseasRegionBaseViewTestCase):
         self.url = self.get_url_for_year(2017)
         self.expected_response = {
             "os_region": {
-                "code": str(self.test_region.id),
+                "id": str(self.test_region.id),
                 "name": self.test_region.name,
             },
             "wins": {
@@ -2337,7 +2337,7 @@ class OverseasRegionsWinTableTestCase(OverseasRegionBaseViewTestCase):
         self.url = self.get_url_for_year(2017)
         self.expected_response = {
             "os_region": {
-                "code": str(self.test_region.id),
+                "id": str(self.test_region.id),
                 "name": self.test_region.name,
             },
             "wins": {
