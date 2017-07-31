@@ -373,9 +373,10 @@ class SectorTeamsOverviewView(BaseSectorMIView):
 
         return self._success(sorted(result, key=itemgetter('name')))
 
-
 class SectorTeamWinTableView(BaseSectorMIView):
+    """ """
     def get(self, request, team_id):
+        """ """
         response = self._handle_fin_year(request)
         if response:
             return response

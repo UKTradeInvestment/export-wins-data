@@ -1300,9 +1300,9 @@ class SectorTeamWinTableTestCase(SectorTeamBaseTestCase):
             "wins": {
                 "hvc": []
             },
-            'hvc': {
-                'code': 'E006',
-                'name': 'E00617'
+            "sector_team": {
+                "code": "1",
+                "name": "Financial & Professional Services",
             }
         }
         self.assertResponse()

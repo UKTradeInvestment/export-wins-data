@@ -161,7 +161,7 @@ class HVCGroupWinTableView(BaseHVCGroupMIView):
 
         results = {
             "hvc_group": {
-                "id": group_id,
+                "code": group_id,
                 "name": group.name,
             },
             "wins": self._win_table_wins(self._get_group_wins(group))
