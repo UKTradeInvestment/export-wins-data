@@ -20,9 +20,6 @@ class BaseOverseasRegionGroupMIView(BaseMIView):
         return [OverseasRegionGroupSerializer(instance=x, year=self.fin_year).data for x in self.get_queryset().order_by('name')]
 
     def get(self, request):
-        response = self._handle_fin_year(request)
-        if response:
-            return response
         return self._success(self.get_results())
 
 class BaseOverseasRegionsMIView(BaseWinMIView):
@@ -95,10 +92,6 @@ class OverseasRegionsListView(BaseOverseasRegionsMIView):
     """ List all Overseas Regions """
 
     def get(self, request):
-        response = self._handle_fin_year(request)
-        if response:
-            return response
-
         results = [
             {
                 'id': region.id,
@@ -113,17 +106,12 @@ class OverseasRegionDetailView(BaseOverseasRegionsMIView):
     """ Overseas Region detail view along with win-breakdown"""
 
     def get(self, request, region_id):
-        response = self._handle_fin_year(request)
-        if response:
-            return response
-
         region = self._get_region(region_id)
         if not region:
             return self._not_found()
         results = self._region_result(region)
         hvc_wins, non_hvc_wins = self._get_region_hvc_wins(region), self._get_region_non_hvc_wins(region)
         results['wins'] = self._breakdowns(hvc_wins, non_hvc_wins=non_hvc_wins)
-        self._fill_date_ranges()
         return self._success(results=results)
 
 
@@ -159,10 +147,6 @@ class OverseasRegionMonthsView(BaseOverseasRegionsMIView):
         return sorted(month_to_wins, key=lambda tup: tup[0])
 
     def get(self, request, region_id):
-        response = self._handle_fin_year(request)
-        if response:
-            return response
-
         region = self._get_region(region_id)
         if not region:
             return self._invalid('region not found')
@@ -171,7 +155,6 @@ class OverseasRegionMonthsView(BaseOverseasRegionsMIView):
         wins = self._get_region_wins(region)
 
         results['months'] = self._month_breakdowns(wins)
-        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -194,15 +177,12 @@ class OverseasRegionCampaignsView(BaseOverseasRegionsMIView):
         return sorted_campaigns
 
     def get(self, request, region_id):
-        self._handle_fin_year(request)
-
         region = self._get_region(region_id)
         if not region:
             return self._invalid('region not found')
 
         results = self._region_result(region)
         results['campaigns'] = self._campaign_breakdowns(region)
-        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -210,16 +190,12 @@ class OverseasRegionsTopNonHvcWinsView(BaseOverseasRegionsMIView):
     """ Top n HVCs with win-breakdown for given Overseas Region"""
 
     def get(self, request, region_id):
-        response = self._handle_fin_year(request)
-        if response:
-            return response
         region = self._get_region(region_id)
         if not region:
             return self._invalid('region not found')
 
         non_hvc_wins_qs = self._get_region_non_hvc_wins(region)
         results = self._top_non_hvc(non_hvc_wins_qs)
-        self._fill_date_ranges()
         return self._success(results)
 
 
@@ -272,19 +248,11 @@ class OverseasRegionOverviewView(BaseOverseasRegionsMIView):
         return result
 
     def get(self, request):
-        response = self._handle_fin_year(request)
-        if response:
-            return response
-
         result = [self._region_data(region) for region in self._regions_for_fin_year()]
-        self._fill_date_ranges()
         return self._success(result)
 
 class OverseasRegionWinTableView(BaseOverseasRegionsMIView):
     def get(self, request, region_id):
-        response = self._handle_fin_year(request)
-        if response:
-            return response
         region = self._get_region(region_id)
         if not region:
             return self._not_found()
@@ -296,5 +264,4 @@ class OverseasRegionWinTableView(BaseOverseasRegionsMIView):
             },
             "wins": self._win_table_wins(self._get_region_hvc_wins(region), self._get_region_non_hvc_wins(region))
         }
-        self._fill_date_ranges()
         return self._success(results)

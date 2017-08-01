@@ -13,6 +13,7 @@ from django.utils.timezone import now, get_current_timezone
 from django_countries.fields import Country as DjangoCountry
 from pytz import UTC
 from rest_framework import status
+from rest_framework.exceptions import ParseError, NotFound
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -21,6 +22,7 @@ from mi.models import (
     FinancialYear,
     Sector
 )
+from mi.serializers import DateRangeSerializer
 from mi.utils import (
     average,
     percentage,
@@ -38,6 +40,9 @@ class BaseMIView(APIView):
     fin_year = None
     date_range = None
 
+    date_start = None
+    date_end = None
+
     def _handle_fin_year(self, request):
         """
         Checks and makes sure if year query param is supplied within request object
@@ -46,17 +51,20 @@ class BaseMIView(APIView):
         """
         year = request.GET.get("year", None)
         if not year:
-            return self._invalid("missing argument: year")
+            self._invalid("missing argument: year")
         try:
+            year = int(year)
             self.fin_year = FinancialYear.objects.get(id=year)
-            return None
-        except ObjectDoesNotExist:
-            return self._not_found()
+        except (ObjectDoesNotExist, ValueError):
+            self._not_found()
 
     def _date_range_start(self):
         """
         Financial year start date, as datetime, is returned
         """
+        if self.date_start:
+            return self.date_start
+
         return datetime.combine(self.fin_year.start, datetime.min.time()).replace(tzinfo=UTC)
 
     def _date_range_end(self):
@@ -64,7 +72,10 @@ class BaseMIView(APIView):
         If fin_year is not current one, current datetime is returned
         Else financial year end date, as datetime, is returned
         """
-        if datetime.today() < self.fin_year.end:
+        if self.date_end:
+            return self.date_end
+
+        if datetime.today().replace(tzinfo=UTC) < self.fin_year.end:
             return now()
         else:
             return datetime.combine(self.fin_year.end, datetime.max.time()).replace(tzinfo=UTC)
@@ -80,7 +91,7 @@ class BaseMIView(APIView):
         }
 
     def _invalid(self, msg):
-        return Response({'error': msg}, status=status.HTTP_400_BAD_REQUEST)
+        raise ParseError({'error': msg})
 
     def _success(self, results):
         if self.fin_year is not None:
@@ -102,7 +113,13 @@ class BaseMIView(APIView):
         return Response(response, status=status.HTTP_200_OK)
 
     def _not_found(self):
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        raise NotFound()
+
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+        self._handle_fin_year(request)
+        self._handle_query_param_dates(request)
+        self._fill_date_ranges()
 
     def _hvc_overview(self, targets):
         """ Make an overview dict for a list of targets """
@@ -118,6 +135,13 @@ class BaseMIView(APIView):
         else:
             return win['date']
 
+    def _handle_query_param_dates(self, request):
+        serializer = DateRangeSerializer(financial_year=self.fin_year, data=request.GET)
+        if serializer.is_valid():
+            for param, value in serializer.validated_data.items():
+                setattr(self, param, value)
+        else:
+            self._invalid(serializer.errors)
 
 class BaseWinMIView(BaseMIView):
     """ Base view with Win-related MI helpers """
@@ -141,8 +165,8 @@ class BaseWinMIView(BaseMIView):
         """
         # get Wins where the customer responded in the given FY
         win_filter = Q(confirmation__created__range=(
-            self.fin_year.start,
-            self.fin_year.end,
+            self._date_range_start(),
+            self._date_range_end()
         ))
 
         # if we're in the current FY, also include unconfirmed Wins
@@ -321,7 +345,7 @@ class BaseWinMIView(BaseMIView):
         If in case of previous ones, just return 365
         """
 
-        days_into_year = (datetime.today() - self.fin_year.start).days
+        days_into_year = (datetime.today().replace(tzinfo=UTC) - self.fin_year.start).days
 
         if days_into_year > 365:
             return 365

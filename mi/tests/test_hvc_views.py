@@ -19,6 +19,7 @@ from wins.factories import NotificationFactory, HVCFactory
 from wins.models import Notification, _get_open_hvcs, normalize_year, HVC
 
 
+@freeze_time(datetime.datetime(2017, 5, 30, tzinfo=get_current_timezone()))
 class HVCBaseViewTestCase(MiApiViewsWithWinsBaseTestCase):
     """ HVC Detail page base test case """
     view_base_url = reverse('mi:hvc_campaign_detail', kwargs={"campaign_id": "E017"})
@@ -33,7 +34,6 @@ class HVCBaseViewTestCase(MiApiViewsWithWinsBaseTestCase):
         return '{base}?year={year}'.format(base=base_url, year=year)
 
 
-@freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
 class HVCDetailsTestCase(HVCBaseViewTestCase):
     TEST_CAMPAIGN_ID = "E017"
     TARGET_E017_17 = 30000000
@@ -308,6 +308,7 @@ class HVCDetailsTestCase(HVCBaseViewTestCase):
         self.assertEqual(cen_response["wins"]["totals"]["value"]["grand_total"], 0)
         self.assertEqual(cen_response["wins"]["totals"]["number"]["grand_total"], 0)
 
+    @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
     def test_details_cen_hvc_win_unconfirmed_in_2016_appears_in_2017(self):
         self._create_hvc_win(
             hvc_code='E017',

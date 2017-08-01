@@ -114,12 +114,14 @@ class OverseasRegionGroupListViewTestCase(MiApiViewsBaseTestCase):
         self.assertResponse()
 
 
+@freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
 class OverseasRegionBaseViewTestCase(MiApiViewsWithWinsBaseTestCase):
     view_base_url = reverse('mi:overseas_regions')
     export_value = 100000
-    win_date_2017 = datetime.datetime(2017, 5, 25, tzinfo=get_current_timezone())
-    win_date_2016 = datetime.datetime(2016, 5, 25, tzinfo=get_current_timezone())
+    win_date_2017 = datetime.datetime(2017, 4, 25, tzinfo=get_current_timezone())
+    win_date_2016 = datetime.datetime(2016, 4, 25, tzinfo=get_current_timezone())
     fy_2016_last_date = datetime.datetime(2017, 3, 31, tzinfo=get_current_timezone())
+    frozen_date_17 = datetime.datetime(2017, 5, 30, tzinfo=get_current_timezone())
 
     def get_url_for_year(self, year, base_url=None):
         if not base_url:
@@ -188,7 +190,7 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
 
     def test_overview_value_1_win(self):
         w1 = self._create_hvc_win(
-            hvc_code='E016', win_date=now(),
+            hvc_code='E016', win_date=self.win_date_2017,
             confirm=True,
             fin_year=2017,
             export_value=self.export_value
@@ -203,14 +205,14 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
     def test_overview_value_2_wins_same_region(self):
         w1 = self._create_hvc_win(
             hvc_code='E016',
-            win_date=now(),
+            win_date=self.win_date_2017,
             confirm=True,
             fin_year=2017,
             export_value=self.export_value
         )
         w2 = self._create_hvc_win(
             hvc_code='E016',
-            win_date=now(),
+            win_date=self.win_date_2017,
             confirm=True,
             fin_year=2017,
             export_value=1
@@ -224,11 +226,11 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
 
     def test_overview_value_2_wins_different_regions(self):
         w1 = self._create_hvc_win(
-            hvc_code='E016', win_date=now(), confirm=True,
+            hvc_code='E016', win_date=self.win_date_2017, confirm=True,
             fin_year=2017, export_value=self.export_value
         )
         w2 = self._create_hvc_win(
-            hvc_code='E119', win_date=now(),
+            hvc_code='E119', win_date=self.win_date_2017,
             confirm=True, fin_year=2017, export_value=1
         )
         self.assertEqual(w1.country.code, w2.country.code)
@@ -243,11 +245,11 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
 
     def test_overview_1_unconfirmed_and_1_confirmed_same_year(self):
         w1 = self._create_hvc_win(
-            hvc_code='E016', win_date=now(), confirm=True,
+            hvc_code='E016', win_date=self.win_date_2017, confirm=True,
             fin_year=2017, export_value=self.export_value
         )
         w2 = self._create_hvc_win(
-            hvc_code='E016', win_date=now(), confirm=False,
+            hvc_code='E016', win_date=self.win_date_2017, confirm=False,
             fin_year=2017, export_value=1
         )
         self.assertEqual(w1.country.code, w2.country.code)
@@ -261,7 +263,7 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
 
     def test_overview_1_unconfirmed_in_current_year_should_not_show_up_in_last_year(self):
         w1 = self._create_hvc_win(
-            hvc_code='E016', win_date=now(),
+            hvc_code='E016', win_date=self.win_date_2017,
             confirm=False,
             fin_year=2017,
             export_value=self.export_value
@@ -338,7 +340,7 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
     # Non HVC
     def test_non_hvc_win_in_overview_confirmed_current_year(self):
         w1 = self._create_non_hvc_win(
-            win_date=self.frozen_date_17, export_value=self.export_value,
+            win_date=self.win_date_2017, export_value=self.export_value,
             confirm=True, country='CA', fin_year=2017
         )
         self.url = self.get_url_for_year(2017)
@@ -356,7 +358,7 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
 
     def test_non_hvc_win_in_overview_unconfirmed_current_year(self):
         w1 = self._create_non_hvc_win(
-            win_date=self.frozen_date_17, export_value=self.export_value,
+            win_date=self.win_date_2017, export_value=self.export_value,
             confirm=False, country='CA', fin_year=2017
         )
         self.url = self.get_url_for_year(2017)
@@ -374,14 +376,14 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
 
     def test_2_non_hvc_win_in_overview_both_confirmed_current_year(self):
         self._create_non_hvc_win(
-            win_date=self.frozen_date_17,
+            win_date=self.win_date_2017,
             export_value=self.export_value + 1,
             confirm=True,
             country='CA',
             fin_year=2017
         )
         self._create_non_hvc_win(
-            win_date=self.frozen_date_17,
+            win_date=self.win_date_2017,
             export_value=self.export_value - 1,
             confirm=True,
             country='CA',
@@ -405,14 +407,14 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
 
     def test_2_non_hvc_win_in_overview_confirmed_and_unconfirmed_current_year(self):
         w1 = self._create_non_hvc_win(
-            win_date=self.frozen_date_17,
+            win_date=self.win_date_2017,
             export_value=self.export_value + 1,
             confirm=True,
             country='CA',
             fin_year=2017
         )
         w2 = self._create_non_hvc_win(
-            win_date=self.frozen_date_17,
+            win_date=self.win_date_2017,
             export_value=self.export_value - 1,
             confirm=False,
             country='CA',
@@ -493,7 +495,6 @@ class OverseasRegionOverviewTestCase(OverseasRegionBaseViewTestCase):
         )
 
 
-@freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
 class OverseasRegionCampaignsTestCase(OverseasRegionBaseViewTestCase):
     list_regions_base_url = reverse('mi:overseas_regions')
     view_base_url = reverse('mi:overseas_region_campaigns', kwargs={"region_id": 10})
@@ -1298,7 +1299,7 @@ class OverseasRegionDetailsTestCase(OverseasRegionBaseViewTestCase):
     def test_details_cen_hvc_win_for_2017_in_2017(self):
         self._create_hvc_win(
             hvc_code='E017',
-            win_date=now(),
+            win_date=self.win_date_2017,
             confirm=True,
             fin_year=2017,
             export_value=self.export_value,
@@ -1316,7 +1317,7 @@ class OverseasRegionDetailsTestCase(OverseasRegionBaseViewTestCase):
     def test_details_cen_hvc_win_for_2017_in_2016(self):
         self._create_hvc_win(
             hvc_code='E017',
-            win_date=now(),
+            win_date=self.win_date_2017,
             confirm=True,
             fin_year=2017,
             export_value=self.export_value,
@@ -1480,7 +1481,7 @@ class OverseasRegionDetailsTestCase(OverseasRegionBaseViewTestCase):
     def test_details_cen_hvc_win_unconfirmed_in_2016_appears_in_2017(self):
         self._create_hvc_win(
             hvc_code='E017',
-            win_date=self.win_date_2016,
+            win_date=self.frozen_date,
             confirm=False,
             fin_year=2016,
             export_value=self.export_value,
@@ -1534,7 +1535,7 @@ class OverseasRegionDetailsTestCase(OverseasRegionBaseViewTestCase):
     def test_details_unconfirmed_hvc_win_last_year_should_show_up_in_new_region_if_country_has_moved_regions(self):
         self._create_hvc_win(
             hvc_code='E017',
-            win_date=self.win_date_2016,
+            win_date=self.frozen_date,
             confirm=False,
             fin_year=2016,
             export_value=self.export_value,
@@ -1572,7 +1573,7 @@ class OverseasRegionDetailsTestCase(OverseasRegionBaseViewTestCase):
     # Non-HVC
     def test_details_cen_non_hvc_win_for_2017_in_2017(self):
         self._create_non_hvc_win(
-            win_date=now(),
+            win_date=self.win_date_2017,
             confirm=True,
             fin_year=2017,
             export_value=self.export_value,
@@ -1589,7 +1590,7 @@ class OverseasRegionDetailsTestCase(OverseasRegionBaseViewTestCase):
 
     def test_details_cen_non_hvc_win_for_2017_in_2016(self):
         self._create_non_hvc_win(
-            win_date=now(),
+            win_date=self.win_date_2017,
             confirm=True,
             fin_year=2017,
             export_value=self.export_value,
@@ -1744,7 +1745,7 @@ class OverseasRegionDetailsTestCase(OverseasRegionBaseViewTestCase):
 
     def test_details_cen_non_hvc_win_unconfirmed_in_2016_appears_in_2017(self):
         self._create_non_hvc_win(
-            win_date=self.win_date_2016,
+            win_date=self.frozen_date,
             confirm=False,
             fin_year=2016,
             export_value=self.export_value,
@@ -1796,7 +1797,7 @@ class OverseasRegionDetailsTestCase(OverseasRegionBaseViewTestCase):
 
     def test_details_unconfirmed_non_hvc_win_last_year_should_show_up_in_new_region_if_country_has_moved_regions(self):
         self._create_non_hvc_win(
-            win_date=self.win_date_2016,
+            win_date=self.frozen_date,
             confirm=False,
             fin_year=2016,
             export_value=self.export_value,
@@ -1863,7 +1864,7 @@ class OverseasRegionMonthsTestCase(OverseasRegionBaseViewTestCase):
         export_value = 123456
 
         self._create_hvc_win(
-            hvc_code='E011', win_date=now(),
+            hvc_code='E011', win_date=now(), response_date=now(),
             confirm=True, fin_year=2017, export_value=export_value)
 
         self.url = self.get_url_for_year(2017)
@@ -1886,7 +1887,7 @@ class OverseasRegionMonthsTestCase(OverseasRegionBaseViewTestCase):
         export_value = 123456
 
         self._create_hvc_win(
-            hvc_code='E011', win_date=now(),
+            hvc_code='E011', win_date=now(), response_date=now(),
             confirm=True, fin_year=2017, export_value=export_value)
 
         self._create_hvc_win(
@@ -2110,10 +2111,8 @@ class OverseasRegionsTopNonHvcWinsTestCase(OverseasRegionBaseViewTestCase):
             data[1]['totalValue']
         )
 
-@freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
+@freeze_time(OverseasRegionBaseViewTestCase.frozen_date_17)
 class OverseasRegionsWinTableTestCase(OverseasRegionBaseViewTestCase):
-    win_date_2017 = datetime.datetime(2017, 5, 25, tzinfo=get_current_timezone())
-    win_date_2016 = datetime.datetime(2016, 5, 25, tzinfo=get_current_timezone())
     export_value = 100000
 
     @classmethod

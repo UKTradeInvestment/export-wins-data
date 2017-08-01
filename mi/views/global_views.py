@@ -10,9 +10,6 @@ class GlobalWinsView(BaseWinMIView):
         return confirmed_value, confirmed_number
 
     def get(self, request):
-        response = self._handle_fin_year(request)
-        if response:
-            return response
         hvc_confirmed = []
         hvc_unconfirmed = []
         non_hvc_confirmed = []
@@ -81,5 +78,4 @@ class GlobalWinsView(BaseWinMIView):
                 }
             }
         }
-        self._fill_date_ranges()
         return self._success(results)

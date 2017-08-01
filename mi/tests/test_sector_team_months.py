@@ -11,7 +11,7 @@ from mi.tests.test_sector_views import SectorTeamBaseTestCase
 from mi.utils import month_iterator
 
 
-@freeze_time(MiApiViewsBaseTestCase.frozen_date)
+@freeze_time(datetime.datetime(2017, 1, 31))
 class SectorTeamMonthlyViewsTestCase(SectorTeamBaseTestCase):
     """
     Tests covering SectorTeam Campaigns API endpoint

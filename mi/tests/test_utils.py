@@ -1,8 +1,9 @@
-from datetime import datetime
+from datetime import datetime, date
 
 from django.test import TestCase
 
 from freezegun import freeze_time
+from pytz import UTC
 
 from mi.models import FinancialYear
 from mi.utils import month_iterator
@@ -14,12 +15,13 @@ class UtilTests(TestCase):
     @freeze_time("2016-05-01")
     def test_financial_year_start_date(self):
         fin_year = FinancialYear.objects.get(id=2016)
-        self.assertEqual(fin_year.start, datetime(2016, 4, 1))
+        self.assertEqual(fin_year.start, datetime(2016, 4, 1, tzinfo=UTC))
 
     @freeze_time("2016-05-01")
     def test_financial_year_end_date(self):
         fin_year = FinancialYear.objects.get(id=2016)
-        self.assertEqual(fin_year.end, datetime(2017, 3, 31, 23, 59, 59))
+        end_dt = datetime.combine(date(2017, 3, 31), datetime.max.time()).replace(tzinfo=UTC)
+        self.assertEqual(fin_year.end, end_dt)
 
     @freeze_time("2016-05-01")
     def test_month_iterator_with_current_date_as_end_date(self):
