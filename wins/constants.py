@@ -88,7 +88,6 @@ HVO_PROGRAMMES = (
   ("KAZ-02", "KAZ-02: Multiple Oil & Gas Projects"),
   ("KAZ-03", "KAZ-03: Kazakhstan Infrastructure"),
   ("KAZ-06", "KAZ-06: Kazakhstan Education and Training"),
-  ("KAZ-07", "KAZ-07: Kazakhstan Mining"),
   ("KOR-05", "KOR-05: Global Sports Projects in Korea"),
   ("KWT-01", "KWT-01: Kuwait Airport Redevelopment"),
   ("KWT-02", "KWT-02: Boubyan Island Development"),
@@ -122,7 +121,6 @@ HVO_PROGRAMMES = (
   ("OTH-11", "OTH-11: Aid Funded Business Service"),
   ("OTH-12", "OTH-12: Building Creative Hubs Internationally"),
   ("OTH-13", "OTH-13: Creative Industries HVO Taskforce"),
-  ("OTH-14", "OTH-14: Creative Tax Credits"),
   ("OTH-14", "OTH-14: Creative Tax Credits"),
   ("OTH-15", "OTH-15: Food and Drink Export Action Plan"),
   ("OTH-16", "OTH-16: Free Trade Agreements"),
@@ -738,7 +736,6 @@ HQ_TEAM_REGION_OR_POST = tuple([
     ('obn:32', 'USA - Altios'),
     ('obn:33', 'USA - OCO Global'),
     ('obn:31', 'Vietnam - British Business Group'),
-    ('obn:32', 'Kenya - British Chamber of Commerce Kenya'),
 
     ("other:1", "DIT Education"),
     ("other:2", "Healthcare UK"),
