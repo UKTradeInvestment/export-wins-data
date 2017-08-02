@@ -3,7 +3,8 @@ from django.conf.urls import url
 from mi.views.country_views import (
     CountryListView,
     CountryDetailView,
-    CountryWinsView,
+    CountryMonthsView,
+    CountryCampaignsView,
 )
 from mi.views.parent_views import (
     ParentSectorListView,
@@ -84,7 +85,10 @@ urlpatterns = [
     url(r"^global_wins/$", GlobalWinsView.as_view(), name="global_wins"),
     
     url(r"^countries/$", CountryListView.as_view(), name="countries"),
-    url(r"^countries/(?P<country_id>\d+)/$", CountryDetailView.as_view()),
-    url(r"^countries/wins/$", CountryWinsView.as_view()),
+    url(r"^countries/(?P<country_code>[\w\-]+)/$", CountryDetailView.as_view(), name="country_detail"),
+    url(r"^countries/(?P<country_code>[\w\-]+)/months/$", CountryMonthsView.as_view(), name="country_monthly"),
+    url(r"^countries/(?P<country_code>[\w\-]+)/campaigns/$", CountryCampaignsView.as_view(), name="country_campaigns"),
+    # url(r"^countries/(?P<country_id>\d+)/top_non_hvcs/$", CountryTopNonHvcWinsView.as_view(), name="country_top_nonhvc"),
+    # url(r"^countries/(?P<country_id>\d+)/win_table/$", CountryWinTableView.as_view(), name="country_win_table"),
 
 ]

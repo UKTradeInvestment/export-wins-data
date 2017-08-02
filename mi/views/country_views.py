@@ -1,41 +1,65 @@
+import operator
+from functools import reduce
+from itertools import groupby
+from operator import itemgetter
+
+from django.db.models import Q
+
 from django_countries.fields import Country as DjangoCountry
 
-from mi.models import Country, Target
+from mi.models import Country
+from mi.utils import month_iterator
 from mi.views.base_view import BaseWinMIView, BaseMIView
-from wins.models import Win
+from mi.utils import sort_campaigns_by
 
 
 class BaseCountriesMIView(BaseWinMIView):
     """ Abstract Base for other Country-related MI endpoints to inherit from """
 
-    def _get_country(self, country_id):
+    def _get_country(self, country_code):
         try:
-            return Country.objects.get(id=int(country_id))
+            return Country.objects.get(country=country_code)
         except Country.DoesNotExist:
             return False
 
-    def _wins(self, country):
-        dj_country = DjangoCountry(country.country.code)
-        return super()._wins().filter(
-            country__exact=dj_country,
-            date__range=(get_financial_start_date(), get_financial_end_date()),
-        ).select_related('confirmation')
+    def _country_hvc_filter(self, country):
+        """ filter to include all HVCs, irrespective of FY """
+        region_hvc_filter = Q(
+            Q(reduce(operator.or_, 
+                [Q(hvc__startswith=t) for t in country.fin_year_campaign_ids(self.fin_year)]))
+            | Q(hvc__in=country.fin_year_charcodes(self.fin_year))
+        )
+        return region_hvc_filter
 
+    def _country_non_hvc_filter(self, country):
+        """ specific filter for non-HVC, for the given Country """
+        dj_country = DjangoCountry(country.country.code)
+        region_non_hvc_filter = Q(Q(hvc__isnull=True) | Q(hvc='')) & Q(country__exact=dj_country)
+        return region_non_hvc_filter
+    
     def _get_hvc_wins(self, country):
-        return self._wins(country).hvc(fin_year=self.fin_year)
+        wins = self._hvc_wins().filter(self._country_hvc_filter(country))
+        return wins
 
     def _get_non_hvc_wins(self, country):
-        return self._wins(country).non_hvc(fin_year=self.fin_year)
+        return self._non_hvc_wins().filter(self._country_non_hvc_filter(country))
+
+    def _get_all_wins(self, country):
+        return self._get_hvc_wins(country) | self._get_non_hvc_wins(country)
 
     def _country_result(self, country):
         """ Basic data about countries - name & hvc's """
+        dj_country = DjangoCountry(country.country.code)
         return {
             'name': country.country.name,
-            'hvcs': self._hvc_overview(country.targets.all()),
+            'avg_time_to_confirm': self._average_confirm_time(win__country__exact=dj_country),
+            'hvcs': self._hvc_overview(country.fin_year_targets(fin_year=self.fin_year)),
         }
 
 
 class CountryListView(BaseMIView):
+    """ List all countries """
+
     def get(self, request):
         results = [
             {
@@ -44,22 +68,17 @@ class CountryListView(BaseMIView):
                 'name': c.country.name
             }
             for c in Country.objects.all()
-            ]
-        return self._success(results)
+        ]
+        return self._success(sorted(results, key=itemgetter('name')))
 
 
 class CountryDetailView(BaseCountriesMIView):
+    """ Country details and wins breakdown """
 
-    def get(self, request, country_id):
-
-        country = self._get_country(country_id)
+    def get(self, request, country_code):
+        country = self._get_country(country_code)
         if not country:
-            return self._invalid('team not found')
-
-        targets = Target.objects.filter(country=country)
-        total_target = 0
-        for target in targets:
-            total_target += target.target
+            return self._not_found()
 
         results = self._country_result(country)
         hvc_wins = self._get_hvc_wins(country)
@@ -68,16 +87,72 @@ class CountryDetailView(BaseCountriesMIView):
         return self._success(results)
 
 
-class CountryWinsView(BaseCountriesMIView):
+class CountryMonthsView(BaseCountriesMIView):
+    """ Country name, hvcs and wins broken down by month """
 
-    def get(self, request):
-        results = [
+    def _month_breakdowns(self, wins):
+        month_to_wins = self._group_wins_by_month(wins)
+        return [
             {
-                'id': c.id,
-                'code': c.country.code,
-                'name': c.country.name,
-                'wins': self._breakdowns(self._get_hvc_wins(c), non_hvc_wins=self._get_non_hvc_wins(c))
+                'date': date_str,
+                'totals': self._breakdowns_cumulative(month_wins),
             }
-            for c in Country.objects.all()
-            ]
+            for date_str, month_wins in month_to_wins
+        ]
+
+    def _group_wins_by_month(self, wins):
+        sorted_wins = sorted(wins, key=self._win_date_for_grouping)
+        month_to_wins = []
+        for k, g in groupby(sorted_wins, key=self._win_date_for_grouping):
+            month_wins = list(g)
+            date_str = month_wins[0]['date'].strftime('%Y-%m')
+            month_to_wins.append((date_str, month_wins))
+
+        # Add missing months within the financial year until current month
+        for item in month_iterator(self.fin_year):
+            date_str = '{:d}-{:02d}'.format(*item)
+            existing = [m for m in month_to_wins if m[0] == date_str]
+            if len(existing) == 0:
+                # add missing month and an empty list
+                month_to_wins.append((date_str, list()))
+
+        return sorted(month_to_wins, key=lambda tup: tup[0])
+
+    def get(self, request, country_code):
+        country = self._get_country(country_code)
+        if not country:
+            return self._invalid('country not found')
+
+        results = self._country_result(country)
+        wins = self._get_all_wins(country)
+
+        results['months'] = self._month_breakdowns(wins)
+        return self._success(results)
+
+
+class CountryCampaignsView(BaseCountriesMIView):
+    """ Country HVC's view along with their win-breakdown """
+
+    def _campaign_breakdowns(self, country):
+        wins = self._get_hvc_wins(country)
+        campaign_to_wins = self._group_wins_by_target(wins, country.fin_year_targets(self.fin_year))
+        campaigns = [
+            {
+                'campaign': campaign.name.split(":")[0],
+                'campaign_id': campaign.campaign_id,
+                'totals': self._progress_breakdown(campaign_wins, campaign.target),
+            }
+            for campaign, campaign_wins in campaign_to_wins
+        ]
+
+        sorted_campaigns = sorted(campaigns, key=sort_campaigns_by, reverse=True)
+        return sorted_campaigns
+
+    def get(self, request, country_code):
+        country = self._get_country(country_code)
+        if not country:
+            return self._not_found()
+
+        results = self._country_result(country)
+        results['campaigns'] = self._campaign_breakdowns(country)
         return self._success(results)

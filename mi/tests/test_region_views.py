@@ -12,8 +12,17 @@ from django.urls import reverse
 from django.core.management import call_command
 
 from fixturedb.factories.win import create_win_factory
-from mi.models import OverseasRegionGroup, OverseasRegion, FinancialYear, OverseasRegionGroupYear, OverseasRegionYear
-from mi.tests.base_test_case import MiApiViewsBaseTestCase, MiApiViewsWithWinsBaseTestCase
+from mi.models import (
+    OverseasRegionGroup, 
+    OverseasRegion, 
+    FinancialYear, 
+    OverseasRegionGroupYear, 
+    OverseasRegionYear,
+)
+from mi.tests.base_test_case import (
+    MiApiViewsBaseTestCase, 
+    MiApiViewsWithWinsBaseTestCase,
+)
 from mi.utils import sort_campaigns_by
 from mi.views.region_views import BaseOverseasRegionGroupMIView
 from wins.factories import NotificationFactory

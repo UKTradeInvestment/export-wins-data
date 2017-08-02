@@ -123,6 +123,24 @@ class Country(models.Model):
         """
         return self.overseas_regions.order_by('overseasregionyear__financial_year').last()
 
+    def fin_year_campaign_ids(self, fin_year):
+        """ List of Campaign IDs of all HVCs belonging to the `Country`, filtered by Financial Year """
+
+        return [t.campaign_id for t in self.fin_year_targets(fin_year)]
+
+    def fin_year_charcodes(self, fin_year):
+        """ List of Charcodes of all HVCs belonging to the `Country`, filtered by Financial Year """
+
+        return [t.charcode for t in self.fin_year_targets(fin_year)]
+
+    def fin_year_targets(self, fin_year):
+        """ List of `Targets` of all HVCs belonging to the `Country`, filtered by Financial Year """
+
+        targets = set()
+        for target in self.targets.filter(financial_year=fin_year):
+            targets.add(target)
+        return targets
+
 
 class SectorTeam(models.Model):
     """ A team in the business """
