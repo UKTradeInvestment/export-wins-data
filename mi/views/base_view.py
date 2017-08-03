@@ -3,12 +3,11 @@ from dateutil.relativedelta import relativedelta
 from collections import Counter
 from itertools import groupby
 from operator import attrgetter, itemgetter
-import time
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Count, Sum, Q, Max
+from django.db.models import Count, Sum, Q, OuterRef, Subquery
 from django.utils import timezone
-from django.utils.timezone import now, get_current_timezone
+from django.utils.timezone import now
 
 from django_countries.fields import Country as DjangoCountry
 from pytz import UTC
@@ -112,8 +111,8 @@ class BaseMIView(APIView):
 
         return Response(response, status=status.HTTP_200_OK)
 
-    def _not_found(self):
-        raise NotFound()
+    def _not_found(self, detail=None):
+        raise NotFound(detail=detail)
 
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
@@ -208,9 +207,13 @@ class BaseWinMIView(BaseMIView):
             'lead_officer_name',
             'location'
         ]
+        newest_notification = Notification.objects.filter(win=OuterRef('pk'), type=Notification.TYPE_CUSTOMER).order_by('-created')
 
-        return Win.objects.filter(self._wins_filter()).only(*fields).values(*fields).annotate(
-            notifications__created=Max('notifications__created'))
+        wins = Win.objects.filter(self._wins_filter()).only(*fields).values(*fields).annotate(
+            notifications__created=Subquery(newest_notification.values('created')[:1])
+        )
+
+        return wins
 
     def _non_hvc_wins(self):
         return self._wins().non_hvc(fin_year=self.fin_year)

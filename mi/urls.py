@@ -5,7 +5,7 @@ from mi.views.country_views import (
     CountryDetailView,
     CountryMonthsView,
     CountryCampaignsView,
-)
+    CountryTopNonHvcWinsView, CountryWinTableView)
 from mi.views.parent_views import (
     ParentSectorListView,
 )
@@ -88,7 +88,7 @@ urlpatterns = [
     url(r"^countries/(?P<country_code>[\w\-]+)/$", CountryDetailView.as_view(), name="country_detail"),
     url(r"^countries/(?P<country_code>[\w\-]+)/months/$", CountryMonthsView.as_view(), name="country_monthly"),
     url(r"^countries/(?P<country_code>[\w\-]+)/campaigns/$", CountryCampaignsView.as_view(), name="country_campaigns"),
-    # url(r"^countries/(?P<country_id>\d+)/top_non_hvcs/$", CountryTopNonHvcWinsView.as_view(), name="country_top_nonhvc"),
-    # url(r"^countries/(?P<country_id>\d+)/win_table/$", CountryWinTableView.as_view(), name="country_win_table"),
+    url(r"^countries/(?P<country_code>[\w\-]+)/top_non_hvcs/$", CountryTopNonHvcWinsView.as_view(), name="country_top_nonhvc"),
+    url(r"^countries/(?P<country_code>[\w\-]+)/win_table/$", CountryWinTableView.as_view(), name="country_win_table"),
 
 ]

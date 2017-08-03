@@ -16,33 +16,30 @@ from mi.utils import sort_campaigns_by
 class BaseCountriesMIView(BaseWinMIView):
     """ Abstract Base for other Country-related MI endpoints to inherit from """
 
+    country = None
+
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+        country_code = kwargs.get('country_code')
+        self.country = self._get_country(country_code=country_code)
+        if not self.country:
+            self._not_found('Country {} not found'.format(country_code))
+
+
     def _get_country(self, country_code):
         try:
             return Country.objects.get(country=country_code)
         except Country.DoesNotExist:
             return False
 
-    def _country_hvc_filter(self, country):
-        """ filter to include all HVCs, irrespective of FY """
-        region_hvc_filter = Q(
-            Q(reduce(operator.or_, 
-                [Q(hvc__startswith=t) for t in country.fin_year_campaign_ids(self.fin_year)]))
-            | Q(hvc__in=country.fin_year_charcodes(self.fin_year))
-        )
-        return region_hvc_filter
-
-    def _country_non_hvc_filter(self, country):
-        """ specific filter for non-HVC, for the given Country """
-        dj_country = DjangoCountry(country.country.code)
-        region_non_hvc_filter = Q(Q(hvc__isnull=True) | Q(hvc='')) & Q(country__exact=dj_country)
-        return region_non_hvc_filter
-    
     def _get_hvc_wins(self, country):
-        wins = self._hvc_wins().filter(self._country_hvc_filter(country))
+        dj_country = DjangoCountry(country.country.code)
+        wins = self._hvc_wins().filter(country__exact=dj_country)
         return wins
 
     def _get_non_hvc_wins(self, country):
-        return self._non_hvc_wins().filter(self._country_non_hvc_filter(country))
+        dj_country = DjangoCountry(country.country.code)
+        return self._non_hvc_wins().filter(country__exact=dj_country)
 
     def _get_all_wins(self, country):
         return self._get_hvc_wins(country) | self._get_non_hvc_wins(country)
@@ -76,13 +73,9 @@ class CountryDetailView(BaseCountriesMIView):
     """ Country details and wins breakdown """
 
     def get(self, request, country_code):
-        country = self._get_country(country_code)
-        if not country:
-            return self._not_found()
-
-        results = self._country_result(country)
-        hvc_wins = self._get_hvc_wins(country)
-        non_hvc_wins = self._get_non_hvc_wins(country)
+        results = self._country_result(self.country)
+        hvc_wins = self._get_hvc_wins(self.country)
+        non_hvc_wins = self._get_non_hvc_wins(self.country)
         results['wins'] = self._breakdowns(hvc_wins, non_hvc_wins=non_hvc_wins)
         return self._success(results)
 
@@ -119,12 +112,8 @@ class CountryMonthsView(BaseCountriesMIView):
         return sorted(month_to_wins, key=lambda tup: tup[0])
 
     def get(self, request, country_code):
-        country = self._get_country(country_code)
-        if not country:
-            return self._invalid('country not found')
-
-        results = self._country_result(country)
-        wins = self._get_all_wins(country)
+        results = self._country_result(self.country)
+        wins = self._get_all_wins(self.country)
 
         results['months'] = self._month_breakdowns(wins)
         return self._success(results)
@@ -149,10 +138,27 @@ class CountryCampaignsView(BaseCountriesMIView):
         return sorted_campaigns
 
     def get(self, request, country_code):
-        country = self._get_country(country_code)
-        if not country:
-            return self._not_found()
+        results = self._country_result(self.country)
+        results['campaigns'] = self._campaign_breakdowns(self.country)
+        return self._success(results)
 
-        results = self._country_result(country)
-        results['campaigns'] = self._campaign_breakdowns(country)
+
+class CountryTopNonHvcWinsView(BaseCountriesMIView):
+
+    def get(self, request, country_code):
+        non_hvc_wins_qs = self._get_non_hvc_wins(self.country)
+        results = self._top_non_hvc(non_hvc_wins_qs)
+        return self._success(results)
+
+
+class CountryWinTableView(BaseCountriesMIView):
+
+    def get(self, request, country_code):
+        results = {
+            "country": {
+                "id": country_code,
+                "name": self.country.country.name,
+            },
+            "wins": self._win_table_wins(self._get_hvc_wins(self.country), self._get_non_hvc_wins(self.country))
+        }
         return self._success(results)
