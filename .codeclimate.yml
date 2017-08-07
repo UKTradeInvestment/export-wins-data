@@ -12,7 +12,7 @@ engines:
       languages:
         python:
           python_version: 3
-          mass_threshold: 32
+          mass_threshold: 50
   fixme:
     enabled: true
   radon:
@@ -21,7 +21,7 @@ engines:
       - 578a67a5fc01bf16f9af5b9ec8c0c328
     config:
       python_version: 3
-      threshold: "B"
+      threshold: "D"
   pep8:
     enabled: true
 ratings:
