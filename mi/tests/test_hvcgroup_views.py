@@ -11,6 +11,7 @@ from freezegun import freeze_time
 
 from fixturedb.factories.win import create_win_factory
 from mi.tests.base_test_case import MiApiViewsBaseTestCase, MiApiViewsWithWinsBaseTestCase
+from mi.tests.utils import GenericWinTableTestMixin
 from wins.factories import (
     CustomerResponseFactory,
     NotificationFactory,
@@ -746,10 +747,18 @@ class HVCGroupBaseViewTestCase(MiApiViewsWithWinsBaseTestCase):
 
 
 @freeze_time(HVCGroupBaseViewTestCase.frozen_date_17)
-class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase):
-    TEST_CAMPAIGN_ID = "E001"
+class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase, GenericWinTableTestMixin):
+
+    fin_years = [2016, 2017]
+
+    TEST_COUNTRY_CODE = 'HU'
+    TEST_CAMPAIGN_ID = "E017"
     win_table_url = reverse('mi:hvc_group_win_table', kwargs={"group_id": 4})
     win_table_url_invalid = reverse('mi:hvc_group_win_table', kwargs={"group_id": 100})
+
+    # disable non_hvc tests
+    test_win_table_2017_confirmed_non_hvc = None
+    test_win_table_2017_unconfirmed_non_hvc = None
 
     @classmethod
     def setUpClass(cls):
@@ -761,6 +770,15 @@ class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase):
         self._win_factory_function = create_win_factory(
             self.user, sector_choices=self.TEAM_1_SECTORS)
         self.view_base_url = self.win_table_url
+        self.expected_response = {
+            "hvc_group": {
+                "id": "4",
+                "name": "Automotive",
+            },
+            "wins": {
+                "hvc": []
+            }
+        }
 
     def test_2017_win_table_in_2016_404(self):
         self.view_base_url = self.win_table_url_invalid
