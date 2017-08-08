@@ -26,6 +26,8 @@ from mi.utils import (
     average,
     percentage,
     percentage_formatted,
+    months_between, 
+    month_iterator,
 )
 from wins.models import Notification, Win, _get_open_hvcs, HVC
 
@@ -735,3 +737,40 @@ class BaseWinMIView(BaseMIView):
                 ]
 
         return results
+
+    def _month_breakdowns(self, wins, include_non_hvc=True):
+        """ generic internal that groups wins into monthly aggregation """
+        month_to_wins = self._group_wins_by_month(wins)
+        return [
+            {
+                'date': date_str,
+                'totals': self._breakdowns_cumulative(month_wins, include_non_hvc),
+            }
+            for date_str, month_wins in month_to_wins
+        ]
+
+    def _group_wins_by_month(self, wins):
+        """ generic internal that groups wins into monthly aggregation """
+        sorted_wins = sorted(wins, key=self._win_date_for_grouping)
+        month_grouping = []
+        start_date = self._date_range_start()
+        end_date = self._date_range_end()
+        # group wins by date (month-year)
+        for k, g in groupby(sorted_wins, key=self._win_date_for_grouping):
+            month_wins = list(g)
+            date_str = month_wins[0]['date'].strftime('%Y-%m')
+            month_grouping.append((date_str, month_wins))
+
+        # Add missing months within the financial year until current month
+        months_range = []
+        for item in month_iterator(start_date, end_date):
+            date_str = '{:d}-{:02d}'.format(*item)
+            months_range.append(date_str)
+            existing = [m for m in month_grouping if m[0] == date_str]
+            if len(existing) == 0:
+                month_grouping.append((date_str, list()))
+
+        sorted_month_grouping = sorted(month_grouping, key=lambda tup: tup[0])
+        # return only months between date range, FY by default
+        return [wins for wins in sorted_month_grouping if wins[0] in months_range]
+        

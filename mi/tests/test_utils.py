@@ -27,12 +27,12 @@ class UtilTests(TestCase):
     def test_month_iterator_with_current_date_as_end_date(self):
         months_in_fake_year = [(2016, 4), (2016, 5)]
         fin_year = FinancialYear.objects.get(id=2016)
-        self.assertEqual(list(month_iterator(fin_year)), months_in_fake_year)
+        self.assertEqual(list(month_iterator(fin_year.start, date(2016, 5, 1))), months_in_fake_year)
 
     @freeze_time("2017-05-01")
     def test_month_iterator(self):
         months_in_fake_year = [(2016, 4), (2016, 5), (2016, 6), (2016, 7), (2016, 8), (2016, 9),
                                (2016, 10), (2016, 11), (2016, 12), (2017, 1), (2017, 2), (2017, 3)]
         fin_year = FinancialYear.objects.get(id=2016)
-        self.assertEqual(list(month_iterator(fin_year)),
+        self.assertEqual(list(month_iterator(fin_year.start, fin_year.end)),
                          months_in_fake_year)

@@ -14,6 +14,7 @@ class OverseasRegionGroupYear(models.Model):
     region = models.ForeignKey('mi.OverseasRegion')
     group = models.ForeignKey('mi.OverseasRegionGroup')
 
+
 class OverseasRegionGroup(models.Model):
     name = models.CharField(max_length=128)
     regions = models.ManyToManyField(
@@ -26,6 +27,7 @@ class OverseasRegionGroup(models.Model):
 
     def __str__(self):
         return self.name
+
 
 class OverseasRegion(models.Model):
     name = models.CharField(max_length=128)
@@ -76,7 +78,8 @@ class OverseasRegion(models.Model):
 
     def fin_year_country_ids(self, year):
         """ List of all countries within the `OverseasRegion` """
-        countries = self.countries.filter(overseasregionyear__financial_year_id=year.id)
+        countries = self.countries.filter(
+            overseasregionyear__financial_year_id=year.id)
         return countries.values_list('country', flat=True)
 
 
@@ -229,7 +232,8 @@ class Sector(models.Model):
 
     name = models.CharField(max_length=128)
     sector_team = models.ManyToManyField(SectorTeam, related_name="sectors")
-    parent_sector = models.ManyToManyField(ParentSector, related_name="sectors")
+    parent_sector = models.ManyToManyField(
+        ParentSector, related_name="sectors")
 
     def __str__(self):
         return 'Sector: {} ({})'.format(self.name, self.parent_sector)
@@ -280,6 +284,7 @@ class FinancialYear(models.Model):
     def is_current(self):
         return self.id == FinancialYear.current_fy()
 
+
 class TargetManager(models.Manager):
 
     def for_fin_year(self, fin_year):
@@ -294,7 +299,8 @@ class Target(models.Model):
     sector_team = models.ForeignKey(SectorTeam, related_name="targets")
     hvc_group = models.ForeignKey(HVCGroup, related_name="targets")
     country = models.ManyToManyField(Country, related_name="targets")
-    financial_year = models.ForeignKey(FinancialYear, related_name="targets", null=False)
+    financial_year = models.ForeignKey(
+        FinancialYear, related_name="targets", null=False)
 
     objects = TargetManager()
 
@@ -316,7 +322,6 @@ class Target(models.Model):
     @property
     def charcode(self):
         return self.campaign_id + self.fy_digits
-
 
     def __str__(self):
         return 'Target: {} - {}'.format(

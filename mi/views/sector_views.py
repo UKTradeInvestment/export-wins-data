@@ -7,7 +7,7 @@ from mi.models import (
     SectorTeam,
     Target,
 )
-from mi.utils import month_iterator, sort_campaigns_by
+from mi.utils import sort_campaigns_by
 from mi.views.base_view import BaseWinMIView
 
 
@@ -167,34 +167,6 @@ class SectorTeamDetailView(BaseSectorMIView):
 
 class SectorTeamMonthsView(BaseSectorMIView):
     """ Sector Team name, hvcs and wins broken down by month """
-
-    def _month_breakdowns(self, wins):
-        month_to_wins = self._group_wins_by_month(wins)
-        return [
-            {
-                'date': date_str,
-                'totals': self._breakdowns_cumulative(month_wins),
-            }
-            for date_str, month_wins in month_to_wins
-        ]
-
-    def _group_wins_by_month(self, wins):
-        sorted_wins = sorted(wins, key=self._win_date_for_grouping)
-        month_to_wins = []
-        # group wins by date (month-year)
-        for k, g in groupby(sorted_wins, key=self._win_date_for_grouping):
-            month_wins = list(g)
-            date_str = month_wins[0]['date'].strftime('%Y-%m')
-            month_to_wins.append((date_str, month_wins))
-
-        # Add missing months within the financial year until current month
-        for item in month_iterator(self.fin_year):
-            date_str = '{:d}-{:02d}'.format(*item)
-            existing = [m for m in month_to_wins if m[0] == date_str]
-            if len(existing) == 0:
-                month_to_wins.append((date_str, list()))
-
-        return sorted(month_to_wins, key=lambda tup: tup[0])
 
     def get(self, request, team_id):
         team = self._get_team(team_id)

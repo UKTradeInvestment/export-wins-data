@@ -1208,7 +1208,7 @@ class SectorTeamMonthlyViewsTestCase(SectorTeamBaseTestCase):
             """ Helper to build response """
             self.expected_response["months"] = []
             fin_year = FinancialYear.objects.get(id=2016)
-            for item in month_iterator(fin_year):
+            for item in month_iterator(fin_year.start, datetime.datetime(2017, 1, 31)):
                 month_str = '{:d}-{:02d}'.format(*item)
                 month_dict = {
                         "date": month_str,

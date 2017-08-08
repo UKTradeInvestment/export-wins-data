@@ -80,3 +80,6 @@ db.sqlite3
 .DS_Store
 mi/.DS_Store
 /data/sp_prod.crt
+
+.vscode/
+/venv

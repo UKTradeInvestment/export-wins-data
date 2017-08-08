@@ -16,25 +16,25 @@ def _today():
     return datetime.today()
 
 
-def month_iterator(fin_year):
+def month_iterator(start, end):
     """
-    Helper generator function to iterate through (year, month) in a given `FinancialYear`
+    Helper generator function to iterate through (year, month) 
+    between start and end dates
     """
-    start_date = fin_year.start
-    if fin_year.is_current:
-        end_date = datetime.today()
-    else:
-        end_date = fin_year.end
-
-    start_month = start_date.month - 1
-    start_year = start_date.year
-    end_month = end_date.month
-    end_year = end_date.year
+    start_month = start.month - 1
+    start_year = start.year
+    end_month = end.month
+    end_year = end.year
     ym_start = 12 * start_year + start_month
     ym_end = 12 * end_year + end_month
     for ym in range(ym_start, ym_end):
         y, m = divmod(ym, 12)
         yield y, m + 1
+
+
+def months_between(start, end):
+    """ Helper to return number of months between dates"""
+    return (end.year - start.year) * 12 + end.month - start.month + 1
 
 
 def two_digit_float(number):

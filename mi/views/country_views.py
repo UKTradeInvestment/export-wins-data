@@ -8,7 +8,6 @@ from django.db.models import Q
 from django_countries.fields import Country as DjangoCountry
 
 from mi.models import Country
-from mi.utils import month_iterator
 from mi.views.base_view import BaseWinMIView, BaseMIView
 from mi.utils import sort_campaigns_by
 
@@ -83,34 +82,6 @@ class CountryDetailView(BaseCountriesMIView):
 class CountryMonthsView(BaseCountriesMIView):
     """ Country name, hvcs and wins broken down by month """
 
-    def _month_breakdowns(self, wins):
-        month_to_wins = self._group_wins_by_month(wins)
-        return [
-            {
-                'date': date_str,
-                'totals': self._breakdowns_cumulative(month_wins),
-            }
-            for date_str, month_wins in month_to_wins
-        ]
-
-    def _group_wins_by_month(self, wins):
-        sorted_wins = sorted(wins, key=self._win_date_for_grouping)
-        month_to_wins = []
-        for k, g in groupby(sorted_wins, key=self._win_date_for_grouping):
-            month_wins = list(g)
-            date_str = month_wins[0]['date'].strftime('%Y-%m')
-            month_to_wins.append((date_str, month_wins))
-
-        # Add missing months within the financial year until current month
-        for item in month_iterator(self.fin_year):
-            date_str = '{:d}-{:02d}'.format(*item)
-            existing = [m for m in month_to_wins if m[0] == date_str]
-            if len(existing) == 0:
-                # add missing month and an empty list
-                month_to_wins.append((date_str, list()))
-
-        return sorted(month_to_wins, key=lambda tup: tup[0])
-
     def get(self, request, country_code):
         results = self._country_result(self.country)
         wins = self._get_all_wins(self.country)
@@ -133,7 +104,6 @@ class CountryCampaignsView(BaseCountriesMIView):
             }
             for campaign, campaign_wins in campaign_to_wins
         ]
-
         sorted_campaigns = sorted(campaigns, key=sort_campaigns_by, reverse=True)
         return sorted_campaigns
 
