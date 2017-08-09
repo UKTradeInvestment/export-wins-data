@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 
-from django.utils.functional import cached_property
 from django_countries.fields import Country
 from factory.fuzzy import FuzzyInteger, FuzzyChoice
 from jmespath import search as s
@@ -28,7 +27,7 @@ class GenericTopNonHvcWinsTestMixin:
         self.view_base_url - url for your top_non_hvc_view without ?year= param
         self.TEST_COUNTRY_CODE - a country code
     """
-
+    TEST_COUNTRY_CODE = "FR"
     fin_years = []
 
     def test_values_1_win(self):
