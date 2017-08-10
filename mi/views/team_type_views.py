@@ -32,6 +32,15 @@ class BaseTeamTypeMIView(BaseWinMIView):
     def team(self):
         return [x for x in self.valid_options if x['slug'] == self.team_slug][0]
 
+    @cached_property
+    def team_type_key(self):
+        """
+        What to use in the result for the heading of the json response.
+        Most of the time returning team_type is fine but override this if the
+        database key for team type doesn't make sense
+        """
+        return self.team_type
+
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
         self.handle_team_slug(kwargs)
@@ -91,7 +100,7 @@ class TeamTypeWinTableView(BaseTeamTypeMIView):
 
     def _result(self):
         return {
-            "post": {
+            self.team_type_key: {
                 "id": self.team['id'],
                 "name": self.team['name'],
                 "slug": self.team['slug'],
