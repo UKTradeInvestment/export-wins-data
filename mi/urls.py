@@ -47,7 +47,9 @@ from mi.views.team_type_views import (
     TeamTypeListView,
     TeamTypeDetailView,
     TeamTypeWinTableView,
-    TeamTypeNonHvcWinsView
+    TeamTypeNonHvcWinsView,
+    TeamTypeMonthsView,
+    TeamTypeCampaignsView
 )
 from mi.views.global_views import GlobalWinsView
 
@@ -104,6 +106,10 @@ urlpatterns = [
         name="post_win_table"),
     url(r"^posts/(?P<team_slug>[\w\-]+)/top_non_hvcs/$", TeamTypeNonHvcWinsView.as_view(team_type='post'),
         name="posts_top_nonhvc"),
+    url(r"^posts/(?P<team_slug>[\w\-]+)/months/$", TeamTypeMonthsView.as_view(team_type='post'),
+        name="posts_months"),
+    url(r"^posts/(?P<team_slug>[\w\-]+)/campaigns/$", TeamTypeCampaignsView.as_view(team_type='post'),
+        name="posts_campaigns"),
 
     url(r"^uk_regions/$", TeamTypeListView.as_view(team_type='itt'), name="uk_regions"),
     url(r"^uk_regions/(?P<team_slug>[\w\-]+)/$", TeamTypeDetailView.as_view(team_type='itt'),
