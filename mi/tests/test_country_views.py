@@ -49,7 +49,6 @@ class CountryDetailTestCase(CountryBaseViewTestCase):
     country_detail_url_invalid = reverse(
         'mi:country_detail', kwargs={"country_code": "ABC"})
 
-
     def setUp(self):
         super().setUp()
         self._win_factory_function = create_win_factory(
@@ -1408,9 +1407,12 @@ class CountryTopNonHVCViewTestCase(CountryBaseViewTestCase, GenericTopNonHvcWins
     export_value = 9992
 
     TEST_COUNTRY_CODE = "FR"
-    country_top_nonhvc_url = reverse('mi:country_top_nonhvc', kwargs={"country_code": "FR"})
-    country_topnonhvc_url_invalid = reverse('mi:country_top_nonhvc', kwargs={"country_code": "ABC"})
-    country_topnonhvc_url_missing_country_kwarg = reverse('mi:country_top_nonhvc', kwargs={"country_code": None})
+    country_top_nonhvc_url = reverse(
+        'mi:country_top_nonhvc', kwargs={"country_code": "FR"})
+    country_topnonhvc_url_invalid = reverse(
+        'mi:country_top_nonhvc', kwargs={"country_code": "ABC"})
+    country_topnonhvc_url_missing_country_kwarg = reverse(
+        'mi:country_top_nonhvc', kwargs={"country_code": None})
 
     fin_years = [2016, 2017]
 

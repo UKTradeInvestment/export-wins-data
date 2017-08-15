@@ -19,7 +19,7 @@ class BaseHVCGroupMIView(BaseSectorMIView):
         """ Basic data about HVC Group - name & hvc's """
         return {
             'name': group.name,
-            'avg_time_to_confirm': self._average_confirm_time(win__hvc__in=group.fin_year_campaign_ids(self.fin_year)),
+            'avg_time_to_confirm': self._average_confirm_time_for_wins(self._get_group_wins(group)),
             'hvcs': self._hvc_overview(group.fin_year_targets(fin_year=self.fin_year)),
         }
 
@@ -103,17 +103,19 @@ class HVCGroupCampaignsView(BaseHVCGroupMIView):
         results['campaigns'] = self._campaign_breakdowns(group)
         return self._success(results)
 
+
 class HVCGroupWinTableView(BaseHVCGroupMIView):
     def get(self, request, group_id):
         group = self._get_hvc_group(group_id)
         if not group:
             return self._not_found()
 
+        wins = self._get_group_wins(group)
         results = {
             "hvc_group": {
                 "id": group_id,
                 "name": group.name,
             },
-            "wins": self._win_table_wins(self._get_group_wins(group))
+            "wins": self._win_table_wins(wins)
         }
         return self._success(results)

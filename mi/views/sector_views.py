@@ -1,6 +1,10 @@
+import operator
 from collections import defaultdict
 from itertools import groupby
 from operator import itemgetter
+from functools import reduce
+
+from django.db.models import Q
 
 from mi.models import (
     HVCGroup,
@@ -42,8 +46,8 @@ class BaseSectorMIView(BaseWinMIView):
 
     def _get_group_campaigns(self, group):
         """
-        Overriding default group.campaign_ids, to add a hack to cater for 
-        cross FY team changes. 
+        Overriding default group.campaign_ids, to add a hack to cater for
+        cross FY team changes.
         """
         campaign_ids = group.campaign_ids
         if group.name == "Consumer and Retail":
@@ -68,13 +72,14 @@ class BaseSectorMIView(BaseWinMIView):
 
     def _get_group_wins(self, group):
         """ HVC wins of the HVC Group, for given `FinancialYear` """
-
-        return self._hvc_wins().filter(hvc__in=self._get_group_campaigns(group))
+        group_hvcs = [hvc[:4] for hvc in self._get_group_campaigns(group)]
+        filter = reduce(
+            operator.or_, [Q(hvc__startswith=hvc) for hvc in group_hvcs])
+        return self._hvc_wins().filter(filter)
 
     def _get_team_campaigns(self, team):
         """
-        Overriding default team.campaign_ids, to add a hack to cater for 
-        cross FY team changes. 
+        Overriding default team.campaign_ids, to add a hack to cater for cross FY team changes
         """
         # hack for Consumer & Creative
         campaign_ids = team.campaign_ids
@@ -196,7 +201,8 @@ class SectorTeamCampaignsView(BaseSectorMIView):
             for campaign, campaign_wins in campaign_to_wins
         ]
 
-        sorted_campaigns = sorted(campaigns, key=sort_campaigns_by, reverse=True)
+        sorted_campaigns = sorted(
+            campaigns, key=sort_campaigns_by, reverse=True)
         return sorted_campaigns
 
     def get(self, request, team_id):
@@ -263,10 +269,12 @@ class SectorTeamsOverviewView(BaseSectorMIView):
         result = self._sector_obj_data(sector_team, team_campaign_ids)
         hvc_wins = self._get_cached_hvc_wins(team_campaign_ids)
         non_hvc_wins = self._get_cached_non_hvc_wins(sector_team.sector_ids)
-        non_hvc_confirmed, non_hvc_unconfirmed = self._confirmed_unconfirmed(non_hvc_wins)
+        non_hvc_confirmed, non_hvc_unconfirmed = self._confirmed_unconfirmed(
+            non_hvc_wins)
         hvc_confirmed = result['values']['hvc']['current']['confirmed']
         hvc_unconfirmed = result['values']['hvc']['current']['unconfirmed']
-        total_win_percent = self._overview_win_percentages(hvc_wins, non_hvc_wins)
+        total_win_percent = self._overview_win_percentages(
+            hvc_wins, non_hvc_wins)
         totals = {
             'confirmed': hvc_confirmed + non_hvc_confirmed,
             'unconfirmed': hvc_unconfirmed + non_hvc_unconfirmed
@@ -284,20 +292,23 @@ class SectorTeamsOverviewView(BaseSectorMIView):
         result['values']['non_hvc'] = non_hvc_data
         result['values']['hvc']['total_win_percent'] = total_win_percent['hvc']
         groups = self.team_groups[sector_team]
-        result['hvc_groups'] = [self._sector_obj_data(g, self._get_group_campaigns(g)) for g in groups]
+        result['hvc_groups'] = [self._sector_obj_data(
+            g, self._get_group_campaigns(g)) for g in groups]
         return result
 
     def get(self, request):
 
         # cache wins to avoid many queries
-        hvc_wins, non_hvc_wins = self._wins().hvc(fin_year=self.fin_year), self._wins().non_hvc(fin_year=self.fin_year)
+        hvc_wins, non_hvc_wins = self._wins().hvc(
+            fin_year=self.fin_year), self._wins().non_hvc(fin_year=self.fin_year)
         for win in hvc_wins:
             self.hvc_to_wins[win['hvc']].append(win)
         for win in non_hvc_wins:
             self.sector_to_wins[win['sector']].append(win)
 
         # cache targets
-        targets = Target.objects.filter(financial_year=self.fin_year).select_related('hvc_group', 'sector_team')
+        targets = Target.objects.filter(
+            financial_year=self.fin_year).select_related('hvc_group', 'sector_team')
         for target in targets:
             self.team_targets[target.sector_team].append(target)
             self.team_targets[target.hvc_group].append(target)
@@ -316,6 +327,7 @@ class SectorTeamsOverviewView(BaseSectorMIView):
         result = [self._sector_data(team) for team in sector_team_qs]
 
         return self._success(sorted(result, key=itemgetter('name')))
+
 
 class SectorTeamWinTableView(BaseSectorMIView):
 

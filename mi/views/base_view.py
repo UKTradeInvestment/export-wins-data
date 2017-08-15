@@ -26,7 +26,7 @@ from mi.utils import (
     average,
     percentage,
     percentage_formatted,
-    months_between, 
+    months_between,
     month_iterator,
 )
 from wins.models import Notification, Win, _get_open_hvcs, HVC
@@ -137,12 +137,14 @@ class BaseMIView(APIView):
             return win['date']
 
     def _handle_query_param_dates(self, request):
-        serializer = DateRangeSerializer(financial_year=self.fin_year, data=request.GET)
+        serializer = DateRangeSerializer(
+            financial_year=self.fin_year, data=request.GET)
         if serializer.is_valid():
             for param, value in serializer.validated_data.items():
                 setattr(self, param, value)
         else:
             self._invalid(serializer.errors)
+
 
 class BaseWinMIView(BaseMIView):
     """ Base view with Win-related MI helpers """
@@ -209,10 +211,12 @@ class BaseWinMIView(BaseMIView):
             'lead_officer_name',
             'location'
         ]
-        newest_notification = Notification.objects.filter(win=OuterRef('pk'), type=Notification.TYPE_CUSTOMER).order_by('-created')
+        newest_notification = Notification.objects.filter(win=OuterRef(
+            'pk'), type=Notification.TYPE_CUSTOMER).order_by('-created')
 
         wins = Win.objects.filter(self._wins_filter()).only(*fields).values(*fields).annotate(
-            notifications__created=Subquery(newest_notification.values('created')[:1])
+            notifications__created=Subquery(
+                newest_notification.values('created')[:1])
         )
 
         return wins
@@ -267,7 +271,8 @@ class BaseWinMIView(BaseMIView):
 
         hvc_colours = []
         for t in targets:
-            target_wins = [win for win in hvc_wins if win['hvc'][:-2] == t.charcode[:-2]]
+            target_wins = [win for win in hvc_wins if win['hvc']
+                           [:-2] == t.charcode[:-2]]
             current_val, _ = self._confirmed_unconfirmed(target_wins)
             hvc_colours.append(self._get_status_colour(t.target, current_val))
 
@@ -295,8 +300,23 @@ class BaseWinMIView(BaseMIView):
         confirm_times = []
         for win_id, values_grouper in groupby(notifications, itemgetter('win__id')):
             earliest_values = next(iter(values_grouper))
-            delta = earliest_values['win__confirmation__created'] - earliest_values['created']
+            from_date = earliest_values['win__confirmation__created']
+            to_date = earliest_values['created']
+            delta = from_date.date() - to_date.date()
             confirm_times.append(delta.days)
+
+        avg_confirm_time = average(confirm_times)
+        return avg_confirm_time or 0.0
+
+    def _average_confirm_time_for_wins(self, wins):
+        confirm_times = []
+        for win in wins:
+            if self._win_status(win) == "confirmed":
+                from_date = win['confirmation__created']
+                to_date = win['notifications__created']
+                if from_date and to_date:
+                    delta = from_date.date() - to_date.date()
+                    confirm_times.append(delta.days)
 
         avg_confirm_time = average(confirm_times)
 
@@ -317,7 +337,8 @@ class BaseWinMIView(BaseMIView):
         """ Percentages of total confirmed/unconfirmed value HVC & non-HVC """
 
         hvc_confirmed, hvc_unconfirmed = self._confirmed_unconfirmed(hvc_wins)
-        non_hvc_confirmed, non_hvc_unconfirmed = self._confirmed_unconfirmed(non_hvc_wins)
+        non_hvc_confirmed, non_hvc_unconfirmed = self._confirmed_unconfirmed(
+            non_hvc_wins)
 
         total_confirmed = hvc_confirmed + non_hvc_confirmed
         total_unconfirmed = hvc_unconfirmed + non_hvc_unconfirmed
@@ -332,12 +353,16 @@ class BaseWinMIView(BaseMIView):
             }
         }
         if total_confirmed != 0:
-            total_win_percent['hvc']['confirmed'] = percentage(hvc_confirmed, total_confirmed)
-            total_win_percent['non_hvc']['confirmed'] = percentage(non_hvc_confirmed, total_confirmed)
+            total_win_percent['hvc']['confirmed'] = percentage(
+                hvc_confirmed, total_confirmed)
+            total_win_percent['non_hvc']['confirmed'] = percentage(
+                non_hvc_confirmed, total_confirmed)
 
         if total_unconfirmed != 0:
-            total_win_percent['hvc']['unconfirmed'] = percentage(hvc_unconfirmed, total_unconfirmed)
-            total_win_percent['non_hvc']['unconfirmed'] = percentage(non_hvc_unconfirmed, total_unconfirmed)
+            total_win_percent['hvc']['unconfirmed'] = percentage(
+                hvc_unconfirmed, total_unconfirmed)
+            total_win_percent['non_hvc']['unconfirmed'] = percentage(
+                non_hvc_unconfirmed, total_unconfirmed)
 
         return total_win_percent
 
@@ -350,7 +375,8 @@ class BaseWinMIView(BaseMIView):
         If in case of previous ones, just return 365
         """
 
-        days_into_year = (datetime.today().replace(tzinfo=UTC) - self.fin_year.start).days
+        days_into_year = (datetime.today().replace(
+            tzinfo=UTC) - self.fin_year.start).days
 
         if days_into_year > 365:
             return 365
@@ -487,8 +513,10 @@ class BaseWinMIView(BaseMIView):
         """ Breakdown wins by progress toward HVC target """
 
         breakdown = self._breakdown_wins(wins)
-        confirmed_percent = percentage_formatted(breakdown['value']['confirmed'], target)
-        unconfirmed_percent = percentage_formatted(breakdown['value']['unconfirmed'], target)
+        confirmed_percent = percentage_formatted(
+            breakdown['value']['confirmed'], target)
+        unconfirmed_percent = percentage_formatted(
+            breakdown['value']['unconfirmed'], target)
         return {
             'hvc': breakdown,
             'target': target,
@@ -635,8 +663,10 @@ class BaseWinMIView(BaseMIView):
     def _confirmed_unconfirmed(self, wins):
         """ Find total Confirmed & Unconfirmed export value for given Wins """
 
-        confirmed = sum(w['total_expected_export_value'] for w in wins if self._win_status(w) == 'confirmed')
-        unconfirmed = sum(w['total_expected_export_value'] for w in wins if self._win_status(w) == 'unconfirmed')
+        confirmed = sum(w['total_expected_export_value']
+                        for w in wins if self._win_status(w) == 'confirmed')
+        unconfirmed = sum(w['total_expected_export_value']
+                          for w in wins if self._win_status(w) == 'unconfirmed')
         return confirmed, unconfirmed
 
     def _top_non_hvc(self, non_hvc_wins_qs, records_to_retrieve=5):
@@ -657,7 +687,8 @@ class BaseWinMIView(BaseMIView):
 
         # make a lookup to get names efficiently
         sector_id_to_name = {s.id: s.name for s in Sector.objects.all()}
-        top_value = int(non_hvc_wins[0]['total_value']) if non_hvc_wins else None
+        top_value = int(non_hvc_wins[0]['total_value']
+                        ) if non_hvc_wins else None
         return [
             {
                 'region': DjangoCountry(w['country']).name,
@@ -672,7 +703,7 @@ class BaseWinMIView(BaseMIView):
         ]
 
     def _win_table_wins(self, hvc_wins, non_hvc_wins=None):
-        all_hvcs = {"{}{}".format(x["campaign_id"], x["financial_year"]):x["name"]
+        all_hvcs = {"{}{}".format(x["campaign_id"], x["financial_year"]): x["name"]
                     for x in HVC.objects.all().values("campaign_id", "financial_year", "name")}
 
         def confirmed_date(win):
@@ -695,46 +726,46 @@ class BaseWinMIView(BaseMIView):
             return self._win_status(win) == "confirmed"
 
         results = {
-                "hvc": [
-                    {
-                        "id": win["id"],
-                        "hvc": {
-                            "code": win["hvc"][:4],
-                            "name": all_hvcs[win["hvc"]]
-                        },
-                        "company": {
-                            "name": win["company_name"],
-                            "cdms_id": win["cdms_reference"]
-                        },
-                        "lead_officer": {
-                            "name": win["lead_officer_name"],
-                        },
-                        "credit": credit(win),
-                        "win_date": confirmed_date(win),
-                        "export_amount": win["total_expected_export_value"],
-                        "status": status(win)
-                    }
-                    for win in hvc_wins
-                ],
-            }
+            "hvc": [
+                {
+                    "id": win["id"],
+                    "hvc": {
+                        "code": win["hvc"][:4],
+                        "name": all_hvcs[win["hvc"]]
+                    },
+                    "company": {
+                        "name": win["company_name"],
+                        "cdms_id": win["cdms_reference"]
+                    },
+                    "lead_officer": {
+                        "name": win["lead_officer_name"],
+                    },
+                    "credit": credit(win),
+                    "win_date": confirmed_date(win),
+                    "export_amount": win["total_expected_export_value"],
+                    "status": status(win)
+                }
+                for win in hvc_wins
+            ],
+        }
         if non_hvc_wins:
             results["non_hvc"] = [
-                    {
-                        "id": win["id"],
-                        "company": {
-                            "name": win["company_name"],
-                            "cdms_id": win["cdms_reference"]
-                        },
-                        "lead_officer": {
-                            "name": win["lead_officer_name"],
-                        },
-                        "credit": credit(win),
-                        "win_date": confirmed_date(win),
-                        "export_amount": win["total_expected_export_value"],
-                        "status": status(win)
-                    }
-                    for win in non_hvc_wins
-                ]
+                {
+                    "id": win["id"],
+                    "company": {
+                        "name": win["company_name"],
+                        "cdms_id": win["cdms_reference"]
+                    },
+                    "lead_officer": {
+                        "name": win["lead_officer_name"],
+                    },
+                    "credit": credit(win),
+                    "win_date": confirmed_date(win),
+                    "export_amount": win["total_expected_export_value"],
+                    "status": status(win)
+                }
+                for win in non_hvc_wins
+            ]
 
         return results
 
@@ -773,4 +804,3 @@ class BaseWinMIView(BaseMIView):
         sorted_month_grouping = sorted(month_grouping, key=lambda tup: tup[0])
         # return only months between date range, FY by default
         return [wins for wins in sorted_month_grouping if wins[0] in months_range]
-        
