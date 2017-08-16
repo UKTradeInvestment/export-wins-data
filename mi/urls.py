@@ -5,7 +5,9 @@ from mi.views.country_views import (
     CountryDetailView,
     CountryMonthsView,
     CountryCampaignsView,
-    CountryTopNonHvcWinsView, CountryWinTableView)
+    CountryTopNonHvcWinsView,
+    CountryWinTableView
+)
 from mi.views.parent_views import (
     ParentSectorListView,
 )
@@ -41,7 +43,14 @@ from mi.views.sector_views import (
     TopNonHvcSectorCountryWinsView,
     SectorTeamWinTableView,
 )
-
+from mi.views.team_type_views import (
+    TeamTypeListView,
+    TeamTypeDetailView,
+    TeamTypeWinTableView,
+    TeamTypeNonHvcWinsView,
+    TeamTypeMonthsView,
+    TeamTypeCampaignsView
+)
 from mi.views.global_views import GlobalWinsView
 
 urlpatterns = [
@@ -91,4 +100,22 @@ urlpatterns = [
     url(r"^countries/(?P<country_code>[\w\-]+)/top_non_hvcs/$", CountryTopNonHvcWinsView.as_view(), name="country_top_nonhvc"),
     url(r"^countries/(?P<country_code>[\w\-]+)/win_table/$", CountryWinTableView.as_view(), name="country_win_table"),
 
+    url(r"^posts/$", TeamTypeListView.as_view(team_type='post'), name="post"),
+    url(r"^posts/(?P<team_slug>[\w\-]+)/$", TeamTypeDetailView.as_view(team_type='post'), name="post_detail"),
+    url(r"^posts/(?P<team_slug>[\w\-]+)/win_table/$", TeamTypeWinTableView.as_view(team_type='post'),
+        name="post_win_table"),
+    url(r"^posts/(?P<team_slug>[\w\-]+)/top_non_hvcs/$", TeamTypeNonHvcWinsView.as_view(team_type='post'),
+        name="posts_top_nonhvc"),
+    url(r"^posts/(?P<team_slug>[\w\-]+)/months/$", TeamTypeMonthsView.as_view(team_type='post'),
+        name="posts_months"),
+    url(r"^posts/(?P<team_slug>[\w\-]+)/campaigns/$", TeamTypeCampaignsView.as_view(team_type='post'),
+        name="posts_campaigns"),
+
+    url(r"^uk_regions/$", TeamTypeListView.as_view(team_type='itt'), name="uk_regions"),
+    url(r"^uk_regions/(?P<team_slug>[\w\-]+)/$", TeamTypeDetailView.as_view(team_type='itt'),
+        name="uk_regions_detail"),
+    url(r"^uk_regions/(?P<team_slug>[\w\-]+)/win_table/$", TeamTypeWinTableView.as_view(team_type='itt'),
+        name="uk_regions_win_table"),
+    url(r"^uk_regions/(?P<team_slug>[\w\-]+)/top_non_hvcs/$", TeamTypeNonHvcWinsView.as_view(team_type='itt'),
+        name="uk_regions_top_nonhvc"),
 ]

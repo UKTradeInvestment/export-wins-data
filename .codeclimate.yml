@@ -24,6 +24,9 @@ engines:
       threshold: "D"
   pep8:
     enabled: true
+    checks:
+      E701:
+        enabled: false
 ratings:
   paths:
   - "**.py"

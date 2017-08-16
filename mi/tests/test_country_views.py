@@ -18,7 +18,7 @@ from mi.tests.base_test_case import (
     MiApiViewsBaseTestCase
 )
 from mi.utils import sort_campaigns_by
-from mi.tests.utils import GenericTopNonHvcWinsTestMixin, GenericWinTableTestMixin
+from mi.tests.utils import GenericTopNonHvcWinsTestMixin, GenericWinTableTestMixin, GenericMonthlyViewTestCase
 
 
 @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
@@ -584,7 +584,10 @@ class CountryDetailTestCase(CountryBaseViewTestCase):
 
 
 @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
-class CountriesMonthsTestCase(CountryBaseViewTestCase):
+class CountriesMonthsTestCase(CountryBaseViewTestCase, GenericMonthlyViewTestCase):
+
+    export_value = 123456
+    TEST_CAMPAIGN_ID = 'E045'
 
     @classmethod
     def setUpClass(cls):
@@ -599,86 +602,14 @@ class CountriesMonthsTestCase(CountryBaseViewTestCase):
         self.view_base_url = reverse('mi:country_monthly', kwargs={
                                      'country_code': self.test_country.country})
 
-    def test_get_with_no_data(self):
-        self.url = self.get_url_for_year(2017)
-        data = self._api_response_data
-
-        # there should be no wins
-        number_of_wins = s('sum(months[].totals.*[].*[].number.*[])', data)
-        self.assertEqual(number_of_wins, 0)
-
-        # every value in the wins breakdown should be 0
-        value_of_wins = s('sum(months[].totals.*[].*[].*[].*[])', data)
-        self.assertEqual(value_of_wins, 0)
-
-    def test_get_with_1_win(self):
-        export_value = 123456
-
-        self._create_hvc_win(
-            hvc_code='E045', win_date=now(), response_date=now(),
-            confirm=True, fin_year=2017, export_value=export_value,
-            country='FR')
-
-        self.url = self.get_url_for_year(2017)
-        data = self._api_response_data
-
-        number_of_wins_2017_05 = s(
-            "months[?date=='2017-05'].totals.export.hvc.number.total | [0]", data)
-        number_of_wins_2017_04 = s(
-            "months[?date=='2017-04'].totals.export.hvc.number.total | [0]", data)
-
-        # there should be no wins for 'last' month
-        self.assertEqual(number_of_wins_2017_04, 0)
-
-        # there should be 1 for this month
-        self.assertEqual(number_of_wins_2017_05, 1)
-
-        # value should match the win we created
-        value_of_wins = s("sum(months[].totals.export.hvc.value.total)", data)
-        self.assertEqual(value_of_wins, export_value)
-
-    def test_group_by_month_from_data(self):
-        export_value = 123456
-
-        self._create_hvc_win(
-            hvc_code='E045', win_date=now(), response_date=now(),
-            confirm=True, fin_year=2017, export_value=export_value,
-            country='FR')
-
-        self._create_hvc_win(
-            hvc_code='E045', win_date=now() + relativedelta(months=-1),
-            confirm=True, fin_year=2017, export_value=export_value,
-            country='FR')
-
-        self.url = self.get_url_for_year(2017)
-        data = self._api_response_data
-
-        number_of_wins_2017_05 = s(
-            "months[?date=='2017-05'].totals.export.hvc.number.total | [0]", data)
-        number_of_wins_2017_04 = s(
-            "months[?date=='2017-04'].totals.export.hvc.number.total | [0]", data)
-
-        # there should be no wins for 'last' month
-        self.assertEqual(number_of_wins_2017_04, 1)
-
-        # there should be 2 for this month (cumulative) take the one
-        # from last month and add to the one from this month
-        self.assertEqual(number_of_wins_2017_05, 2)
-
-        # value should match the win we created for
-        # month 1, then 2x value for month 2 therefore
-        # sum of all totals will be 3x export_value
-        value_of_wins = s("sum(months[].totals.export.hvc.value.total)", data)
-        self.assertEqual(value_of_wins, export_value * 3)
-
 
 @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
 class CountryCampaignsTestCase(CountryBaseViewTestCase):
     list_countries_base_url = reverse('mi:countries')
     view_base_url = reverse('mi:country_campaigns', kwargs={
         'country_code': "FR"})
-    CEN_16_HVCS = ["E045", "E046", "E047", "E048", "E214"]
-    CEN_17_HVCS = ["E045", "E046", "E047", "E054", "E119", "E225"]
+    CEN_2016_HVCS = ["E045", "E046", "E047", "E048", "E214"]
+    CEN_2017_HVCS = ["E045", "E046", "E047", "E054", "E119", "E225"]
     TEST_CAMPAIGN_ID = "E045"
     TARGET_E017 = 10000000
     PRORATED_TARGET = 833333  # target based on the frozen date
@@ -699,7 +630,7 @@ class CountryCampaignsTestCase(CountryBaseViewTestCase):
         api_response = self._api_response_data
         self.assertEqual(len(api_response["campaigns"]), len(
             api_response["hvcs"]["campaigns"]))
-        self.assertEqual(len(api_response["campaigns"]), len(self.CEN_16_HVCS))
+        self.assertEqual(len(api_response["campaigns"]), len(self.CEN_2016_HVCS))
 
     def test_campaigns_2016_no_duplicates(self):
         list_countries_url = self.get_url_for_year(
@@ -751,12 +682,12 @@ class CountryCampaignsTestCase(CountryBaseViewTestCase):
                     "HVC: E048",
                     "HVC: E214",
                 ],
-                "target": self.CAMPAIGN_TARGET * len(self.CEN_16_HVCS)
+                "target": self.CAMPAIGN_TARGET * len(self.CEN_2016_HVCS)
             },
             "avg_time_to_confirm": 0
         }
         campaigns = []
-        for hvc_code in self.CEN_16_HVCS:
+        for hvc_code in self.CEN_2016_HVCS:
             campaigns.append({
                 "campaign": "HVC",
                 "campaign_id": hvc_code,
@@ -789,7 +720,7 @@ class CountryCampaignsTestCase(CountryBaseViewTestCase):
 
     def test_avg_time_to_confirm_unconfirmed_wins(self):
         """ Average time to confirm will be zero, if there are no confirmed wins """
-        for hvc_code in self.CEN_16_HVCS:
+        for hvc_code in self.CEN_2016_HVCS:
             self._create_hvc_win(
                 hvc_code=hvc_code, confirm=False, country="FR")
         api_response = self._api_response_data
@@ -799,7 +730,7 @@ class CountryCampaignsTestCase(CountryBaseViewTestCase):
 
     def test_avg_time_to_confirm_wins_confirmed_nextday(self):
         """ Test average time to confirm when all wins confirmed in one day """
-        for hvc_code in self.CEN_16_HVCS:
+        for hvc_code in self.CEN_2016_HVCS:
             self._create_hvc_win(
                 hvc_code=hvc_code,
                 win_date=self.win_date_2017,
@@ -820,7 +751,7 @@ class CountryCampaignsTestCase(CountryBaseViewTestCase):
         Average time to confirm should be more than one,
         when wins took more than one day to be confirmed
         """
-        for hvc_code in self.CEN_16_HVCS:
+        for hvc_code in self.CEN_2016_HVCS:
             response_date = FuzzyDate(datetime.datetime(2017, 5, 27),
                                       datetime.datetime(2017, 5, 31)).evaluate(2, None, False)
             self._create_hvc_win(
@@ -845,7 +776,7 @@ class CountryCampaignsTestCase(CountryBaseViewTestCase):
 
     def test_campaigns_count_unconfirmed_wins(self):
         """ unconfirmed wins shouldn't have any effect on number of campaigns """
-        for hvc_code in self.CEN_17_HVCS:
+        for hvc_code in self.CEN_2017_HVCS:
             self._create_hvc_win(
                 hvc_code=hvc_code,
                 win_date=self.win_date_2017,
@@ -859,7 +790,7 @@ class CountryCampaignsTestCase(CountryBaseViewTestCase):
 
     def test_campaigns_count_confirmed_wins(self):
         """ confirmed HVC wins shouldn't have any effect on number of campaigns """
-        for hvc_code in self.CEN_17_HVCS:
+        for hvc_code in self.CEN_2017_HVCS:
             self._create_hvc_win(
                 hvc_code=hvc_code,
                 win_date=self.win_date_2017,
@@ -874,7 +805,7 @@ class CountryCampaignsTestCase(CountryBaseViewTestCase):
 
     def test_campaigns_count_unconfirmed_nonhvc_wins(self):
         """ unconfirmed non-hvc wins shouldn't have any effect on number of campaigns """
-        for _ in self.CEN_17_HVCS:
+        for _ in self.CEN_2017_HVCS:
             self._create_non_hvc_win(
                 win_date=self.win_date_2017,
                 confirm=False,
@@ -887,7 +818,7 @@ class CountryCampaignsTestCase(CountryBaseViewTestCase):
 
     def test_campaigns_count_confirmed_nonhvc_wins(self):
         """ unconfirmed non-hvc wins shouldn't have any effect on number of campaigns """
-        for _ in self.CEN_17_HVCS:
+        for _ in self.CEN_2017_HVCS:
             self._create_non_hvc_win(
                 win_date=self.win_date_2017,
                 confirm=True,
