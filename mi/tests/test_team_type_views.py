@@ -77,10 +77,10 @@ class PostWinTableTestCase(TeamTypeBaseViewTestCase, GenericWinTableTestMixin):
 
     expected_response = {
         "post": {
-            "id": "post:Albania - Tirana",
+            "id": "albania-tirana",
             "name": "Albania - Tirana",
-            "slug": "albania-tirana",
         },
+        "avg_time_to_confirm": 0.0,
         "wins": {
             "hvc": [],
         }
@@ -118,7 +118,7 @@ class PostListViewTestCase(TeamTypeBaseViewTestCase):
             len({k: v for k, v in HQ_TEAM_REGION_OR_POST if k.startswith('post')})
         )
 
-        self.assertEqual(set(response_data[0].keys()), {'slug', 'id', 'name'})
+        self.assertEqual(set(response_data[0].keys()), {'id', 'name'})
 
         # year doesn't matter
         self.expected_response = response_data
@@ -150,9 +150,8 @@ class PostDetailViewTestCase(TeamTypeBaseViewTestCase, GenericDetailsTestMixin):
         self.view_base_url = self.post_detail_url
 
         self.expected_response = dict(
-            id=self.TEST_TEAM,
+            id=self.TEST_TEAM_SLUG,
             name='Albania - Tirana',
-            slug=self.TEST_TEAM_SLUG,
             **self.expected_response
         )
 
@@ -184,8 +183,7 @@ class PostDetailViewTestCase(TeamTypeBaseViewTestCase, GenericDetailsTestMixin):
     def assert_top_level_keys(self, response_data):
         subset = {
             'name': self.TEST_TEAM_NAME,
-            'slug': self.TEST_TEAM_SLUG,
-            'id': self.TEST_TEAM
+            'id': self.TEST_TEAM_SLUG
         }
         self.assertDictContainsSubset(subset, response_data)
 
@@ -205,14 +203,13 @@ class PostCampaignsViewTestCase(TeamTypeBaseViewTestCase, GenericCampaignsViewTe
 
     expected_response = {
         "campaigns": [],
-        "slug": TEST_TEAM_SLUG,
         "name": TEST_TEAM_NAME,
-        "id": TEST_TEAM,
+        "id": TEST_TEAM_SLUG,
         "hvcs": {
             "campaigns": [],
             "target": 0
         },
-        "avg_time_to_confirm": 0
+        "avg_time_to_confirm": 0.0
     }
 
     def setUp(self):
@@ -235,7 +232,7 @@ class PostCampaignsViewTestCase(TeamTypeBaseViewTestCase, GenericCampaignsViewTe
                 self.assertEqual(len(api_response["campaigns"]), 0)
 
     def test_campaign_progress_colour_1_win(self):
-        """ 
+        """
         Given the 'Frozen datetime', progress colour will be zero if there is 1 win.
         For the posts view it'll always be 'zero'
         """
@@ -254,7 +251,7 @@ class PostCampaignsViewTestCase(TeamTypeBaseViewTestCase, GenericCampaignsViewTe
         self.assertEqual(e017_status, "zero")
 
     def test_campaign_progress_colour_10_wins(self):
-        """ 
+        """
         Given the 'Frozen datetime', progress colour will be zero if there are no wins.
         For the posts view it'll always be 'zero'
         """
@@ -298,4 +295,28 @@ class PostCampaignsViewTestCase(TeamTypeBaseViewTestCase, GenericCampaignsViewTe
 
 
 class PostMonthsViewTestCase(TeamTypeBaseViewTestCase, GenericMonthlyViewTestCase):
-    pass
+
+    TEST_TEAM = 'post:Albania - Tirana'
+    TEAM_TYPE = 'post'
+    TEST_TEAM_NAME = TEST_TEAM.lstrip(f'{TEAM_TYPE}:')
+    TEST_TEAM_SLUG = slugify(TEST_TEAM_NAME)
+
+    view_base_url = reverse('mi:posts_months', kwargs={'team_slug': TEST_TEAM_SLUG})
+    expected_response = {
+        "campaigns": [],
+        "name": TEST_TEAM_NAME,
+        "id": TEST_TEAM_SLUG,
+        "hvcs": {
+            "campaigns": [],
+            "target": 0
+        },
+        "avg_time_to_confirm": 0.0
+    }
+
+    def setUp(self):
+        super().setUp()
+        self._win_factory_function = create_win_factory(
+            self.user, sector_choices=self.TEAM_1_SECTORS,
+            default_team_type=self.TEAM_TYPE,
+            default_hq_team=self.TEST_TEAM
+        )

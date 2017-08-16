@@ -74,9 +74,9 @@ class BaseTeamTypeMIView(BaseWinMIView):
     @property
     def _team_type_result(self):
         return {
-            "id": self.team['id'],
+            "id": self.team['slug'],
             "name": self.team['name'],
-            "slug": self.team['slug'],
+            "avg_time_to_confirm": self._average_confirm_time(**self.confirmation_time_filter),
         }
 
     def _wins_filter(self):
@@ -103,7 +103,7 @@ class BaseTeamTypeMIView(BaseWinMIView):
 class TeamTypeListView(BaseTeamTypeMIView):
 
     def get(self, request, *args, **kwargs):
-        return self._success(self.valid_options)
+        return self._success([{'id': x['slug'], 'name': x['name']} for x in self.valid_options])
 
     def handle_team_slug(self, kwargs):
         """
@@ -130,10 +130,10 @@ class TeamTypeWinTableView(BaseTeamTypeMIView):
     def _result(self):
         return {
             self.team_type_key: {
-                "id": self.team['id'],
+                "id": self.team['slug'],
                 "name": self.team['name'],
-                "slug": self.team['slug'],
             },
+            "avg_time_to_confirm": self._average_confirm_time(**self.confirmation_time_filter),
             "wins": self._win_table_wins(self._hvc_wins(), self._non_hvc_wins())
         }
 
@@ -214,7 +214,6 @@ class TeamTypeCampaignsView(BaseTeamTypeMIView):
         breakdown = self._campaign_breakdowns()
         return {
             **self._team_type_result,
-            "avg_time_to_confirm": self._average_confirm_time(**self.confirmation_time_filter),
             "hvcs": {
                 "campaigns": [f'{x["campaign"]}: {x["campaign_id"]}' for x in breakdown],
                 "target": 0

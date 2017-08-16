@@ -18,7 +18,7 @@ from mi.tests.base_test_case import (
     MiApiViewsBaseTestCase
 )
 from mi.utils import sort_campaigns_by
-from mi.tests.utils import GenericTopNonHvcWinsTestMixin, GenericWinTableTestMixin
+from mi.tests.utils import GenericTopNonHvcWinsTestMixin, GenericWinTableTestMixin, GenericMonthlyViewTestCase
 
 
 @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
@@ -582,7 +582,10 @@ class CountryDetailTestCase(CountryBaseViewTestCase):
 
 
 @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
-class CountriesMonthsTestCase(CountryBaseViewTestCase):
+class CountriesMonthsTestCase(CountryBaseViewTestCase, GenericMonthlyViewTestCase):
+
+    export_value = 123456
+    TEST_CAMPAIGN_ID = 'E045'
 
     @classmethod
     def setUpClass(cls):
@@ -596,78 +599,6 @@ class CountriesMonthsTestCase(CountryBaseViewTestCase):
         self.test_country = Country.objects.get(country='FR')
         self.view_base_url = reverse('mi:country_monthly', kwargs={
                                      'country_code': self.test_country.country})
-
-    def test_get_with_no_data(self):
-        self.url = self.get_url_for_year(2017)
-        data = self._api_response_data
-
-        # there should be no wins
-        number_of_wins = s('sum(months[].totals.*[].*[].number.*[])', data)
-        self.assertEqual(number_of_wins, 0)
-
-        # every value in the wins breakdown should be 0
-        value_of_wins = s('sum(months[].totals.*[].*[].*[].*[])', data)
-        self.assertEqual(value_of_wins, 0)
-
-    def test_get_with_1_win(self):
-        export_value = 123456
-
-        self._create_hvc_win(
-            hvc_code='E045', win_date=now(), response_date=now(),
-            confirm=True, fin_year=2017, export_value=export_value,
-            country='FR')
-
-        self.url = self.get_url_for_year(2017)
-        data = self._api_response_data
-
-        number_of_wins_2017_05 = s(
-            "months[?date=='2017-05'].totals.export.hvc.number.total | [0]", data)
-        number_of_wins_2017_04 = s(
-            "months[?date=='2017-04'].totals.export.hvc.number.total | [0]", data)
-
-        # there should be no wins for 'last' month
-        self.assertEqual(number_of_wins_2017_04, 0)
-
-        # there should be 1 for this month
-        self.assertEqual(number_of_wins_2017_05, 1)
-
-        # value should match the win we created
-        value_of_wins = s("sum(months[].totals.export.hvc.value.total)", data)
-        self.assertEqual(value_of_wins, export_value)
-
-    def test_group_by_month_from_data(self):
-        export_value = 123456
-
-        self._create_hvc_win(
-            hvc_code='E045', win_date=now(), response_date=now(),
-            confirm=True, fin_year=2017, export_value=export_value,
-            country='FR')
-
-        self._create_hvc_win(
-            hvc_code='E045', win_date=now() + relativedelta(months=-1),
-            confirm=True, fin_year=2017, export_value=export_value,
-            country='FR')
-
-        self.url = self.get_url_for_year(2017)
-        data = self._api_response_data
-
-        number_of_wins_2017_05 = s(
-            "months[?date=='2017-05'].totals.export.hvc.number.total | [0]", data)
-        number_of_wins_2017_04 = s(
-            "months[?date=='2017-04'].totals.export.hvc.number.total | [0]", data)
-
-        # there should be no wins for 'last' month
-        self.assertEqual(number_of_wins_2017_04, 1)
-
-        # there should be 2 for this month (cumulative) take the one
-        # from last month and add to the one from this month
-        self.assertEqual(number_of_wins_2017_05, 2)
-
-        # value should match the win we created for
-        # month 1, then 2x value for month 2 therefore
-        # sum of all totals will be 3x export_value
-        value_of_wins = s("sum(months[].totals.export.hvc.value.total)", data)
-        self.assertEqual(value_of_wins, export_value * 3)
 
 
 @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)

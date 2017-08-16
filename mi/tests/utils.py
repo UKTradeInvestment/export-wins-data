@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
+from django.utils.timezone import now
 
 from django_countries.fields import Country
 from factory.fuzzy import FuzzyInteger, FuzzyChoice, FuzzyDate
@@ -968,8 +970,81 @@ class GenericCampaignsViewTestCase:
 
 
 class GenericMonthlyViewTestCase:
+
     # defaults
     export_value = 100000
     fin_years = [2016, 2017]
     TEST_CAMPAIGN_ID = 'E045'
     TEST_COUNTRY_CODE = 'FR'
+
+    def test_get_with_no_data(self):
+        self.url = self.get_url_for_year(2017)
+        data = self._api_response_data
+
+        # there should be no wins
+        number_of_wins = s('sum(months[].totals.*[].*[].number.*[])', data)
+        self.assertEqual(number_of_wins, 0)
+
+        # every value in the wins breakdown should be 0
+        value_of_wins = s('sum(months[].totals.*[].*[].*[].*[])', data)
+        self.assertEqual(value_of_wins, 0)
+
+    def test_get_with_1_win(self):
+
+        w = self._create_hvc_win(
+            hvc_code=self.TEST_CAMPAIGN_ID, win_date=now(), response_date=now(),
+            confirm=True, fin_year=2017, export_value=self.export_value,
+            country=self.TEST_COUNTRY_CODE)
+
+        self.url = self.get_url_for_year(2017)
+        data = self._api_response_data
+        year = w.created.year
+        month = w.created.month
+
+        number_of_wins_this_month = s(
+            f"months[?date=='{year}-{month:02d}'].totals.export.hvc.number.total | [0]", data)
+        number_of_wins_last_month = s(
+            f"months[?date=='{year}-{month - 1:02d}'].totals.export.hvc.number.total | [0]", data)
+
+        # there should be no wins for 'last' month
+        self.assertEqual(number_of_wins_last_month, 0)
+
+        # there should be 1 for this month
+        self.assertEqual(number_of_wins_this_month, 1)
+
+        # value should match the win we created
+        value_of_wins = s("sum(months[].totals.export.hvc.value.total)", data)
+        self.assertEqual(value_of_wins, self.export_value)
+
+    def test_group_by_month_from_data(self):
+
+        self._create_hvc_win(
+            hvc_code=self.TEST_CAMPAIGN_ID, win_date=now(), response_date=now(),
+            confirm=True, fin_year=2017, export_value=self.export_value,
+            country=self.TEST_COUNTRY_CODE)
+
+        self._create_hvc_win(
+            hvc_code=self.TEST_CAMPAIGN_ID, win_date=now() + relativedelta(months=-1),
+            confirm=True, fin_year=2017, export_value=self.export_value,
+            country=self.TEST_COUNTRY_CODE)
+
+        self.url = self.get_url_for_year(2017)
+        data = self._api_response_data
+
+        number_of_wins_2017_05 = s(
+            "months[?date=='2017-05'].totals.export.hvc.number.total | [0]", data)
+        number_of_wins_2017_04 = s(
+            "months[?date=='2017-04'].totals.export.hvc.number.total | [0]", data)
+
+        # there should be no wins for 'last' month
+        self.assertEqual(number_of_wins_2017_04, 1)
+
+        # there should be 2 for this month (cumulative) take the one
+        # from last month and add to the one from this month
+        self.assertEqual(number_of_wins_2017_05, 2)
+
+        # value should match the win we created for
+        # month 1, then 2x value for month 2 therefore
+        # sum of all totals will be 3x export_value
+        value_of_wins = s("sum(months[].totals.export.hvc.value.total)", data)
+        self.assertEqual(value_of_wins, self.export_value * 3)
