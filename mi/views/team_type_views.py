@@ -12,10 +12,12 @@ from mi.views.base_view import BaseWinMIView
 from wins.constants import TEAMS, HQ_TEAM_REGION_OR_POST
 from wins.models import HVC
 
+
 class FakeTarget(NamedTuple):
     campaign_id: str
     name: str
     target: int = 0
+
 
 class BaseTeamTypeMIView(BaseWinMIView):
     """ Abstract Base for other Team Type-related MI endpoints to inherit from """
@@ -52,6 +54,13 @@ class BaseTeamTypeMIView(BaseWinMIView):
         """
         return self.team_type
 
+    @cached_property
+    def confirmation_time_filter(self):
+        return {
+            'win__hq_team': self.team['id'],
+            'win__confirmation__created__range': (self._date_range_start(), self._date_range_end())
+        }
+
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
         self.handle_team_slug(kwargs)
@@ -85,8 +94,10 @@ class BaseTeamTypeMIView(BaseWinMIView):
 
     def wins_to_campaigns(self, wins_qs):
         hvc_set = {w['hvc'] for w in wins_qs if w['hvc']}
+        if not hvc_set:
+            return []
         hvc_filter = reduce(or_, [Q(**{'campaign_id': hvc[:4], 'financial_year': hvc[-2:]}) for hvc in hvc_set])
-        return sorted(list(set(HVC.objects.filter(hvc_filter).values_list('name', flat=True))))
+        return HVC.objects.filter(hvc_filter).order_by('name')
 
 
 class TeamTypeListView(BaseTeamTypeMIView):
@@ -103,17 +114,13 @@ class TeamTypeListView(BaseTeamTypeMIView):
 
 class TeamTypeDetailView(BaseTeamTypeMIView):
 
-    def _wins_filter(self):
-        wf = super()._wins_filter()
-        return wf & Q(hq_team=self.team['id'])
-
     def _result(self):
         """
         Formatted result for a post
         """
         return {
             **self._team_type_result,
-            "avg_time_to_confirm": self._average_confirm_time(win__hq_team=self.team['id']),
+            "avg_time_to_confirm": self._average_confirm_time(**self.confirmation_time_filter),
             "wins": self._breakdowns(self._hvc_wins(), non_hvc_wins=self._non_hvc_wins(), include_non_hvc=True),
         }
 
@@ -141,12 +148,13 @@ class TeamTypeMonthsView(BaseTeamTypeMIView):
 
     def _result(self):
         wins = self._get_all_wins()
+        hvcs = self.wins_to_campaigns(wins)
         return {
             **self._team_type_result,
-            "avg_time_to_confirm": self._average_confirm_time(win__hq_team=self.team['id']),
+            "avg_time_to_confirm": self._average_confirm_time(**self.confirmation_time_filter),
             "hvcs": {
                 "target": 0,
-                "campaigns": self.wins_to_campaigns(wins)
+                "campaigns": {x.name for x in hvcs}
             },
             'months': self._month_breakdowns(wins, include_non_hvc=True)
         }
@@ -155,6 +163,19 @@ class TeamTypeMonthsView(BaseTeamTypeMIView):
 class TeamTypeCampaignsView(BaseTeamTypeMIView):
 
     """ Team HVC's view along with their win-breakdown """
+
+    @cached_property
+    def confirmation_time_filter(self):
+        """
+        This overrides the base filter for avg_time_to_confirm
+        because this is a hvc only view so it should make sure
+        that the average only considers HVCs
+        """
+        return {
+            **super().confirmation_time_filter,
+            'win__hvc__isnull': False,
+            'win__hvc__gt': ''
+        }
 
     def _group_wins_by_target(self, wins, targets=None):
         if targets:
@@ -168,9 +189,9 @@ class TeamTypeCampaignsView(BaseTeamTypeMIView):
 
         synthetic_targets = [
             FakeTarget(
-                campaign_name.split(':')[1].strip(),
-                campaign_name
-            ) for campaign_name in campaigns
+                campaign.campaign_id,
+                campaign.name
+            ) for campaign in campaigns
         ]
 
         return super()._group_wins_by_target(wins, synthetic_targets)
@@ -190,7 +211,14 @@ class TeamTypeCampaignsView(BaseTeamTypeMIView):
         return sorted_campaigns
 
     def _result(self):
+        breakdown = self._campaign_breakdowns()
         return {
             **self._team_type_result,
-            'campaigns': self._campaign_breakdowns()
+            "avg_time_to_confirm": self._average_confirm_time(**self.confirmation_time_filter),
+            "hvcs": {
+                "campaigns": [f'{x["campaign"]}: {x["campaign_id"]}' for x in breakdown],
+                "target": 0
+            },
+            "campaigns": breakdown,
+
         }

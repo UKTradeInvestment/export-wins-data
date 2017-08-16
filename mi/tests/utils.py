@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
 
 from django_countries.fields import Country
-from factory.fuzzy import FuzzyInteger, FuzzyChoice
+from factory.fuzzy import FuzzyInteger, FuzzyChoice, FuzzyDate
+from freezegun import freeze_time
 from jmespath import search as s
 from pytz import UTC
 
@@ -751,3 +752,224 @@ class GenericDetailsTestMixin:
                          ["totals"]["value"]["confirmed"], 0)
         self.assertEqual(api_response["wins"]["export"]
                          ["totals"]["value"]["unconfirmed"], 0)
+
+
+class GenericCampaignsViewTestCase:
+
+    # defaults
+    export_value = 100000
+    fin_years = [2016, 2017]
+    TEST_CAMPAIGN_ID = 'E045'
+    TEST_COUNTRY_CODE = 'FR'
+
+    def test_campaigns_json_YEAR_no_wins(self):
+        for year in self.fin_years:
+            with self.subTest(year=year):
+                self.url = self.get_url_for_year(year)
+                self.assertResponse()
+
+    def test_avg_time_to_confirm_unconfirmed_wins(self):
+        """ Average time to confirm will be zero, if there are no confirmed wins """
+        for year in self.fin_years:
+            with self.subTest(year=year):
+                self.url = self.get_url_for_year(year)
+                win_date = getattr(self, f'win_date_{year}')
+
+                for hvc_code in self.CEN_16_HVCS:
+                    self._create_hvc_win(
+                        hvc_code=hvc_code,
+                        win_date=win_date,
+                        confirm=False,
+                        country=self.TEST_COUNTRY_CODE
+                    )
+                api_response = self._api_response_data
+                expected_avg_time = 0.0
+                response_avg_time = api_response["avg_time_to_confirm"]
+                self.assertEqual(expected_avg_time, response_avg_time)
+
+    def test_avg_time_to_confirm_wins_confirmed_nextday(self):
+        """ Test average time to confirm when all wins confirmed in one day """
+        for year in self.fin_years:
+            with self.subTest(year=year):
+                self.url = self.get_url_for_year(year)
+                win_date = getattr(self, f'win_date_{year}')
+
+                for hvc_code in self.CEN_16_HVCS:
+                    self._create_hvc_win(
+                        hvc_code=hvc_code,
+                        win_date=win_date,
+                        notify_date=win_date,
+                        response_date=win_date + timedelta(days=1),
+                        confirm=True,
+                        fin_year=year,
+                        export_value=self.export_value,
+                        country=self.TEST_COUNTRY_CODE
+                    )
+                api_response = self._api_response_data
+                expected_avg_time = 1.0
+                response_avg_time = api_response["avg_time_to_confirm"]
+                self.assertEqual(expected_avg_time, response_avg_time)
+
+    def test_avg_time_to_confirm_wins_confirmed_randomly(self):
+        """
+        Average time to confirm should be more than one,
+        when wins took more than one day to be confirmed
+        """
+        for year in self.fin_years:
+            with self.subTest(year=year):
+                self.url = self.get_url_for_year(year)
+                win_date = getattr(self, f'win_date_{year}')
+                for hvc_code in self.CEN_16_HVCS:
+                    response_date = FuzzyDate(win_date + timedelta(days=2),
+                                              win_date + timedelta(days=5)
+                                              ).evaluate(2, None, False)
+                    self._create_hvc_win(
+                        hvc_code=hvc_code,
+                        win_date=win_date,
+                        notify_date=win_date,
+                        response_date=response_date,
+                        confirm=True,
+                        fin_year=year,
+                        export_value=self.export_value,
+                        country=self.TEST_COUNTRY_CODE
+                    )
+
+                api_response = self._api_response_data
+                response_avg_time = api_response["avg_time_to_confirm"]
+                self.assertTrue(response_avg_time > 1.0)
+
+    def test_campaigns_count_no_wins(self):
+        """ Make sure number of campaigns returned have no effect when there are no wins """
+        for year in self.fin_years:
+            with self.subTest(year=year):
+                self.url = self.get_url_for_year(year)
+                api_response = self._api_response_data
+                self.assertEqual(len(api_response["campaigns"]), 5)
+
+    def test_campaign_hvc_number_unconfirmed_wins(self):
+        """ Check HVC number with unconfirmed HVC wins """
+
+        self.url = self.get_url_for_year(2017)
+        for _ in range(10):
+            self._create_hvc_win(
+                hvc_code=self.TEST_CAMPAIGN_ID,
+                win_date=self.win_date_2017,
+                confirm=False,
+                fin_year=2017,
+                export_value=300000,
+                country=self.TEST_COUNTRY_CODE
+            )
+        api_response = self._api_response_data
+        self.assertEqual(s("campaigns[?campaign_id=='{}'].totals.hvc.number.confirmed"
+                           .format(self.TEST_CAMPAIGN_ID), api_response)[0], 0)
+        self.assertEqual(s("campaigns[?campaign_id=='{}'].totals.hvc.number.unconfirmed"
+                           .format(self.TEST_CAMPAIGN_ID), api_response)[0], 10)
+        self.assertEqual(s("campaigns[?campaign_id=='{}'].totals.hvc.number.total"
+                           .format(self.TEST_CAMPAIGN_ID), api_response)[0], 10)
+
+    def test_campaign_hvc_number_mixed_wins(self):
+        """ Check HVC numbers with both confirmed and unconfirmed HVC wins """
+
+        self.url = self.get_url_for_year(2017)
+        for _ in range(10):
+            self._create_hvc_win(
+                hvc_code=self.TEST_CAMPAIGN_ID,
+                win_date=self.win_date_2017,
+                confirm=False,
+                fin_year=2017,
+                export_value=self.export_value,
+                country=self.TEST_COUNTRY_CODE
+            )
+        for _ in range(10):
+            self._create_hvc_win(
+                hvc_code=self.TEST_CAMPAIGN_ID,
+                win_date=self.win_date_2017,
+                confirm=True,
+                fin_year=2017,
+                export_value=self.export_value,
+                country=self.TEST_COUNTRY_CODE
+            )
+        api_response = self._api_response_data
+        self.assertEqual(s("campaigns[?campaign_id=='{}'].totals.hvc.number.confirmed"
+                           .format(self.TEST_CAMPAIGN_ID), api_response)[0], 10)
+        self.assertEqual(s("campaigns[?campaign_id=='{}'].totals.hvc.number.unconfirmed"
+                           .format(self.TEST_CAMPAIGN_ID), api_response)[0], 10)
+        self.assertEqual(s("campaigns[?campaign_id=='{}'].totals.hvc.number.total"
+                           .format(self.TEST_CAMPAIGN_ID), api_response)[0], 20)
+
+    def test_campaign_hvc_value_unconfirmed_wins(self):
+        """ Check HVC value when there are unconfirmed wins """
+        self.url = self.get_url_for_year(2017)
+        for _ in range(10):
+            self._create_hvc_win(
+                hvc_code=self.TEST_CAMPAIGN_ID,
+                win_date=self.win_date_2017,
+                confirm=False,
+                fin_year=2017,
+                export_value=self.export_value,
+                country=self.TEST_COUNTRY_CODE
+            )
+        api_response = self._api_response_data
+        self.assertEqual(s("campaigns[?campaign_id=='{}'].totals.hvc.value.confirmed"
+                           .format(self.TEST_CAMPAIGN_ID), api_response)[0], 0)
+        self.assertEqual(s("campaigns[?campaign_id=='{}'].totals.hvc.value.unconfirmed"
+                           .format(self.TEST_CAMPAIGN_ID), api_response)[0], self.export_value * 10)
+        self.assertEqual(s("campaigns[?campaign_id=='{}'].totals.hvc.value.total"
+                           .format(self.TEST_CAMPAIGN_ID), api_response)[0], self.export_value * 10)
+
+    def test_campaign_hvc_value_confirmed_wins(self):
+        """ Check HVC value when there are confirmed wins """
+        self.url = self.get_url_for_year(2017)
+        for _ in range(10):
+            self._create_hvc_win(
+                hvc_code=self.TEST_CAMPAIGN_ID,
+                win_date=self.win_date_2017,
+                confirm=True,
+                fin_year=2017,
+                export_value=self.export_value,
+                country=self.TEST_COUNTRY_CODE
+            )
+        api_response = self._api_response_data
+        self.assertEqual(s("campaigns[?campaign_id=='{}'].totals.hvc.value.confirmed"
+                           .format(self.TEST_CAMPAIGN_ID), api_response)[0], self.export_value * 10)
+        self.assertEqual(s("campaigns[?campaign_id=='{}'].totals.hvc.value.unconfirmed"
+                           .format(self.TEST_CAMPAIGN_ID), api_response)[0], 0)
+        self.assertEqual(s("campaigns[?campaign_id=='{}'].totals.hvc.value.total"
+                           .format(self.TEST_CAMPAIGN_ID), api_response)[0], self.export_value * 10)
+
+    def test_campaign_hvc_value_mixed_wins(self):
+        """ Check HVC value when there are both confirmed and unconfirmed wins """
+        self.url = self.get_url_for_year(2017)
+        for _ in range(10):
+            self._create_hvc_win(
+                hvc_code=self.TEST_CAMPAIGN_ID,
+                win_date=self.win_date_2017,
+                confirm=False,
+                fin_year=2017,
+                export_value=self.export_value,
+                country=self.TEST_COUNTRY_CODE
+            )
+        for _ in range(10):
+            self._create_hvc_win(
+                hvc_code=self.TEST_CAMPAIGN_ID,
+                win_date=self.win_date_2017,
+                confirm=True,
+                fin_year=2017,
+                export_value=self.export_value,
+                country=self.TEST_COUNTRY_CODE
+            )
+        api_response = self._api_response_data
+        self.assertEqual(s("campaigns[?campaign_id=='{}'].totals.hvc.value.confirmed"
+                           .format(self.TEST_CAMPAIGN_ID), api_response)[0], self.export_value * 10)
+        self.assertEqual(s("campaigns[?campaign_id=='{}'].totals.hvc.value.unconfirmed"
+                           .format(self.TEST_CAMPAIGN_ID), api_response)[0], self.export_value * 10)
+        self.assertEqual(s("campaigns[?campaign_id=='{}'].totals.hvc.value.total"
+                           .format(self.TEST_CAMPAIGN_ID), api_response)[0], self.export_value * 20)
+
+
+class GenericMonthlyViewTestCase:
+    # defaults
+    export_value = 100000
+    fin_years = [2016, 2017]
+    TEST_CAMPAIGN_ID = 'E045'
+    TEST_COUNTRY_CODE = 'FR'

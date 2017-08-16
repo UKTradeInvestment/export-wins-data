@@ -5,15 +5,22 @@ from django.utils.text import slugify
 
 from django.utils.timezone import get_current_timezone
 from freezegun import freeze_time
+from jmespath import search as s
 
 from fixturedb.factories.win import create_win_factory
 from wins.constants import HQ_TEAM_REGION_OR_POST
 from mi.tests.base_test_case import MiApiViewsWithWinsBaseTestCase
-from mi.tests.utils import GenericTopNonHvcWinsTestMixin, GenericWinTableTestMixin, GenericDetailsTestMixin
+from mi.tests.utils import GenericTopNonHvcWinsTestMixin, GenericWinTableTestMixin, GenericDetailsTestMixin, \
+    GenericCampaignsViewTestCase, GenericMonthlyViewTestCase
 
 
 @freeze_time(MiApiViewsWithWinsBaseTestCase.frozen_date_17)
 class TeamTypeBaseViewTestCase(MiApiViewsWithWinsBaseTestCase):
+    TEST_TEAM = 'post:Albania - Tirana'
+    TEAM_TYPE = 'post'
+    TEST_TEAM_NAME = TEST_TEAM.lstrip(f'{TEAM_TYPE}:')
+    TEST_TEAM_SLUG = slugify(TEST_TEAM_NAME)
+
     export_value = 100000
     win_date_2017 = datetime.datetime(
         2017, 4, 25, tzinfo=get_current_timezone())
@@ -181,3 +188,114 @@ class PostDetailViewTestCase(TeamTypeBaseViewTestCase, GenericDetailsTestMixin):
             'id': self.TEST_TEAM
         }
         self.assertDictContainsSubset(subset, response_data)
+
+
+class PostCampaignsViewTestCase(TeamTypeBaseViewTestCase, GenericCampaignsViewTestCase):
+    TEST_TEAM = 'post:Albania - Tirana'
+    TEAM_TYPE = 'post'
+    TEST_TEAM_NAME = TEST_TEAM.lstrip(f'{TEAM_TYPE}:')
+    TEST_TEAM_SLUG = slugify(TEST_TEAM_NAME)
+    CEN_16_HVCS = ["E045", "E046", "E047", "E048", "E214"]
+    CEN_17_HVCS = ["E045", "E046", "E047", "E054", "E119", "E225"]
+    TEST_CAMPAIGN_ID = "E045"
+    TARGET_E017 = 10000000
+    PRORATED_TARGET = 833333  # target based on the frozen date
+
+    view_base_url = reverse('mi:posts_campaigns', kwargs={'team_slug': TEST_TEAM_SLUG})
+
+    expected_response = {
+        "campaigns": [],
+        "slug": TEST_TEAM_SLUG,
+        "name": TEST_TEAM_NAME,
+        "id": TEST_TEAM,
+        "hvcs": {
+            "campaigns": [],
+            "target": 0
+        },
+        "avg_time_to_confirm": 0
+    }
+
+    def setUp(self):
+        self._win_factory_function = create_win_factory(
+            self.user, sector_choices=self.TEAM_1_SECTORS,
+            default_team_type='post',
+            default_hq_team=self.TEST_TEAM
+        )
+
+    def test_campaigns_count_no_wins(self):
+        """
+        In Posts view the campaigns are generated from the
+        wins themselves. So if there are no wins there should be no
+        campaigns
+        """
+        for year in self.fin_years:
+            with self.subTest(year=year):
+                self.url = self.get_url_for_year(year)
+                api_response = self._api_response_data
+                self.assertEqual(len(api_response["campaigns"]), 0)
+
+    def test_campaign_progress_colour_1_win(self):
+        """ 
+        Given the 'Frozen datetime', progress colour will be zero if there is 1 win.
+        For the posts view it'll always be 'zero'
+        """
+        self._create_hvc_win(
+            win_date=self.win_date_2017,
+            hvc_code=self.TEST_CAMPAIGN_ID,
+            confirm=True,
+            fin_year=2017,
+            export_value=1,
+            country=self.TEST_COUNTRY_CODE
+        )
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        e017_status = s(f"campaigns[?campaign_id=='{self.TEST_CAMPAIGN_ID}'].totals.progress.status",
+                        api_response)[0]
+        self.assertEqual(e017_status, "zero")
+
+    def test_campaign_progress_colour_10_wins(self):
+        """ 
+        Given the 'Frozen datetime', progress colour will be zero if there are no wins.
+        For the posts view it'll always be 'zero'
+        """
+        for _ in range(10):
+            self._create_hvc_win(
+                win_date=self.win_date_2017,
+                hvc_code=self.TEST_CAMPAIGN_ID,
+                confirm=True,
+                fin_year=2017,
+                export_value=self.export_value,
+                country=self.TEST_COUNTRY_CODE
+            )
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        e017_status = s(f"campaigns[?campaign_id=='{self.TEST_CAMPAIGN_ID}'].totals.progress.status",
+                        api_response)[0]
+        self.assertEqual(e017_status, "zero")
+
+    def test_campaign_progress_percent_confirmed_wins_1(self):
+        """
+        Test simple progress percent
+        """
+        for year in self.fin_years:
+            with self.subTest(year=year):
+                win_date = getattr(self, f'win_date_{year}')
+                self.url = self.get_url_for_year(year)
+                self._create_hvc_win(
+                    hvc_code=self.TEST_CAMPAIGN_ID,
+                    win_date=win_date,
+                    confirm=True,
+                    fin_year=2017,
+                    export_value=self.export_value,
+                    country=self.TEST_COUNTRY_CODE
+                )
+                api_response = self._api_response_data
+                # progress should always be 0
+                self.assertEqual(s("campaigns[?campaign_id=='{}'].totals.progress.confirmed_percent"
+                                   .format(self.TEST_CAMPAIGN_ID), api_response)[0], 0.0)
+                self.assertEqual(s("campaigns[?campaign_id=='{}'].totals.progress.unconfirmed_percent"
+                                   .format(self.TEST_CAMPAIGN_ID), api_response)[0], 0.0)
+
+
+class PostMonthsViewTestCase(TeamTypeBaseViewTestCase, GenericMonthlyViewTestCase):
+    pass
