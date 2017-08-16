@@ -48,6 +48,7 @@ class BaseCountriesMIView(BaseWinMIView):
         dj_country = DjangoCountry(country.country.code)
         return {
             'name': country.country.name,
+            'id': country.country.code,
             'avg_time_to_confirm': self._average_confirm_time(win__country__exact=dj_country),
             'hvcs': self._hvc_overview(country.fin_year_targets(fin_year=self.fin_year)),
         }
@@ -59,8 +60,7 @@ class CountryListView(BaseMIView):
     def get(self, request):
         results = [
             {
-                'id': c.id,
-                'code': c.country.code,
+                'id': c.country.code,
                 'name': c.country.name
             }
             for c in Country.objects.all()

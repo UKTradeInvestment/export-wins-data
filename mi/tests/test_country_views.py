@@ -69,6 +69,7 @@ class CountryDetailTestCase(CountryBaseViewTestCase):
         self.url = self.get_url_for_year(2016)
         self.expected_response = {
             "name": "France",
+            "id": "FR",
             "wins": {
                 "export": {
                     "totals": {
@@ -139,6 +140,7 @@ class CountryDetailTestCase(CountryBaseViewTestCase):
         self.url = self.get_url_for_year(2017)
         self.expected_response = {
             "name": "France",
+            "id": "FR",
             "wins": {
                 "export": {
                     "totals": {
@@ -706,7 +708,7 @@ class CountryCampaignsTestCase(CountryBaseViewTestCase):
             list_countries_url).data["results"]
         for country in all_countries:
             country_url = reverse('mi:country_campaigns',
-                                  kwargs={"country_code": country["code"]})
+                                  kwargs={"country_code": country["id"]})
             self.url = self.get_url_for_year(2016, base_url=country_url)
             api_response = self._api_response_data
             for campaign in api_response["campaigns"]:
@@ -727,7 +729,7 @@ class CountryCampaignsTestCase(CountryBaseViewTestCase):
             list_countries_url).data["results"]
         for country in all_countries:
             country_url = reverse('mi:country_campaigns',
-                                  kwargs={"country_code": country["code"]})
+                                  kwargs={"country_code": country["id"]})
             self.url = self.get_url_for_year(2017, base_url=country_url)
             api_response = self._api_response_data
             for campaign in api_response["campaigns"]:
@@ -740,6 +742,7 @@ class CountryCampaignsTestCase(CountryBaseViewTestCase):
         self.expected_response = {
             "campaigns": [],
             "name": "France",
+            "id": "FR",
             "hvcs": {
                 "campaigns": [
                     "HVC: E045",
