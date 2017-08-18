@@ -659,7 +659,7 @@ HQ_TEAM_REGION_OR_POST = tuple([
     ("investment:42", "IG - Strategy & Policy - Resources and Finance"),
     ("investment:43", "IG - Strategy & Policy - FDI Projects - Financial Services"),
     ("investment:44", "IG - Strategy & Policy - FDI Contract - Networks & Partnerships"),
-    ("investment:45", "IG - Strategy & Policy - Investor Policy"),
+    ("investment:45", "Business Environment Advisory Team"),
     ("investment:46", "IG - Strategy & Policy - Briefing Tours and Visits"),
     ("investment:47", "IG - Strategy & Policy - Director & PA"),
     ("investment:48", "IG - Strategy & Policy - FDI Projects - Electronics and Comms"),
