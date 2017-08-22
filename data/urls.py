@@ -8,7 +8,7 @@ from wins.views import (
     WinViewSet, BreakdownViewSet, AdvisorViewSet, ConfirmationViewSet,
     LimitedWinViewSet, CSVView, DetailsWinViewSet, AddUserView,
     NewPasswordView, SendCustomerEmailView, ChangeCustomerEmailView,
-    SoftDeleteWinView, SendAdminEmailView,
+    SoftDeleteWinView, SendAdminEmailView, CompleteWinsCSVView
 )
 
 router = DefaultRouter()
@@ -24,6 +24,7 @@ urlpatterns = [
     url(r'^saml2/', include('sso.urls', namespace="sso")),
     url(r'^mi/', include('mi.urls', namespace="mi", app_name="mi")),
     url(r"^csv/$", CSVView.as_view(), name="csv"),
+    url(r"^csv/wins/$", CompleteWinsCSVView.as_view(), name="csv_wins"),
     url(
         r"^admin/add-user/$",
         AddUserView.as_view(),
