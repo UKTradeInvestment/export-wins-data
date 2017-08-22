@@ -9,11 +9,14 @@ import mimetypes
 from django.conf import settings
 from django.db import connection
 from django.http import HttpResponse, StreamingHttpResponse
+from django.utils.decorators import method_decorator
 from django.utils.timezone import now
+from django.views.decorators.gzip import gzip_page
 
 from rest_framework import permissions
 from rest_framework.views import APIView
 
+from alice.authenticators import IsMIServer, IsMIUser
 from ..constants import BREAKDOWN_TYPES
 from ..models import Advisor, Breakdown, CustomerResponse, Notification, Win
 from ..serializers import CustomerResponseSerializer, WinSerializer
@@ -289,7 +292,12 @@ class Echo(object):
         """Write the value by returning it, instead of storing in a buffer."""
         return value
 
+
+@method_decorator(gzip_page, name='dispatch')
 class CompleteWinsCSVView(CSVView):
+
+    # TODO: what permission class?
+    # permission_classes = (IsMIServer, IsMIUser,)
 
     def _make_flat_wins_csv(self, deleted=False):
         """ Make CSV of all Wins, with non-local data flattened """
