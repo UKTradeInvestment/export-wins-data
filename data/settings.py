@@ -151,7 +151,8 @@ LOGIN_REDIRECT_URL = "/"
 UI_SECRET = os.getenv("UI_SECRET")
 ADMIN_SECRET = os.getenv("ADMIN_SECRET")
 MI_SECRET = os.getenv("MI_SECRET")
-assert len(set([UI_SECRET, ADMIN_SECRET, MI_SECRET])) == 3,\
+DATA_SECRET = os.getenv("DATA_SECRET")
+assert len(set([UI_SECRET, ADMIN_SECRET, MI_SECRET, DATA_SECRET])) == 4,\
     "secrets must be different"
 
 

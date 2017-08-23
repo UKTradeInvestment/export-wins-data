@@ -1,3 +1,5 @@
+import os
+from django.conf import settings
 from django.conf.urls import url, include
 
 from rest_framework.routers import DefaultRouter
@@ -8,8 +10,10 @@ from wins.views import (
     WinViewSet, BreakdownViewSet, AdvisorViewSet, ConfirmationViewSet,
     LimitedWinViewSet, CSVView, DetailsWinViewSet, AddUserView,
     NewPasswordView, SendCustomerEmailView, ChangeCustomerEmailView,
-    SoftDeleteWinView, SendAdminEmailView,
+    SoftDeleteWinView, SendAdminEmailView, CompleteWinsCSVView
 )
+
+WINS_CSV_SECRET_PATH = os.environ.get('WINS_CSV_SECRET_PATH')
 
 router = DefaultRouter()
 router.register(r"wins", WinViewSet)
@@ -64,3 +68,9 @@ urlpatterns = [
     url(r"^auth/", include('rest_framework.urls', namespace="rest_framework")),
 
 ]
+
+if settings.API_DEBUG or WINS_CSV_SECRET_PATH:
+    secret_path = '/' + WINS_CSV_SECRET_PATH if WINS_CSV_SECRET_PATH else ''
+    urlpatterns.append(
+        url(fr"^csv{secret_path}/wins/$", CompleteWinsCSVView.as_view(), name="csv_wins"),
+    )

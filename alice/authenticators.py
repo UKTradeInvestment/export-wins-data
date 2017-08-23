@@ -43,6 +43,10 @@ class IsMIServer(IsServer):
     server_name = 'mi'
 
 
+class IsDataTeamServer(IsServer):
+    server_name = 'data'
+
+
 class IsMIUser(BasePermission):
     """ Allows access only to MI users """
 

@@ -4,14 +4,19 @@ import functools
 import io
 import zipfile
 from operator import attrgetter
+import mimetypes
 
 from django.conf import settings
 from django.db import connection
-from django.http import HttpResponse
+from django.http import HttpResponse, StreamingHttpResponse
+from django.utils.decorators import method_decorator
+from django.utils.timezone import now
+from django.views.decorators.gzip import gzip_page
 
 from rest_framework import permissions
 from rest_framework.views import APIView
 
+from alice.authenticators import IsMIServer, IsMIUser, IsDataTeamServer
 from ..constants import BREAKDOWN_TYPES
 from ..models import Advisor, Breakdown, CustomerResponse, Notification, Win
 from ..serializers import CustomerResponseSerializer, WinSerializer
@@ -29,7 +34,7 @@ class CSVView(APIView):
                      'complete', 'type', 'type_display',
                      'export_experience_display', 'location']
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         # cache some stuff to make flat CSV. like prefetch but works easily
         # with .values()
         self.users_map = {u.id: u for u in User.objects.all()}
@@ -48,7 +53,7 @@ class CSVView(APIView):
             for instance in instances:
                 prefetch_map[instance.win_id].append(instance)
             self.table_maps[table] = prefetch_map
-        return super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
     def _extract_breakdowns(self, win):
         """ Return list of 10 tuples, 5 for export, 5 for non-export """
@@ -277,4 +282,58 @@ class CSVView(APIView):
         user_csv_str = self._make_user_csv()
         zf.writestr('users.csv', user_csv_str)
         zf.close()
-        return HttpResponse(bytesio.getvalue())
+        return HttpResponse(bytesio.getvalue(), content_type=mimetypes.types_map['.csv'])
+
+
+class Echo(object):
+    """An object that implements just the write method of the file-like
+    interface.
+    """
+    def write(self, value):
+        """Write the value by returning it, instead of storing in a buffer."""
+        return value
+
+
+@method_decorator(gzip_page, name='dispatch')
+class CompleteWinsCSVView(CSVView):
+
+    permission_classes = (IsDataTeamServer,)
+
+    def _make_flat_wins_csv(self, deleted=False):
+        """ Make CSV of all Wins, with non-local data flattened """
+
+        if deleted:
+            wins = Win.objects.inactive()
+        else:
+            wins = Win.objects.all()
+
+        if deleted:
+            # ignore users should show up in normal CSV
+            wins = wins.exclude(
+                user__email__in=settings.IGNORE_USERS
+            )
+
+        wins = wins.values()
+
+        for win in wins:
+            yield self._get_win_data(win)
+
+    def _make_flat_wins_csv_stream(self, win_data_generator):
+        stringio = Echo()
+        yield stringio.write(u'\ufeff')
+        first = next(win_data_generator)
+        csv_writer = csv.DictWriter(stringio, first.keys())
+        header = dict(zip(first.keys(), first.keys()))
+        yield csv_writer.writerow(header)
+        yield csv_writer.writerow(first)
+
+        for win_data in win_data_generator:
+            yield csv_writer.writerow(win_data)
+
+    def get(self, request, format=None):
+        resp = StreamingHttpResponse(
+            self._make_flat_wins_csv_stream(self._make_flat_wins_csv()),
+            content_type=mimetypes.types_map['.csv'],
+        )
+        resp['Content-Disposition'] = f'attachent; filename="wins_complete_{now().isoformat()}.csv"'
+        return resp

@@ -1,6 +1,19 @@
 from hashlib import sha256
 
 from django.test import Client
+from requests.auth import AuthBase
+
+SIG_KEY = "HTTP_X_SIGNATURE"
+
+
+def _generate_signature(secret, path, post_data):
+    path = bytes(path, "utf-8")
+    body = post_data
+    secret = bytes(secret, "utf-8")
+    if isinstance(body, str):
+        body = bytes(body, "utf-8")
+
+    return sha256(path + body + secret).hexdigest()
 
 
 class AliceClient(Client):
@@ -9,7 +22,6 @@ class AliceClient(Client):
     class doesn't exactly make that easy.
     """
 
-    SIG_KEY = "HTTP_X_SIGNATURE"
     SECRET = "alice_client_test_secret"
 
     def generic(self, method, path, data='',
@@ -17,8 +29,8 @@ class AliceClient(Client):
                 **extra):
 
         # This is the only part that isn't copypasta from Client.post
-        if self.SIG_KEY not in extra:
-            extra[self.SIG_KEY] = self._generate_signature(path, data)
+        if SIG_KEY not in extra:
+            extra[SIG_KEY] = self.sign(path, data)
 
         return Client.generic(
             self,
@@ -30,11 +42,25 @@ class AliceClient(Client):
             **extra
         )
 
-    def _generate_signature(self, path, post_data):
-        path = bytes(path, "utf-8")
-        body = post_data
-        secret = bytes(self.SECRET, "utf-8")
-        if isinstance(body, str):
-            body = bytes(body, "utf-8")
+    def sign(self, path, post_data):
+        return _generate_signature(self.SECRET, path, post_data)
 
-        return sha256(path + body + secret).hexdigest()
+
+class AliceAuthenticator(AuthBase):
+    """
+    Alice authenticator that can be used with `requests`.
+    >>> from alice.tests.client import AliceAuthenticator
+    >>> import requests
+    >>> requests.get('http://localhost:8000/some_path/', auth=AliceAuthenticator('SECRET!!!'))
+    <Response [200]>
+    """
+
+    def __init__(self, secret, header=SIG_KEY):
+        super().__init__()
+        self.secret = secret
+        self.header = header
+
+    def __call__(self, r):
+        sig = _generate_signature(self.secret, r.url, r.body or '')
+        r.headers[self.header] = sig
+        return r
