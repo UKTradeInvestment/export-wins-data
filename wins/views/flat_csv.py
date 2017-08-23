@@ -16,7 +16,7 @@ from django.views.decorators.gzip import gzip_page
 from rest_framework import permissions
 from rest_framework.views import APIView
 
-from alice.authenticators import IsMIServer, IsMIUser
+from alice.authenticators import IsMIServer, IsMIUser, IsDataTeamServer
 from ..constants import BREAKDOWN_TYPES
 from ..models import Advisor, Breakdown, CustomerResponse, Notification, Win
 from ..serializers import CustomerResponseSerializer, WinSerializer
@@ -284,6 +284,7 @@ class CSVView(APIView):
         zf.close()
         return HttpResponse(bytesio.getvalue(), content_type=mimetypes.types_map['.csv'])
 
+
 class Echo(object):
     """An object that implements just the write method of the file-like
     interface.
@@ -296,8 +297,7 @@ class Echo(object):
 @method_decorator(gzip_page, name='dispatch')
 class CompleteWinsCSVView(CSVView):
 
-    # TODO: what permission class?
-    # permission_classes = (IsMIServer, IsMIUser,)
+    permission_classes = (IsDataTeamServer,)
 
     def _make_flat_wins_csv(self, deleted=False):
         """ Make CSV of all Wins, with non-local data flattened """
@@ -331,10 +331,9 @@ class CompleteWinsCSVView(CSVView):
             yield csv_writer.writerow(win_data)
 
     def get(self, request, format=None):
-        resp = \
-            StreamingHttpResponse(
-                self._make_flat_wins_csv_stream(self._make_flat_wins_csv()),
-                content_type=mimetypes.types_map['.csv'],
-            )
+        resp = StreamingHttpResponse(
+            self._make_flat_wins_csv_stream(self._make_flat_wins_csv()),
+            content_type=mimetypes.types_map['.csv'],
+        )
         resp['Content-Disposition'] = f'attachent; filename="wins_complete_{now().isoformat()}.csv"'
         return resp

@@ -39,6 +39,7 @@ class SignatureRejectionMiddleware(object):
             (settings.UI_SECRET, 'ui'),
             (settings.ADMIN_SECRET, 'admin'),
             (settings.MI_SECRET, 'mi'),
+            (settings.DATA_SECRET, 'data')
         ]
         for secret, server_name in servers:
             generated = self._generate_signature(
