@@ -183,7 +183,13 @@ class CSVView(APIView):
                 value = win[field_name]
             # if it is a choicefield, do optimized lookup of the display value
             if model_field.choices and value:
-                value = self._choices_dict(model_field.choices)[value]
+                try:
+                    value = self._choices_dict(model_field.choices)[value]
+                except KeyError as e:
+                    if model_field.attname == 'hvc':
+                        value = value
+                    else:
+                        raise e
             else:
                 comma_fields = [
                     'total_expected_export_value',
