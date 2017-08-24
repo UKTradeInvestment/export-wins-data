@@ -55,12 +55,12 @@ class AliceAuthenticator(AuthBase):
     <Response [200]>
     """
 
-    def __init__(self, secret, header=SIG_KEY):
+    def __init__(self, secret, header='X-Signature'):
         super().__init__()
         self.secret = secret
         self.header = header
 
     def __call__(self, r):
-        sig = _generate_signature(self.secret, r.url, r.body or '')
+        sig = _generate_signature(self.secret, r.path_url, r.body or '')
         r.headers[self.header] = sig
         return r
