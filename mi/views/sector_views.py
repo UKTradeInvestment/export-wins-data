@@ -15,6 +15,14 @@ from mi.utils import sort_campaigns_by
 from mi.views.base_view import BaseWinMIView
 
 
+def get_campaigns_from_group(g: HVCGroup, **kwargs):
+    return g.campaign_ids
+
+
+def get_campaigns_from_group_for_year(g: HVCGroup, fin_year=None):
+    return g.fin_year_campaign_ids(fin_year)
+
+
 class BaseSectorMIView(BaseWinMIView):
     """ Abstract Base for other Sector-related MI endpoints to inherit from """
 
@@ -44,35 +52,41 @@ class BaseSectorMIView(BaseWinMIView):
             non_hvc_wins=self._get_non_hvc_wins(sector_team)
         )
 
-    def _get_group_campaigns(self, group):
+    def _get_group_fn(self, group, fn):
         """
         Overriding default group.campaign_ids, to add a hack to cater for
         cross FY team changes.
         """
-        campaign_ids = group.campaign_ids
+        campaign_ids = fn(group, fin_year=self.fin_year)
         if group.name == "Consumer and Retail":
             other_group = HVCGroup.objects.get(name="Consumer Goods & Retail")
-            campaign_ids.extend(other_group.campaign_ids)
+            campaign_ids.extend(fn(other_group, fin_year=self.fin_year))
         elif group.name == "Creative":
             other_group = HVCGroup.objects.get(name="Creative Industries")
-            campaign_ids.extend(other_group.campaign_ids)
+            campaign_ids.extend(fn(other_group, fin_year=self.fin_year))
         elif group.id == 34:  # Sports Economy has same name across
             other_group = HVCGroup.objects.get(id=27)
-            campaign_ids.extend(other_group.campaign_ids)
+            campaign_ids.extend(fn(other_group, fin_year=self.fin_year))
         elif group.id == 30:
             fin_group = HVCGroup.objects.get(name="Financial Services")
-            campaign_ids.extend(fin_group.campaign_ids)
+            campaign_ids.extend(fn(fin_group, fin_year=self.fin_year))
             pro_group = HVCGroup.objects.get(name="Professional Services")
-            campaign_ids.extend(pro_group.campaign_ids)
+            campaign_ids.extend(fn(pro_group, fin_year=self.fin_year))
         elif group.id == 29:
             fin_group = HVCGroup.objects.get(name="Digital Economy")
-            campaign_ids.extend(fin_group.campaign_ids)
+            campaign_ids.extend(fn(fin_group, fin_year=self.fin_year))
 
         return campaign_ids
 
+    def _get_group_campaigns_for_year(self, group):
+        return self._get_group_fn(group, get_campaigns_from_group_for_year)
+
+    def _get_group_campaigns(self, group):
+        return self._get_group_fn(group, get_campaigns_from_group)
+
     def _get_group_wins(self, group):
         """ HVC wins of the HVC Group, for given `FinancialYear` """
-        group_hvcs = [hvc[:4] for hvc in self._get_group_campaigns(group)]
+        group_hvcs = [hvc[:4] for hvc in self._get_group_campaigns_for_year(group)]
         filter = reduce(
             operator.or_, [Q(hvc__startswith=hvc) for hvc in group_hvcs])
         return self._hvc_wins().filter(filter)

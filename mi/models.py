@@ -217,7 +217,7 @@ class HVCGroup(models.Model):
     def fin_year_campaign_ids(self, fin_year):
         """ List of Campaign IDs of all HVCs belonging to the HVC Group, filtered by Financial Year """
 
-        return [t.charcode for t in self.targets.filter(financial_year=fin_year)]
+        return [t.charcode for t in self.fin_year_targets(fin_year)]
 
     def fin_year_targets(self, fin_year):
         """ `Target` objects of `HVCGroup`, filtered by `FinancialYear` """

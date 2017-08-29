@@ -819,11 +819,11 @@ class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase, GenericWinTableTestMixi
 
     def test_win_table_2017_one_confirmed_hvc_win(self):
         self._create_hvc_win(
-            hvc_code='E001',
+            hvc_code='E049',
             win_date=self.win_date_2017,
             response_date=self.win_date_2017,
             confirm=True,
-            fin_year=2016,
+            fin_year=2017,
             export_value=self.export_value,
             country='HU'
         )
@@ -831,8 +831,7 @@ class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase, GenericWinTableTestMixi
         api_response = self._api_response_data
         self.assertTrue(len(api_response["wins"]["hvc"]) == 1)
         win_item = api_response["wins"]["hvc"][0]
-        self.assertEqual(win_item["hvc"]["code"], "E001")
-        self.assertEqual(win_item["hvc"]["name"], "HVC: E001")
+        self.assertEqual(win_item["hvc"]["code"], "E049")
         self.assertIsNotNone(win_item["win_date"])
         self.assertEqual(win_item["export_amount"], self.export_value)
         self.assertEqual(win_item["status"], "customer_confirmed")
@@ -843,10 +842,10 @@ class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase, GenericWinTableTestMixi
 
     def test_win_table_2017_one_unconfirmed_hvc_win(self):
         self._create_hvc_win(
-            hvc_code='E001',
+            hvc_code='E049',
             win_date=self.win_date_2017,
             confirm=False,
-            fin_year=2016,
+            fin_year=2017,
             export_value=self.export_value,
             country='HU'
         )
@@ -854,8 +853,7 @@ class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase, GenericWinTableTestMixi
         api_response = self._api_response_data
         self.assertTrue(len(api_response["wins"]["hvc"]) == 1)
         win_item = api_response["wins"]["hvc"][0]
-        self.assertEqual(win_item["hvc"]["code"], "E001")
-        self.assertEqual(win_item["hvc"]["name"], "HVC: E001")
+        self.assertEqual(win_item["hvc"]["code"], "E049")
         self.assertIsNone(win_item["win_date"])
         self.assertEqual(win_item["export_amount"], self.export_value)
         self.assertEqual(win_item["status"], "email_not_sent")
@@ -866,10 +864,10 @@ class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase, GenericWinTableTestMixi
 
     def test_win_table_2017_one_unconfirmed_hvc_win_with_multiple_customer_notifications(self):
         win = self._create_hvc_win(
-            hvc_code='E001',
+            hvc_code='E049',
             win_date=self.win_date_2017,
             confirm=False,
-            fin_year=2016,
+            fin_year=2017,
             export_value=self.export_value,
             country='HU'
         )
@@ -893,10 +891,10 @@ class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase, GenericWinTableTestMixi
 
     def test_win_table_2017_one_unconfirmed_hvc_win_with_multiple_mixed_notifications(self):
         win = self._create_hvc_win(
-            hvc_code='E001',
+            hvc_code='E049',
             win_date=self.win_date_2017,
             confirm=False,
-            fin_year=2016,
+            fin_year=2017,
             export_value=self.export_value,
             country='HU'
         )
@@ -921,12 +919,12 @@ class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase, GenericWinTableTestMixi
 
     def test_win_table_2017_one_confirmed_rejected_hvc_win(self):
         self._create_hvc_win(
-            hvc_code='E001',
+            hvc_code='E049',
             win_date=self.win_date_2017,
             response_date=self.win_date_2017,
             confirm=True,
             agree_with_win=False,
-            fin_year=2016,
+            fin_year=2017,
             export_value=self.export_value,
             country='HU'
         )
@@ -934,8 +932,7 @@ class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase, GenericWinTableTestMixi
         api_response = self._api_response_data
         self.assertTrue(len(api_response["wins"]["hvc"]) == 1)
         win_item = api_response["wins"]["hvc"][0]
-        self.assertEqual(win_item["hvc"]["code"], "E001")
-        self.assertEqual(win_item["hvc"]["name"], "HVC: E001")
+        self.assertEqual(win_item["hvc"]["code"], "E049")
         self.assertIsNotNone(win_item["win_date"])
         self.assertEqual(win_item["export_amount"], self.export_value)
         self.assertEqual(win_item["status"], "customer_rejected")
@@ -946,12 +943,12 @@ class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase, GenericWinTableTestMixi
 
     def test_win_table_2017_one_hvc_win_from_2016_confirmed_in_2017(self):
         self._create_hvc_win(
-            hvc_code='E001',
+            hvc_code='E049',
             win_date=self.win_date_2016,
             response_date=self.win_date_2017,
             confirm=True,
             agree_with_win=False,
-            fin_year=2016,
+            fin_year=2017,
             export_value=self.export_value,
             country='HU'
         )
@@ -959,8 +956,7 @@ class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase, GenericWinTableTestMixi
         api_response = self._api_response_data
         self.assertTrue(len(api_response["wins"]["hvc"]) == 1)
         win_item = api_response["wins"]["hvc"][0]
-        self.assertEqual(win_item["hvc"]["code"], "E001")
-        self.assertEqual(win_item["hvc"]["name"], "HVC: E001")
+        self.assertEqual(win_item["hvc"]["code"], "E049")
         self.assertIsNotNone(win_item["win_date"])
         self.assertEqual(win_item["export_amount"], self.export_value)
         self.assertEqual(win_item["status"], "customer_rejected")
@@ -969,14 +965,29 @@ class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase, GenericWinTableTestMixi
         self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
         self.assertFalse(win_item["credit"])
 
-    def test_win_table_2017_one_hvc_win_from_2016_confirmed_in_2016_no_result(self):
+    def test_win_table_2017_one_hvc_win_from_2016_confirmed_in_2017_with_no2017_target(self):
         self._create_hvc_win(
             hvc_code='E001',
+            win_date=self.win_date_2016,
+            response_date=self.win_date_2017,
+            confirm=True,
+            agree_with_win=True,
+            fin_year=2017,
+            export_value=self.export_value,
+            country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertTrue(len(api_response["wins"]["hvc"]) == 0)
+
+    def test_win_table_2017_one_hvc_win_from_2016_confirmed_in_2016_no_result(self):
+        self._create_hvc_win(
+            hvc_code='E049',
             win_date=self.win_date_2016,
             response_date=self.win_date_2016,
             confirm=True,
             agree_with_win=False,
-            fin_year=2016,
+            fin_year=2017,
             export_value=self.export_value,
             country='HU'
         )
