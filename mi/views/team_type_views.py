@@ -69,7 +69,7 @@ class BaseTeamTypeMIView(BaseWinMIView):
         # ensure team_id is in team_type
         self.team_slug = kwargs.get('team_slug')
         if self.team_slug not in [x['slug'] for x in self.valid_options]:
-            self._not_found(f'{self.team_slug} is not a valid {self.team_type}')
+            self._not_found(f'{self.team_slug} is not a valid {self.team_type_key}')
 
     @property
     def _team_type_result(self):
@@ -79,9 +79,13 @@ class BaseTeamTypeMIView(BaseWinMIView):
             "avg_time_to_confirm": self._average_confirm_time(**self.confirmation_time_filter),
         }
 
+    @cached_property
+    def _team_filter(self):
+        return Q(team_type=self.team_type) & Q(hq_team=self.team['id'])
+
     def _wins_filter(self):
         wf = super()._wins_filter()
-        return wf & Q(team_type=self.team_type) & Q(hq_team=self.team['id'])
+        return wf & self._team_filter
 
     def _get_all_wins(self):
         return self._hvc_wins() | self._non_hvc_wins()

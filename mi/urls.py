@@ -52,6 +52,15 @@ from mi.views.team_type_views import (
     TeamTypeCampaignsView
 )
 from mi.views.global_views import GlobalWinsView
+from mi.views.ukregion_views import (
+    UKRegionListView,
+    UKRegionDetailView,
+    UKRegionWinTableView,
+    UKRegionNonHvcWinsView,
+    UKRegionMonthsView,
+    UKRegionCampaignsView
+)
+
 
 urlpatterns = [
     url(r"^sector_teams/$", SectorTeamsListView.as_view(), name="sector_teams"),
@@ -111,11 +120,15 @@ urlpatterns = [
     url(r"^posts/(?P<team_slug>[\w\-]+)/campaigns/$", TeamTypeCampaignsView.as_view(team_type='post'),
         name="posts_campaigns"),
 
-    url(r"^uk_regions/$", TeamTypeListView.as_view(team_type='itt'), name="uk_regions"),
-    url(r"^uk_regions/(?P<team_slug>[\w\-]+)/$", TeamTypeDetailView.as_view(team_type='itt'),
+    url(r"^uk_regions/$", UKRegionListView.as_view(team_type='itt'), name="uk_regions"),
+    url(r"^uk_regions/(?P<team_slug>[\w\-]+)/$", UKRegionDetailView.as_view(team_type='itt'),
         name="uk_regions_detail"),
-    url(r"^uk_regions/(?P<team_slug>[\w\-]+)/win_table/$", TeamTypeWinTableView.as_view(team_type='itt'),
+    url(r"^uk_regions/(?P<team_slug>[\w\-]+)/win_table/$", UKRegionWinTableView.as_view(team_type='itt'),
         name="uk_regions_win_table"),
-    url(r"^uk_regions/(?P<team_slug>[\w\-]+)/top_non_hvcs/$", TeamTypeNonHvcWinsView.as_view(team_type='itt'),
+    url(r"^uk_regions/(?P<team_slug>[\w\-]+)/top_non_hvcs/$", UKRegionNonHvcWinsView.as_view(team_type='itt'),
         name="uk_regions_top_nonhvc"),
+    url(r"^uk_regions/(?P<team_slug>[\w\-]+)/months/$", UKRegionMonthsView.as_view(team_type='itt'),
+        name="uk_regions_months"),
+    url(r"^uk_regions/(?P<team_slug>[\w\-]+)/campaigns/$", UKRegionCampaignsView.as_view(team_type='itt'),
+        name="uk_regions_campaigns"),
 ]

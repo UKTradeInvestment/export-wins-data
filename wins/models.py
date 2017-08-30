@@ -194,7 +194,7 @@ class Win(SoftDeleteModel):
     customer_job_title = models.CharField(max_length=128, verbose_name='Job title')
     customer_email_address = models.EmailField(verbose_name='Contact email')
     customer_location = models.PositiveIntegerField(
-        choices=constants.UK_REGIONS,
+        choices=constants.UK_REGIONS.choices,
         verbose_name="HQ location"
     )
 

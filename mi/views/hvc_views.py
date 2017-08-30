@@ -8,7 +8,8 @@ from mi.utils import percentage_formatted, percentage
 from mi.views.base_view import BaseWinMIView, BaseMIView
 from wins.models import HVC
 
-GLOBAL_COUNTRY_CODE="XG"
+GLOBAL_COUNTRY_CODE = "XG"
+
 
 class BaseHVCDetailView(BaseWinMIView):
     def _get_campaign(self, campaign_id):
