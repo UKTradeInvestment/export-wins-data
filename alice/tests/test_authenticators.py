@@ -1,6 +1,6 @@
 from unittest import mock
 
-from django.test import TestCase, Client, override_settings, RequestFactory
+from django.test import TestCase, Client, override_settings, RequestFactory, SimpleTestCase
 from django.core.urlresolvers import reverse
 
 from ..authenticators import AlicePermission
@@ -8,7 +8,7 @@ from ..middleware import SignatureRejectionMiddleware
 from .client import AliceClient
 
 
-class BaseSignatureTestCase(TestCase):
+class BaseSignatureTestCase(SimpleTestCase):
     """
     Base TestCase providing a mock request and appropriate signature
     """

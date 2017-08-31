@@ -6,7 +6,7 @@ from django.core.checks import register, Tags, Error
 from .constants import EXPERIENCE, GOODS_VS_SERVICES, HVO_PROGRAMMES, \
     PROGRAMMES, RATINGS, SECTORS, TEAMS, HQ_TEAM_REGION_OR_POST, WIN_TYPES, \
     BREAKDOWN_TYPES, NOTIFICATION_TYPES, TYPES_OF_SUPPORT, WITHOUT_OUR_SUPPORT, \
-    WITH_OUR_SUPPORT, UK_REGIONS, STATUS, BREAKDOWN_NAME_TO_ID
+    WITH_OUR_SUPPORT, UK_REGIONS, STATUS, BREAKDOWN_NAME_TO_ID, UK_SUPER_REGIONS
 
 item0getter = itemgetter(0)
 
@@ -42,7 +42,8 @@ def constants_check(app_configs, **kwargs):
         check_unique_keys(WITH_OUR_SUPPORT),
         check_unique_keys(WITHOUT_OUR_SUPPORT),
         check_unique_keys(UK_REGIONS),
-        check_unique_keys(STATUS)
+        check_unique_keys(STATUS),
+        check_unique_keys(UK_SUPER_REGIONS)
     ]
 
     return [x for x in errors if x]

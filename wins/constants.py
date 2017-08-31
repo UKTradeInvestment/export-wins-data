@@ -3,6 +3,7 @@
 # into a model of their own, but as I don't have that information handy, I'm
 # not going to over-complicate things at this stage for the sake of
 # over-engineering.
+from extended_choices import Choices
 
 EXPERIENCE = (
     (1, "We had not started exporting before this win"),
@@ -1065,20 +1066,67 @@ WITH_OUR_SUPPORT = (
   (7, '0%',),
 )
 
-UK_REGIONS = (
-    (1, "East Midlands"),
-    (2, "East of England"),
-    (3, "London"),
-    (4, "North East"),
-    (5, "North West"),
-    (6, "Northern Ireland"),
-    (7, "Scotland"),
-    (8, "South East"),
-    (9, "South West"),
-    (10, "Wales"),
-    (11, "West Midlands"),
-    (12, "Yorkshire and The Humber"),
+# noinspection PyTypeChecker
+UK_REGIONS = Choices(
+    ("EAST_MIDLANDS", 1, "East Midlands"),
+    ("EAST", 2, "East of England"),
+    ("LONDON", 3, "London"),
+    ("NORTH_EAST", 4, "North East"),
+    ("NORTH_WEST", 5, "North West"),
+    ("NI", 6, "Northern Ireland"),
+    ("SCOTLAND", 7, "Scotland"),
+    ("SOUTH_EAST", 8, "South East"),
+    ("SOUTH_WEST", 9, "South West"),
+    ("WALES", 10, "Wales"),
+    ("WEST_MIDLANDS", 11, "West Midlands"),
+    ("YORKSHIRE", 12, "Yorkshire and The Humber"),
 )
+
+UK_SUPER_REGIONS = Choices(
+    ("NORTH", 1, "Northern Powerhouse"),
+    ("MIDLANDS", 2, "Midlands Engine"),
+    ("LONDON", 3, "London"),
+    ("SOUTH", 4, "South"),
+    ("DEVOLVED", 5, "Devolved Administrations")
+)
+
+UK_REGIONS_MAP = {
+    UK_SUPER_REGIONS.NORTH: {
+        UK_REGIONS.NORTH_WEST: ['itt:The North West International Trade Team'],
+        UK_REGIONS.NORTH_EAST: ['itt:DIT North East Regional International Trade Office'],
+        UK_REGIONS.YORKSHIRE: [
+            'itt:DIT Yorkshire',
+            'itt:DIT Yorkshire and Humber Regional Sector Specialists'
+        ]
+    },
+    UK_SUPER_REGIONS.MIDLANDS: {
+        UK_REGIONS.EAST_MIDLANDS: ['itt:DIT Team East Midlands - International Trade Team'],
+        UK_REGIONS.WEST_MIDLANDS: [
+            'itt:DIT Team West Midlands - Birmingham',
+            'itt:DIT Team West Midlands - Black Country',
+            'itt:DIT Team West Midlands - Coventry',
+            'itt:DIT Team West Midlands - Hereford and Worcester',
+            'itt:DIT Team West Midlands - NEC',
+            'itt:DIT Team West Midlands - Regional and LLP',
+            'itt:DIT Team West Midlands - Shropshire',
+            'itt:DIT Team West Midlands - Staffordshire',
+            'itt:DIT West Midlands Team - Regional Team'
+        ]
+    },
+    UK_SUPER_REGIONS.LONDON: {
+        UK_REGIONS.LONDON: ['itt:London International Trade Team']
+    },
+    UK_SUPER_REGIONS.SOUTH: {
+        UK_REGIONS.EAST: ['itt:DIT Team East'],
+        UK_REGIONS.SOUTH_EAST: ['itt:DIT Team South East - International Trade Team'],
+        UK_REGIONS.SOUTH_WEST: ['itt:DIT South West']
+    },
+    UK_SUPER_REGIONS.DEVOLVED: {
+        UK_REGIONS.NI: ['itt:Invest Northern Ireland (Trade)'],
+        UK_REGIONS.SCOTLAND: ['itt:Scottish Development International - International Trade Enquiries Team'],
+        UK_REGIONS.WALES: ['itt:Welsh Government']
+    }
+}
 
 STATUS = (
   (1, "Has never exported before"),

@@ -13,6 +13,7 @@ Environment Variables you probably want to set
 UI_SECRET='shared-ui-secret'
 ADMIN_SECRET='shared-admin-secret'
 MI_SECRET='shared-mi-secret'
+DATA_SECRET='shared-data-secret'
 DEBUG='1'
 DATA_SERVER='localhost:8001'  # port you run this project on, for front-ends
 EMAIL_BACKEND='django.core.mail.backends.console.EmailBackend'

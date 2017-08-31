@@ -75,7 +75,6 @@ class BaseSectorMIView(BaseWinMIView):
         elif group.id == 29:
             fin_group = HVCGroup.objects.get(name="Digital Economy")
             campaign_ids.extend(fn(fin_group, fin_year=self.fin_year))
-
         return campaign_ids
 
     def _get_group_campaigns_for_year(self, group):
