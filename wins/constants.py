@@ -723,7 +723,7 @@ HQ_TEAM_REGION_OR_POST = tuple([
     ('obn:17', 'Poland - British Polish Chamber of Commerce'),
     ('obn:18', 'Qatar - British Chamber of Commerce'),
     ('obn:19', 'Romania - British-Romanian Chamber of Commerce'),
-    ('obn:20', 'Saudi Arabia - Saudi Britain Joint Business Council'),
+    ('obn:20', 'Saudi Arabia - Arabian Enterprise Incubators (AEI Saudi)'),
     ('obn:21', 'Singapore - British Chamber of Commerce'),
     ('obn:22', 'Slovakia - British Slovak Business Centre'),
     ('obn:23', 'Slovenia - British Slovenian Chamber of Commerce'),
