@@ -1,11 +1,15 @@
 import datetime
+from django.contrib.postgres.fields import ArrayField
 
 from django.db import models
+from django.db.models import PROTECT
 from django.utils.functional import cached_property
 
 from django_countries.fields import CountryField
+from extended_choices import Choices
 from pytz import UTC
 
+from wins.constants import UK_REGIONS, STATUS as EXPORT_EXPERIENCE
 from wins.models import HVC
 
 
@@ -297,7 +301,7 @@ class Target(models.Model):
     campaign_id = models.CharField(max_length=4)
     target = models.BigIntegerField()
     sector_team = models.ForeignKey(SectorTeam, related_name="targets")
-    hvc_group = models.ForeignKey(HVCGroup, related_name="targets")
+    hvc_group = models.ForeignKey(HVCGroup, related_name="targets", on_delete=PROTECT)
     country = models.ManyToManyField(Country, related_name="targets")
     financial_year = models.ForeignKey(
         FinancialYear, related_name="targets", null=False)
@@ -328,3 +332,41 @@ class Target(models.Model):
             self.name,
             self.target,
         )
+
+
+class UKRegionTarget(models.Model):
+
+    financial_year = models.ForeignKey(
+        FinancialYear, related_name="volume_targets", null=False)
+
+    new_exporters = ArrayField(models.BigIntegerField(), size=12)
+    sustainable = ArrayField(models.BigIntegerField(), size=12)
+    growth = ArrayField(models.BigIntegerField(default=0), size=12)
+
+    region = models.PositiveSmallIntegerField(choices=UK_REGIONS.choices)
+
+    # constant, array offset, month name for display
+    months = Choices(
+        ('APRIL', 0, 'April', {'month': 4}),
+        ('MAY', 1, 'May', {'month': 5}),
+        ('JUNE', 2, 'June', {'month': 6}),
+        ('JULY', 3, 'July', {'month': 7}),
+        ('AUGUST', 4, 'August', {'month': 8}),
+        ('SEPTEMBER', 5, 'September', {'month': 9}),
+        ('OCTOBER', 6, 'October', {'month': 10}),
+        ('NOVEMBER', 7, 'November', {'month': 11}),
+        ('DECEMBER', 8, 'December', {'month': 12}),
+        ('JANUARY', 9, 'January', {'month': 1}),
+        ('FEBRUARY', 10, 'February', {'month': 2}),
+        ('MARCH', 11, 'March', {'month': 3})
+    )
+
+    @property
+    def all_categories(self):
+        return [sum([self.new_exporters[x], self.sustainable[x], self.growth[x]]) for x in range(12)]
+
+    def __str__(self):
+        return f'{UK_REGIONS.for_value(self.region)[-1]} - {self.financial_year_id}'
+
+    class Meta:
+        unique_together = ('financial_year', 'region')
