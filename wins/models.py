@@ -297,7 +297,7 @@ class Win(SoftDeleteModel):
         choices=constants.HQ_TEAM_REGION_OR_POST
     )
     export_experience = models.PositiveIntegerField(
-        choices=constants.STATUS,
+        choices=constants.STATUS.choices,
         null=True,
     )
     location = models.CharField(max_length=128, blank=True)

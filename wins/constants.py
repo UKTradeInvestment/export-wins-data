@@ -1128,11 +1128,16 @@ UK_REGIONS_MAP = {
     }
 }
 
-STATUS = (
-  (1, "Has never exported before"),
-  (2, "Has exported before but not won an export order in the past twelve months"),
-  (3, "Has exported in the past twelve months but has not won an export order proactively as a result of having an export plan"),
-  (4, "Is an exporter but exports currently account for less than 10% of its overall turnover"),
-  (5, "Is an exporter but has only won export orders in three countries or fewer"),
-  (6, "Is an exporter that we are helping to maintain and grow its exports"),
+STATUS = Choices(
+    ('NEVER', 1, "Has never exported before"),
+    ('STALE', 2, "Has exported before but not won an export order in the past twelve months"),
+    ('NOPLAN', 3, "Has exported in the past twelve months but has not "
+                  "won an export order proactively as a result of having an export plan"),
+    ('SMALL', 4, "Is an exporter but exports currently account for less than 10% of its overall turnover"),
+    ('MEDIUM', 5, "Is an exporter but has only won export orders in three countries or fewer"),
+    ('GROWTH', 6, "Is an exporter that we are helping to maintain and grow its exports")
 )
+
+STATUS.add_subset('new_exporter', ['NEVER', 'STALE', 'NOPLAN'])
+STATUS.add_subset('sustainable', ['SMALL', 'MEDIUM'])
+STATUS.add_subset('growth', ['GROWTH'])
