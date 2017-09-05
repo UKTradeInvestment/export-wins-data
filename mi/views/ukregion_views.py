@@ -1,12 +1,15 @@
 import itertools
 
+from collections import defaultdict
 from django.db.models import Q
 from django.utils.functional import cached_property
 from django.utils.text import slugify
 
+from mi.models import UKRegionTarget
 from mi.views.team_type_views import TeamTypeListView, TeamTypeDetailView, TeamTypeWinTableView, \
     TeamTypeNonHvcWinsView, TeamTypeMonthsView, TeamTypeCampaignsView
-from wins.constants import UK_REGIONS_MAP, UK_REGIONS
+from wins.constants import UK_REGIONS_MAP, UK_REGIONS, STATUS as EXPORT_EXPERIENCE
+from wins.models import Win
 
 FLATTENED_REGIONS = {}
 for v in UK_REGIONS_MAP.values():
@@ -78,15 +81,88 @@ class UKRegionMixin(
     UKRegionValidOptionsMixin,
     UKRegionTeamTypeNameMixin
 ):
-    pass
+    @property
+    def target(self):
+        try:
+            target = UKRegionTarget.objects.get(financial_year=self.fin_year, region=self.team['id']).as_dict()
+        except UKRegionTarget.DoesNotExist:
+            target = {'target': None}
+        return target
 
 
 class UKRegionListView(UKRegionMixin, TeamTypeListView):
     pass
 
 
+class UKRegionOverview(UKRegionMixin, TeamTypeListView):
+
+    def get(self, request, *args, **kwargs):
+        regions = []
+        region_targets = UKRegionTarget.objects.filter(financial_year=self.fin_year)
+        for x in self.valid_options:
+            try:
+                target = region_targets.get(region=x['id']).as_dict()
+            except UKRegionTarget.DoesNotExist:
+                target = {'target': None}
+
+            regions.append({'id': x['slug'], 'name': x['name'], **target})
+        return self._success(regions)
+
+
 class UKRegionDetailView(UKRegionMixin, TeamTypeDetailView):
-    pass
+
+    def _group_wins_by_export_experience(self):
+
+        def classify_experience(win):
+            exp_id = win['export_experience']
+            if exp_id in EXPORT_EXPERIENCE.new_exporter:
+                return 'new_exporters'
+            elif exp_id in EXPORT_EXPERIENCE.sustainable:
+                return 'sustainable'
+            elif exp_id in EXPORT_EXPERIENCE.growth:
+                return 'growth'
+            else:
+                return 'unknown'
+
+        group_iter = itertools.groupby(self._get_all_wins().order_by('export_experience'), key=classify_experience)
+        groups = defaultdict(list)
+        for export_exp, wins in group_iter:
+            groups[export_exp] = list(wins)
+        return groups
+
+    def breakdown_by_experience(self):
+        """
+        Result looks like:
+        {
+            'new_exporter': {
+                'value': ...,
+                'number': ...,
+            },
+            'sustainable': {
+                'value': ...,
+                'number': ...,
+            }
+            'growth': {
+                'value': ...,
+                'number': ...,
+            }
+        }
+        """
+
+        grouped_wins = self._group_wins_by_export_experience()
+        data = {
+            exp: self._breakdown_wins(wins) for exp, wins in grouped_wins.items()
+        }
+        data.update({'total': self._breakdown_wins(self._wins())})
+        return data
+
+    def _result(self):
+        result = super()._result()
+        return {
+            **result,
+            'export_experience': self.breakdown_by_experience(),
+            'target': self.target
+        }
 
 
 class UKRegionWinTableView(UKRegionMixin, TeamTypeWinTableView):
@@ -98,7 +174,17 @@ class UKRegionNonHvcWinsView(UKRegionMixin, TeamTypeNonHvcWinsView):
 
 
 class UKRegionMonthsView(UKRegionMixin, TeamTypeMonthsView):
-    pass
+
+    def _result(self):
+        wins = self._get_all_wins()
+        return {
+            **self._team_type_result,
+            "avg_time_to_confirm": self._average_confirm_time(**self.confirmation_time_filter),
+            'export_experience': {
+                'target': self.target
+            },
+            'months': self._month_breakdowns(wins, include_non_hvc=True),
+        }
 
 
 class UKRegionCampaignsView(UKRegionMixin, TeamTypeCampaignsView):

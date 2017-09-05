@@ -368,5 +368,16 @@ class UKRegionTarget(models.Model):
     def __str__(self):
         return f'{UK_REGIONS.for_value(self.region)[-1]} - {self.financial_year_id}'
 
+    def as_dict(self):
+        return {
+            'target': {
+                'new_exporters': sum(self.new_exporters),
+                'sustainable': sum(self.sustainable),
+                'growth': sum(self.growth),
+                'total': sum(self.all_categories),
+                'type': 'volume'
+            },
+        }
+
     class Meta:
         unique_together = ('financial_year', 'region')
