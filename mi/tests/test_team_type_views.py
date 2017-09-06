@@ -428,7 +428,7 @@ class UKRegionDetailViewTestCase(TeamTypeBaseViewTestCase, GenericDetailsTestMix
         **GenericDetailsTestMixin.expected_response,
         "name": TEST_TEAM_NAME,
         "id": TEST_TEAM_SLUG,
-        'target': {'target': None},
+        'target': None,
         "avg_time_to_confirm": 0.0,
         'export_experience': {'total': {'number': {'confirmed': 0,
                                                    'total': 0,

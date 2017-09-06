@@ -161,7 +161,7 @@ class UKRegionDetailView(UKRegionMixin, TeamTypeDetailView):
         return {
             **result,
             'export_experience': self.breakdown_by_experience(),
-            'target': self.target
+            **self.target
         }
 
 
