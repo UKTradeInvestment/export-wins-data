@@ -97,11 +97,28 @@ class BaseTeamTypeMIView(BaseWinMIView):
         return self._success(self._result())
 
     def wins_to_campaigns(self, wins_qs):
+
+        def only_unique(campaigns):
+            seen = set()
+            ret = []
+            for campaign in campaigns:
+                campaign_id = campaign['campaign_id']
+                if campaign_id not in seen:
+                    seen.add(campaign_id)
+                    ret.append(campaign)
+            return ret
+
         hvc_set = {w['hvc'] for w in wins_qs if w['hvc']}
         if not hvc_set:
             return []
         hvc_filter = reduce(or_, [Q(**{'campaign_id': hvc[:4], 'financial_year': hvc[-2:]}) for hvc in hvc_set])
-        return HVC.objects.filter(hvc_filter).order_by('name')
+        return only_unique(
+            HVC.objects.filter(hvc_filter).values(
+                'campaign_id', 'name'
+            ).order_by(
+                '-financial_year', 'name'
+            )
+        )
 
 
 class TeamTypeListView(BaseTeamTypeMIView):
@@ -158,7 +175,7 @@ class TeamTypeMonthsView(BaseTeamTypeMIView):
             "avg_time_to_confirm": self._average_confirm_time(**self.confirmation_time_filter),
             "hvcs": {
                 "target": 0,
-                "campaigns": {x.name for x in hvcs}
+                "campaigns": {x['name'] for x in hvcs}
             },
             'months': self._month_breakdowns(wins, include_non_hvc=True)
         }
@@ -193,8 +210,8 @@ class TeamTypeCampaignsView(BaseTeamTypeMIView):
 
         synthetic_targets = [
             FakeTarget(
-                campaign.campaign_id,
-                campaign.name
+                campaign['campaign_id'],
+                campaign['name']
             ) for campaign in campaigns
         ]
 
