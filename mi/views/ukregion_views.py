@@ -181,7 +181,7 @@ class UKRegionMonthsView(UKRegionMixin, TeamTypeMonthsView):
             **self._team_type_result,
             "avg_time_to_confirm": self._average_confirm_time(**self.confirmation_time_filter),
             'export_experience': {
-                'target': self.target
+                **self.target
             },
             'months': self._month_breakdowns(wins, include_non_hvc=True),
         }
