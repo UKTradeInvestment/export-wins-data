@@ -408,7 +408,7 @@ class UKRegionListViewTestCase(TeamTypeBaseViewTestCase):
             len(UK_REGIONS)
         )
 
-        self.assertEqual(set(response_data[0].keys()), {'id', 'name'})
+        self.assertEqual(set(response_data[0].keys()), {'id', 'name', 'target'})
 
         # year doesn't matter
         self.expected_response = response_data
@@ -423,6 +423,20 @@ class UKRegionDetailViewTestCase(TeamTypeBaseViewTestCase, GenericDetailsTestMix
     TEAM_TYPE = 'uk_region'
     TEST_TEAM_NAME = "South West"
     TEST_TEAM_SLUG = slugify(TEST_TEAM_NAME)
+
+    expected_response = {
+        **GenericDetailsTestMixin.expected_response,
+        "name": TEST_TEAM_NAME,
+        "id": TEST_TEAM_SLUG,
+        'target': None,
+        "avg_time_to_confirm": 0.0,
+        'export_experience': {'total': {'number': {'confirmed': 0,
+                                                   'total': 0,
+                                                   'unconfirmed': 0},
+                                        'value': {'confirmed': 0,
+                                                  'total': 0,
+                                                  'unconfirmed': 0}}},
+    }
 
     def setUp(self):
         super().setUp()
@@ -441,8 +455,6 @@ class UKRegionDetailViewTestCase(TeamTypeBaseViewTestCase, GenericDetailsTestMix
         self.view_base_url = self.uk_region_detail_url
 
         self.expected_response = dict(
-            id=self.TEST_TEAM_SLUG,
-            name='South West',
             **self.expected_response
         )
 
@@ -495,13 +507,11 @@ class UKRegionCampaignsViewTestCase(TeamTypeBaseViewTestCase, GenericCampaignsVi
 
     expected_response = {
         "campaigns": [],
+        'hvcs': {'campaigns': [], 'target': 0},
         "name": TEST_TEAM_NAME,
         "id": TEST_TEAM_SLUG,
-        "hvcs": {
-            "campaigns": [],
-            "target": 0
-        },
-        "avg_time_to_confirm": 0.0
+        "avg_time_to_confirm": 0.0,
+
     }
 
     def setUp(self):
@@ -599,11 +609,14 @@ class UKRegionsMonthsViewTestCase(TeamTypeBaseViewTestCase, GenericMonthlyViewTe
         "campaigns": [],
         "name": TEST_TEAM_NAME,
         "id": TEST_TEAM_SLUG,
-        "hvcs": {
-            "campaigns": [],
-            "target": 0
-        },
-        "avg_time_to_confirm": 0.0
+        'target': {'target': None},
+        "avg_time_to_confirm": 0.0,
+        'export_experience': {'total': {'number': {'confirmed': 0,
+                                                   'total': 0,
+                                                   'unconfirmed': 0},
+                                        'value': {'confirmed': 0,
+                                                  'total': 0,
+                                                  'unconfirmed': 0}}},
     }
 
     def setUp(self):

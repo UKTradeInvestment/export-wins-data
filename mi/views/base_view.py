@@ -209,7 +209,8 @@ class BaseWinMIView(BaseMIView):
             'company_name',
             'cdms_reference',
             'lead_officer_name',
-            'location'
+            'location',
+            'export_experience'
         ]
         newest_notification = Notification.objects.filter(win=OuterRef(
             'pk'), type=Notification.TYPE_CUSTOMER).order_by('-created')

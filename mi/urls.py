@@ -58,7 +58,8 @@ from mi.views.ukregion_views import (
     UKRegionWinTableView,
     UKRegionNonHvcWinsView,
     UKRegionMonthsView,
-    UKRegionCampaignsView
+    UKRegionCampaignsView,
+    UKRegionOverview
 )
 
 
@@ -121,6 +122,7 @@ urlpatterns = [
         name="posts_campaigns"),
 
     url(r"^uk_regions/$", UKRegionListView.as_view(team_type='itt'), name="uk_regions"),
+    url(r"^uk_regions/overview/$", UKRegionOverview.as_view(team_type='itt'), name="uk_regions"),
     url(r"^uk_regions/(?P<team_slug>[\w\-]+)/$", UKRegionDetailView.as_view(team_type='itt'),
         name="uk_regions_detail"),
     url(r"^uk_regions/(?P<team_slug>[\w\-]+)/win_table/$", UKRegionWinTableView.as_view(team_type='itt'),

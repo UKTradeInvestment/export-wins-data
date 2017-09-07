@@ -2,7 +2,6 @@ from functools import reduce
 from operator import or_
 from typing import NamedTuple
 
-from collections import defaultdict, namedtuple
 from django.db.models import Q
 from django.utils.functional import cached_property
 from django.utils.text import slugify
