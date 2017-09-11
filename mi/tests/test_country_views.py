@@ -394,7 +394,7 @@ class CountryDetailTestCase(CountryBaseViewTestCase):
 
     def test_detail_2016_only_hvc_win_confirmed_in_2017_appear_in_2017(self):
         self._create_hvc_win(
-            hvc_code='E214',
+            hvc_code='E046',
             win_date=self.win_date_2016,
             response_date=self.win_date_2017,
             confirm=True,
@@ -445,11 +445,11 @@ class CountryDetailTestCase(CountryBaseViewTestCase):
         self.assertTrue(len(api_response["hvcs"]["campaigns"]) > 0)
         self.assertEqual(api_response["name"], "France")
         self.assertEqual(api_response["wins"]["export"]
-                         ["hvc"]["number"]["confirmed"], 1)
+                         ["hvc"]["number"]["confirmed"], 0)
         self.assertEqual(api_response["wins"]["export"]
                          ["hvc"]["number"]["unconfirmed"], 0)
         self.assertEqual(
-            api_response["wins"]["export"]["hvc"]["value"]["confirmed"], self.export_value)
+            api_response["wins"]["export"]["hvc"]["value"]["confirmed"], 0)
         self.assertEqual(api_response["wins"]["export"]
                          ["hvc"]["value"]["unconfirmed"], 0)
         self.assertEqual(api_response["wins"]["export"]
@@ -461,11 +461,11 @@ class CountryDetailTestCase(CountryBaseViewTestCase):
         self.assertEqual(api_response["wins"]["export"]
                          ["non_hvc"]["value"]["unconfirmed"], 0)
         self.assertEqual(api_response["wins"]["export"]
-                         ["totals"]["number"]["confirmed"], 1)
+                         ["totals"]["number"]["confirmed"], 0)
         self.assertEqual(api_response["wins"]["export"]
                          ["totals"]["number"]["unconfirmed"], 0)
         self.assertEqual(
-            api_response["wins"]["export"]["totals"]["value"]["confirmed"], self.export_value)
+            api_response["wins"]["export"]["totals"]["value"]["confirmed"], 0)
         self.assertEqual(api_response["wins"]["export"]
                          ["totals"]["value"]["unconfirmed"], 0)
 
@@ -481,14 +481,12 @@ class CountryDetailTestCase(CountryBaseViewTestCase):
         self.url = self.get_url_for_year(2017)
         api_response = self._api_response_data
         self.assertTrue(len(api_response["hvcs"]["campaigns"]) > 0)
-        # TODO check why this is failing
-        # self.assertNotEqual(api_response["name"], "France")
         self.assertEqual(api_response["wins"]["export"]
-                         ["hvc"]["number"]["confirmed"], 0)
+                         ["hvc"]["number"]["confirmed"], 1)
         self.assertEqual(api_response["wins"]["export"]
                          ["hvc"]["number"]["unconfirmed"], 0)
         self.assertEqual(api_response["wins"]["export"]
-                         ["hvc"]["value"]["confirmed"], 0)
+                         ["hvc"]["value"]["confirmed"], self.export_value)
         self.assertEqual(api_response["wins"]["export"]
                          ["hvc"]["value"]["unconfirmed"], 0)
         self.assertEqual(api_response["wins"]["export"]
@@ -500,11 +498,11 @@ class CountryDetailTestCase(CountryBaseViewTestCase):
         self.assertEqual(api_response["wins"]["export"]
                          ["non_hvc"]["value"]["unconfirmed"], 0)
         self.assertEqual(api_response["wins"]["export"]
-                         ["totals"]["number"]["confirmed"], 0)
+                         ["totals"]["number"]["confirmed"], 1)
         self.assertEqual(api_response["wins"]["export"]
                          ["totals"]["number"]["unconfirmed"], 0)
         self.assertEqual(api_response["wins"]["export"]
-                         ["totals"]["value"]["confirmed"], 0)
+                         ["totals"]["value"]["confirmed"], self.export_value)
         self.assertEqual(api_response["wins"]["export"]
                          ["totals"]["value"]["unconfirmed"], 0)
 
@@ -650,9 +648,7 @@ class CountryCampaignsTestCase(CountryBaseViewTestCase):
 
     def test_campaigns_list_2017(self):
         api_response = self._api_response_data
-        self.assertEqual(len(api_response["campaigns"]), len(
-            api_response["hvcs"]["campaigns"]))
-        self.assertEqual(len(api_response["campaigns"]), 3)
+        self.assertEqual(len(api_response["campaigns"]), 5)
 
     def test_campaigns_list_2017_no_duplicates(self):
         list_countries_url = self.get_url_for_year(
@@ -773,7 +769,7 @@ class CountryCampaignsTestCase(CountryBaseViewTestCase):
     def test_campaigns_count_no_wins(self):
         """ Make sure number of campaigns returned have no effect when there are no wins """
         api_response = self._api_response_data
-        self.assertEqual(len(api_response["campaigns"]), 3)
+        self.assertEqual(len(api_response["campaigns"]), 5)
 
     def test_campaigns_count_unconfirmed_wins(self):
         """ unconfirmed wins shouldn't have any effect on number of campaigns """
@@ -787,7 +783,7 @@ class CountryCampaignsTestCase(CountryBaseViewTestCase):
                 country='FR'
             )
         api_response = self._api_response_data
-        self.assertEqual(len(api_response["campaigns"]), 3)
+        self.assertEqual(len(api_response["campaigns"]), 5)
 
     def test_campaigns_count_confirmed_wins(self):
         """ confirmed HVC wins shouldn't have any effect on number of campaigns """
@@ -802,7 +798,7 @@ class CountryCampaignsTestCase(CountryBaseViewTestCase):
             )
 
         api_response = self._api_response_data
-        self.assertEqual(len(api_response["campaigns"]), 3)
+        self.assertEqual(len(api_response["campaigns"]), 5)
 
     def test_campaigns_count_unconfirmed_nonhvc_wins(self):
         """ unconfirmed non-hvc wins shouldn't have any effect on number of campaigns """
@@ -815,7 +811,7 @@ class CountryCampaignsTestCase(CountryBaseViewTestCase):
                 country='FR'
             )
         api_response = self._api_response_data
-        self.assertEqual(len(api_response["campaigns"]), 3)
+        self.assertEqual(len(api_response["campaigns"]), 5)
 
     def test_campaigns_count_confirmed_nonhvc_wins(self):
         """ confirmed non-hvc wins shouldn't have any effect on number of campaigns """
@@ -828,7 +824,7 @@ class CountryCampaignsTestCase(CountryBaseViewTestCase):
                 country="FR"
             )
         api_response = self._api_response_data
-        self.assertEqual(len(api_response["campaigns"]), 3)
+        self.assertEqual(len(api_response["campaigns"]), 5)
 
     def test_campaign_progress_colour_no_wins(self):
         """ Given the 'Frozen datetime', progress colour will be Red if there are no wins """

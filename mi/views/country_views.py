@@ -30,9 +30,20 @@ class BaseCountriesMIView(BaseWinMIView):
         except Country.DoesNotExist:
             return False
 
-    def _get_hvc_wins(self, country):
-        dj_country = DjangoCountry(country.country.code)
-        wins = self._hvc_wins().filter(country__exact=dj_country)
+    def _get_hvc_wins(self, country, non_contrib=False):
+        targets = country.fin_year_targets(self.fin_year)
+        if non_contrib:
+            targets = targets | country.non_contributing_targets(self.fin_year)
+        campaign_ids = [t.campaign_id for t in targets]
+        charcodes = [t.charcode for t in targets]
+        # There are countries where there is no assigned HVC
+        if campaign_ids:
+            region_hvc_filter = Q(
+                Q(reduce(operator.or_, [Q(hvc__startswith=t) for t in campaign_ids])) | Q(hvc__in=charcodes)
+            )
+            wins = self._hvc_wins().filter(region_hvc_filter)
+        else:
+            wins = self._hvc_wins()
         return wins
 
     def _get_non_hvc_wins(self, country):
@@ -93,8 +104,9 @@ class CountryCampaignsView(BaseCountriesMIView):
     """ Country HVC's view along with their win-breakdown """
 
     def _campaign_breakdowns(self, country):
-        wins = self._get_hvc_wins(country)
-        campaign_to_wins = self._group_wins_by_target(wins, country.fin_year_targets(self.fin_year))
+        wins = self._get_hvc_wins(country, non_contrib=True)
+        all_targets = country.fin_year_targets(self.fin_year) | country.non_contributing_targets(self.fin_year)
+        campaign_to_wins = self._group_wins_by_target(wins, all_targets)
         campaigns = [
             {
                 'campaign': campaign.name.split(":")[0],
