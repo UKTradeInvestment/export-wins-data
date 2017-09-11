@@ -24,7 +24,6 @@ class BaseCountriesMIView(BaseWinMIView):
         if not self.country:
             self._not_found('Country {} not found'.format(country_code))
 
-
     def _get_country(self, country_code):
         try:
             return Country.objects.get(country=country_code)

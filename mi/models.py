@@ -45,7 +45,7 @@ class OverseasRegion(models.Model):
 
         targets = set()
         for country in self.countries.all():
-            for target in country.targets.all():
+            for target in country.targets.filter(targetcountry__contributes_to_target=True):
                 targets.add(target)
         return targets
 
@@ -54,8 +54,17 @@ class OverseasRegion(models.Model):
 
         targets = set()
         for country in self.countries.filter(overseasregionyear__financial_year=fin_year):
-            for target in country.targets.filter(financial_year=fin_year):
+            for target in country.fin_year_targets(fin_year):
                 targets.add(target)
+        return targets
+
+    def fin_year_non_contributing_targets(self, fin_year):
+        targets = set()
+        contributing_targets = [target.campaign_id for target in self.fin_year_targets(fin_year)]
+        for country in self.countries.filter(overseasregionyear__financial_year=fin_year):
+            for target in country.non_contributing_targets(fin_year):
+                if target.campaign_id not in contributing_targets:
+                    targets.add(target)
         return targets
 
     @property
@@ -77,13 +86,13 @@ class OverseasRegion(models.Model):
     @property
     def country_ids(self):
         """ List of all countries within the `OverseasRegion` """
-        countries = self.countries.all()
+        countries = self.countries.filter(targetcountry__contributes_to_target=True)
         return countries.values_list('country', flat=True)
 
     def fin_year_country_ids(self, year):
         """ List of all countries within the `OverseasRegion` """
         countries = self.countries.filter(
-            overseasregionyear__financial_year_id=year.id)
+            overseasregionyear__financial_year_id=year.id, targetcountry__contributes_to_target=True)
         return countries.values_list('country', flat=True)
 
 
@@ -144,8 +153,18 @@ class Country(models.Model):
         """ List of `Targets` of all HVCs belonging to the `Country`, filtered by Financial Year """
 
         targets = set()
-        for target in self.targets.filter(financial_year=fin_year):
+        for target in self.targets.filter(financial_year=fin_year, targetcountry__contributes_to_target=True):
             targets.add(target)
+        return targets
+
+    def non_contributing_targets(self, fin_year):
+
+        targets = set()
+        contributing_targets = [target.campaign_id for target in self.fin_year_targets(fin_year)]
+        for target in self.targets.filter(financial_year=fin_year, targetcountry__contributes_to_target=False):
+            if target.campaign_id not in contributing_targets:
+                target.target = 0
+                targets.add(target)
         return targets
 
 
@@ -301,8 +320,10 @@ class Target(models.Model):
     campaign_id = models.CharField(max_length=4)
     target = models.BigIntegerField()
     sector_team = models.ForeignKey(SectorTeam, related_name="targets")
-    hvc_group = models.ForeignKey(HVCGroup, related_name="targets", on_delete=PROTECT)
-    country = models.ManyToManyField(Country, related_name="targets")
+    hvc_group = models.ForeignKey(
+        HVCGroup, related_name="targets", on_delete=PROTECT)
+    country = models.ManyToManyField(Country, related_name="targets",
+                                     through="TargetCountry")
     financial_year = models.ForeignKey(
         FinancialYear, related_name="targets", null=False)
 
@@ -332,6 +353,16 @@ class Target(models.Model):
             self.name,
             self.target,
         )
+
+
+class TargetCountry(models.Model):
+    target = models.ForeignKey('Target')
+    country = models.ForeignKey('Country')
+    contributes_to_target = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "mi_target_country"
+        unique_together = (('target', 'country'),)
 
 
 class UKRegionTarget(models.Model):

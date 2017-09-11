@@ -12,7 +12,7 @@ from django.core.management import call_command
 
 from fixturedb.factories.win import create_win_factory
 from mi.factories import TargetFactory, SectorTeamFactory
-from mi.models import FinancialYear, Country, HVCGroup
+from mi.models import FinancialYear, Country, HVCGroup, TargetCountry
 from mi.tests.base_test_case import MiApiViewsBaseTestCase, MiApiViewsWithWinsBaseTestCase
 from mi.tests.utils import GenericWinTableTestMixin
 from wins.constants import SECTORS
@@ -860,8 +860,6 @@ class HVCWinTableTestCase(HVCBaseViewTestCase, GenericWinTableTestMixin):
         self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
         self.assertFalse(win_item["credit"])
 
-
-
     def test_win_table_2017_confirmed_non_hvc_empty_result(self):
         self._create_non_hvc_win(
             win_date=self.win_date_2017,
@@ -895,7 +893,7 @@ class TestGlobalHVCList(MiApiViewsBaseTestCase):
         hvc_group = FuzzyChoice(HVCGroup.objects.all())
 
         target = TargetFactory.create(campaign_id='E225', financial_year=fy2017, hvc_group=hvc_group, sector_team=sector_team)
-        target.country.add(Country.objects.get(country='XG'))
+        TargetCountry(target=target, country=Country.objects.get(country='XG')).save()
         return target
 
     def test_2017_returns_1_hvcs(self):
