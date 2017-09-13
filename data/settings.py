@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "users.apps.UsersConfig",
     "sso.apps.SsoConfig",
     "fixturedb.apps.FixtureDBConfig",
+    "fdi.apps.InvestmentConfig",
 
     # drf
     "rest_framework",
