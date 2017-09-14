@@ -35,3 +35,16 @@ class InvestmentLegacyLoad(models.Model):
     row_index = models.PositiveSmallIntegerField(blank=False, null=False)
     created = CreationDateTimeField('created')
     data = JSONField(encoder=DjangoJSONEncoder)
+
+    class Meta:
+        unique_together = ('filename', 'row_index',)
+
+
+class CompanyLegacyLoad(models.Model):
+    filename = models.CharField(max_length=255)
+    row_index = models.PositiveSmallIntegerField(blank=False, null=False)
+    created = CreationDateTimeField('created')
+    data = JSONField(encoder=DjangoJSONEncoder)
+
+    class Meta:
+        unique_together = ('filename', 'row_index',)
