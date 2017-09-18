@@ -34,6 +34,7 @@ termcolor==1.1.0
 WebOb==1.7.3
 zope.interface==4.4.2
 django-extended-choices==1.1.1
+openpyxl==2.4.8
 
 # Tests
 Faker==0.7.18

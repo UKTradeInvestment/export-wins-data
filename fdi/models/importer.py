@@ -1,4 +1,5 @@
 from django.contrib.postgres.fields import JSONField
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.db.models import CASCADE
 from django_extensions.db.fields import CreationDateTimeField
@@ -33,4 +34,17 @@ class InvestmentLegacyLoad(models.Model):
     filename = models.CharField(max_length=255)
     row_index = models.PositiveSmallIntegerField(blank=False, null=False)
     created = CreationDateTimeField('created')
-    data = JSONField()
+    data = JSONField(encoder=DjangoJSONEncoder)
+
+    class Meta:
+        unique_together = ('filename', 'row_index',)
+
+
+class CompanyLegacyLoad(models.Model):
+    filename = models.CharField(max_length=255)
+    row_index = models.PositiveSmallIntegerField(blank=False, null=False)
+    created = CreationDateTimeField('created')
+    data = JSONField(encoder=DjangoJSONEncoder)
+
+    class Meta:
+        unique_together = ('filename', 'row_index',)
