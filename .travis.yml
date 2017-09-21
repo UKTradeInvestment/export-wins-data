@@ -1,13 +1,19 @@
 language: python
 python:
   - 3.6
+services:
+  - postgresql
+cache: pip
 addons:
   apt:
     packages:
       xmlsec1
+  postgresql: "9.6"
 before_script:
   - export SAML_KEY=`base64 -d <<< $SAML_KEY_B64`
   - export SAML_CERT=`base64 -d <<< $SAML_CERT_B64`
+  - psql -c 'create database test;' -U postgres
+  - export DATABASE_URL=postgres://postgres@localhost/test
 install: pip install -r requirements.txt
 script: python -Wd `which coverage3` run ./manage.py test
 after_success: codeclimate-test-reporter
