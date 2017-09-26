@@ -39,11 +39,13 @@ class BaseCountriesMIView(BaseWinMIView):
         # There are countries where there is no assigned HVC
         if campaign_ids:
             region_hvc_filter = Q(
-                Q(reduce(operator.or_, [Q(hvc__startswith=t) for t in campaign_ids])) | Q(hvc__in=charcodes)
+                Q(reduce(operator.or_, [Q(hvc__startswith=t)
+                                        for t in campaign_ids])) | Q(hvc__in=charcodes)
             )
-            wins = self._hvc_wins().filter(region_hvc_filter)
         else:
-            wins = self._hvc_wins()
+            region_hvc_filter = Q(hvc__in=charcodes)
+
+        wins = self._hvc_wins().filter(region_hvc_filter)
         return wins
 
     def _get_non_hvc_wins(self, country):
@@ -105,7 +107,8 @@ class CountryCampaignsView(BaseCountriesMIView):
 
     def _campaign_breakdowns(self, country):
         wins = self._get_hvc_wins(country, non_contrib=True)
-        all_targets = country.fin_year_targets(self.fin_year) | country.non_contributing_targets(self.fin_year)
+        all_targets = country.fin_year_targets(
+            self.fin_year) | country.non_contributing_targets(self.fin_year)
         campaign_to_wins = self._group_wins_by_target(wins, all_targets)
         campaigns = [
             {
@@ -115,7 +118,8 @@ class CountryCampaignsView(BaseCountriesMIView):
             }
             for campaign, campaign_wins in campaign_to_wins
         ]
-        sorted_campaigns = sorted(campaigns, key=sort_campaigns_by, reverse=True)
+        sorted_campaigns = sorted(
+            campaigns, key=sort_campaigns_by, reverse=True)
         return sorted_campaigns
 
     def get(self, request, country_code):

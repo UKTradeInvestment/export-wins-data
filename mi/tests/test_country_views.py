@@ -629,7 +629,8 @@ class CountryCampaignsTestCase(CountryBaseViewTestCase):
         api_response = self._api_response_data
         self.assertEqual(len(api_response["campaigns"]), len(
             api_response["hvcs"]["campaigns"]))
-        self.assertEqual(len(api_response["campaigns"]), len(self.CEN_2016_HVCS))
+        self.assertEqual(
+            len(api_response["campaigns"]), len(self.CEN_2016_HVCS))
 
     def test_campaigns_2016_no_duplicates(self):
         list_countries_url = self.get_url_for_year(
@@ -1366,7 +1367,7 @@ class CountryTopNonHVCViewTestCase(CountryBaseViewTestCase, GenericTopNonHvcWins
 
 class CountryWinTableTestCase(CountryBaseViewTestCase, GenericWinTableTestMixin):
 
-    TEST_COUNTRY_CODE = 'IE'
+    TEST_COUNTRY_CODE = 'FR'
     TEST_COUNTRY = DjangoCountry(TEST_COUNTRY_CODE)
     fin_years = [2016, 2017]
 
