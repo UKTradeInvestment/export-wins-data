@@ -24,5 +24,8 @@ class Investments(models.Model):
     company_name = models.CharField(max_length=MAX_LENGTH)
     company_reference = models.CharField(max_length=MAX_LENGTH)
 
-    investment_value = models.PositiveIntegerField(default=0)
-    foreign_equity_investment = models.PositiveIntegerField(default=0)
+    investment_value = models.BigIntegerField(default=0)
+    foreign_equity_investment = models.BigIntegerField(default=0)
+
+    # set to true if importing from spreadsheet
+    legacy = models.BooleanField(default=False, db_index=True)
