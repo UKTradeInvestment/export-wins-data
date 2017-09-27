@@ -60,7 +60,8 @@ class OverseasRegion(models.Model):
 
     def fin_year_non_contributing_targets(self, fin_year):
         targets = set()
-        contributing_targets = [target.campaign_id for target in self.fin_year_targets(fin_year)]
+        contributing_targets = [
+            target.campaign_id for target in self.fin_year_targets(fin_year)]
         for country in self.countries.filter(overseasregionyear__financial_year=fin_year):
             for target in country.non_contributing_targets(fin_year):
                 if target.campaign_id not in contributing_targets:
@@ -86,13 +87,20 @@ class OverseasRegion(models.Model):
     @property
     def country_ids(self):
         """ List of all countries within the `OverseasRegion` """
-        countries = self.countries.filter(targetcountry__contributes_to_target=True)
+        countries = self.countries.filter(
+            targetcountry__contributes_to_target=True)
         return countries.values_list('country', flat=True)
 
     def fin_year_country_ids(self, year):
         """ List of all countries within the `OverseasRegion` """
         countries = self.countries.filter(
             overseasregionyear__financial_year_id=year.id, targetcountry__contributes_to_target=True)
+        return countries.values_list('country', flat=True)
+
+    def fin_year_non_contributing_country_ids(self, year):
+        """ List of all secondary market countries within the `OverseasRegion` """
+        countries = self.countries.filter(
+            overseasregionyear__financial_year_id=year.id, targetcountry__contributes_to_target=False)
         return countries.values_list('country', flat=True)
 
 
@@ -160,7 +168,8 @@ class Country(models.Model):
     def non_contributing_targets(self, fin_year):
 
         targets = set()
-        contributing_targets = [target.campaign_id for target in self.fin_year_targets(fin_year)]
+        contributing_targets = [
+            target.campaign_id for target in self.fin_year_targets(fin_year)]
         for target in self.targets.filter(financial_year=fin_year, targetcountry__contributes_to_target=False):
             if target.campaign_id not in contributing_targets:
                 target.target = 0

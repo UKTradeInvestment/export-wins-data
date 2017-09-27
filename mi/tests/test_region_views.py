@@ -1243,6 +1243,7 @@ class OverseasRegionDetailsTestCase(OverseasRegionBaseViewTestCase):
 
     we_region_url = reverse('mi:overseas_region_detail', kwargs={"region_id": 5})
     cen_region_url = reverse('mi:overseas_region_detail', kwargs={"region_id": 10})
+    latam_region_url = reverse('mi:overseas_region_detail', kwargs={"region_id": 6})
     region_url_2016_only = reverse('mi:overseas_region_detail', kwargs={"region_id": 15})
     region_url_2017_only = reverse('mi:overseas_region_detail', kwargs={"region_id": 18})
 
@@ -1578,6 +1579,27 @@ class OverseasRegionDetailsTestCase(OverseasRegionBaseViewTestCase):
         self.assertEqual(data_2017["wins"]["export"]["hvc"]["value"]["total"], self.export_value)
         self.assertEqual(data_2017["wins"]["export"]["hvc"]["number"]["total"], 1)
 
+    def test_details_hvc_win_HU_as_secondary_market_doesnt_appear_in_latam(self):
+        """ A win to MX, but HVC from North America. 
+        This win would appear in North America, but not in Latin America region"""
+        self._create_hvc_win(
+            hvc_code='E192',
+            win_date=self.win_date_2017,
+            confirm=True,
+            fin_year=2017,
+            export_value=self.export_value,
+            country='MX'
+        )
+        self.view_base_url = self.latam_region_url
+        self.url = self.get_url_for_year(2017)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["confirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["value"]["total"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["hvc"]["number"]["total"], 0)
+
     # Non-HVC
     def test_details_cen_non_hvc_win_for_2017_in_2017(self):
         self._create_non_hvc_win(
@@ -1707,6 +1729,23 @@ class OverseasRegionDetailsTestCase(OverseasRegionBaseViewTestCase):
             fin_year=2016,
             export_value=self.export_value,
             country='HU'
+        )
+        self.url = self.get_url_for_year(2017)
+        cen_response = self._api_response_data
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["confirmed"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["confirmed"], 1)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["unconfirmed"], 0)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["value"]["total"], self.export_value)
+        self.assertEqual(cen_response["wins"]["export"]["non_hvc"]["number"]["total"], 1)
+
+    def test_details_non_hvc_win_from_secondary_market_appears_in_cen(self):
+        self._create_non_hvc_win(
+            win_date=self.win_date_2017,
+            confirm=True,
+            fin_year=2017,
+            export_value=self.export_value,
+            country='PL'
         )
         self.url = self.get_url_for_year(2017)
         cen_response = self._api_response_data

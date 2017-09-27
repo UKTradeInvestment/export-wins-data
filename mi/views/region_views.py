@@ -45,26 +45,32 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
 
         targets = region.fin_year_targets(self.fin_year)
         if non_contrib:
-            targets = targets | region.fin_year_non_contributing_targets(self.fin_year)
+            targets = targets | region.fin_year_non_contributing_targets(
+                self.fin_year)
         campaign_ids = [t.campaign_id for t in targets]
         charcodes = [t.charcode for t in targets]
         region_hvc_filter = Q(
-            Q(reduce(operator.or_, [Q(hvc__startswith=t) for t in campaign_ids]))
+            Q(reduce(operator.or_, [Q(hvc__startswith=t)
+                                    for t in campaign_ids]))
             | Q(hvc__in=charcodes)
         )
         return region_hvc_filter
 
     def _region_non_hvc_filter(self, region):
         """ specific filter for non-HVC, with all countries for the given region """
+        region_countries = region.fin_year_country_ids(
+            self.fin_year) | region.fin_year_non_contributing_country_ids(self.fin_year)
+        region.fin_year_non_contributing_country_ids(self.fin_year)
         region_non_hvc_filter = Q(
-            Q(hvc__isnull=True) | Q(hvc='')) & Q(country__in=region.fin_year_country_ids(self.fin_year))
+            Q(hvc__isnull=True) | Q(hvc='')) & Q(country__in=region_countries)
         return region_non_hvc_filter
 
     def _get_region_wins(self, region):
         """
         All HVC and non-HVC wins for the `OverseasRegion`
         """
-        all_wins_filter = Q(self._region_hvc_filter(region) | self._region_non_hvc_filter(region))
+        all_wins_filter = Q(self._region_hvc_filter(
+            region) | self._region_non_hvc_filter(region))
         wins = self._wins().filter(all_wins_filter)
         return wins
 
@@ -90,6 +96,7 @@ class OverseasRegionGroupListView(BaseOverseasRegionGroupMIView):
     """
     List all Overseas Region Groups for current year
     """
+
     def get_queryset(self):
         return super().get_queryset().filter(
             overseasregiongroupyear__financial_year=self.fin_year
@@ -106,7 +113,7 @@ class OverseasRegionsListView(BaseOverseasRegionsMIView):
                 'name': region.name,
             }
             for region in self._regions_for_fin_year()
-            ]
+        ]
         return self._success(sorted(results, key=itemgetter('name')))
 
 
@@ -118,7 +125,8 @@ class OverseasRegionDetailView(BaseOverseasRegionsMIView):
         if not region:
             return self._not_found()
         results = self._region_result(region)
-        hvc_wins, non_hvc_wins = self._get_region_hvc_wins(region), self._get_region_non_hvc_wins(region)
+        hvc_wins, non_hvc_wins = self._get_region_hvc_wins(
+            region), self._get_region_non_hvc_wins(region)
         results['wins'] = self._breakdowns(hvc_wins, non_hvc_wins=non_hvc_wins)
         return self._success(results=results)
 
@@ -143,7 +151,8 @@ class OverseasRegionCampaignsView(BaseOverseasRegionsMIView):
 
     def _campaign_breakdowns(self, region):
         wins = self._get_region_hvc_wins(region, non_contrib=True)
-        all_targets = region.fin_year_targets(self.fin_year) | region.fin_year_non_contributing_targets(self.fin_year)
+        all_targets = region.fin_year_targets(
+            self.fin_year) | region.fin_year_non_contributing_targets(self.fin_year)
         campaign_to_wins = self._group_wins_by_target(wins, all_targets)
         campaigns = [
             {
@@ -154,7 +163,8 @@ class OverseasRegionCampaignsView(BaseOverseasRegionsMIView):
             for campaign, campaign_wins in campaign_to_wins
         ]
 
-        sorted_campaigns = sorted(campaigns, key=sort_campaigns_by, reverse=True)
+        sorted_campaigns = sorted(
+            campaigns, key=sort_campaigns_by, reverse=True)
         return sorted_campaigns
 
     def get(self, request, region_id):
@@ -195,10 +205,13 @@ class OverseasRegionOverviewView(BaseOverseasRegionsMIView):
         hvc_confirmed, hvc_unconfirmed = self._confirmed_unconfirmed(hvc_wins)
 
         non_hvc_wins = self._get_region_non_hvc_wins(region_obj)
-        non_hvc_confirmed, non_hvc_unconfirmed = self._confirmed_unconfirmed(non_hvc_wins)
+        non_hvc_confirmed, non_hvc_unconfirmed = self._confirmed_unconfirmed(
+            non_hvc_wins)
 
-        target_percentage = self._overview_target_percentage(hvc_wins, total_target)
-        total_win_percent = self._overview_win_percentages(hvc_wins, non_hvc_wins)
+        target_percentage = self._overview_target_percentage(
+            hvc_wins, total_target)
+        total_win_percent = self._overview_win_percentages(
+            hvc_wins, non_hvc_wins)
         hvc_colours_count = self._colours(hvc_wins, targets)
 
         result = {
@@ -229,7 +242,8 @@ class OverseasRegionOverviewView(BaseOverseasRegionsMIView):
         return result
 
     def get(self, request):
-        result = [self._region_data(region) for region in self._regions_for_fin_year()]
+        result = [self._region_data(region)
+                  for region in self._regions_for_fin_year()]
         return self._success(result)
 
 
