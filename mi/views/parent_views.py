@@ -1,8 +1,8 @@
 from rest_framework.generics import ListAPIView
 
+from core.views import MI_PERMISSION_CLASSES
 from mi.models import ParentSector, SectorTeam
 from mi.serializers import ParentSectorSerializer
-from mi.views.base_view import MI_PERMISSION_CLASSES
 from mi.views.sector_views import BaseSectorMIView
 
 

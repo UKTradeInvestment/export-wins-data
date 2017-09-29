@@ -25,7 +25,7 @@ from djangosaml2.cache import (
 from djangosaml2.conf import get_config
 from rest_framework.views import APIView
 
-from mi.views.base_view import MI_PERMISSION_CLASSES
+from core.views import MI_PERMISSION_CLASSES
 
 logger = logging.getLogger(__name__)
 

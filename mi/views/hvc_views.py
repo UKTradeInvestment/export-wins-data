@@ -5,7 +5,7 @@ from django_countries.fields import Country as DjangoCountry
 
 from mi.models import Target, Sector
 from mi.utils import percentage_formatted, percentage
-from mi.views.base_view import BaseWinMIView, BaseMIView
+from mi.views.base_view import BaseWinMIView, BaseExportMIView
 from wins.models import HVC
 
 GLOBAL_COUNTRY_CODE = "XG"
@@ -164,7 +164,7 @@ class HVCWinTableView(BaseHVCDetailView):
         return self._success(results)
 
 
-class GlobalHVCListView(BaseMIView):
+class GlobalHVCListView(BaseExportMIView):
 
     def _get_global_hvcs(self):
         return HVC.objects.filter(campaign_id__in=

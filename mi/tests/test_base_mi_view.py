@@ -9,7 +9,7 @@ from pytz import UTC
 from rest_framework.renderers import JSONRenderer
 from mi.tests.utils import datetime_factory, MIN, MAX
 from mi.tests.base_test_case import MiApiViewsBaseTestCase
-from mi.views.base_view import BaseMIView, BaseWinMIView
+from mi.views.base_view import BaseExportMIView, BaseWinMIView
 
 
 @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
@@ -28,7 +28,7 @@ class BaseMIViewTestCase(BaseTestCase):
 
     def setUp(self):
         self.maxDiff = None
-        self.view = BaseMIView()
+        self.view = BaseExportMIView()
 
     def test_handle_fin_year_valid(self):
         fake_req = self.make_mock_request_for_year(2017)
