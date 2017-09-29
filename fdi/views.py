@@ -1,3 +1,10 @@
-from django.shortcuts import render
+from fdi.models import Investments
+from core.views import BaseMIView
 
-# Create your views here.
+
+class BaseFDIView(BaseMIView):
+
+    queryset = Investments.objects.all()
+
+    def get_queryset(self):
+        return self.queryset
