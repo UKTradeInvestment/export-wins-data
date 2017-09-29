@@ -156,6 +156,11 @@ DATA_SECRET = os.getenv("DATA_SECRET")
 assert len(set([UI_SECRET, ADMIN_SECRET, MI_SECRET, DATA_SECRET])) == 4,\
     "secrets must be different"
 
+# DataHub API
+DH_TOKEN_URL = os.getenv("DH_TOKEN_URL")
+DH_INVEST_URL = os.getenv("DH_INVEST_URL")
+DH_CLIENT_ID = os.getenv("DH_CLIENT_ID")
+DH_CLIENT_SECRET = os.getenv("DH_CLIENT_SECRET")
 
 # DRF
 REST_FRAMEWORK = {
@@ -174,7 +179,8 @@ EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 EMAIL_USE_TLS = bool(os.getenv("EMAIL_USE_TLS"))
 EMAIL_USE_SSL = bool(os.getenv("EMAIL_USE_SSL"))
-EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT")) if os.getenv("EMAIL_TIMEOUT") else None
+EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT")) if os.getenv(
+    "EMAIL_TIMEOUT") else None
 EMAIL_SSL_KEYFILE = os.getenv("EMAIL_SSL_KEYFILE")
 EMAIL_SSL_CERTFILE = os.getenv("EMAIL_SSL_CERTFILE")
 EMAIL_BACKEND = os.getenv(
@@ -184,13 +190,14 @@ EMAIL_BACKEND = os.getenv(
 # SAML configuration for djangosaml2 & pysaml2
 # note, we implement/hack djangosaml2 ourselves in sso.views, so cannot
 # necessarily use all available djangosaml2/pysaml2 settings here
-SAML_DONT_CHECK_GROUP_MEMBERSHIP = os.getenv('SAML_DONT_CHECK_GROUP_MEMBERSHIP', False)
+SAML_DONT_CHECK_GROUP_MEMBERSHIP = os.getenv(
+    'SAML_DONT_CHECK_GROUP_MEMBERSHIP', False)
 SAML_DJANGO_USER_MAIN_ATTRIBUTE = 'email'
 SAML_USE_NAME_ID_AS_USERNAME = True
 SAML_USER_MODEL = 'sso.adfsuser'
 BASEDIR = os.path.dirname(os.path.abspath(__file__))
 
-cert_filename = 'sp_test.crt' # if STAGING or DEBUG else 'sp_prod.crt'
+cert_filename = 'sp_test.crt'  # if STAGING or DEBUG else 'sp_prod.crt'
 
 if DEBUG:
     certfile_path = os.path.join(BASEDIR, 'sp_test.crt')
@@ -215,7 +222,8 @@ SAML_REDIRECT_RETURN_HOST = os.environ.get(
     'SAML_REDIRECT_RETURN_HOST',
     'https://mi.exportwins.service.trade.gov.uk'
 )
-SAML_REMOTE_METADATA = os.getenv('SAML_REMOTE_METADATA', 'ukti_federationmetadata.xml')
+SAML_REMOTE_METADATA = os.getenv(
+    'SAML_REMOTE_METADATA', 'ukti_federationmetadata.xml')
 SAML_METADATA_PATH = os.path.join(BASEDIR, SAML_REMOTE_METADATA)
 
 SAML_CONFIG = {
@@ -238,7 +246,8 @@ SAML_CONFIG = {
             'name': 'Datahub SP',
             'endpoints': {
                 'assertion_consumer_service': [
-                    (SAML_REDIRECT_RETURN_HOST + '/saml2/acs/', saml2.BINDING_HTTP_POST),
+                    (SAML_REDIRECT_RETURN_HOST + \
+                     '/saml2/acs/', saml2.BINDING_HTTP_POST),
                 ],
             },
             # this is the name id format Core responds with
