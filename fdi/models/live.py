@@ -3,6 +3,12 @@ from django.db import models
 MAX_LENGTH = 255
 
 
+class InvestmentsQuerySet(models.QuerySet):
+
+    def won(self):
+        return self.filter(stage='Won')
+
+
 class Investments(models.Model):
     """
     The model to query all MI data from
@@ -25,9 +31,11 @@ class Investments(models.Model):
     client_relationship_manager = models.CharField(max_length=MAX_LENGTH)
     company_name = models.CharField(max_length=MAX_LENGTH)
     company_reference = models.CharField(max_length=MAX_LENGTH)
+    company_country = models.CharField(max_length=MAX_LENGTH, null=True)
 
     investment_value = models.BigIntegerField(default=0)
     foreign_equity_investment = models.BigIntegerField(default=0)
 
     # set to true if importing from spreadsheet
     legacy = models.BooleanField(default=False, db_index=True)
+    objects = InvestmentsQuerySet.as_manager()
