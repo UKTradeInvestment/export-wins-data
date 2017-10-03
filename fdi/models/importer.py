@@ -22,6 +22,7 @@ class InvestmentLoad(models.Model):
     row_index = models.PositiveSmallIntegerField(blank=False, null=False)
     created = CreationDateTimeField('created')
     data = JSONField()
+    transformed = models.BooleanField(default=False, db_index=True)
 
     class Meta:
         unique_together = ('import_id', 'row_index',)
