@@ -27,6 +27,7 @@ urlpatterns = [
     url(r"^", include(router.urls, namespace="drf")),
     url(r'^saml2/', include('sso.urls', namespace="sso")),
     url(r'^mi/', include('mi.urls', namespace="mi", app_name="mi")),
+    url(r'^mi/fdi/', include('fdi.urls', namespace="fdi", app_name="fdi")),
     url(r"^csv/$", CSVView.as_view(), name="csv"),
     url(
         r"^admin/add-user/$",

@@ -8,10 +8,10 @@ from django.db.models import Q
 from mi.models import OverseasRegion, OverseasRegionGroup
 from mi.serializers import OverseasRegionGroupSerializer
 from mi.utils import sort_campaigns_by
-from mi.views.base_view import BaseWinMIView, BaseMIView
+from mi.views.base_view import BaseWinMIView, BaseExportMIView
 
 
-class BaseOverseasRegionGroupMIView(BaseMIView):
+class BaseOverseasRegionGroupMIView(BaseExportMIView):
 
     def get_queryset(self):
         return OverseasRegionGroup.objects.all()

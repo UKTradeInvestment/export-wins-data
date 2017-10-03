@@ -18,7 +18,7 @@ class Command(BaseCommand):
         query = """
         INSERT INTO fdi_investments (project_code, stage, number_new_jobs, number_safeguarded_jobs,
         approved_high_value, approved_good_value, date_won, sector_team, uk_region, client_relationship_manager,
-        company_name, company_reference, investment_value, foreign_equity_investment, legacy)
+        company_name, company_reference, investment_value, foreign_equity_investment, legacy, company_country)
         select
           i.data->>'Project Reference Code' as project_code,
           i.data->>'Project Status' as stage,
@@ -34,7 +34,8 @@ class Command(BaseCommand):
           parent_c.data->>'Organisation Reference Code' as comapny_reference,
           (i.data->>'Total Value of Investment')::DECIMAL::BIGINT as investment_value,
           (i.data->>'Foreign Equity Investment /£')::DECIMAL::BIGINT as foreign_equity_investment,
-          true as legacy
+          true as legacy,
+          parent_c.data->>'Organisation Primary Address Country' as company_country
         from fdi_investmentlegacyload as i
         join fdi_companylegacyload as parent_c
           on i.data ->'Project Reference Code' = parent_c.data->'Project Reference Code'

@@ -8,7 +8,7 @@ from django.db.models import Q
 from django_countries.fields import Country as DjangoCountry
 
 from mi.models import Country
-from mi.views.base_view import BaseWinMIView, BaseMIView
+from mi.views.base_view import BaseWinMIView, BaseExportMIView
 from mi.utils import sort_campaigns_by
 
 
@@ -66,7 +66,7 @@ class BaseCountriesMIView(BaseWinMIView):
         }
 
 
-class CountryListView(BaseMIView):
+class CountryListView(BaseExportMIView):
     """ List all countries """
 
     def get(self, request):

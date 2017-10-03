@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'djangosaml2',
 
     # local apps
+    "core.apps.CoreConfig",
     "mi.apps.MiConfig",
     "wins.apps.WinsConfig",
     "users.apps.UsersConfig",
