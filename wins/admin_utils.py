@@ -115,7 +115,7 @@ def update_numbers(win_id, new_total, year1, year2, year3, year4, year5,
     # get and re-set the breakdowns
     breakdown_dict = dict((v, k) for k, v in BREAKDOWN_TYPES)
     if value_type == 'odi':
-        breakdown_name = 'ODI'
+        breakdown_name = 'Outward Direct Investment'
     elif value_type == 'export':
         breakdown_name = 'Export'
     elif value_type == 'non_export':
