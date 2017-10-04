@@ -86,6 +86,17 @@ class BaseTeamTypeMIView(BaseWinMIView):
         wf = super()._wins_filter()
         return wf & self._team_filter
 
+    @cached_property
+    def _advisor_filter(self):
+        """ filter for contributing wins """
+        return Q(advisors__team_type=self.team_type) & Q(advisors__hq_team=self.team['id'])
+
+    def _non_hvc_wins(self):
+        """ overriding super's non_hvc_wins, to accomodate contributing wins as well as the usual ones """
+        modified_filter = super()._wins_filter() & Q(
+            self._advisor_filter | self._team_filter)
+        return self._wins(modified_filter).non_hvc(fin_year=self.fin_year)
+
     def _get_all_wins(self):
         return self._hvc_wins() | self._non_hvc_wins()
 
@@ -110,7 +121,8 @@ class BaseTeamTypeMIView(BaseWinMIView):
         hvc_set = {w['hvc'] for w in wins_qs if w['hvc']}
         if not hvc_set:
             return []
-        hvc_filter = reduce(or_, [Q(**{'campaign_id': hvc[:4], 'financial_year': hvc[-2:]}) for hvc in hvc_set])
+        hvc_filter = reduce(
+            or_, [Q(**{'campaign_id': hvc[:4], 'financial_year': hvc[-2:]}) for hvc in hvc_set])
         return only_unique(
             HVC.objects.filter(hvc_filter).values(
                 'campaign_id', 'name'
@@ -182,7 +194,7 @@ class TeamTypeMonthsView(BaseTeamTypeMIView):
 
 class TeamTypeCampaignsView(BaseTeamTypeMIView):
 
-    """ Team HVC's view along with their win-breakdown """
+    """ Team HVC's view along with their win - breakdown """
 
     @cached_property
     def confirmation_time_filter(self):
@@ -227,7 +239,8 @@ class TeamTypeCampaignsView(BaseTeamTypeMIView):
             }
             for campaign, campaign_wins in campaign_to_wins
         ]
-        sorted_campaigns = sorted(campaigns, key=sort_campaigns_by, reverse=True)
+        sorted_campaigns = sorted(
+            campaigns, key=sort_campaigns_by, reverse=True)
         return sorted_campaigns
 
     def _result(self):
