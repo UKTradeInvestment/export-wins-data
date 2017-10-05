@@ -17,6 +17,8 @@ from fixturedb.factories.win import create_win_factory
 from mi.views.team_type_views import BaseTeamTypeMIView
 from mi.views.ukregion_views import UKRegionWinsFilterMixin, UKRegionTeamTypeNameMixin, UKRegionValidOptionsMixin
 from wins.constants import HQ_TEAM_REGION_OR_POST, UK_REGIONS
+from wins.factories import AdvisorFactory
+from wins.models import Advisor
 from mi.tests.base_test_case import MiApiViewsWithWinsBaseTestCase
 from mi.tests.utils import GenericTopNonHvcWinsTestMixin, GenericWinTableTestMixin, GenericDetailsTestMixin, \
     GenericCampaignsViewTestCase, GenericMonthlyViewTestCase
@@ -52,9 +54,12 @@ class PostTopNonHVCViewTestCase(TeamTypeBaseViewTestCase, GenericTopNonHvcWinsTe
 
     export_value = 9992
 
-    post_top_nonhvc_url = reverse('mi:posts_top_nonhvc', kwargs={"team_slug": "albania-tirana"})
-    post_topnonhvc_url_invalid = reverse('mi:posts_top_nonhvc', kwargs={"team_slug": "ABC"})
-    post_topnonhvc_url_missing_post_kwarg = reverse('mi:posts_top_nonhvc', kwargs={"team_slug": None})
+    post_top_nonhvc_url = reverse('mi:posts_top_nonhvc', kwargs={
+                                  "team_slug": "albania-tirana"})
+    post_topnonhvc_url_invalid = reverse(
+        'mi:posts_top_nonhvc', kwargs={"team_slug": "ABC"})
+    post_topnonhvc_url_missing_post_kwarg = reverse(
+        'mi:posts_top_nonhvc', kwargs={"team_slug": None})
 
     fin_years = [2016, 2017]
 
@@ -154,7 +159,8 @@ class PostDetailViewTestCase(TeamTypeBaseViewTestCase, GenericDetailsTestMixin):
         self.post_detail_url_invalid = reverse('mi:post_detail', kwargs={
             'team_slug': 'notalbania-tirana'
         })
-        self.post_detail_url_missing_post_kwarg = reverse('mi:post_detail', kwargs={"team_slug": None})
+        self.post_detail_url_missing_post_kwarg = reverse(
+            'mi:post_detail', kwargs={"team_slug": None})
         self.view_base_url = self.post_detail_url
 
         self.expected_response = dict(
@@ -207,7 +213,8 @@ class PostCampaignsViewTestCase(TeamTypeBaseViewTestCase, GenericCampaignsViewTe
     TARGET_E017 = 10000000
     PRORATED_TARGET = 833333  # target based on the frozen date
 
-    view_base_url = reverse('mi:posts_campaigns', kwargs={'team_slug': TEST_TEAM_SLUG})
+    view_base_url = reverse('mi:posts_campaigns', kwargs={
+                            'team_slug': TEST_TEAM_SLUG})
 
     expected_response = {
         "campaigns": [],
@@ -309,7 +316,8 @@ class PostMonthsViewTestCase(TeamTypeBaseViewTestCase, GenericMonthlyViewTestCas
     TEST_TEAM_NAME = TEST_TEAM.lstrip(f'{TEAM_TYPE}:')
     TEST_TEAM_SLUG = slugify(TEST_TEAM_NAME)
 
-    view_base_url = reverse('mi:posts_months', kwargs={'team_slug': TEST_TEAM_SLUG})
+    view_base_url = reverse('mi:posts_months', kwargs={
+                            'team_slug': TEST_TEAM_SLUG})
     expected_response = {
         "campaigns": [],
         "name": TEST_TEAM_NAME,
@@ -335,9 +343,12 @@ class UKRegionTopNonHVCViewTestCase(TeamTypeBaseViewTestCase, GenericTopNonHvcWi
 
     export_value = 9992
 
-    uk_region_top_nonhvc_url = reverse('mi:uk_regions_top_nonhvc', kwargs={"team_slug": "south-west"})
-    uk_region_topnonhvc_url_invalid = reverse('mi:uk_regions_top_nonhvc', kwargs={"team_slug": "ABC"})
-    uk_region_topnonhvc_url_missing_uk_region_kwarg = reverse('mi:uk_regions_top_nonhvc', kwargs={"team_slug": None})
+    uk_region_top_nonhvc_url = reverse('mi:uk_regions_top_nonhvc', kwargs={
+                                       "team_slug": "south-west"})
+    uk_region_topnonhvc_url_invalid = reverse(
+        'mi:uk_regions_top_nonhvc', kwargs={"team_slug": "ABC"})
+    uk_region_topnonhvc_url_missing_uk_region_kwarg = reverse(
+        'mi:uk_regions_top_nonhvc', kwargs={"team_slug": None})
 
     fin_years = [2016, 2017]
 
@@ -408,7 +419,8 @@ class UKRegionListViewTestCase(TeamTypeBaseViewTestCase):
             len(UK_REGIONS)
         )
 
-        self.assertEqual(set(response_data[0].keys()), {'id', 'name', 'target'})
+        self.assertEqual(set(response_data[0].keys()), {
+                         'id', 'name', 'target'})
 
         # year doesn't matter
         self.expected_response = response_data
@@ -451,7 +463,8 @@ class UKRegionDetailViewTestCase(TeamTypeBaseViewTestCase, GenericDetailsTestMix
         self.uk_region_detail_url_invalid = reverse('mi:uk_regions_detail', kwargs={
             'team_slug': 'notsouth-west'
         })
-        self.uk_region_detail_url_missing_uk_region_kwarg = reverse('mi:uk_regions_detail', kwargs={"team_slug": None})
+        self.uk_region_detail_url_missing_uk_region_kwarg = reverse(
+            'mi:uk_regions_detail', kwargs={"team_slug": None})
         self.view_base_url = self.uk_region_detail_url
 
         self.expected_response = dict(
@@ -490,6 +503,89 @@ class UKRegionDetailViewTestCase(TeamTypeBaseViewTestCase, GenericDetailsTestMix
         }
         self.assertDictContainsSubset(subset, response_data)
 
+    def test_detail_hvc_win_appear_in_south_west(self):
+        self._create_hvc_win(
+            hvc_code=self.TEST_CAMPAIGN_ID,
+            win_date=self.win_date_2017,
+            confirm=True,
+            fin_year=2017,
+            export_value=self.export_value,
+            country=self.TEST_COUNTRY_CODE,
+            hq_team="itt:DIT South West"
+        )
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assert_top_level_keys(api_response)
+        self.assertEqual(api_response["wins"]["export"]
+                         ["hvc"]["number"]["confirmed"], 1)
+
+    def test_detail_non_hvc_win_appear_in_south_west(self):
+        win = self._create_non_hvc_win(
+            win_date=self.win_date_2017,
+            confirm=True,
+            fin_year=2017,
+            export_value=self.export_value,
+            country=self.TEST_COUNTRY_CODE,
+        )
+        win.team_type = 'itt'
+        win.hq_team = "itt:DIT South West"
+        win.save()
+
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assert_top_level_keys(api_response)
+        self.assertEqual(api_response["wins"]["export"]
+                         ["non_hvc"]["number"]["confirmed"], 1)
+
+    def test_detail_non_hvc_win_appear_in_south_west_even_with_diff_contributor(self):
+        win = self._create_non_hvc_win(
+            win_date=self.win_date_2017,
+            confirm=True,
+            fin_year=2017,
+            export_value=self.export_value,
+            country=self.TEST_COUNTRY_CODE,
+        )
+        win.team_type = 'itt'
+        win.hq_team = "itt:DIT South West"
+        win.save()
+
+        AdvisorFactory(
+            win=win,
+            name='UKTI SW',
+            team_type='itt',
+            hq_team="itt:DIT North West"
+        )
+
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assert_top_level_keys(api_response)
+        self.assertEqual(api_response["wins"]["export"]
+                         ["non_hvc"]["number"]["confirmed"], 1)
+
+    def test_non_hvc_win_by_north_west_but_contributed_by_south_west_appear_in_south_west(self):
+        win = self._create_non_hvc_win(
+            win_date=self.win_date_2017,
+            confirm=True,
+            fin_year=2017,
+            export_value=self.export_value,
+            country=self.TEST_COUNTRY_CODE
+        )
+        win.team_type = 'itt'
+        win.hq_team = 'itt:DIT North West'
+        win.save()
+        AdvisorFactory(
+            win=win,
+            name='UKTI SW',
+            team_type='itt',
+            hq_team="itt:DIT South West"
+        )
+        a = Advisor.objects.get(win_id=win.id)
+        # check south-west
+        self.url = self.get_url_for_year(2017)
+        api_response = self._api_response_data
+        self.assertEqual(api_response["wins"]["export"]
+                         ["non_hvc"]["number"]["confirmed"], 1)
+
 
 @tag('uk_region')
 class UKRegionCampaignsViewTestCase(TeamTypeBaseViewTestCase, GenericCampaignsViewTestCase):
@@ -503,7 +599,8 @@ class UKRegionCampaignsViewTestCase(TeamTypeBaseViewTestCase, GenericCampaignsVi
     TARGET_E017 = 10000000
     PRORATED_TARGET = 833333  # target based on the frozen date
 
-    view_base_url = reverse('mi:uk_regions_campaigns', kwargs={'team_slug': TEST_TEAM_SLUG})
+    view_base_url = reverse('mi:uk_regions_campaigns', kwargs={
+        'team_slug': TEST_TEAM_SLUG})
 
     expected_response = {
         "campaigns": [],
@@ -604,7 +701,8 @@ class UKRegionsMonthsViewTestCase(TeamTypeBaseViewTestCase, GenericMonthlyViewTe
     TEST_TEAM_NAME = "South West"
     TEST_TEAM_SLUG = slugify(TEST_TEAM_NAME)
 
-    view_base_url = reverse('mi:uk_regions_months', kwargs={'team_slug': TEST_TEAM_SLUG})
+    view_base_url = reverse('mi:uk_regions_months', kwargs={
+        'team_slug': TEST_TEAM_SLUG})
     expected_response = {
         "campaigns": [],
         "name": TEST_TEAM_NAME,
@@ -712,15 +810,18 @@ class UKRegionTeamTypeNameMixinTestCase(SimpleTestCase):
         test_team_type_literal = 'itt'
         test_base_instance = BaseTeamTypeMIView()
         test_base_instance.team_type = test_team_type_literal
-        self.assertEqual(test_base_instance.team_type_key, test_base_instance.team_type)
+        self.assertEqual(test_base_instance.team_type_key,
+                         test_base_instance.team_type)
 
         class Test(UKRegionTeamTypeNameMixin, BaseTeamTypeMIView):
             team_type = test_team_type_literal
             team_slug = 'south-west'
 
         test_derived_instance = Test()
-        self.assertNotEqual(test_derived_instance.team_type_key, test_base_instance.team_type_key)
-        self.assertNotEqual(test_derived_instance.team_type_key, test_derived_instance.team_type)
+        self.assertNotEqual(test_derived_instance.team_type_key,
+                            test_base_instance.team_type_key)
+        self.assertNotEqual(test_derived_instance.team_type_key,
+                            test_derived_instance.team_type)
         self.assertEqual(test_derived_instance.team_type_key, 'uk_region')
 
 
@@ -738,7 +839,8 @@ class UKRegionValidOptionsMixinTestCase(SimpleTestCase):
             team_slug = 'south-west'
 
         test_derived_instance = Test()
-        self.assertNotEqual(test_base_instance.valid_options, test_derived_instance.valid_options)
+        self.assertNotEqual(test_base_instance.valid_options,
+                            test_derived_instance.valid_options)
         self.assertEqual(
             {x['name'] for x in test_derived_instance.valid_options},
             set(UK_REGIONS.displays.keys())

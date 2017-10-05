@@ -89,7 +89,7 @@ class BaseTeamTypeMIView(BaseWinMIView):
     @cached_property
     def _advisor_filter(self):
         """ filter for contributing wins """
-        return Q(advisors__team_type=self.team_type) & Q(advisors__hq_team=self.team['id'])
+        return Q(advisors__hq_team=self.team['id'])
 
     def _non_hvc_wins(self):
         """ overriding super's non_hvc_wins, to accomodate contributing wins as well as the usual ones """
