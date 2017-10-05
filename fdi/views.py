@@ -1,4 +1,4 @@
-from django.db.models import Func, F, Sum, Count
+from django.db.models import Func, F, Sum, Count, When, Case, Value, CharField
 
 from fdi.models import Investments
 from core.views import BaseMIView
@@ -31,7 +31,35 @@ class FDISectorOverview(BaseFDIView):
 
 
 class FDIOverview(BaseFDIView):
-    pass
+
+    def get_results(self):
+        investments_in_scope = self.get_queryset().won().filter(
+            date_won__range=(self._date_range_start(), self._date_range_end())
+        )
+        total = investments_in_scope.count()
+        data = investments_in_scope.values(
+            'approved_high_value', 'approved_good_value'
+        ).annotate(
+            value=Case(
+                When(approved_good_value=True, then=Value('good', output_field=CharField(max_length=10))),
+                When(approved_high_value=True, then=Value('high', output_field=CharField(max_length=10))),
+                default=Value('standard', output_field=CharField(max_length=10))
+            )
+        ).annotate(
+            Count('value'),
+        ).values(
+            'value',
+            'value__count'
+        )
+
+        return {
+            "performance": [{
+                "value": x['value'],
+                "value__count": x['value__count'],
+                "value__percent": '{0:.2%}'.format(x['value__count'] / total)
+            } for x in data],
+            "total": total
+        }
 
 
 class FDIYearOnYearComparison(BaseFDIView):
