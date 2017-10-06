@@ -35,6 +35,12 @@ class UKRegionWinsFilterMixin:
         all_teams = FLATTENED_REGIONS[self.team['id']]
         return Q(hq_team__in=all_teams)
 
+    @cached_property
+    def _advisor_filter(self):
+        """ UK Region specific filter for contributing wins """
+        all_teams = FLATTENED_REGIONS[self.team['id']]
+        return Q(advisors__hq_team__in=all_teams)
+
 
 class UKRegionTeamTypeNameMixin:
     """
@@ -64,7 +70,8 @@ class UKRegionValidOptionsMixin:
 
     @cached_property
     def valid_options(self):
-        all_uk_regions = itertools.chain.from_iterable(x.keys() for x in UK_REGIONS_MAP.values())
+        all_uk_regions = itertools.chain.from_iterable(
+            x.keys() for x in UK_REGIONS_MAP.values())
 
         return [
             {
@@ -84,7 +91,8 @@ class UKRegionMixin(
     @property
     def target(self):
         try:
-            target = UKRegionTarget.objects.get(financial_year=self.fin_year, region=self.team['id']).as_dict()
+            target = UKRegionTarget.objects.get(
+                financial_year=self.fin_year, region=self.team['id']).as_dict()
         except UKRegionTarget.DoesNotExist:
             target = {'target': None}
         return target
@@ -98,7 +106,8 @@ class UKRegionOverview(UKRegionMixin, TeamTypeListView):
 
     def get(self, request, *args, **kwargs):
         regions = []
-        region_targets = UKRegionTarget.objects.filter(financial_year=self.fin_year)
+        region_targets = UKRegionTarget.objects.filter(
+            financial_year=self.fin_year)
         for x in self.valid_options:
             try:
                 target = region_targets.get(region=x['id']).as_dict()
@@ -124,7 +133,8 @@ class UKRegionDetailView(UKRegionMixin, TeamTypeDetailView):
             else:
                 return 'unknown'
 
-        group_iter = itertools.groupby(self._get_all_wins().order_by('export_experience'), key=classify_experience)
+        group_iter = itertools.groupby(self._get_all_wins().order_by(
+            'export_experience'), key=classify_experience)
         groups = defaultdict(list)
         for export_exp, wins in group_iter:
             groups[export_exp] = list(wins)

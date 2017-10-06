@@ -78,7 +78,7 @@ class BaseWinMIView(BaseExportMIView):
 
         return win_filter
 
-    def _wins(self):
+    def _wins(self, filter=None):
         """ Return queryset of Wins used by all Endpoints
 
         All endpoints should derive their Wins from this single source of
@@ -110,11 +110,13 @@ class BaseWinMIView(BaseExportMIView):
         newest_notification = Notification.objects.filter(win=OuterRef(
             'pk'), type=Notification.TYPE_CUSTOMER).order_by('-created')
 
-        wins = Win.objects.filter(self._wins_filter()).only(*fields).values(*fields).annotate(
-            notifications__created=Subquery(
-                newest_notification.values('created')[:1])
-        )
-
+        wins = None
+        if not filter:
+            wins = Win.objects.filter(self._wins_filter()).only(*fields).values(*fields).annotate(
+                notifications__created=Subquery(newest_notification.values('created')[:1]))
+        else:
+            wins = Win.objects.filter(filter).only(*fields).values(*fields).annotate(
+                notifications__created=Subquery(newest_notification.values('created')[:1]))
         return wins
 
     def _non_hvc_wins(self):
