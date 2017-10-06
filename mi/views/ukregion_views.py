@@ -37,7 +37,7 @@ class UKRegionWinsFilterMixin:
 
     @cached_property
     def _advisor_filter(self):
-        """ filter for contributing wins """
+        """ UK Region specific filter for contributing wins """
         all_teams = FLATTENED_REGIONS[self.team['id']]
         return Q(advisors__hq_team__in=all_teams)
 
