@@ -18,7 +18,6 @@ from mi.views.team_type_views import BaseTeamTypeMIView
 from mi.views.ukregion_views import UKRegionWinsFilterMixin, UKRegionTeamTypeNameMixin, UKRegionValidOptionsMixin
 from wins.constants import HQ_TEAM_REGION_OR_POST, UK_REGIONS
 from wins.factories import AdvisorFactory
-from wins.models import Advisor
 from mi.tests.base_test_case import MiApiViewsWithWinsBaseTestCase
 from mi.tests.utils import GenericTopNonHvcWinsTestMixin, GenericWinTableTestMixin, GenericDetailsTestMixin, \
     GenericCampaignsViewTestCase, GenericMonthlyViewTestCase
@@ -579,7 +578,6 @@ class UKRegionDetailViewTestCase(TeamTypeBaseViewTestCase, GenericDetailsTestMix
             team_type='itt',
             hq_team="itt:DIT South West"
         )
-        a = Advisor.objects.get(win_id=win.id)
         # check south-west
         self.url = self.get_url_for_year(2017)
         api_response = self._api_response_data
