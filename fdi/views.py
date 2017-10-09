@@ -4,6 +4,15 @@ from fdi.models import Investments
 from core.views import BaseMIView
 from mi.models import Sector
 
+ANNOTATIONS = dict(
+    year=Func(F('date_won'), function='get_financial_year'),
+    value=Case(
+        When(approved_good_value=True, then=Value('good', output_field=CharField(max_length=10))),
+        When(approved_high_value=True, then=Value('high', output_field=CharField(max_length=10))),
+        default=Value('standard', output_field=CharField(max_length=10))
+    )
+)
+
 
 class BaseFDIView(BaseMIView):
 
@@ -36,41 +45,80 @@ class FDIOverview(BaseFDIView):
         investments_in_scope = self.get_queryset().won().filter(
             date_won__range=(self._date_range_start(), self._date_range_end())
         )
+        pending = self.get_queryset().filter(
+            date_won=None
+        ).annotate(
+            Sum('number_new_jobs'),
+            Sum('number_safeguarded_jobs'),
+            Sum('investment_value'),
+            count=Count('id'),
+        ).values(
+            'number_new_jobs__sum',
+            'number_safeguarded_jobs__sum',
+            'investment_value__sum',
+            'count'
+        ).get()
+
         total = investments_in_scope.count()
         data = investments_in_scope.values(
             'approved_high_value', 'approved_good_value'
         ).annotate(
-            value=Case(
-                When(approved_good_value=True, then=Value('good', output_field=CharField(max_length=10))),
-                When(approved_high_value=True, then=Value('high', output_field=CharField(max_length=10))),
-                default=Value('standard', output_field=CharField(max_length=10))
-            )
+            value=ANNOTATIONS['value']
         ).annotate(
-            Count('value'),
+            Sum('number_new_jobs'),
+            Sum('number_safeguarded_jobs'),
+            Sum('investment_value'),
+            count=Count('value'),
         ).values(
             'value',
-            'value__count'
+            'count',
+            'number_new_jobs__sum',
+            'number_safeguarded_jobs__sum',
+            'investment_value__sum',
         )
 
         return {
-            "performance": [{
-                "value": x['value'],
-                "value__count": x['value__count'],
-                "value__percent": '{0:.2%}'.format(x['value__count'] / total)
-            } for x in data],
-            "total": total
+            "target": 0,
+            "performance": {
+                "verified": [
+                    {
+                        **x,
+                        "value__percent": x['count'] / total
+                    } for x in data
+                ],
+            },
+            "total": {
+                "verified": {
+                    "number_new_jobs__sum": sum(x['number_new_jobs__sum'] for x in data),
+                    "number_safeguarded_jobs__sum": sum(x['number_safeguarded_jobs__sum'] for x in data),
+                    "investment_value__sum": sum(x['investment_value__sum'] for x in data),
+                    "count": total
+                },
+                "pending": pending
+            },
+            "verified_met_percent": total / (total + pending['count'])
         }
 
 
 class FDIYearOnYearComparison(BaseFDIView):
 
+    def _fill_date_ranges(self):
+        self.date_range = {
+            "start": None,
+            "end": self._date_range_end(),
+        }
+
     def get_results(self):
-        return self.get_queryset().won().values(
+        breakdown = self.get_queryset().won(
+        ).filter(
+            date_won__lt=self._date_range_end()
+        ).values(
             'date_won'
         ).annotate(
-            year=Func(F('date_won'), function='get_financial_year')
+            **ANNOTATIONS
         ).annotate(
             Count('year'),
+            Count('value'),
             Sum('number_new_jobs'),
             Sum('number_safeguarded_jobs'),
             Sum('investment_value')
@@ -79,5 +127,18 @@ class FDIYearOnYearComparison(BaseFDIView):
             'year__count',
             'number_new_jobs__sum',
             'number_safeguarded_jobs__sum',
-            'investment_value__sum'
+            'investment_value__sum',
+            'value',
+            'value__count'
         ).order_by('year')
+        year_buckets = sorted(list({x['year'] for x in breakdown}))
+        return [
+            {
+                y: [{b['value']: {
+                    "count": b['year__count'],
+                    "number_new_jobs__sum": b['number_new_jobs__sum'],
+                    "number_safeguarded_jobs__sum": b['number_safeguarded_jobs__sum'],
+                    "investment_value__sum": b['investment_value__sum']
+                }} for b in breakdown if b['year'] == y]
+            } for y in year_buckets
+        ]
