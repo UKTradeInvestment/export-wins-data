@@ -3,6 +3,7 @@ from django.db.models import Func, F, Sum, Count, When, Case, Value, CharField
 from fdi.models import Investments, FDIGlobalTargets
 from core.views import BaseMIView
 from mi.models import Sector
+from mi.utils import two_digit_float
 
 ANNOTATIONS = dict(
     year=Func(F('date_won'), function='get_financial_year'),
@@ -87,7 +88,7 @@ class FDIOverview(BaseFDIView):
                     {
                         **x,
                         "target": getattr(fdi_target, x['value'], 0),
-                        "value__percent": x['count'] / total
+                        "value__percent": two_digit_float((x['count'] / total) * 100)
                     } for x in data
                 ],
             },
@@ -100,7 +101,7 @@ class FDIOverview(BaseFDIView):
                 },
                 "pending": pending
             },
-            "verified_met_percent": total / (total + pending['count'])
+            "verified_met_percent": two_digit_float((total / (total + pending['count'])) * 100)
         }
 
 
