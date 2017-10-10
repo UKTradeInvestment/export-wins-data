@@ -1,6 +1,6 @@
 from django.db.models import Func, F, Sum, Count, When, Case, Value, CharField
 
-from fdi.models import Investments
+from fdi.models import Investments, FDIGlobalTargets
 from core.views import BaseMIView
 from mi.models import Sector
 
@@ -42,22 +42,25 @@ class FDISectorOverview(BaseFDIView):
 class FDIOverview(BaseFDIView):
 
     def get_results(self):
+
+        try:
+            fdi_target = FDIGlobalTargets.objects.get(financial_year=self.fin_year)
+        except FDIGlobalTargets.DoesNotExist:
+            fdi_target = FDIGlobalTargets(financial_year=self.fin_year, high=0, good=0, standard=0)
+
         investments_in_scope = self.get_queryset().won().filter(
             date_won__range=(self._date_range_start(), self._date_range_end())
         )
         pending = self.get_queryset().filter(
             date_won=None
-        ).annotate(
+        ).exclude(
+            stage='Won'
+        ).aggregate(
             Sum('number_new_jobs'),
             Sum('number_safeguarded_jobs'),
             Sum('investment_value'),
             count=Count('id'),
-        ).values(
-            'number_new_jobs__sum',
-            'number_safeguarded_jobs__sum',
-            'investment_value__sum',
-            'count'
-        ).get()
+        )
 
         total = investments_in_scope.count()
         data = investments_in_scope.values(
@@ -78,11 +81,12 @@ class FDIOverview(BaseFDIView):
         )
 
         return {
-            "target": 0,
+            "target": fdi_target.total,
             "performance": {
                 "verified": [
                     {
                         **x,
+                        "target": getattr(fdi_target, x['value'], 0),
                         "value__percent": x['count'] / total
                     } for x in data
                 ],

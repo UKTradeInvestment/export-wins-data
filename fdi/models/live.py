@@ -1,5 +1,7 @@
 from django.db import models
 
+from mi.models import FinancialYear
+
 MAX_LENGTH = 255
 
 
@@ -29,6 +31,7 @@ class Investments(models.Model):
     uk_region = models.CharField(max_length=MAX_LENGTH)
 
     client_relationship_manager = models.CharField(max_length=MAX_LENGTH)
+    client_relationship_manager_team = models.CharField(max_length=MAX_LENGTH, null=True)
     company_name = models.CharField(max_length=MAX_LENGTH)
     company_reference = models.CharField(max_length=MAX_LENGTH)
     company_country = models.CharField(max_length=MAX_LENGTH, null=True)
@@ -39,3 +42,17 @@ class Investments(models.Model):
     # set to true if importing from spreadsheet
     legacy = models.BooleanField(default=False, db_index=True)
     objects = InvestmentsQuerySet.as_manager()
+
+
+class FDIGlobalTargets(models.Model):
+    financial_year = models.OneToOneField(FinancialYear)
+    high = models.PositiveIntegerField(null=False)
+    good = models.PositiveIntegerField(null=False)
+    standard = models.PositiveIntegerField(null=False)
+
+    @property
+    def total(self):
+        return self.high + self.good + self.standard
+
+    def __str__(self):
+        return f'{self.financial_year.description} - h{self.good},g{self.good},s{self.standard},∑{self.total} '
