@@ -1,6 +1,6 @@
 from django.db.models import Func, F, Sum, Count, When, Case, Value, CharField
 
-from fdi.models import Investments, FDIGlobalTargets
+from fdi.models import Investments, GlobalTargets
 from core.views import BaseMIView
 from mi.models import Sector
 from mi.utils import two_digit_float
@@ -45,9 +45,9 @@ class FDIOverview(BaseFDIView):
     def get_results(self):
 
         try:
-            fdi_target = FDIGlobalTargets.objects.get(financial_year=self.fin_year)
-        except FDIGlobalTargets.DoesNotExist:
-            fdi_target = FDIGlobalTargets(financial_year=self.fin_year, high=0, good=0, standard=0)
+            fdi_target = GlobalTargets.objects.get(financial_year=self.fin_year)
+        except GlobalTargets.DoesNotExist:
+            fdi_target = GlobalTargets(financial_year=self.fin_year, high=0, good=0, standard=0)
 
         investments_in_scope = self.get_queryset().won().filter(
             date_won__range=(self._date_range_start(), self._date_range_end())

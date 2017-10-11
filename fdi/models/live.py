@@ -44,7 +44,7 @@ class Investments(models.Model):
     objects = InvestmentsQuerySet.as_manager()
 
 
-class FDIGlobalTargets(models.Model):
+class GlobalTargets(models.Model):
     financial_year = models.OneToOneField(FinancialYear)
     high = models.PositiveIntegerField(null=False)
     good = models.PositiveIntegerField(null=False)

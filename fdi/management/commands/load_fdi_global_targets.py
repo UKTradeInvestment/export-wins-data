@@ -1,6 +1,6 @@
 from django.core.management import BaseCommand
 
-from fdi.models import FDIGlobalTargets
+from fdi.models import GlobalTargets
 from mi.models import FinancialYear
 
 
@@ -20,7 +20,7 @@ class Command(BaseCommand):
         parser.add_argument("--standard", type=int, required=True)
 
     def handle(self, year, high=None, good=None, standard=None, **options):
-        target, created = FDIGlobalTargets.objects.get_or_create(
+        target, created = GlobalTargets.objects.get_or_create(
             financial_year=year,
             defaults=dict(high=high, good=good, standard=standard)
         )
