@@ -87,7 +87,8 @@ class CountryDetailView(BaseCountriesMIView):
         results = self._country_result(self.country)
         hvc_wins = self._get_hvc_wins(self.country)
         non_hvc_wins = self._get_non_hvc_wins(self.country)
-        results['wins'] = self._breakdowns(hvc_wins, non_hvc_wins=non_hvc_wins)
+        results['wins'] = self._breakdowns(
+            hvc_wins=hvc_wins, non_hvc_wins=non_hvc_wins)
         return self._success(results)
 
 

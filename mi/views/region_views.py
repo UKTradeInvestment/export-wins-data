@@ -127,7 +127,8 @@ class OverseasRegionDetailView(BaseOverseasRegionsMIView):
         results = self._region_result(region)
         hvc_wins, non_hvc_wins = self._get_region_hvc_wins(
             region), self._get_region_non_hvc_wins(region)
-        results['wins'] = self._breakdowns(hvc_wins, non_hvc_wins=non_hvc_wins)
+        results['wins'] = self._breakdowns(
+            hvc_wins=hvc_wins, non_hvc_wins=non_hvc_wins)
         return self._success(results=results)
 
 

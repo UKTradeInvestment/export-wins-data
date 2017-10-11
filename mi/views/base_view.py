@@ -321,19 +321,20 @@ class BaseWinMIView(BaseExportMIView):
         confirmed = []
         unconfirmed = []
 
-        for win in wins:
-            if non_export:
-                value = win['total_expected_non_export_value']
-            else:
-                value = win['total_expected_export_value']
+        if wins:
+            for win in wins:
+                if non_export:
+                    value = win['total_expected_non_export_value']
+                else:
+                    value = win['total_expected_export_value']
 
-            win_status = self._win_status(win)
-            if win_status == 'confirmed':
-                confirmed.append(value)
-            elif win_status == 'unconfirmed':
-                unconfirmed.append(value)
-            elif win_status == 'rejected':
-                pass  # todo
+                win_status = self._win_status(win)
+                if win_status == 'confirmed':
+                    confirmed.append(value)
+                elif win_status == 'unconfirmed':
+                    unconfirmed.append(value)
+                elif win_status == 'rejected':
+                    pass  # todo
 
         return {
             'value': {
@@ -349,10 +350,11 @@ class BaseWinMIView(BaseExportMIView):
 
         }
 
-    def _breakdowns(self, hvc_wins, non_hvc_wins=None, include_non_hvc=True):
-        """ Get breakdown of data for wins
+    def _breakdowns(self, include_hvc=True, hvc_wins=None, include_non_hvc=True, non_hvc_wins=None):
+        """ Get breakdown of data for wins,
+        option to have either hvc or non_hvc or both
 
-        Result looks like:
+        Result looks like this, when both hvc and non_hvc are provided:
         {
             'export': {
                 'hvc': {
@@ -362,6 +364,10 @@ class BaseWinMIView(BaseExportMIView):
                 'non_hvc' <optional>:{
                    'value': ...,
                    'number': ...,
+                },
+                'totals': {
+                    'value': ...,
+                    'number': ...,
                 }
             },
             'non_export': {
@@ -372,21 +378,26 @@ class BaseWinMIView(BaseExportMIView):
         }
 
         """
+        if not include_hvc and not include_non_hvc:
+            return None
+
         result = {
             'export': {
-                'hvc': self._breakdown_wins(hvc_wins),
             },
-            'non_export': self._breakdown_wins(hvc_wins, non_export=True),
         }
 
-        confirmed_value = result['export']['hvc']['value']['confirmed']
-        unconfirmed_value = result['export']['hvc']['value']['unconfirmed']
-        confirmed_number = result['export']['hvc']['number']['confirmed']
-        unconfirmed_number = result['export']['hvc']['number']['unconfirmed']
+        confirmed_value = unconfirmed_value = confirmed_number = unconfirmed_number = 0
+        if include_hvc:
+            result['export']['hvc'] = self._breakdown_wins(hvc_wins)
+            result['non_export'] = self._breakdown_wins(
+                hvc_wins, non_export=True)
+            confirmed_value = result['export']['hvc']['value']['confirmed']
+            unconfirmed_value = result['export']['hvc']['value']['unconfirmed']
+            confirmed_number = result['export']['hvc']['number']['confirmed']
+            unconfirmed_number = result['export']['hvc']['number']['unconfirmed']
 
         if include_non_hvc:
             result['export']['non_hvc'] = self._breakdown_wins(non_hvc_wins)
-
             confirmed_value += result['export']['non_hvc']['value']['confirmed']
             unconfirmed_value += result['export']['non_hvc']['value']['unconfirmed']
             confirmed_number += result['export']['non_hvc']['number']['confirmed']

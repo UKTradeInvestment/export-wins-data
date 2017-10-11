@@ -1,7 +1,7 @@
 from unittest.mock import PropertyMock
 
 from django.db.models import Q
-from unittest import mock
+from unittest import mock, skip
 
 import datetime
 from django.core.management import call_command
@@ -418,8 +418,7 @@ class UKRegionListViewTestCase(TeamTypeBaseViewTestCase):
             len(UK_REGIONS)
         )
 
-        self.assertEqual(set(response_data[0].keys()), {
-                         'id', 'name', 'target'})
+        self.assertEqual(set(response_data[0].keys()), {'id', 'name'})
 
         # year doesn't matter
         self.expected_response = response_data
@@ -561,6 +560,7 @@ class UKRegionDetailViewTestCase(TeamTypeBaseViewTestCase, GenericDetailsTestMix
         self.assertEqual(api_response["wins"]["export"]
                          ["non_hvc"]["number"]["confirmed"], 1)
 
+    @skip('until contributing wins is implemented')
     def test_non_hvc_win_by_north_west_but_contributed_by_south_west_appear_in_south_west(self):
         win = self._create_non_hvc_win(
             win_date=self.win_date_2017,

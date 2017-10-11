@@ -8,6 +8,7 @@ from django.utils.text import slugify
 from mi.models import UKRegionTarget
 from mi.views.team_type_views import TeamTypeListView, TeamTypeDetailView, TeamTypeWinTableView, \
     TeamTypeNonHvcWinsView, TeamTypeMonthsView, TeamTypeCampaignsView
+from mi.utils import percentage_formatted
 from wins.constants import UK_REGIONS_MAP, UK_REGIONS, STATUS as EXPORT_EXPERIENCE
 from wins.models import Win
 
@@ -30,12 +31,12 @@ class UKRegionWinsFilterMixin:
             'win__confirmation__created__range': (self._date_range_start(), self._date_range_end())
         }
 
-    @cached_property
+    @property
     def _team_filter(self):
         all_teams = FLATTENED_REGIONS[self.team['id']]
         return Q(hq_team__in=all_teams)
 
-    @cached_property
+    @property
     def _advisor_filter(self):
         """ UK Region specific filter for contributing wins """
         all_teams = FLATTENED_REGIONS[self.team['id']]
@@ -50,7 +51,7 @@ class UKRegionTeamTypeNameMixin:
     Mixin that should be used with a subclass of `BaseTeamTypeMIView`
     """
 
-    @cached_property
+    @property
     def team_type_key(self):
         """
         What to use in the result for the heading of the json response.
@@ -88,38 +89,6 @@ class UKRegionMixin(
     UKRegionValidOptionsMixin,
     UKRegionTeamTypeNameMixin
 ):
-    @property
-    def target(self):
-        try:
-            target = UKRegionTarget.objects.get(
-                financial_year=self.fin_year, region=self.team['id']).as_dict()
-        except UKRegionTarget.DoesNotExist:
-            target = {'target': None}
-        return target
-
-
-class UKRegionListView(UKRegionMixin, TeamTypeListView):
-    pass
-
-
-class UKRegionOverview(UKRegionMixin, TeamTypeListView):
-
-    def get(self, request, *args, **kwargs):
-        regions = []
-        region_targets = UKRegionTarget.objects.filter(
-            financial_year=self.fin_year)
-        for x in self.valid_options:
-            try:
-                target = region_targets.get(region=x['id']).as_dict()
-            except UKRegionTarget.DoesNotExist:
-                target = {'target': None}
-
-            regions.append({'id': x['slug'], 'name': x['name'], **target})
-        return self._success(regions)
-
-
-class UKRegionDetailView(UKRegionMixin, TeamTypeDetailView):
-
     def _group_wins_by_export_experience(self):
 
         def classify_experience(win):
@@ -133,7 +102,7 @@ class UKRegionDetailView(UKRegionMixin, TeamTypeDetailView):
             else:
                 return 'unknown'
 
-        group_iter = itertools.groupby(self._get_all_wins().order_by(
+        group_iter = itertools.groupby(self._non_hvc_wins().order_by(
             'export_experience'), key=classify_experience)
         groups = defaultdict(list)
         for export_exp, wins in group_iter:
@@ -165,6 +134,117 @@ class UKRegionDetailView(UKRegionMixin, TeamTypeDetailView):
         }
         data.update({'total': self._breakdown_wins(self._wins())})
         return data
+
+    @property
+    def target(self):
+        try:
+            target = UKRegionTarget.objects.get(
+                financial_year=self.fin_year, region=self.team['id']).as_dict()
+        except UKRegionTarget.DoesNotExist:
+            target = {'target': None}
+        return target
+
+
+class UKRegionListView(UKRegionMixin, TeamTypeListView):
+    pass
+
+
+class UKRegionOverview(UKRegionMixin, TeamTypeListView):
+
+    def wins_non_hvc_performance(self, wins, target):
+        wins_performance = {
+            'target': target,
+            'performance': {
+                'confirmed': percentage_formatted(wins['export']['non_hvc']['number']['confirmed'], target),
+                'unconfirmed': percentage_formatted(wins['export']['non_hvc']['number']['unconfirmed'], target)
+            }
+        }
+        return wins_performance
+
+    def export_experience_performance(self, confirmed, unconfirmed, target):
+        performance = {
+            'target': target,
+            'percentage': {
+                'confirmed': percentage_formatted(confirmed, target),
+                'unconfirmed': percentage_formatted(unconfirmed, target)
+            }
+        }
+        return performance
+
+    def summary_of_regions(self, regions):
+        non_hvcs = [n['wins']['export']['non_hvc'] for n in regions]
+        conf_number = sum(non_hvc['number']['confirmed']
+                          for non_hvc in non_hvcs)
+        unconf_number = sum(non_hvc['number']['unconfirmed']
+                            for non_hvc in non_hvcs)
+        target = sum(non_hvc['performance']['target'] for non_hvc in non_hvcs)
+        summary = {
+            "non_hvc": {
+                "value": {
+                    "confirmed": sum(non_hvc['value']['confirmed'] for non_hvc in non_hvcs),
+                    "unconfirmed": sum(non_hvc['value']['unconfirmed'] for non_hvc in non_hvcs),
+                    "total": sum(non_hvc['value']['total'] for non_hvc in non_hvcs)
+                },
+                "number": {
+                    "confirmed": conf_number,
+                    "unconfirmed": unconf_number,
+                    "total": sum(non_hvc['number']['total'] for non_hvc in non_hvcs)
+                },
+                "performance": {
+                    "target": sum(non_hvc['performance']['target'] for non_hvc in non_hvcs),
+                    "percentage": {
+                        'confirmed': percentage_formatted(conf_number, target),
+                        'unconfirmed': percentage_formatted(unconf_number, target),
+                    }
+                }
+            }
+        }
+        return summary
+
+    def get(self, request, *args, **kwargs):
+        regions = []
+        region_targets = UKRegionTarget.objects.filter(
+            financial_year=self.fin_year)
+
+        for x in self.valid_options:
+            try:
+                target = region_targets.get(region=x['id']).as_dict()
+
+                self.team_slug = x['slug']
+
+                wins = self._breakdowns(
+                    include_hvc=False, non_hvc_wins=self._non_hvc_wins())
+                wins_perf = self.wins_non_hvc_performance(
+                    wins, target['target']['total'])
+                wins['export']['non_hvc']['performance'] = wins_perf
+
+                export_experience = self.breakdown_by_experience()
+                for key, experience in export_experience.items():
+                    if key != 'unknown':
+                        exp_performance = self.export_experience_performance(experience['number']['confirmed'],
+                                                                             experience['number']['unconfirmed'],
+                                                                             target['target'][key])
+                        experience['performance'] = exp_performance
+
+                region_result = {
+                    'id': x['slug'],
+                    'name': x['name'],
+                    **target,
+                    'wins': wins,
+                    'export_experience': export_experience,
+                }
+                regions.append(region_result)
+            except UKRegionTarget.DoesNotExist:
+                pass
+
+        result = {
+            'summary': self.summary_of_regions(regions),
+            "regions": regions,
+        }
+        return self._success(result)
+
+
+class UKRegionDetailView(UKRegionMixin, TeamTypeDetailView):
 
     def _result(self):
         result = super()._result()

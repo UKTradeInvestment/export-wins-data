@@ -64,13 +64,16 @@ class HVCDetailView(BaseHVCDetailView):
         }
         """
 
-        breakdown = self._breakdowns(self._get_hvc_wins(campaign), include_non_hvc=False)
+        breakdown = self._breakdowns(
+            hvc_wins=self._get_hvc_wins(campaign), include_non_hvc=False)
         confirmed_value = breakdown["export"]["hvc"]["value"]["confirmed"]
         unconfirmed_value = breakdown["export"]["hvc"]["value"]["unconfirmed"]
         confirmed_number = breakdown["export"]["hvc"]["number"]["confirmed"]
         unconfirmed_number = breakdown["export"]["hvc"]["number"]["unconfirmed"]
-        confirmed_percent = percentage_formatted(confirmed_value, campaign.target)
-        unconfirmed_percent = percentage_formatted(unconfirmed_value, campaign.target)
+        confirmed_percent = percentage_formatted(
+            confirmed_value, campaign.target)
+        unconfirmed_percent = percentage_formatted(
+            unconfirmed_value, campaign.target)
         result = {
             "totals": {
                 "value": {
@@ -148,6 +151,7 @@ class HVCWinsByMarketSectorView(BaseHVCDetailView):
 
 class HVCWinTableView(BaseHVCDetailView):
     """ Wins for table view for HVC"""
+
     def get(self, request, campaign_id):
         campaign = self._get_campaign(campaign_id)
         if not campaign:
@@ -167,11 +171,10 @@ class HVCWinTableView(BaseHVCDetailView):
 class GlobalHVCListView(BaseExportMIView):
 
     def _get_global_hvcs(self):
-        return HVC.objects.filter(campaign_id__in=
-            Target.objects.for_fin_year(
-                fin_year=self.fin_year)
-                    .filter(country__country=GLOBAL_COUNTRY_CODE)
-                    .values_list("campaign_id")
+        return HVC.objects.filter(campaign_id__in=Target.objects.for_fin_year(
+            fin_year=self.fin_year)
+            .filter(country__country=GLOBAL_COUNTRY_CODE)
+            .values_list("campaign_id")
         )
 
     def get(self, request):

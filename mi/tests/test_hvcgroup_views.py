@@ -491,10 +491,10 @@ class HVCGroupCampaignViewsTestCase(MiApiViewsBaseTestCase):
         call_command('create_missing_hvcs', verbose=False)
 
         self._win_factory_function(hvc_code="E083", confirm=True,
-                             export_value=10000000,
-                             win_date=datetime.datetime(2017,3, 25),
-                             notify_date=datetime.datetime(2017,3, 25),
-                             response_date=datetime.datetime(2017,4, 5))
+                                   export_value=10000000,
+                                   win_date=datetime.datetime(2017, 3, 25),
+                                   notify_date=datetime.datetime(2017, 3, 25),
+                                   response_date=datetime.datetime(2017, 4, 5))
         group_31_campaign_url = reverse("mi:hvc_group_campaigns", kwargs={"group_id": 31}) + "?year=2017"
         api_response = self._get_api_response(group_31_campaign_url)
         response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
@@ -595,7 +595,7 @@ def make_month_data(month, confirmed=None, unconfirmed=None):
     number_of_confirmed_wins = len(confirmed)
     number_of_wins = number_of_confirmed_wins + number_of_unconfirmed_wins
     return \
-        { 'totals':
+        {'totals':
             {'non_export':
                 {'number': {
                     'total': number_of_wins,
@@ -603,10 +603,10 @@ def make_month_data(month, confirmed=None, unconfirmed=None):
                     'confirmed': number_of_confirmed_wins
                 },
                     'value': {
-                        'total': sum([x.total_expected_non_export_value for x in  confirmed + unconfirmed]),
+                        'total': sum([x.total_expected_non_export_value for x in confirmed + unconfirmed]),
                         'unconfirmed': sum([x.total_expected_non_export_value for x in unconfirmed]),
                         'confirmed': sum([x.total_expected_non_export_value for x in confirmed])
-                    }
+                }
                 },
                 'export': {
                     'totals': {
@@ -615,7 +615,7 @@ def make_month_data(month, confirmed=None, unconfirmed=None):
                             'unconfirmed': number_of_unconfirmed_wins,
                             'confirmed': number_of_confirmed_wins
                         }, 'value': {
-                            'grand_total': sum([x.total_expected_export_value for x in  confirmed + unconfirmed]),
+                            'grand_total': sum([x.total_expected_export_value for x in confirmed + unconfirmed]),
                             'unconfirmed': sum([x.total_expected_export_value for x in unconfirmed]),
                             'confirmed': sum([x.total_expected_export_value for x in confirmed])
                         }
@@ -633,9 +633,10 @@ def make_month_data(month, confirmed=None, unconfirmed=None):
                         }
                     }
                 }
-            },
+             },
             'date': '2016-{:02d}'.format(month)
-        }
+         }
+
 
 @freeze_time(MiApiViewsBaseTestCase.frozen_date)
 class HVCGroupMonthsView(MiApiViewsBaseTestCase):
@@ -666,7 +667,6 @@ class HVCGroupMonthsView(MiApiViewsBaseTestCase):
 
     def test_month_grouping_with_no_wins(self):
         self.assertResponse()
-
 
     def test_month_grouping_with_1_win_unconfirmed(self):
         win1 = WinFactory(
@@ -702,7 +702,6 @@ class HVCGroupMonthsView(MiApiViewsBaseTestCase):
 
         self.expected_response['months'] = month1 + rest_months
         self.assertResponse()
-
 
     def test_month_grouping_with_1_win_confirmed(self):
         win1 = WinFactory(
@@ -997,8 +996,8 @@ class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase, GenericWinTableTestMixi
                 "hvc": []
             },
             "hvc_group": {
-                    "id": "4",
-                    "name": "Automotive"
+                "id": "4",
+                "name": "Automotive"
             }
         }
         self.assertResponse()
@@ -1017,8 +1016,8 @@ class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase, GenericWinTableTestMixi
                 "hvc": []
             },
             "hvc_group": {
-                    "id": "4",
-                    "name": "Automotive"
+                "id": "4",
+                "name": "Automotive"
             }
         }
         self.assertResponse()
@@ -1037,8 +1036,8 @@ class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase, GenericWinTableTestMixi
                 "hvc": []
             },
             "hvc_group": {
-                    "id": "4",
-                    "name": "Automotive"
+                "id": "4",
+                "name": "Automotive"
             }
         }
         self.assertResponse()

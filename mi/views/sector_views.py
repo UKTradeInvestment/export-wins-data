@@ -48,7 +48,7 @@ class BaseSectorMIView(BaseWinMIView):
     def _team_wins_breakdown(self, sector_team):
         """ Breakdown of team's HVC, non-HVC and non-export Wins """
         return self._breakdowns(
-            self._get_hvc_wins(sector_team),
+            hvc_wins=self._get_hvc_wins(sector_team),
             non_hvc_wins=self._get_non_hvc_wins(sector_team)
         )
 
@@ -85,7 +85,8 @@ class BaseSectorMIView(BaseWinMIView):
 
     def _get_group_wins(self, group):
         """ HVC wins of the HVC Group, for given `FinancialYear` """
-        group_hvcs = [hvc[:4] for hvc in self._get_group_campaigns_for_year(group)]
+        group_hvcs = [hvc[:4]
+                      for hvc in self._get_group_campaigns_for_year(group)]
         filter = reduce(
             operator.or_, [Q(hvc__startswith=hvc) for hvc in group_hvcs])
         return self._hvc_wins().filter(filter)

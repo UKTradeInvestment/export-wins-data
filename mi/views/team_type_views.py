@@ -40,11 +40,11 @@ class BaseTeamTypeMIView(BaseWinMIView):
             for k, v in HQ_TEAM_REGION_OR_POST if k.startswith(self.team_type)
         ]
 
-    @cached_property
+    @property
     def team(self):
         return [x for x in self.valid_options if x['slug'] == self.team_slug][0]
 
-    @cached_property
+    @property
     def team_type_key(self):
         """
         What to use in the result for the heading of the json response.
@@ -78,7 +78,7 @@ class BaseTeamTypeMIView(BaseWinMIView):
             "avg_time_to_confirm": self._average_confirm_time(**self.confirmation_time_filter),
         }
 
-    @cached_property
+    @property
     def _team_filter(self):
         return Q(team_type=self.team_type) & Q(hq_team=self.team['id'])
 
@@ -86,7 +86,7 @@ class BaseTeamTypeMIView(BaseWinMIView):
         wf = super()._wins_filter()
         return wf & self._team_filter
 
-    @cached_property
+    @property
     def _advisor_filter(self):
         """ filter for contributing wins """
         return Q(advisors__hq_team=self.team['id'])
@@ -95,6 +95,8 @@ class BaseTeamTypeMIView(BaseWinMIView):
         """ overriding super's non_hvc_wins, to accomodate contributing wins as well as the usual ones """
         modified_filter = super()._wins_filter() & Q(
             self._advisor_filter | self._team_filter)
+        # temp change to expose only lead wins, exlude contributing wins for now
+        modified_filter = super()._wins_filter() & self._team_filter
         return self._wins(modified_filter).non_hvc(fin_year=self.fin_year)
 
     def _get_all_wins(self):
@@ -153,7 +155,7 @@ class TeamTypeDetailView(BaseTeamTypeMIView):
         return {
             **self._team_type_result,
             "avg_time_to_confirm": self._average_confirm_time(**self.confirmation_time_filter),
-            "wins": self._breakdowns(self._hvc_wins(), non_hvc_wins=self._non_hvc_wins(), include_non_hvc=True),
+            "wins": self._breakdowns(hvc_wins=self._hvc_wins(), non_hvc_wins=self._non_hvc_wins()),
         }
 
 
