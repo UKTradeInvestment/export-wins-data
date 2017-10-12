@@ -1,4 +1,5 @@
 import itertools
+from operator import itemgetter
 
 from collections import defaultdict
 from django.db.models import Q
@@ -9,7 +10,7 @@ from mi.models import UKRegionTarget
 from mi.views.team_type_views import TeamTypeListView, TeamTypeDetailView, TeamTypeWinTableView, \
     TeamTypeNonHvcWinsView, TeamTypeMonthsView, TeamTypeCampaignsView
 from mi.utils import percentage_formatted
-from wins.constants import UK_REGIONS_MAP, UK_REGIONS, STATUS as EXPORT_EXPERIENCE
+from wins.constants import UK_REGIONS_MAP, UK_REGIONS, STATUS as EXPORT_EXPERIENCE, UK_SUPER_REGIONS
 from wins.models import Win
 
 FLATTENED_REGIONS = {}
@@ -149,6 +150,18 @@ class UKRegionListView(UKRegionMixin, TeamTypeListView):
     pass
 
 
+def get_region_group_by_region_id(region_id):
+    lookup = {}
+    for super_region_id, region_ids in UK_REGIONS_MAP.items():
+        for lookup_region_id in region_ids:
+            lookup[lookup_region_id] = super_region_id
+    return lookup[region_id]
+
+
+def filter_key(dict_, key_to_remove):
+    return {k: v for k, v in dict_.items() if k != key_to_remove}
+
+
 class UKRegionOverview(UKRegionMixin, TeamTypeListView):
 
     def wins_non_hvc_performance(self, wins, target):
@@ -232,6 +245,7 @@ class UKRegionOverview(UKRegionMixin, TeamTypeListView):
                     **target,
                     'wins': wins,
                     'export_experience': export_experience,
+                    'super_region': get_region_group_by_region_id(x['id'])
                 }
                 regions.append(region_result)
             except UKRegionTarget.DoesNotExist:
@@ -239,9 +253,21 @@ class UKRegionOverview(UKRegionMixin, TeamTypeListView):
 
         result = {
             'summary': self.summary_of_regions(regions),
-            "regions": regions,
+            "region_groups": self.group_by_superregion(regions),
         }
         return self._success(result)
+
+    def group_by_superregion(self, regions):
+        regions.sort(key=itemgetter('super_region'))
+        groups = defaultdict(list)
+        for group, vals in itertools.groupby(regions, key=itemgetter('super_region')):
+            groups[group] = [filter_key(region_data, 'super_region') for region_data in vals]
+        return [
+            {
+                "name": UK_SUPER_REGIONS.values[k].display,
+                "regions": v
+            } for k, v in groups.items()
+        ]
 
 
 class UKRegionDetailView(UKRegionMixin, TeamTypeDetailView):
