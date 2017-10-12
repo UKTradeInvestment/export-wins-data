@@ -158,7 +158,7 @@ assert len(set([UI_SECRET, ADMIN_SECRET, MI_SECRET, DATA_SECRET])) == 4,\
     "secrets must be different"
 
 # DataHub API
-DH_TOKEN_URL = os.getenv("DH_TOKEN_URL")
+DH_METADATA_URL = os.getenv("DH_METADATA_URL")
 DH_INVEST_URL = os.getenv("DH_INVEST_URL")
 DH_CLIENT_ID = os.getenv("DH_CLIENT_ID")
 DH_CLIENT_SECRET = os.getenv("DH_CLIENT_SECRET")
