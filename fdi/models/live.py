@@ -1,8 +1,7 @@
 from django.db import models
 
+from fdi.models.constants import MAX_LENGTH
 from mi.models import FinancialYear
-
-MAX_LENGTH = 255
 
 
 class InvestmentsQuerySet(models.QuerySet):
@@ -55,4 +54,4 @@ class GlobalTargets(models.Model):
         return self.high + self.good + self.standard
 
     def __str__(self):
-        return f'{self.financial_year.description} - h{self.good},g{self.good},s{self.standard},∑{self.total} '
+        return f'{self.financial_year.description} - h{self.good},g{self.good},s{self.standard},∑{self.total}'
