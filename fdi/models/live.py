@@ -1,5 +1,6 @@
 from django.db import models
 
+from fdi.models.metadata import Country, Sector, UKRegion
 from fdi.models.constants import MAX_LENGTH
 from mi.models import FinancialYear
 
@@ -8,6 +9,26 @@ class InvestmentsQuerySet(models.QuerySet):
 
     def won(self):
         return self.filter(stage='Won')
+
+
+class Market(models.Model):
+    """ MI's representation of FDI Markets """
+
+    name = models.CharField(max_length=MAX_LENGTH, unique=True)
+    countries = models.ManyToManyField(Country, through="MarketCountry")
+
+    def __str__(self):
+        return self.name
+
+
+class MarketCountry(models.Model):
+    """ One to many representation of Market and Country """
+
+    market = models.ForeignKey('Market')
+    country = models.ForeignKey(Country)
+
+    def __str__(self):
+        return f'{self.market} - {self.country}'
 
 
 class Investments(models.Model):
@@ -26,14 +47,15 @@ class Investments(models.Model):
     approved_good_value = models.BooleanField(default=False)
 
     date_won = models.DateField(null=True)
-    sector_team = models.CharField(max_length=MAX_LENGTH)
-    uk_region = models.CharField(max_length=MAX_LENGTH)
+    sector = models.ForeignKey(Sector, null=True)
+    uk_region = models.ForeignKey(UKRegion, null=True)
 
     client_relationship_manager = models.CharField(max_length=MAX_LENGTH)
-    client_relationship_manager_team = models.CharField(max_length=MAX_LENGTH, null=True)
+    client_relationship_manager_team = models.CharField(
+        max_length=MAX_LENGTH, null=True)
     company_name = models.CharField(max_length=MAX_LENGTH)
     company_reference = models.CharField(max_length=MAX_LENGTH)
-    company_country = models.CharField(max_length=MAX_LENGTH, null=True)
+    company_country = models.ForeignKey(Country, null=True)
 
     investment_value = models.BigIntegerField(default=0)
     foreign_equity_investment = models.BigIntegerField(default=0)
@@ -44,6 +66,8 @@ class Investments(models.Model):
 
 
 class GlobalTargets(models.Model):
+    """ FDI type of investment based global targets per FY """
+
     financial_year = models.OneToOneField(FinancialYear)
     high = models.PositiveIntegerField(null=False)
     good = models.PositiveIntegerField(null=False)
@@ -55,3 +79,16 @@ class GlobalTargets(models.Model):
 
     def __str__(self):
         return f'{self.financial_year.description} - h{self.good},g{self.good},s{self.standard},∑{self.total}'
+
+
+class Target(models.Model):
+    """ Targets for Sector and Market combinations, per FY. Some of them are considered HVC """
+    sector_team = models.ForeignKey(Sector, related_name="targets")
+    market = models.ForeignKey(Market, related_name="targets")
+    hvc_target = models.IntegerField()
+    non_hvc_target = models.IntegerField()
+    financial_year = models.OneToOneField(FinancialYear)
+
+    def __str__(self):
+        return f'{self.financial_year} - {self.sector_team}/{self.market}: ' \
+            f'HVC: {self.hvc_target} non-HVC: {self.non_hvc_target}'
