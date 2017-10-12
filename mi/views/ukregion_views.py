@@ -146,10 +146,6 @@ class UKRegionMixin(
         return target
 
 
-class UKRegionListView(UKRegionMixin, TeamTypeListView):
-    pass
-
-
 def get_region_group_by_region_id(region_id):
     lookup = {}
     for super_region_id, region_ids in UK_REGIONS_MAP.items():
@@ -160,6 +156,47 @@ def get_region_group_by_region_id(region_id):
 
 def filter_key(dict_, key_to_remove):
     return {k: v for k, v in dict_.items() if k != key_to_remove}
+
+
+def group_by_superregion(regions):
+    regions.sort(key=itemgetter('super_region'))
+    groups = defaultdict(list)
+    for group, vals in itertools.groupby(regions, key=itemgetter('super_region')):
+        groups[group] = [filter_key(region_data, 'super_region') for region_data in vals]
+    return [
+        {
+            "name": UK_SUPER_REGIONS.values[k].display,
+            "regions": v
+        } for k, v in groups.items()
+    ]
+
+
+def is_devolved(super_region):
+    sr = UK_SUPER_REGIONS.for_display(super_region).value
+    return sr == UK_SUPER_REGIONS.DEVOLVED
+
+
+class UKRegionListView(UKRegionMixin, TeamTypeListView):
+
+    def get(self, request, *args, **kwargs):
+        regions = []
+        for x in self.valid_options:
+            super_region = get_region_group_by_region_id(x['id'])
+            regions.append({
+                'id': x['slug'],
+                'name': x['name'],
+                'super_region': super_region
+            })
+        grouped_regions = group_by_superregion(regions)
+        grouped_regions = [
+            {
+                **super_region,
+                'devolved': is_devolved(super_region['name'])}
+            for super_region in grouped_regions
+        ]
+        return self._success(
+            {'region_groups': grouped_regions}
+        )
 
 
 class UKRegionOverview(UKRegionMixin, TeamTypeListView):
@@ -253,21 +290,9 @@ class UKRegionOverview(UKRegionMixin, TeamTypeListView):
 
         result = {
             'summary': self.summary_of_regions(regions),
-            "region_groups": self.group_by_superregion(regions),
+            "region_groups": group_by_superregion(regions),
         }
         return self._success(result)
-
-    def group_by_superregion(self, regions):
-        regions.sort(key=itemgetter('super_region'))
-        groups = defaultdict(list)
-        for group, vals in itertools.groupby(regions, key=itemgetter('super_region')):
-            groups[group] = [filter_key(region_data, 'super_region') for region_data in vals]
-        return [
-            {
-                "name": UK_SUPER_REGIONS.values[k].display,
-                "regions": v
-            } for k, v in groups.items()
-        ]
 
 
 class UKRegionDetailView(UKRegionMixin, TeamTypeDetailView):
