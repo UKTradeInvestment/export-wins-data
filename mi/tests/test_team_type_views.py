@@ -16,7 +16,7 @@ from jmespath import search as s
 from fixturedb.factories.win import create_win_factory
 from mi.views.team_type_views import BaseTeamTypeMIView
 from mi.views.ukregion_views import UKRegionWinsFilterMixin, UKRegionTeamTypeNameMixin, UKRegionValidOptionsMixin
-from wins.constants import HQ_TEAM_REGION_OR_POST, UK_REGIONS
+from wins.constants import HQ_TEAM_REGION_OR_POST, UK_REGIONS, UK_SUPER_REGIONS
 from wins.factories import AdvisorFactory
 from mi.tests.base_test_case import MiApiViewsWithWinsBaseTestCase
 from mi.tests.utils import GenericTopNonHvcWinsTestMixin, GenericWinTableTestMixin, GenericDetailsTestMixin, \
@@ -411,17 +411,95 @@ class UKRegionListViewTestCase(TeamTypeBaseViewTestCase):
     def test_list_of_uk_regions(self):
         self.url = self.get_url_for_year(2016)
         response_data = self._api_response_data
-
-        # must be same length as the UK_REGIONS
+        # must be same length as the UK_SUPER_REGIONS
         self.assertEqual(
-            len(response_data),
-            len(UK_REGIONS)
+            len(response_data['region_groups']),
+            len(UK_SUPER_REGIONS)
         )
 
-        self.assertEqual(set(response_data[0].keys()), {'id', 'name'})
-
         # year doesn't matter
-        self.expected_response = response_data
+        self.expected_response = {
+            "region_groups": [
+                {
+                    "name": "Northern Powerhouse",
+                    "regions": [
+                        {
+                            "id": "north-west",
+                            "name": "North West",
+                        },
+                        {
+                            "id": "north-east",
+                            "name": "North East",
+                        },
+                        {
+                            "id": "yorkshire-and-the-humber",
+                            "name": "Yorkshire and The Humber",
+                        }
+                    ],
+                    "devolved": False,
+                },
+                {
+                    "name": "Midlands Engine",
+                    "regions": [
+                        {
+                            "id": "east-midlands",
+                            "name": "East Midlands",
+                        },
+                        {
+                            "id": "west-midlands",
+                            "name": "West Midlands",
+                        }
+                    ],
+                    "devolved": False,
+                },
+                {
+                    "name": "London",
+                    "regions": [
+                        {
+                            "id": "london",
+                            "name": "London",
+                        }
+                    ],
+                    "devolved": False,
+                },
+                {
+                    "name": "South",
+                    "regions": [
+                        {
+                            "id": "east-of-england",
+                            "name": "East of England",
+                        },
+                        {
+                            "id": "south-east",
+                            "name": "South East",
+                        },
+                        {
+                            "id": "south-west",
+                            "name": "South West",
+                        }
+                    ],
+                    "devolved": False,
+                },
+                {
+                    "name": "Devolved Administrations",
+                    "regions": [
+                        {
+                            "id": "northern-ireland",
+                            "name": "Northern Ireland",
+                        },
+                        {
+                            "id": "scotland",
+                            "name": "Scotland",
+                        },
+                        {
+                            "id": "wales",
+                            "name": "Wales",
+                        }
+                    ],
+                    "devolved": True,
+                }
+            ]
+        }
         self.url = self.get_url_for_year(2017)
         self.assertResponse()
 
