@@ -11,6 +11,25 @@ class InvestmentsQuerySet(models.QuerySet):
         return self.filter(stage='Won')
 
 
+class SectorTeam(models.Model):
+    """ FDI's team structure that maps to Sectors """
+    name = models.CharField(max_length=MAX_LENGTH, unique=True)
+    description = models.CharField(max_length=MAX_LENGTH)
+    sectors = models.ManyToManyField(Sector, through="SectorTeamSector")
+
+    def __str__(self):
+        return self.name
+
+
+class SectorTeamSector(models.Model):
+    """ SectorTeam to Sector mapping """
+    team = models.ForeignKey(SectorTeam)
+    sector = models.ForeignKey(Sector)
+
+    def __str__(self):
+        return f'{self.team} - {self.sector}'
+
+
 class Market(models.Model):
     """ MI's representation of FDI Markets """
 
