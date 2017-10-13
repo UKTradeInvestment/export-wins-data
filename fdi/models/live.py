@@ -101,8 +101,9 @@ class GlobalTargets(models.Model):
 
 
 class Target(models.Model):
-    """ Targets for Sector and Market combinations, per FY. Some of them are considered HVC """
-    sector_team = models.ForeignKey(Sector, related_name="targets")
+    """ Targets for SectorTeam and Market combinations, per FY.
+    Some of them are considered HVC, some non-HVC """
+    sector_team = models.ForeignKey(SectorTeam, related_name="targets")
     market = models.ForeignKey(Market, related_name="targets")
     hvc_target = models.IntegerField()
     non_hvc_target = models.IntegerField()
