@@ -101,7 +101,10 @@ class FDIOverview(BaseFDIView):
                 },
                 "pending": pending
             },
-            "verified_met_percent": two_digit_float((total / (total + pending['count'])) * 100)
+            "verified_met_percent": two_digit_float(
+                (total / fdi_target.total) * 100
+            ) if fdi_target.total else 0.0
+
         }
 
 
