@@ -78,7 +78,7 @@ class GlobalTargets(models.Model):
         return self.high + self.good + self.standard
 
     def __str__(self):
-        return f'{self.financial_year.description} - h{self.good},g{self.good},s{self.standard},∑{self.total}'
+        return f'{self.financial_year.description} - h{self.high},g{self.good},s{self.standard},∑{self.total}'
 
 
 class Target(models.Model):
