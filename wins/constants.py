@@ -671,6 +671,7 @@ HQ_TEAM_REGION_OR_POST = tuple([
     ("investment:53", "IG - CPI - FDI Projects - New Technologies"),
     ("investment:54", "IG - Campaigns and Special Programmes"),
     ("investment:55", "IG - Tech City Investment Organisation"),
+    ("investment:56", "GREAT Investors"),
 
     ("dso:1", "DSO Head Office"),
     ("dso:2", "DSO Cyber Security Export Team"),
