@@ -61,7 +61,7 @@ class Command(BaseCommand):
             if pending_i.data["client_relationship_manager_team"]:
                 live_i.company_country = pending_i.data["client_relationship_manager_team"]
             if pending_i.data["investor_company_country"]:
-                live_i.company_country = pending_i.data["investor_company_country"]["id"]
+                live_i.company_country_id = pending_i.data["investor_company_country"]["id"]
             live_i.save()
             pending_i.transformed = True
             pending_i.save()
