@@ -6,6 +6,7 @@ from django.db.models import Q
 from django.utils.functional import cached_property
 from django.utils.text import slugify
 
+from core.utils import filter_key
 from mi.models import UKRegionTarget
 from mi.views.team_type_views import TeamTypeListView, TeamTypeDetailView, TeamTypeWinTableView, \
     TeamTypeNonHvcWinsView, TeamTypeMonthsView, TeamTypeCampaignsView
@@ -152,10 +153,6 @@ def get_region_group_by_region_id(region_id):
         for lookup_region_id in region_ids:
             lookup[lookup_region_id] = super_region_id
     return lookup[region_id]
-
-
-def filter_key(dict_, key_to_remove):
-    return {k: v for k, v in dict_.items() if k != key_to_remove}
 
 
 def group_by_superregion(regions):

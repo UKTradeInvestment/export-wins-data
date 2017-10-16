@@ -1,5 +1,6 @@
 from django.db.models import Func, F, Sum, Count, When, Case, Value, CharField
 
+from core.utils import group_by_key
 from fdi.models import Investments, GlobalTargets
 from core.views import BaseMIView
 from mi.models import Sector
@@ -81,16 +82,18 @@ class FDIOverview(BaseFDIView):
             'investment_value__sum',
         )
 
+        formatted_breakdown_by_value = group_by_key([
+            {
+                **x,
+                "target": getattr(fdi_target, x['value'], 0),
+                "value__percent": two_digit_float((x['count'] / total) * 100)
+            } for x in data
+        ], key='value', flatten=True)
+
         return {
             "target": fdi_target.total,
             "performance": {
-                "verified": [
-                    {
-                        **x,
-                        "target": getattr(fdi_target, x['value'], 0),
-                        "value__percent": two_digit_float((x['count'] / total) * 100)
-                    } for x in data
-                ],
+                "verified": formatted_breakdown_by_value if formatted_breakdown_by_value else None,
             },
             "total": {
                 "verified": {
@@ -99,11 +102,11 @@ class FDIOverview(BaseFDIView):
                     "investment_value__sum": sum(x['investment_value__sum'] for x in data),
                     "count": total
                 },
-                "pending": pending
+                "pending": {k: v or 0 for k, v in pending.items()}
             },
             "verified_met_percent": two_digit_float(
-                (total / fdi_target.total) * 100
-            ) if fdi_target.total else 0.0
+                total / fdi_target.total * 100
+            ) if fdi_target.total > 0 and total > 0 else 0.0
 
         }
 
