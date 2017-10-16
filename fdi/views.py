@@ -1,10 +1,15 @@
-from django.db.models import Func, F, Sum, Count, When, Case, Value, CharField
-from django.db.models.functions import Coalesce
+from django.db.models import Func, F, Sum, Count, When, Case, Value, CharField, Max, Count
 
 from core.utils import group_by_key
-from fdi.models import Investments, GlobalTargets, SectorTeam
+from fdi.models import (
+    Investments,
+    GlobalTargets,
+    Sector,
+    SectorTeam,
+    Market,
+    Target
+)
 from core.views import BaseMIView
-from fdi.serializers import InvestmentsSerializer
 from mi.utils import two_digit_float
 
 ANNOTATIONS = dict(
@@ -27,33 +32,17 @@ class BaseFDIView(BaseMIView):
     def get_results(self):
         return []
 
+    def _get_team(self, team_id):
+        """ Get SectorTeam object or False if invalid ID """
+        try:
+            return SectorTeam.objects.get(id=int(team_id))
+        except SectorTeam.DoesNotExist:
+            return False
+
     def get(self, request, *args, **kwargs):
         return self._success(self.get_results())
 
-
-class FDISectorTeamListView(BaseFDIView):
-
-    def get(self, request, *args, **kwargs):
-        all_sectors = SectorTeam.objects.all()
-        formatted_sector_teams = [
-            {
-                'id': x.id,
-                'name': x.name,
-                'description': x.description,
-                'sectors': x.sectors.all().values()
-            } for x in all_sectors
-        ]
-        return self._success(formatted_sector_teams)
-
-
-class FDISectorTeamOverview(BaseFDIView):
-    pass
-
-
-class FDIOverview(BaseFDIView):
-
-    def get_results(self):
-
+    def _get_fdi_summary():
         try:
             fdi_target = GlobalTargets.objects.get(financial_year=self.fin_year)
         except GlobalTargets.DoesNotExist:
@@ -120,6 +109,90 @@ class FDIOverview(BaseFDIView):
         }
 
 
+class FDISectorTeamListView(BaseFDIView):
+
+    def get(self, request, *args, **kwargs):
+        all_sectors = SectorTeam.objects.all()
+        formatted_sector_teams = [
+            {
+                'id': x.id,
+                'name': x.name,
+                'description': x.description,
+                'sectors': x.sectors.all().values()
+            } for x in all_sectors
+        ]
+        return self._success(formatted_sector_teams)
+
+
+class FDISectorTeamOverview(BaseFDIView):
+    pass
+
+
+class FDIOverview(BaseFDIView):
+
+    def get_results(self):
+        return self._get_fdi_summary()
+
+
+class FDISectorTeamListView(BaseFDIView):
+
+    def get(self, request):
+        all_sectors = Sector.objects.all().values()
+        return self._success(all_sectors)
+
+
+class FDISectorOverview(BaseFDIView):
+    pass
+
+
+class FDISectorDetailView(BaseFDIView):
+    team = None
+
+    def get_queryset(self):
+        return Investments.objects.filter(Sector__in=self.team.sectors)
+
+    def _market_breakdown(investments, market, max_hvc_target):
+        market_investments = investments.filter(company_country__in=market.countries)
+        won_count = len([i for i in market_investments if i.stage == 'Won'])
+        pending_count = len([i for i in market_investments if i.stage != 'Won'])
+        try:
+            target = Target.objects.get(sector_team=self.team, market=market)
+        except Target.DoesNotExist:
+            target = None
+        
+        market_data = {
+            "name": market.name,
+            "projects": {
+                "number": won_count,
+                "progress": won_count * 100/max_hvc_target,
+            },
+            "pipeline": {
+                "number": pending_count,
+                "progress": pending_count * 100/max_hvc_target,
+            },
+            "target": target.hvc_target if target else 0,
+        }
+
+    def get(self, request, team_id):
+        self.team = self._get_team(team_id)
+        investments_in_scope = self.get_queryset().won().filter(
+            date_won__range=(self._date_range_start(), self._date_range_end())
+        )
+
+        if not self.team:
+            return self._invalid('team not found')
+
+        results = self._get_fdi_summary()
+        markets = Market.objects.all()
+        max_hvc_target = Target.objects.filter(sector_team=self.team).aggregate(Max('hvc_target'))
+        market_data = [
+            self._market_breakdown(investments_in_scope, market, max_hvc_target)
+            for market in markets
+        ]
+        results['markets'] = market_data
+        return self._success(results)
+
+
 class FDIYearOnYearComparison(BaseFDIView):
 
     def _fill_date_ranges(self):
@@ -166,12 +239,6 @@ class FDIYearOnYearComparison(BaseFDIView):
 
 
 class FDIBaseSectorTeamView(BaseFDIView):
-
-    def _get_team(self, team_id):
-        try:
-            return SectorTeam.objects.get(pk=team_id)
-        except SectorTeam.DoesNotExist:
-            return False
 
     def initial(self, request, team_id, *args, **kwargs):
         self.team = self._get_team(team_id)

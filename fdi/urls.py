@@ -5,8 +5,10 @@ from fdi.views import (
     FDIYearOnYearComparison,
     FDIOverview,
     FDISectorTeamWinTable,
-    FDISectorTeamOverview
+    FDISectorTeamOverview,
+    FDISectorTeamDetailView
 )
+
 
 urlpatterns = [
     url(r"^sector_teams/$", FDISectorTeamListView.as_view(), name="sector_teams"),
@@ -14,4 +16,6 @@ urlpatterns = [
     url(r"^sector_teams/(?P<team_id>\d+)/win_table/$", FDISectorTeamWinTable.as_view(), name="sector_teams_win_table"),
     url(r"^overview/yoy/$", FDIYearOnYearComparison.as_view(), name="overview_yoy"),
     url(r"^overview/$", FDIOverview.as_view(), name="overview"),
+    url(r"^sector_teams/(?P<team_id>\d+)/$",
+        FDISectorTeamDetailView.as_view(), name="sector_team_detail"),
 ]
