@@ -82,16 +82,18 @@ class FDIOverview(BaseFDIView):
             'investment_value__sum',
         )
 
+        formatted_breakdown_by_value = group_by_key([
+            {
+                **x,
+                "target": getattr(fdi_target, x['value'], 0),
+                "value__percent": two_digit_float((x['count'] / total) * 100)
+            } for x in data
+        ], key='value', flatten=True)
+
         return {
             "target": fdi_target.total,
             "performance": {
-                "verified": group_by_key([
-                    {
-                        **x,
-                        "target": getattr(fdi_target, x['value'], 0),
-                        "value__percent": two_digit_float((x['count'] / total) * 100)
-                    } for x in data
-                ], key='value', flatten=True),
+                "verified": formatted_breakdown_by_value if formatted_breakdown_by_value else None,
             },
             "total": {
                 "verified": {
