@@ -10,6 +10,9 @@ class InvestmentsQuerySet(models.QuerySet):
     def won(self):
         return self.filter(stage='Won')
 
+    def for_sector_team(self, sector_team):
+        return self.filter(sector__in=sector_team.sectors.all())
+
 
 class SectorTeam(models.Model):
     """ FDI's team structure that maps to Sectors """
