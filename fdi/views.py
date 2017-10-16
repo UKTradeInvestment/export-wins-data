@@ -102,11 +102,11 @@ class FDIOverview(BaseFDIView):
                     "investment_value__sum": sum(x['investment_value__sum'] for x in data),
                     "count": total
                 },
-                "pending": pending
+                "pending": {k: v or 0 for k, v in pending.items()}
             },
             "verified_met_percent": two_digit_float(
-                (total / fdi_target.total) * 100
-            ) if fdi_target.total else 0.0
+                total / fdi_target.total * 100
+            ) if fdi_target.total > 0 and total > 0 else 0.0
 
         }
 
