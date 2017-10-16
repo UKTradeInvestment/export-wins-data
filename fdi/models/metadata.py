@@ -7,6 +7,7 @@ from django_countries.fields import CountryField
 from django_countries import Countries as DjCountries
 
 from fdi.models.constants import MAX_LENGTH
+from fdi.utils import datahub_country_iso_code
 
 
 class BaseMetadataModel(models.Model):
@@ -35,11 +36,6 @@ class Country(BaseMetadataModel):
     # this needs an pre_save method to set the iso code based on
     # the country name
 
-    def try_set_iso_code(self):
-        code = DjCountries().by_name(self.name)
-        if code:
-            self.iso_code = code
-
     def save(self, **kwargs):
-        self.try_set_iso_code()
+        self.iso_code = datahub_country_iso_code(self.name)
         super().save(**kwargs)
