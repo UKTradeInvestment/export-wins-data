@@ -1,5 +1,6 @@
 from django.db.models import Func, F, Sum, Count, When, Case, Value, CharField
 
+from core.utils import group_by_key
 from fdi.models import Investments, GlobalTargets
 from core.views import BaseMIView
 from mi.models import Sector
@@ -84,13 +85,13 @@ class FDIOverview(BaseFDIView):
         return {
             "target": fdi_target.total,
             "performance": {
-                "verified": [
+                "verified": group_by_key([
                     {
                         **x,
                         "target": getattr(fdi_target, x['value'], 0),
                         "value__percent": two_digit_float((x['count'] / total) * 100)
                     } for x in data
-                ],
+                ], key='value', flatten=True),
             },
             "total": {
                 "verified": {
