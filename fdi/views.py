@@ -42,7 +42,7 @@ class BaseFDIView(BaseMIView):
     def get(self, request, *args, **kwargs):
         return self._success(self.get_results())
 
-    def _get_fdi_summary():
+    def _get_fdi_summary(self):
         try:
             fdi_target = GlobalTargets.objects.get(financial_year=self.fin_year)
         except GlobalTargets.DoesNotExist:
@@ -145,14 +145,15 @@ class FDISectorOverview(BaseFDIView):
     pass
 
 
-class FDISectorDetailView(BaseFDIView):
+class FDISectorTeamDetailView(BaseFDIView):
     team = None
 
     def get_queryset(self):
-        return Investments.objects.filter(Sector__in=self.team.sectors)
+        team_sectors = self.team.sectors.all()
+        return Investments.objects.filter(sector__in=team_sectors)
 
-    def _market_breakdown(investments, market, max_hvc_target):
-        market_investments = investments.filter(company_country__in=market.countries)
+    def _market_breakdown(self, investments, market, max_hvc_target):
+        market_investments = investments.filter(company_country__in=market.countries.all())
         won_count = len([i for i in market_investments if i.stage == 'Won'])
         pending_count = len([i for i in market_investments if i.stage != 'Won'])
         try:
@@ -164,14 +165,15 @@ class FDISectorDetailView(BaseFDIView):
             "name": market.name,
             "projects": {
                 "number": won_count,
-                "progress": won_count * 100/max_hvc_target,
+                "progress": two_digit_float(won_count * 100/max_hvc_target),
             },
             "pipeline": {
                 "number": pending_count,
-                "progress": pending_count * 100/max_hvc_target,
+                "progress": two_digit_float(pending_count * 100/max_hvc_target),
             },
             "target": target.hvc_target if target else 0,
         }
+        return market_data
 
     def get(self, request, team_id):
         self.team = self._get_team(team_id)
@@ -184,11 +186,9 @@ class FDISectorDetailView(BaseFDIView):
 
         results = self._get_fdi_summary()
         markets = Market.objects.all()
-        max_hvc_target = Target.objects.filter(sector_team=self.team).aggregate(Max('hvc_target'))
-        market_data = [
-            self._market_breakdown(investments_in_scope, market, max_hvc_target)
-            for market in markets
-        ]
+        max_hvc_target = Target.objects.filter(sector_team=self.team).aggregate(Max('hvc_target'))['hvc_target__max']
+        market_data = [self._market_breakdown(investments_in_scope, market, max_hvc_target) for market in markets]
+
         results['markets'] = market_data
         return self._success(results)
 
