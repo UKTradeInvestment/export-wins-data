@@ -39,8 +39,12 @@ def months_between(start, end):
 
 def two_digit_float(number):
     """ Format given number into two decimal float """
+    if number == 0:
+        return 0.0
+
     if not number:
         return None
+
     return float("{0:.2f}".format(number))
 
 
