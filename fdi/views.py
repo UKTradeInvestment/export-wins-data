@@ -175,7 +175,7 @@ class FDISectorTeamDetailView(FDIBaseSectorTeamView):
             target = Target.objects.get(sector_team=self.team, market=market)
         except Target.DoesNotExist:
             target = None
-        
+
         market_data = {
             "name": market.name,
             "projects": {

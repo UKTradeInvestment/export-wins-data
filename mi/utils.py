@@ -44,7 +44,7 @@ def two_digit_float(number):
 
     if not number:
         return None
-    
+
     return float("{0:.2f}".format(number))
 
 
