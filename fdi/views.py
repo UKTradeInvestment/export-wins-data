@@ -1,9 +1,10 @@
 from django.db.models import Func, F, Sum, Count, When, Case, Value, CharField
+from django.db.models.functions import Coalesce
 
 from core.utils import group_by_key
-from fdi.models import Investments, GlobalTargets
+from fdi.models import Investments, GlobalTargets, SectorTeam
 from core.views import BaseMIView
-from mi.models import Sector
+from fdi.serializers import InvestmentsSerializer
 from mi.utils import two_digit_float
 
 ANNOTATIONS = dict(
@@ -26,18 +27,26 @@ class BaseFDIView(BaseMIView):
     def get_results(self):
         return []
 
-    def get(self, request):
+    def get(self, request, *args, **kwargs):
         return self._success(self.get_results())
 
 
 class FDISectorTeamListView(BaseFDIView):
 
-    def get(self, request):
-        all_sectors = Sector.objects.all().values()
-        return self._success(all_sectors)
+    def get(self, request, *args, **kwargs):
+        all_sectors = SectorTeam.objects.all()
+        formatted_sector_teams = [
+            {
+                'id': x.id,
+                'name': x.name,
+                'description': x.description,
+                'sectors': x.sectors.all().values()
+            } for x in all_sectors
+        ]
+        return self._success(formatted_sector_teams)
 
 
-class FDISectorOverview(BaseFDIView):
+class FDISectorTeamOverview(BaseFDIView):
     pass
 
 
@@ -153,3 +162,45 @@ class FDIYearOnYearComparison(BaseFDIView):
                 }} for b in breakdown if b['year'] == y]
             } for y in year_buckets
         ]
+
+
+class FDIBaseSectorTeamView(BaseFDIView):
+
+    def _get_team(self, team_id):
+        try:
+            return SectorTeam.objects.get(pk=team_id)
+        except SectorTeam.DoesNotExist:
+            return False
+
+    def initial(self, request, team_id, *args, **kwargs):
+        self.team = self._get_team(team_id)
+        super(FDIBaseSectorTeamView, self).initial(request, team_id, *args, **kwargs)
+
+    def get_queryset(self):
+        qs = super().get_queryset().filter(date_won__range=(self._date_range_start(), self._date_range_end()))
+        return qs.for_sector_team(self.team)
+
+    def get_targets(self):
+        return self.team.targets.filter(financial_year=self.fin_year)
+
+    def get(self, request, *args, **kwargs):
+        return super(FDIBaseSectorTeamView, self).get(request, *args, **kwargs)
+
+
+class FDISectorTeamWinTable(FDIBaseSectorTeamView):
+
+    def get_results(self):
+        hvc_target = self.get_targets().aggregate(target=Coalesce(Sum('hvc_target'), 0))['target']
+        non_hvc_target = self.get_targets().aggregate(target=Coalesce(Sum('non_hvc_target'), 0))['target']
+        investments = InvestmentsSerializer(self.get_queryset(), many=True)
+
+        return {
+            "name": self.team.name,
+            "description": self.team.description,
+            "target": {
+                "hvc": hvc_target,
+                "non_hvc": non_hvc_target,
+                "total": sum([hvc_target, non_hvc_target])
+            },
+            "investments": investments.data
+        }
