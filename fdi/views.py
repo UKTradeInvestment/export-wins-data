@@ -154,12 +154,13 @@ class FDIYearOnYearComparison(BaseFDIView):
         year_buckets = sorted(list({x['year'] for x in breakdown}))
         return [
             {
-                y: [{b['value']: {
+                "year": y,
+                **{b['value']: {
                     "count": b['year__count'],
                     "number_new_jobs__sum": b['number_new_jobs__sum'],
                     "number_safeguarded_jobs__sum": b['number_safeguarded_jobs__sum'],
                     "investment_value__sum": b['investment_value__sum']
-                }} for b in breakdown if b['year'] == y]
+                } for b in breakdown if b['year'] == y}
             } for y in year_buckets
         ]
 
