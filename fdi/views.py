@@ -32,13 +32,6 @@ class BaseFDIView(BaseMIView):
     def get_results(self):
         return []
 
-    def _get_team(self, team_id):
-        """ Get SectorTeam object or False if invalid ID """
-        try:
-            return SectorTeam.objects.get(id=int(team_id))
-        except SectorTeam.DoesNotExist:
-            return False
-
     def get(self, request, *args, **kwargs):
         return self._success(self.get_results())
 
@@ -109,6 +102,32 @@ class BaseFDIView(BaseMIView):
         }
 
 
+class FDIBaseSectorTeamView(BaseFDIView):
+
+    def initial(self, request, team_id, *args, **kwargs):
+        self.team = self._get_team(team_id)
+        if not self.team:
+            return self._not_found(detail=f'team with id: {team_id} not found')
+        super(FDIBaseSectorTeamView, self).initial(request, team_id, *args, **kwargs)
+
+    def _get_team(self, team_id):
+        """ Get SectorTeam object or False if invalid ID """
+        try:
+            return SectorTeam.objects.get(id=int(team_id))
+        except SectorTeam.DoesNotExist:
+            return False
+
+    def get_queryset(self):
+        qs = super().get_queryset().filter(date_won__range=(self._date_range_start(), self._date_range_end()))
+        return qs.for_sector_team(self.team)
+
+    def get_targets(self):
+        return self.team.targets.filter(financial_year=self.fin_year)
+
+    def get(self, request, *args, **kwargs):
+        return super(FDIBaseSectorTeamView, self).get(request, *args, **kwargs)
+
+
 class FDISectorTeamListView(BaseFDIView):
 
     def get(self, request, *args, **kwargs):
@@ -145,12 +164,8 @@ class FDISectorOverview(BaseFDIView):
     pass
 
 
-class FDISectorTeamDetailView(BaseFDIView):
+class FDISectorTeamDetailView(FDIBaseSectorTeamView):
     team = None
-
-    def get_queryset(self):
-        team_sectors = self.team.sectors.all()
-        return Investments.objects.filter(sector__in=team_sectors)
 
     def _market_breakdown(self, investments, market, max_hvc_target):
         market_investments = investments.filter(company_country__in=market.countries.all())
@@ -177,9 +192,7 @@ class FDISectorTeamDetailView(BaseFDIView):
 
     def get(self, request, team_id):
         self.team = self._get_team(team_id)
-        investments_in_scope = self.get_queryset().won().filter(
-            date_won__range=(self._date_range_start(), self._date_range_end())
-        )
+        investments_in_scope = self.get_queryset()
 
         if not self.team:
             return self._invalid('team not found')
@@ -236,25 +249,6 @@ class FDIYearOnYearComparison(BaseFDIView):
                 } for b in breakdown if b['year'] == y}
             } for y in year_buckets
         ]
-
-
-class FDIBaseSectorTeamView(BaseFDIView):
-
-    def initial(self, request, team_id, *args, **kwargs):
-        self.team = self._get_team(team_id)
-        if not self.team:
-            return self._not_found(detail=f'team with id: {team_id} not found')
-        super(FDIBaseSectorTeamView, self).initial(request, team_id, *args, **kwargs)
-
-    def get_queryset(self):
-        qs = super().get_queryset().filter(date_won__range=(self._date_range_start(), self._date_range_end()))
-        return qs.for_sector_team(self.team)
-
-    def get_targets(self):
-        return self.team.targets.filter(financial_year=self.fin_year)
-
-    def get(self, request, *args, **kwargs):
-        return super(FDIBaseSectorTeamView, self).get(request, *args, **kwargs)
 
 
 class FDISectorTeamWinTable(FDIBaseSectorTeamView):
