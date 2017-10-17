@@ -4,6 +4,7 @@ from django.db.models.functions import Coalesce
 from core.utils import group_by_key
 from fdi.models import Investments, GlobalTargets, SectorTeam
 from core.views import BaseMIView
+from fdi.serializers import InvestmentsSerializer
 from mi.utils import two_digit_float
 
 ANNOTATIONS = dict(
@@ -43,7 +44,6 @@ class FDISectorTeamListView(BaseFDIView):
             } for x in all_sectors
         ]
         return self._success(formatted_sector_teams)
-
 
 
 class FDISectorTeamOverview(BaseFDIView):
@@ -192,6 +192,8 @@ class FDISectorTeamWinTable(FDIBaseSectorTeamView):
     def get_results(self):
         hvc_target = self.get_targets().aggregate(target=Coalesce(Sum('hvc_target'), 0))['target']
         non_hvc_target = self.get_targets().aggregate(target=Coalesce(Sum('non_hvc_target'), 0))['target']
+        investments = InvestmentsSerializer(self.get_queryset(), many=True)
+
         return {
             "name": self.team.name,
             "description": self.team.description,
@@ -200,6 +202,5 @@ class FDISectorTeamWinTable(FDIBaseSectorTeamView):
                 "non_hvc": non_hvc_target,
                 "total": sum([hvc_target, non_hvc_target])
             },
-            "investments": self.get_queryset().values()
+            "investments": investments.data
         }
-
