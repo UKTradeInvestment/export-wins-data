@@ -1,4 +1,5 @@
 from django.db.models import Func, F, Sum, Count, When, Case, Value, CharField, Max, Count
+from django.db.models.functions import Coalesce
 
 from core.utils import group_by_key
 from fdi.models import (
@@ -10,6 +11,7 @@ from fdi.models import (
     Target
 )
 from core.views import BaseMIView
+from fdi.serializers import InvestmentsSerializer
 from mi.utils import two_digit_float
 
 ANNOTATIONS = dict(
