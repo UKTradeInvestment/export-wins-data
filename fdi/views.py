@@ -174,6 +174,8 @@ class FDIBaseSectorTeamView(BaseFDIView):
 
     def initial(self, request, team_id, *args, **kwargs):
         self.team = self._get_team(team_id)
+        if not self.team:
+            return self._not_found(detail=f'team with id: {team_id} not found')
         super(FDIBaseSectorTeamView, self).initial(request, team_id, *args, **kwargs)
 
     def get_queryset(self):
