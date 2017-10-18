@@ -155,13 +155,6 @@ class FDIOverview(BaseFDIView):
         return self._get_fdi_summary()
 
 
-class FDISectorTeamListView(BaseFDIView):
-
-    def get(self, request):
-        all_sectors = Sector.objects.all().values()
-        return self._success(all_sectors)
-
-
 class FDISectorOverview(BaseFDIView):
     pass
 
