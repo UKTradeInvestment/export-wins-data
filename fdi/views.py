@@ -51,10 +51,9 @@ class BaseFDIView(BaseMIView):
             fdi_target = GlobalTargets(
                 financial_year=self.fin_year, high=0, good=0, standard=0)
 
-        investments_in_scope = self.get_queryset().won()
-        # .filter(
-        #    date_won__range=(self._date_range_start(), self._date_range_end())
-        # )
+        investments_in_scope = self.get_queryset().won().filter(
+            date_won__range=(self._date_range_start(), self._date_range_end())
+        )
         pending = self.get_queryset().filter(
             date_won=None
         ).exclude(
@@ -130,8 +129,8 @@ class FDIBaseSectorTeamView(BaseFDIView):
             return False
 
     def get_queryset(self):
-        qs = super().get_queryset()
-        # .filter(date_won__range=(self._date_range_start(), self._date_range_end()))
+        qs = super().get_queryset().filter(date_won__range=(
+            self._date_range_start(), self._date_range_end()))
         return qs.for_sector_team(self.team)
 
     def get_targets(self):
