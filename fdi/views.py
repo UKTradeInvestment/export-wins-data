@@ -43,9 +43,10 @@ class BaseFDIView(BaseMIView):
         except GlobalTargets.DoesNotExist:
             fdi_target = GlobalTargets(financial_year=self.fin_year, high=0, good=0, standard=0)
 
-        investments_in_scope = self.get_queryset().won().filter(
-            date_won__range=(self._date_range_start(), self._date_range_end())
-        )
+        investments_in_scope = self.get_queryset().won()
+        # .filter(
+        #    date_won__range=(self._date_range_start(), self._date_range_end())
+        # )
         pending = self.get_queryset().filter(
             date_won=None
         ).exclude(
@@ -120,7 +121,8 @@ class FDIBaseSectorTeamView(BaseFDIView):
             return False
 
     def get_queryset(self):
-        qs = super().get_queryset().filter(date_won__range=(self._date_range_start(), self._date_range_end()))
+        qs = super().get_queryset()
+        # .filter(date_won__range=(self._date_range_start(), self._date_range_end()))
         return qs.for_sector_team(self.team)
 
     def get_targets(self):
@@ -162,26 +164,64 @@ class FDISectorOverview(BaseFDIView):
 class FDISectorTeamDetailView(FDIBaseSectorTeamView):
     team = None
 
+    def _item_breakdown(self, investments, hvc_target):
+        high = []
+        good = []
+        standard = []
+        for i in investments:
+            if i.approved_high_value is True:
+                high.append(i)
+            elif i.approved_good_value is True:
+                good.append(i)
+            else:
+                standard.append(i)
+
+        data = {
+            'total': len(investments),
+            'progress': two_digit_float(len(investments) * 100/hvc_target) if hvc_target else 0,
+            'high': len(high),
+            'good': len(good),
+            'standard': len(standard),
+        }
+        return data
+
+    def _target_breakdown(self, target):
+        data = {
+            'total': target,
+            'progress': 100.0,
+            'high': target * 40/100,
+            'good': target * 30/100,
+            'standard': target * 30/100,
+        }
+        return data
+
     def _market_breakdown(self, investments, market, max_hvc_target):
         market_investments = investments.filter(company_country__in=market.countries.all())
-        won_count = len([i for i in market_investments if i.stage == 'Won'])
-        pending_count = len([i for i in market_investments if i.stage != 'Won'])
+        verified_investments = []
+        confirmed_investments = []
+        pipeline = []
+        for i in market_investments:
+            if i.stage == 'Verify win':
+                verified_investments.append(i)
+            elif i.stage == 'Won':
+                confirmed_investments.append(i)
+            else:
+                pipeline.append(i)
+
         try:
-            target = Target.objects.get(sector_team=self.team, market=market)
+            target_obj = Target.objects.get(sector_team=self.team, market=market)
         except Target.DoesNotExist:
-            target = None
+            target_obj = None
+
+        target = target_obj.hvc_target if target_obj else 0
 
         market_data = {
+            "id": market.id,
             "name": market.name,
-            "projects": {
-                "number": won_count,
-                "progress": two_digit_float(won_count * 100/max_hvc_target),
-            },
-            "pipeline": {
-                "number": pending_count,
-                "progress": two_digit_float(pending_count * 100/max_hvc_target),
-            },
-            "target": target.hvc_target if target else 0,
+            "verified": self._item_breakdown(verified_investments, target),
+            "confirmed": self._item_breakdown(confirmed_investments, target),
+            "pipeline": self._item_breakdown(pipeline, 0),
+            "target": self._target_breakdown(target),
         }
         return market_data
 
@@ -197,6 +237,8 @@ class FDISectorTeamDetailView(FDIBaseSectorTeamView):
         max_hvc_target = Target.objects.filter(sector_team=self.team).aggregate(Max('hvc_target'))['hvc_target__max']
         market_data = [self._market_breakdown(investments_in_scope, market, max_hvc_target) for market in markets]
 
+        results['name'] = self.team.name
+        results['description'] = self.team.description
         results['markets'] = market_data
         return self._success(results)
 

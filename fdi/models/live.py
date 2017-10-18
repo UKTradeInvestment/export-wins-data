@@ -13,8 +13,11 @@ class InvestmentsQuerySet(models.QuerySet):
     def for_sector_team(self, sector_team):
         return self.filter(sector__in=sector_team.sectors.all())
 
-    def pending(self):
-        return self.exclude(stage='Won')
+    def verified(self):
+        return self.filter(stage='Verify win')
+
+    def pipeline(self):
+        return self.exclude(stage__in=['Won', 'Verify win'])
 
 
 class SectorTeam(models.Model):
