@@ -1,3 +1,7 @@
+import itertools
+from operator import itemgetter
+from collections import defaultdict
+
 from django.db.models import Func, F, Sum, Count, When, Case, Value, CharField, Max, Count
 from django.db.models.functions import Coalesce
 
@@ -17,8 +21,10 @@ from mi.utils import two_digit_float
 ANNOTATIONS = dict(
     year=Func(F('date_won'), function='get_financial_year'),
     value=Case(
-        When(approved_good_value=True, then=Value('good', output_field=CharField(max_length=10))),
-        When(approved_high_value=True, then=Value('high', output_field=CharField(max_length=10))),
+        When(approved_good_value=True, then=Value(
+            'good', output_field=CharField(max_length=10))),
+        When(approved_high_value=True, then=Value(
+            'high', output_field=CharField(max_length=10))),
         default=Value('standard', output_field=CharField(max_length=10))
     )
 )
@@ -39,9 +45,11 @@ class BaseFDIView(BaseMIView):
 
     def _get_fdi_summary(self):
         try:
-            fdi_target = GlobalTargets.objects.get(financial_year=self.fin_year)
+            fdi_target = GlobalTargets.objects.get(
+                financial_year=self.fin_year)
         except GlobalTargets.DoesNotExist:
-            fdi_target = GlobalTargets(financial_year=self.fin_year, high=0, good=0, standard=0)
+            fdi_target = GlobalTargets(
+                financial_year=self.fin_year, high=0, good=0, standard=0)
 
         investments_in_scope = self.get_queryset().won()
         # .filter(
@@ -111,7 +119,8 @@ class FDIBaseSectorTeamView(BaseFDIView):
         self.team = self._get_team(team_id)
         if not self.team:
             return self._not_found(detail=f'team with id: {team_id} not found')
-        super(FDIBaseSectorTeamView, self).initial(request, team_id, *args, **kwargs)
+        super(FDIBaseSectorTeamView, self).initial(
+            request, team_id, *args, **kwargs)
 
     def _get_team(self, team_id):
         """ Get SectorTeam object or False if invalid ID """
@@ -171,64 +180,70 @@ class FDISectorOverview(BaseFDIView):
 class FDISectorTeamDetailView(FDIBaseSectorTeamView):
     team = None
 
-    def _item_breakdown(self, investments, hvc_target):
-        high = []
-        good = []
-        standard = []
-        for i in investments:
-            if i.approved_high_value is True:
-                high.append(i)
-            elif i.approved_good_value is True:
-                good.append(i)
-            else:
-                standard.append(i)
+    def _group_investments(self, investments, condition):
+        group_iter = itertools.groupby(investments, key=condition)
+        groups = defaultdict(list)
+        for stage, wins in group_iter:
+            groups[stage] = list(wins)
+        return groups
 
+    def _item_breakdown(self, investments, hvc_target):
+        def classify_quality(investment):
+            if investment.approved_high_value:
+                return 'high'
+            elif investment.approved_good_value:
+                return 'good'
+            else:
+                return 'standard'
+
+        grouped = self._group_investments(investments, classify_quality)
         data = {
             'total': len(investments),
-            'progress': two_digit_float(len(investments) * 100/hvc_target) if hvc_target else 0,
-            'high': len(high),
-            'good': len(good),
-            'standard': len(standard),
-        }
-        return data
-
-    def _target_breakdown(self, target):
-        data = {
-            'total': target,
-            'progress': 100.0,
-            'high': target * 40/100,
-            'good': target * 30/100,
-            'standard': target * 30/100,
+            'progress': two_digit_float(len(investments) * 100 / hvc_target) if hvc_target else 0.0,
+            'high': len(grouped['high']),
+            'good': len(grouped['good']),
+            'standard': len(grouped['standard']),
         }
         return data
 
     def _market_breakdown(self, investments, market, max_hvc_target):
-        market_investments = investments.filter(company_country__in=market.countries.all())
-        verified_investments = []
-        confirmed_investments = []
-        pipeline = []
-        for i in market_investments:
-            if i.stage == 'Verify win':
-                verified_investments.append(i)
-            elif i.stage == 'Won':
-                confirmed_investments.append(i)
+        def classify_stage(investment):
+            if investment.stage == 'Verify win':
+                return 'verified'
+            elif investment.stage == 'Won':
+                return 'confirmed'
             else:
-                pipeline.append(i)
+                return 'pipeline'
+
+        # order investments by stage and then by quality so as to group them easily
+        market_investments = investments.filter(
+            company_country__in=market.countries.all()).order_by(
+                'stage', 'approved_high_value', 'approved_good_value')
+        grouped = self._group_investments(market_investments, classify_stage)
 
         try:
-            target_obj = Target.objects.get(sector_team=self.team, market=market)
+            target_obj = Target.objects.get(
+                sector_team=self.team, market=market)
         except Target.DoesNotExist:
             target_obj = None
 
         target = target_obj.hvc_target if target_obj else 0
+        # TODO target distribution needs a home in database, not here
+        target_data = {
+            'total': target,
+            'progress': 100.0,
+            'high': target * 40 / 100,
+            'good': target * 30 / 100,
+            'standard': target * 30 / 100,
+        }
 
         market_data = {
             "id": market.id,
             "name": market.name,
-            "verified": self._item_breakdown(verified_investments, target),
-            "confirmed": self._item_breakdown(confirmed_investments, target),
-            "pipeline": self._item_breakdown(pipeline, 0),
-            "target": self._target_breakdown(target),
+            "verified": self._item_breakdown(grouped['verfied'], target),
+            "confirmed": self._item_breakdown(grouped['confirmed'], target),
+            "pipeline": self._item_breakdown(grouped['pipeline'], 0),
+            "target": target_data,
         }
         return market_data
 
@@ -239,13 +254,17 @@ class FDISectorTeamDetailView(FDIBaseSectorTeamView):
         if not self.team:
             return self._invalid('team not found')
 
-        results = self._get_fdi_summary()
-        markets = Market.objects.all()
-        max_hvc_target = Target.objects.filter(sector_team=self.team).aggregate(Max('hvc_target'))['hvc_target__max']
-        market_data = [self._market_breakdown(investments_in_scope, market, max_hvc_target) for market in markets]
-
+        results = {}
         results['name'] = self.team.name
         results['description'] = self.team.description
+        results['overview'] = self._get_fdi_summary()
+
+        markets = Market.objects.all()
+        max_hvc_target = Target.objects.filter(sector_team=self.team).aggregate(
+            Max('hvc_target'))['hvc_target__max']
+        market_data = [self._market_breakdown(
+            investments_in_scope, market, max_hvc_target) for market in markets]
+
         results['markets'] = market_data
         return self._success(results)
 
@@ -298,8 +317,10 @@ class FDIYearOnYearComparison(BaseFDIView):
 class FDISectorTeamWinTable(FDIBaseSectorTeamView):
 
     def get_results(self):
-        hvc_target = self.get_targets().aggregate(target=Coalesce(Sum('hvc_target'), 0))['target']
-        non_hvc_target = self.get_targets().aggregate(target=Coalesce(Sum('non_hvc_target'), 0))['target']
+        hvc_target = self.get_targets().aggregate(
+            target=Coalesce(Sum('hvc_target'), 0))['target']
+        non_hvc_target = self.get_targets().aggregate(
+            target=Coalesce(Sum('non_hvc_target'), 0))['target']
         investments = InvestmentsSerializer(self.get_queryset(), many=True)
 
         return {
