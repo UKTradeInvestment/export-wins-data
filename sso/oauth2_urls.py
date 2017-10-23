@@ -7,5 +7,5 @@ from sso.views import (
 
 urlpatterns = [
     url(r'^callback/$', callback, name="oauth2_callback"),
-    url(r'^auth_url/$', callback, name="oauth2_auth_url")
+    url(r'^auth_url/$', auth_url, name="oauth2_auth_url")
 ]
