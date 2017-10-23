@@ -3,7 +3,7 @@ see http://requests-oauthlib.readthedocs.io/en/latest/oauth2_workflow.html#web-a
 """
 from django.conf import settings
 from django.contrib.auth import get_user_model, login
-from django.http import HttpResponseForbidden, HttpResponse
+from django.http import HttpResponseForbidden, HttpResponse, JsonResponse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 
@@ -67,6 +67,6 @@ def auth_url(request):
     returns the url that the frontend should redirect the user to
     """
     url = get_oauth_client().authorization_url(settings.OAUTH2_AUTH_URL)
-    return {
+    return JsonResponse({
         'target_url': url[0],
-    }
+    })
