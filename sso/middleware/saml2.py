@@ -1,3 +1,4 @@
+
 import django
 from django.test import override_settings
 from django.contrib.auth.models import AnonymousUser
@@ -20,7 +21,7 @@ class SSOAuthenticationMiddleware(object):
     @override_settings(AUTHENTICATION_BACKENDS='djangosaml2.backends.Saml2Backend')
     def authenticated(self, request):
         adfsuser = django.contrib.auth.get_user(request)
-        assert isinstance(adfsuser, (AnonymousUser, ADFSUser)),\
+        assert isinstance(adfsuser, (AnonymousUser, ADFSUser)), \
             'Incorrect User model'  # in case of problem with settins override
         return adfsuser and adfsuser.is_authenticated()
 

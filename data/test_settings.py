@@ -10,7 +10,8 @@ MIDDLEWARE_CLASSES = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
-    'sso.middleware.SSOAuthenticationMiddleware',
+    'sso.middleware.saml2.SSOAuthenticationMiddleware',
+    'sso.middleware.permission_denied.Metadata403',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]

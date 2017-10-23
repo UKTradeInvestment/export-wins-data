@@ -36,6 +36,7 @@ zope.interface==4.4.2
 django-extended-choices==1.1.1
 openpyxl==2.4.8
 URLObject==2.4.3
+requests-oauthlib==0.8.0
 
 # Tests
 Faker==0.7.18

@@ -70,7 +70,8 @@ MIDDLEWARE_CLASSES = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
-    'sso.middleware.SSOAuthenticationMiddleware',
+    'sso.middleware.saml2.SSOAuthenticationMiddleware',
+    'sso.middleware.permission_denied.Metadata403',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -187,6 +188,9 @@ EMAIL_SSL_CERTFILE = os.getenv("EMAIL_SSL_CERTFILE")
 EMAIL_BACKEND = os.getenv(
     "EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
 
+# auth setings
+# one of 'saml2' or 'oauth2', defaults to saml2
+SSO_PREFER_AUTH = os.getenv('SSO_PREFER_AUTH', 'saml2')
 
 # SAML configuration for djangosaml2 & pysaml2
 # note, we implement/hack djangosaml2 ourselves in sso.views, so cannot
@@ -196,6 +200,16 @@ SAML_DONT_CHECK_GROUP_MEMBERSHIP = os.getenv(
 SAML_DJANGO_USER_MAIN_ATTRIBUTE = 'email'
 SAML_USE_NAME_ID_AS_USERNAME = True
 SAML_USER_MODEL = 'sso.adfsuser'
+
+# ABC OAuth2 settings
+OAUTH2_CLIENT_ID = os.getenv("OAUTH2_CLIENT_ID")
+OAUTH2_REDIRECT_URI = os.getenv("OAUTH2_REDIRECT_URI")
+OAUTH2_CLIENT_SECRET = os.getenv("OAUTH2_CLIENT_SECRET")
+OAUTH2_TOKEN_FETCH_URL = os.getenv("OAUTH2_TOKEN_FETCH_URL")
+OAUTH2_USER_PROFILE_URL = os.getenv("OAUTH2_USER_PROFILE_URL")
+OAUTH2_AUTH_URL = os.getenv("OAUTH2_AUTH_URL")
+
+
 BASEDIR = os.path.dirname(os.path.abspath(__file__))
 
 cert_filename = 'sp_test.crt'  # if STAGING or DEBUG else 'sp_prod.crt'

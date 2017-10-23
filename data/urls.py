@@ -25,7 +25,8 @@ router.register(r"advisors", AdvisorViewSet)
 
 urlpatterns = [
     url(r"^", include(router.urls, namespace="drf")),
-    url(r'^saml2/', include('sso.urls', namespace="sso")),
+    url(r'^saml2/', include('sso.saml2_urls', namespace="saml2")),
+    url(r'^oauth2/', include('sso.oauth2_urls', namespace="oauth2")),
     url(r'^mi/', include('mi.urls', namespace="mi", app_name="mi")),
     url(r'^mi/fdi/', include('fdi.urls', namespace="fdi", app_name="fdi")),
     url(r"^csv/$", CSVView.as_view(), name="csv"),
@@ -64,7 +65,8 @@ urlpatterns = [
     url(r"^auth/login/$", LoginView.as_view(), name="login"),
 
     url(r"^auth/is-logged-in/$", IsLoggedIn.as_view(), name="is-logged-in"),
-    url(r"^user/me/$", UserRetrieveViewSet.as_view({'get': 'retrieve'}), name="user_profile"),
+    url(r"^user/me/$",
+        UserRetrieveViewSet.as_view({'get': 'retrieve'}), name="user_profile"),
 
     url(r"^auth/", include('rest_framework.urls', namespace="rest_framework")),
 

@@ -2,7 +2,7 @@ from django.conf.urls import url
 
 from djangosaml2.views import metadata
 
-from sso.views import (
+from sso.views.saml import (
     assertion_consumer_service,
     login,
     logout,

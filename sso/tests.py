@@ -19,12 +19,13 @@ class BaseSSOTestCase(TestCase):
 
     def _login(self):
         # note login side-steps SAML/XML stuff
-        self.alice_client.force_login(self.adfs_user, 'djangosaml2.backends.Saml2Backend')
+        self.alice_client.force_login(
+            self.adfs_user, 'djangosaml2.backends.Saml2Backend')
 
-    @patch('sso.middleware.get_user_attributes', lambda _: {})
+    @patch('sso.middleware.saml2.get_user_attributes', lambda _: {})
     def _get_status_no_secret(self, url, status_code=200, perm=False):
         if perm:
-            with patch('sso.middleware.has_MI_permission', lambda _: True):
+            with patch('sso.middleware.saml2.has_MI_permission', lambda _: True):
                 response = self.alice_client.get(url)
         else:
             response = self.alice_client.get(url)
@@ -44,7 +45,7 @@ class BaseSSOTestCase(TestCase):
         return self._get_status_no_secret(*args, **kwargs)
 
     def _get(self, name, status_code=200, perm=False):
-        url = reverse('sso:' + name)
+        url = reverse('saml2:' + name)
         return self._get_status_mi_secret(url, status_code, perm)
 
     @override_settings(MI_SECRET=AliceClient.SECRET)
@@ -92,7 +93,7 @@ class SSOTestCase(BaseSSOTestCase):
         self._get('saml2_acs', 400)
 
     def test_acs_bad_post(self):
-        self._post('sso:saml2_acs', {}, 400)
+        self._post('saml2:saml2_acs', {}, 400)
 
     # def test_acs_valid(self):
     #     self._post('saml2_acs', {'SAMLResponse': '<xml>'})

@@ -775,13 +775,17 @@ HQ_TEAM_REGION_OR_POST = tuple([
     ('itt:DIT West Midlands Team - Regional Team',
      'DIT West Midlands Team - Regional Team'),
     ('itt:DIT Yorkshire', 'DIT Yorkshire'),
-    ('itt:DIT Yorkshire and Humber Regional Sector Specialists',
-     'DIT Yorkshire and Humber Regional Sector Specialists'),
+    (
+        'itt:DIT Yorkshire and Humber Regional Sector Specialists',
+        'DIT Yorkshire and Humber Regional Sector Specialists'
+    ),
     ('itt:Invest Northern Ireland (Trade)', 'Invest Northern Ireland (Trade)'),
     ('itt:London International Trade Team', 'London International Trade Team'),
     ('itt:National Chemicals Sector Unit', 'National Chemicals Sector Unit'),
-    ('itt:Scottish Development International - International Trade Enquiries Team',
-     'Scottish Development International - International Trade Enquiries Team'),
+    (
+        'itt:Scottish Development International - International Trade Enquiries Team',
+        'Scottish Development International - International Trade Enquiries Team'
+    ),
     ('itt:The North West International Trade Team',
      'The North West International Trade Team'),
     ('itt:Welsh Government', 'Welsh Government'),
