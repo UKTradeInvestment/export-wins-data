@@ -3,11 +3,13 @@ see http://requests-oauthlib.readthedocs.io/en/latest/oauth2_workflow.html#web-a
 """
 from django.conf import settings
 from django.contrib.auth import get_user_model, login
-from django.http import HttpResponseForbidden, HttpResponse, JsonResponse
+from django.http import HttpResponseForbidden, HttpResponse, JsonResponse, HttpResponseBadRequest
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 
 from requests_oauthlib import OAuth2Session
+
+from sso.models import AuthorizationState
 
 
 def get_oauth_client() -> OAuth2Session:
@@ -25,6 +27,9 @@ def callback(request):
     """
     oauth = get_oauth_client()
     code = request.POST['code']
+    state = request.POST.get('state', '')[:254]
+    if not AuthorizationState.objects.check_state(state):
+        return HttpResponseBadRequest('bad state')
 
     # save token in session? Use token introspection endpoint
     # to check validity periodically? http://localhost:2000/api/v1/user/me/
@@ -66,7 +71,8 @@ def auth_url(request):
     """
     returns the url that the frontend should redirect the user to
     """
-    url = get_oauth_client().authorization_url(settings.OAUTH2_AUTH_URL)
+    state, url = get_oauth_client().authorization_url(settings.OAUTH2_AUTH_URL)
+    AuthorizationState.objects.create(state=state)
     return JsonResponse({
-        'target_url': url[0],
+        'target_url': url,
     })
