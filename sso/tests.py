@@ -1,11 +1,16 @@
 from unittest.mock import patch
+
+from datetime import timedelta, datetime
+from django.conf import settings
+from django.utils.timezone import now
+from freezegun import freeze_time
 from xml.etree import ElementTree
 
 from django.core.urlresolvers import reverse
-from django.test import TestCase, override_settings
+from django.test import TestCase, override_settings, tag
 
 from alice.tests.client import AliceClient
-from sso.models import ADFSUser
+from sso.models import ADFSUser, AuthorizationState
 
 
 class BaseSSOTestCase(TestCase):
@@ -117,3 +122,53 @@ class SSOTestCase(BaseSSOTestCase):
         self._login()
         self._get('adfs_logout')
         self._assert_not_logged_in_adfs()
+
+
+@tag('oauth2')
+@freeze_time(datetime(2017, 1, 1, 12))
+@override_settings(OAUTH2_STATE_TIMEOUT_SECONDS=1)
+class AuthorizationStateTestCase(TestCase):
+
+    def _create_state(self, state):
+        return AuthorizationState.objects.create(state=state)
+
+    def _make_invalid(self, authState: AuthorizationState):
+        timeout = settings.OAUTH2_STATE_TIMEOUT_SECONDS
+        authState.created = now() - timedelta(seconds=timeout + 1)
+        authState.save()
+        return AuthorizationState.objects.get(state=authState.state)
+
+    def test_no_states_in_valid_qs(self):
+        # create 1 invalid state
+        self._make_invalid(self._create_state('123'))
+        self.assertEqual(AuthorizationState.objects.all().count(), 1)
+        self.assertEqual(AuthorizationState.objects.valid().count(), 0)
+
+    def test_1_valid_state_is_in_valid_qs(self):
+        self._create_state('222')
+        self.assertEqual(AuthorizationState.objects.all().count(), 1)
+        self.assertEqual(AuthorizationState.objects.valid().count(), 1)
+
+    def test_1_valid_1_invalid_in_qs(self):
+        self._make_invalid(self._create_state('123'))
+        self._create_state('222')
+        self.assertEqual(AuthorizationState.objects.all().count(), 2)
+        self.assertEqual(AuthorizationState.objects.valid().count(), 1)
+
+    def test_check_state_for_valid_state(self):
+        self._create_state('333')
+        self.assertEqual(AuthorizationState.objects.valid().count(), 1)
+        self.assertTrue(AuthorizationState.objects.check_state('333'))
+
+    def test_check_state_for_expired_state(self):
+        self._make_invalid(self._create_state('444'))
+        self.assertEqual(AuthorizationState.objects.all().count(), 1)
+        self.assertEqual(AuthorizationState.objects.valid().count(), 0)
+        self.assertFalse(AuthorizationState.objects.check_state('444'))
+
+    def test_check_state_deletes_expired_ones(self):
+        self._make_invalid(self._create_state('444'))
+        self.assertEqual(AuthorizationState.objects.all().count(), 1)
+        self.assertEqual(AuthorizationState.objects.valid().count(), 0)
+        self.assertFalse(AuthorizationState.objects.check_state('444'))
+        self.assertEqual(AuthorizationState.objects.all().count(), 0)
