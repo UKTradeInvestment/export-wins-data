@@ -45,17 +45,13 @@ def callback(request):
         # 1. log them in if they already exist
         try:
             user = user_model.objects.get(email=abc_data['email'])
-            user.first_name = abc_data['first_name']
-            user.last_name = abc_data['last_name']
             user.save()
             login(request, user, backend=settings.AUTHENTICATION_BACKENDS[0])
         # or
-        except user_model.models.DoesNotExist:
+        except user_model.DoesNotExist:
             # 2. create new User object for them and log them in
             new_user = user_model.objects.create(
-                email=abc_data['email'],
-                first_name=abc_data['first_name'],
-                last_name=abc_data['last_name']
+                email=abc_data['email']
             )
             new_user.set_unusable_password()  # they won't ever need to login using user/pass
             new_user.save()
@@ -71,7 +67,7 @@ def auth_url(request):
     """
     returns the url that the frontend should redirect the user to
     """
-    state, url = get_oauth_client().authorization_url(settings.OAUTH2_AUTH_URL)
+    url, state = get_oauth_client().authorization_url(settings.OAUTH2_AUTH_URL)
     AuthorizationState.objects.create(state=state)
     return JsonResponse({
         'target_url': url,
