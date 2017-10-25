@@ -41,7 +41,7 @@ class HVCDetailView(BaseHVCDetailView):
     """ HVC name, targets and win-breakdown """
 
     def _campaign_wins_breakdown(self, campaign):
-        """ 
+        """
         Breakdown of HVC
         {
             "progress": {
@@ -171,11 +171,10 @@ class HVCWinTableView(BaseHVCDetailView):
 class GlobalHVCListView(BaseExportMIView):
 
     def _get_global_hvcs(self):
-        return HVC.objects.filter(campaign_id__in=Target.objects.for_fin_year(
-            fin_year=self.fin_year)
-            .filter(country__country=GLOBAL_COUNTRY_CODE)
-            .values_list("campaign_id")
-        )
+        return HVC.objects.filter(campaign_id__in=Target.objects
+                                  .for_fin_year(fin_year=self.fin_year)
+                                  .filter(country__country=GLOBAL_COUNTRY_CODE)
+                                  .values_list("campaign_id"))
 
     def get(self, request):
 

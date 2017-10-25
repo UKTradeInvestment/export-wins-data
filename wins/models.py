@@ -143,15 +143,16 @@ def _get_open_hvcs(fin_year):
     if cached_result:
         return cached_result
 
-    max_hvc_years = HVC.objects.values('campaign_id').annotate(Max('financial_year'))
+    max_hvc_years = HVC.objects.values(
+        'campaign_id').annotate(Max('financial_year'))
     open_hvcs_for_fin_year = \
-        set(max_hvc_years.filter(financial_year__max__gte=fin_year).values_list('campaign_id', flat=True))
+        set(max_hvc_years.filter(financial_year__max__gte=fin_year).values_list(
+            'campaign_id', flat=True))
     cache.set(cache_key, open_hvcs_for_fin_year, CACHE_TIMEOUT)
     return open_hvcs_for_fin_year
 
 
 class WinQuerySet(models.QuerySet):
-
 
     def _get_open_hvcs_filter(self, fin_year):
         # normalize financial_year to the short format used by HVC table
@@ -164,15 +165,17 @@ class WinQuerySet(models.QuerySet):
             return self.filter(base_filter)
         return self.filter(base_filter).filter(self._get_open_hvcs_filter(fin_year=fin_year))
 
-
     def non_hvc(self, fin_year=None):
         base_filter = Q(Q(hvc__isnull=True) | Q(hvc=''))
         if not fin_year:
             return self.filter(base_filter)
-        qs = self.filter(base_filter | ~self._get_open_hvcs_filter(fin_year=fin_year))
+        qs = self.filter(
+            base_filter | ~self._get_open_hvcs_filter(fin_year=fin_year))
         return qs
 
+
 WinManager = SoftDeleteManager.from_queryset(WinQuerySet)
+
 
 class Win(SoftDeleteModel):
     """ Information about a given "export win", submitted by an officer """
@@ -191,7 +194,8 @@ class Win(SoftDeleteModel):
 
     customer_name = models.CharField(
         max_length=128, verbose_name="Contact name")
-    customer_job_title = models.CharField(max_length=128, verbose_name='Job title')
+    customer_job_title = models.CharField(
+        max_length=128, verbose_name='Job title')
     customer_email_address = models.EmailField(verbose_name='Contact email')
     customer_location = models.PositiveIntegerField(
         choices=constants.UK_REGIONS.choices,
@@ -253,7 +257,8 @@ class Win(SoftDeleteModel):
         verbose_name="An HVO specialist was involved", default=False)
     is_e_exported = models.BooleanField("E-exporting programme", default=False)
 
-    type_of_support_1 = models.PositiveIntegerField(choices=constants.TYPES_OF_SUPPORT)
+    type_of_support_1 = models.PositiveIntegerField(
+        choices=constants.TYPES_OF_SUPPORT)
     type_of_support_2 = models.PositiveIntegerField(
         choices=constants.TYPES_OF_SUPPORT, blank=True, null=True)
     type_of_support_3 = models.PositiveIntegerField(
@@ -544,7 +549,8 @@ class CustomerResponse(SoftDeleteModel):
         verbose_name="Would you be willing for DIT / Exporting is GREAT to feature your success in marketing materials?"
     )
 
-    comments = models.TextField(blank=True, verbose_name='Other comments or changes to the win details')
+    comments = models.TextField(
+        blank=True, verbose_name='Other comments or changes to the win details')
     name = models.CharField(max_length=256, verbose_name='Your name')
     created = models.DateTimeField(auto_now_add=True)
 

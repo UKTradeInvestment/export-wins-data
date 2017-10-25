@@ -18,7 +18,7 @@ def _today():
 
 def month_iterator(start, end):
     """
-    Helper generator function to iterate through (year, month) 
+    Helper generator function to iterate through (year, month)
     between start and end dates
     """
     start_month = start.month - 1
