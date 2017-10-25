@@ -67,13 +67,16 @@ class DateTimeOrDateThatDefaultsTimeField(DateTimeField):
 
     def __init__(self, default_time=None, format=empty, default_timezone=None, *args, **kwargs):
         self.default_time = default_time
-        super().__init__(format=format, input_formats=None, default_timezone=default_timezone, *args, **kwargs)
+        super().__init__(format=format, input_formats=None,
+                         default_timezone=default_timezone, *args, **kwargs)
 
     def to_internal_value(self, value):
-        input_formats = getattr(self, 'input_formats', api_settings.DATETIME_INPUT_FORMATS)
+        input_formats = getattr(self, 'input_formats',
+                                api_settings.DATETIME_INPUT_FORMATS)
 
         if isinstance(value, datetime.date) and not isinstance(value, datetime.datetime):
-            value = datetime.datetime.combine(value, self.default_time).replace(tzinfo=UTC)
+            value = datetime.datetime.combine(
+                value, self.default_time).replace(tzinfo=UTC)
 
         if isinstance(value, datetime.datetime):
             return self.enforce_timezone(value)
@@ -87,7 +90,8 @@ class DateTimeOrDateThatDefaultsTimeField(DateTimeField):
                 return self.enforce_timezone(parsed)
             else:
                 try:
-                    parsed = datetime.datetime.combine(parse_date(value), self.default_time)
+                    parsed = datetime.datetime.combine(
+                        parse_date(value), self.default_time)
                 except (ValueError, TypeError):
                     pass
                 else:
@@ -96,6 +100,7 @@ class DateTimeOrDateThatDefaultsTimeField(DateTimeField):
 
         humanized_format = humanize_datetime.datetime_formats(input_formats)
         self.fail('invalid', format=humanized_format)
+
 
 class DateRangeSerializer(Serializer):
 

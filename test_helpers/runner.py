@@ -5,8 +5,8 @@ from django.test.runner import DiscoverRunner
 class CatchWarningsDiscoverRunner(DiscoverRunner):
     """
     Replacement for Django's DiscoverRunner that fails tests
-    if they raise a RuntimeWarning. This is to help debug the 
-    naive datetime warnings in our tests. To use it set an 
+    if they raise a RuntimeWarning. This is to help debug the
+    naive datetime warnings in our tests. To use it set an
     environment variable called TEST_RUNNER to the value of
     'test_helpers.runner.CatchWarningsDiscoverRunner'.
     """

@@ -17,7 +17,8 @@ class BaseOverseasRegionGroupMIView(BaseExportMIView):
         return OverseasRegionGroup.objects.all()
 
     def get_results(self):
-        return [OverseasRegionGroupSerializer(instance=x, year=self.fin_year).data for x in self.get_queryset().order_by('name')]
+        return [OverseasRegionGroupSerializer(instance=x, year=self.fin_year).data
+                for x in self.get_queryset().order_by('name')]
 
     def get(self, request):
         return self._success(self.get_results())
@@ -51,8 +52,7 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
         charcodes = [t.charcode for t in targets]
         region_hvc_filter = Q(
             Q(reduce(operator.or_, [Q(hvc__startswith=t)
-                                    for t in campaign_ids]))
-            | Q(hvc__in=charcodes)
+                                    for t in campaign_ids])) | Q(hvc__in=charcodes)
         )
         return region_hvc_filter
 

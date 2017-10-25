@@ -19,7 +19,8 @@ class Command(BaseCommand):
             email, password=pw)
         self.stdout.write(
             self.style.SUCCESS(
-                'User {username} created with password: {pw}'.format(username=u.email, pw=pw)
+                'User {username} created with password: {pw}'.format(
+                    username=u.email, pw=pw)
             )
         )
         g = Group.objects.get(name='mi_group')
@@ -27,7 +28,7 @@ class Command(BaseCommand):
         u.save()
         self.stdout.write(
             self.style.SUCCESS(
-                'User {username} added to {group}'.format(username=u.email, group=g.name)
+                'User {username} added to {group}'.format(
+                    username=u.email, group=g.name)
             )
         )
-

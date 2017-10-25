@@ -16,4 +16,4 @@ MIDDLEWARE_CLASSES = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
+CACHES = {'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}

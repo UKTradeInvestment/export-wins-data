@@ -82,6 +82,7 @@ def lookup(dictionary, key, *keys):
         return lookup(dictionary.get(key, {}), *keys)
     return dictionary.get(key)
 
+
 def print_csv(wins, file_name=None):
     import csv
     keys = wins[0].keys()
