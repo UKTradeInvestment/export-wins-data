@@ -302,7 +302,10 @@ class FinancialYear(models.Model):
         Pass e.g. 2016 for the 2016/17 financial year
 
         """
-        return datetime.datetime.combine(datetime.date(fin_year + 1, 3, 31), datetime.datetime.max.time()).replace(tzinfo=UTC)
+        return datetime.datetime.combine(
+            datetime.date(fin_year + 1, 3, 31),
+            datetime.datetime.max.time()
+        ).replace(tzinfo=UTC)
 
     @property
     def start(self):

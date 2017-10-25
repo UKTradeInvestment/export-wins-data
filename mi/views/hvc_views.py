@@ -29,10 +29,10 @@ class BaseHVCDetailView(BaseWinMIView):
         }
 
     def _get_hvc_wins(self, campaign):
-        """ 
-        wins of this HVC campaign, 
-        using startswith campaign_id instead of charcode 
-        to cover last FYs wins that were confirmed this FY 
+        """
+        wins of this HVC campaign,
+        using startswith campaign_id instead of charcode
+        to cover last FYs wins that were confirmed this FY
         """
         return self._wins().filter(hvc__startswith=campaign.campaign_id)
 

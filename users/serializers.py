@@ -13,7 +13,6 @@ from .models import User, LoginFailure
 class LoggingAuthTokenSerializer(AuthTokenSerializer):
     """ As DRF AuthTokenSerializer, but prevent login after many failures """
 
-
     WINDOW = 5  # Minutes of wait time before we allow attempts again
     STRIKES = 3  # Number of failed logins before we complain
 

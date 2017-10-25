@@ -27,14 +27,18 @@ class GlobalWinsView(BaseWinMIView):
             else:
                 non_hvc_unconfirmed.append(win)
 
-        hvc_confirmed_value,hvc_confirmed_number = self.value_and_number(hvc_confirmed)
-        hvc_unconfirmed_value, hvc_unconfirmed_number = self.value_and_number(hvc_unconfirmed)
-        non_hvc_confirmed_value, non_hvc_confirmed_number = self.value_and_number(non_hvc_confirmed)
-        non_hvc_unconfirmed_value, non_hvc_unconfirmed_number = self.value_and_number(non_hvc_unconfirmed)
+        hvc_confirmed_value, hvc_confirmed_number = self.value_and_number(
+            hvc_confirmed)
+        hvc_unconfirmed_value, hvc_unconfirmed_number = self.value_and_number(
+            hvc_unconfirmed)
+        non_hvc_confirmed_value, non_hvc_confirmed_number = self.value_and_number(
+            non_hvc_confirmed)
+        non_hvc_unconfirmed_value, non_hvc_unconfirmed_number = self.value_and_number(
+            non_hvc_unconfirmed)
 
         targets = Target.objects.filter(financial_year=self.fin_year)
         total_target = sum(t.target for t in targets)
-        
+
         results = {
             "total_target": total_target,
             "wins": {
@@ -67,13 +71,13 @@ class GlobalWinsView(BaseWinMIView):
                         "confirmed": hvc_confirmed_value + non_hvc_confirmed_value,
                         "unconfirmed": hvc_unconfirmed_value + non_hvc_unconfirmed_value,
                         "total": hvc_confirmed_value + non_hvc_confirmed_value +
-                                 hvc_unconfirmed_value + non_hvc_unconfirmed_value,
+                        hvc_unconfirmed_value + non_hvc_unconfirmed_value,
                     },
                     "number": {
                         "confirmed": hvc_confirmed_number + non_hvc_confirmed_number,
                         "unconfirmed": hvc_unconfirmed_number + non_hvc_unconfirmed_number,
                         "total": hvc_confirmed_number + non_hvc_confirmed_number +
-                                 hvc_unconfirmed_number + non_hvc_unconfirmed_number,
+                        hvc_unconfirmed_number + non_hvc_unconfirmed_number,
                     }
                 }
             }
