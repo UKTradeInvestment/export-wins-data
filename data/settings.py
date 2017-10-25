@@ -209,7 +209,8 @@ OAUTH2_CLIENT_SECRET = os.getenv("OAUTH2_CLIENT_SECRET")
 OAUTH2_TOKEN_FETCH_URL = os.getenv("OAUTH2_TOKEN_FETCH_URL")
 OAUTH2_USER_PROFILE_URL = os.getenv("OAUTH2_USER_PROFILE_URL")
 OAUTH2_AUTH_URL = os.getenv("OAUTH2_AUTH_URL")
-OAUTH2_STATE_TIMEOUT_SECONDS = int(os.getenv('OAUTH2_STATE_TIMEOUT_SECONDS', '3600'))
+OAUTH2_STATE_TIMEOUT_SECONDS = int(
+    os.getenv('OAUTH2_STATE_TIMEOUT_SECONDS', '3600'))
 
 BASEDIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -288,9 +289,7 @@ SAML_CONFIG = {
     },
 }
 
-
-SESSION_COOKIE_SECURE = True
-
+SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", 'True') == 'True'
 
 # deleted wins from these users will not show up in deleted wins CSV
 IGNORE_USERS = [
