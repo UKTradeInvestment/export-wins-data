@@ -289,7 +289,7 @@ SAML_CONFIG = {
     },
 }
 
-SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", True)
+SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", 'True') == 'True'
 
 # deleted wins from these users will not show up in deleted wins CSV
 IGNORE_USERS = [
