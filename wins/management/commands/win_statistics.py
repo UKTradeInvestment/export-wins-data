@@ -74,7 +74,6 @@ class Command(BaseCommand):
             send_to_addresses,
         )
 
-
     def _generate_txt(self, stats):
         wins = stats["wins"]
         users = stats["users"]
@@ -106,16 +105,17 @@ class Command(BaseCommand):
             Total who have been issued password: {}
 
             """.format(
-                wins["total"],
-                "£{}".format(intword(wins["total-export-funds"])),
-                "£{}".format(intword(wins["total-non-export-funds"])),
-                wins["confirmed"],
-                "£{}".format(intword(wins["total-confirmed-export-funds"])),
-                "£{}".format(intword(wins["total-confirmed-non-export-funds"])),
-                users["total-active"],
-                users["total-creating-wins"],
-                users["total"]
-            )
+            wins["total"],
+            "£{}".format(intword(wins["total-export-funds"])),
+            "£{}".format(intword(wins["total-non-export-funds"])),
+            wins["confirmed"],
+            "£{}".format(intword(wins["total-confirmed-export-funds"])),
+            "£{}".format(
+                intword(wins["total-confirmed-non-export-funds"])),
+            users["total-active"],
+            users["total-creating-wins"],
+            users["total"]
+        )
         return textwrap.dedent(stats_txt)
 
     @staticmethod
