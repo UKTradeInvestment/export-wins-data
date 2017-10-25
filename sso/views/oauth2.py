@@ -58,6 +58,9 @@ def callback(request):
             login(request, new_user,
                   backend=settings.AUTHENTICATION_BACKENDS[0])
             login(request, new_user)
+
+        request.session['_source'] = 'oauth2'
+        request.session.save()
         return HttpResponse('success')
     else:
         return HttpResponseForbidden()

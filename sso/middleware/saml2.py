@@ -26,9 +26,11 @@ class SSOAuthenticationMiddleware(object):
         return adfsuser and adfsuser.is_authenticated()
 
     def process_request(self, request):
-        request.sso_authenticated = self.authenticated(request)
-        request.mi_permission = False
-        if request.sso_authenticated:
-            request.adfs_attributes = get_user_attributes(request)
-            request.mi_permission = has_MI_permission(request.adfs_attributes)
+        request.mi_permission = request.session.get('_source', None) == 'oauth2'
+        if not request.mi_permission:
+            request.sso_authenticated = self.authenticated(request)
+            request.mi_permission = False
+            if request.sso_authenticated:
+                request.adfs_attributes = get_user_attributes(request)
+                request.mi_permission = has_MI_permission(request.adfs_attributes)
         return None
