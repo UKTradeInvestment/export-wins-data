@@ -501,7 +501,8 @@ class CustomerResponse(SoftDeleteModel):
     )
 
     involved_state_enterprise = models.BooleanField(
-        verbose_name="The win involved a foreign government or state-owned enterprise (eg as an intermediary or facilitator)",
+        verbose_name=(
+            "The win involved a foreign government or state-owned enterprise (eg as an intermediary or facilitator)"),
         default=False
     )
     interventions_were_prerequisite = models.BooleanField(
@@ -546,7 +547,7 @@ class CustomerResponse(SoftDeleteModel):
         verbose_name="Please confirm these details are correct",
     )
     case_study_willing = models.BooleanField(
-        verbose_name="Would you be willing for DIT / Exporting is GREAT to feature your success in marketing materials?"
+        verbose_name="Would you be willing for DIT/Exporting is GREAT to feature your success in marketing materials?"
     )
 
     comments = models.TextField(
