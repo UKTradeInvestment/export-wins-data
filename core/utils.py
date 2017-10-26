@@ -21,3 +21,13 @@ def group_by_key(l: List[MutableMapping], key: str, flatten: bool = False) -> Mu
     for group, vals in itertools.groupby(l, key=key_getter):
         groups[group] = [filter_key(data, key) for data in vals]
     return {k: v[0] if flatten else v for k, v in groups.items()}
+
+
+def enable_http_logging():
+    import logging
+    import http.client as client
+    client.HTTPConnection.debuglevel = 1
+    logging.getLogger().setLevel(logging.DEBUG)
+    requests_log = logging.getLogger("requests.packages.urllib3")
+    requests_log.setLevel(logging.DEBUG)
+    requests_log.propagate = True

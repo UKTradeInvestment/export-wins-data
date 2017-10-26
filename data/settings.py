@@ -9,6 +9,8 @@ import saml2.saml
 import dj_database_url
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+from core.utils import enable_http_logging
+
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(PROJECT_ROOT)
 
@@ -383,6 +385,9 @@ else:
 # only show critical log message when running tests
 if len(sys.argv) > 1 and sys.argv[1] == 'test':
     logging.disable(logging.CRITICAL)
+
+if os.getenv('ENABLE_HTTP_LOGGING', False):
+    enable_http_logging()
 
 
 # django countries only uses ISO countries. Wikipedia says, "XK is a
