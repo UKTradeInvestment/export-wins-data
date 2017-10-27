@@ -95,5 +95,5 @@ def auth_url(request):
             current_state.save()
 
     url, state = get_oauth_client().authorization_url(settings.OAUTH2_AUTH_URL)
-    _create_state(state=state, next_url=request.POST.get('next', None))
+    _create_state(state=state, next_url=request.GET.get('next', None))
     return JsonResponse({'target_url': url})
