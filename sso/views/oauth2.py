@@ -2,7 +2,8 @@
 This is oauth2 implementation for DIT Authentication Broker Component
 that centralises SSO for all DIT applications
 This is not a typical oauth2 implementation, in order to keep saml2 as backup authentication
-see http://requests-oauthlib.readthedocs.io/en/latest/oauth2_workflow.html#web-application-flow
+for web-application-flow
+see http://requests-oauthlib.readthedocs.io/en/latest/oauth2_workflow.html
 """
 from django.conf import settings
 from django.contrib.auth import get_user_model, login
@@ -27,7 +28,11 @@ def get_oauth_client() -> OAuth2Session:
 @csrf_exempt
 def callback(request):
     """
-    frontend will call this and pass through the code from the / o / authorization / url
+    frontend will call this and pass through the code from the ABC callback url
+    if the user exists in database, we log them in
+    otherwise we create a new user and log them in,
+    thus assuming any user authenticated by ABC is a valid MI user
+    Returns a JSON with front end's follow up URL, if any
     """
     oauth = get_oauth_client()
     code = request.POST['code']
@@ -59,18 +64,19 @@ def callback(request):
             new_user = user_model.objects.create(
                 email=abc_data['email']
             )
-            new_user.set_unusable_password()  # they won't ever need to login using user/pass
+            # they won't ever need to login using user/pass
+            new_user.set_unusable_password()
             new_user.save()
             login(request, new_user,
                   backend=settings.AUTHENTICATION_BACKENDS[0])
             login(request, new_user)
 
         request.session['_source'] = 'oauth2'
-        request.session['abc_token'] = token
+        request.session['_abc_token'] = token
         request.session['_token_introspected_at'] = now().timestamp()
         request.session.save()
 
-        return HttpResponse('success')
+        return JsonResponse({'next': AuthorizationState.objects.get_next_url(state)})
     else:
         return HttpResponseForbidden()
 
@@ -79,9 +85,10 @@ def auth_url(request):
     """
     returns the url that the frontend should redirect the user to
     save the state for future cross check in callback
+    save and pass follow up url to the front end via callback
     """
+
     url, state = get_oauth_client().authorization_url(settings.OAUTH2_AUTH_URL)
-    AuthorizationState.objects.create(state=state)
-    return JsonResponse({
-        'target_url': url,
-    })
+    next_url = request.GET.get('next', None)
+    AuthorizationState.objects.create(state=state, next_url=next_url)
+    return JsonResponse({'target_url': url})

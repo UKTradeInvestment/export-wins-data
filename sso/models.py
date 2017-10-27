@@ -24,6 +24,13 @@ class AuthorizationStateManager(models.Manager):
         self._delete_expired()
         return self.get_queryset().valid().filter(state=state).exists()
 
+    def get_next_url(self, state):
+        state = self.get_queryset().valid().filter(state=state).last()
+        if state:
+            return state.next_url
+
+        return None
+
 
 class AuthorizationStateQuerySet(QuerySet):
 
@@ -48,6 +55,8 @@ class AuthorizationStateQuerySet(QuerySet):
 class AuthorizationState(models.Model):
 
     state = models.CharField(max_length=255, db_index=True)
+    next_url = models.CharField(max_length=255, null=True)
     created = CreationDateTimeField('created', db_index=True)
 
-    objects = AuthorizationStateManager.from_queryset(AuthorizationStateQuerySet)()
+    objects = AuthorizationStateManager.from_queryset(
+        AuthorizationStateQuerySet)()
