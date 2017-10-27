@@ -88,12 +88,7 @@ def auth_url(request):
     save and pass follow up url to the front end via callback
     """
 
-    def _create_state(state, next_url=None):
-        current_state = AuthorizationState.objects.create(state=state)
-        if next_url:
-            current_state.next_url = next_url
-            current_state.save()
-
     url, state = get_oauth_client().authorization_url(settings.OAUTH2_AUTH_URL)
-    _create_state(state=state, next_url=request.GET.get('next', None))
+    next_url = request.GET.get('next', None)
+    AuthorizationState.objects.create(state=state, next_url=next_url)
     return JsonResponse({'target_url': url})

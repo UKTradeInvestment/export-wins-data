@@ -25,7 +25,7 @@ class AuthorizationStateManager(models.Manager):
         return self.get_queryset().valid().filter(state=state).exists()
 
     def get_next_url(self, state):
-        state = self.get_queryset().valid().get(state=state)
+        state = self.get_queryset().valid().filter(state=state).last()
         if state:
             return state.next_url
 
