@@ -72,6 +72,7 @@ MIDDLEWARE_CLASSES = [
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'sso.middleware.saml2.SSOAuthenticationMiddleware',
     'sso.middleware.permission_denied.Metadata403',
+    'sso.middleware.oauth2.OAuth2IntrospectToken',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -211,6 +212,10 @@ OAUTH2_USER_PROFILE_URL = os.getenv("OAUTH2_USER_PROFILE_URL")
 OAUTH2_AUTH_URL = os.getenv("OAUTH2_AUTH_URL")
 OAUTH2_STATE_TIMEOUT_SECONDS = int(
     os.getenv('OAUTH2_STATE_TIMEOUT_SECONDS', '3600'))
+OAUTH2_INTROSPECT_TOKEN = os.getenv("OAUTH2_INTROSPECT_TOKEN")
+OAUTH2_INTROSPECT_URL = os.getenv("OAUTH2_INTROSPECT_URL")
+OAUTH2_INTROSPECT_INTERVAL = int(
+    os.getenv("OAUTH2_INTROSPECT_INTERVAL", '600'))
 
 BASEDIR = os.path.dirname(os.path.abspath(__file__))
 
