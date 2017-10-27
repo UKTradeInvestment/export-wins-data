@@ -17,15 +17,10 @@ from requests_oauthlib import OAuth2Session
 from sso.models import AuthorizationState
 
 
-def get_oauth_client(next=None) -> OAuth2Session:
-    if next:
-        redirect_url = settings.OAUTH2_REDIRECT_URI + '?next=' + next
-    else:
-        redirect_url = settings.OAUTH2_REDIRECT_URI
-
+def get_oauth_client() -> OAuth2Session:
     return OAuth2Session(
         client_id=settings.OAUTH2_CLIENT_ID,
-        redirect_uri=redirect_url,
+        redirect_uri=settings.OAUTH2_REDIRECT_URI,
     )
 
 
@@ -37,6 +32,7 @@ def callback(request):
     if the user exists in database, we log them in
     otherwise we create a new user and log them in,
     thus assuming any user authenticated by ABC is a valid MI user
+    Returns a JSON with front end's follow up URL, if any
     """
     oauth = get_oauth_client()
     code = request.POST['code']
@@ -80,7 +76,7 @@ def callback(request):
         request.session['_token_introspected_at'] = now().timestamp()
         request.session.save()
 
-        return HttpResponse('success')
+        return JsonResponse({'next': AuthorizationState.objects.get_next_url(state)})
     else:
         return HttpResponseForbidden()
 
@@ -89,11 +85,15 @@ def auth_url(request):
     """
     returns the url that the frontend should redirect the user to
     save the state for future cross check in callback
-    and pass follow up url to front end
+    save and pass follow up url to the front end via callback
     """
-    next_path = request.POST.get('next', '/')
 
-    url, state = get_oauth_client(
-        next_path).authorization_url(settings.OAUTH2_AUTH_URL)
-    AuthorizationState.objects.create(state=state)
+    def _create_state(state, next_url=None):
+        current_state = AuthorizationState.objects.create(state=state)
+        if next_url:
+            current_state.next_url = next_url
+            current_state.save()
+
+    url, state = get_oauth_client().authorization_url(settings.OAUTH2_AUTH_URL)
+    _create_state(state=state, next_url=request.POST.get('next', None))
     return JsonResponse({'target_url': url})
