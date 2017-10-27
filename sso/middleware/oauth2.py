@@ -21,7 +21,7 @@ class OAuth2IntrospectToken(MiddlewareMixin):
                    'token_type': 'Bearer'},
         )
         source = request.session.get('_source', None)
-        user_token = request.session.get('abc_token', None)
+        user_token = request.session.get('_abc_token', None)
         token_introspected_at = request.session.get(
             '_token_introspected_at', None)
 
