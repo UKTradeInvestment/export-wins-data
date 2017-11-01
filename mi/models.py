@@ -434,4 +434,4 @@ class CSVFile(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return path
+        return 'path {} created by {} on {}'.format(s3_path, user.username, created)
