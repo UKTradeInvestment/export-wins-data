@@ -217,6 +217,13 @@ OAUTH2_INTROSPECT_URL = os.getenv("OAUTH2_INTROSPECT_URL")
 OAUTH2_INTROSPECT_INTERVAL = int(
     os.getenv("OAUTH2_INTROSPECT_INTERVAL", '600'))
 
+# Amazon S3 settings for CSV
+AWS_ACCESS_KEY_ID_READ_ONLY_CSV_ACCESS = os.getenv(
+    "AWS_ACCESS_KEY_ID_READ_ONLY_CSV_ACCESS")
+AWS_SECRET_READ_ONLY_CSV_ACCESS = os.getenv(
+    "AWS_SECRET_READ_ONLY_CSV_ACCESS")
+AWS_REGION_CSV = os.getenv("AWS_REGION_CSV")
+
 BASEDIR = os.path.dirname(os.path.abspath(__file__))
 
 cert_filename = 'sp_test.crt'  # if STAGING or DEBUG else 'sp_prod.crt'

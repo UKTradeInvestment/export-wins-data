@@ -77,9 +77,9 @@ class GenerateOTUForExportWinsCSVFile(APIView):
 
         s3 = boto3.client(
             's3',
-            aws_access_key_id=settings.CSV_UPLOAD_AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.CSV_UPLOAD_AWS_SECRET_ACCESS_KEY,
-            region_name=settings.CSV_AWS_REGION,
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID_READ_ONLY_CSV_ACCESS,
+            aws_secret_access_key=settings.AWS_SECRET_READ_ONLY_CSV_ACCESS,
+            region_name=settings.AWS_REGION_CSV,
         )
         return s3.generate_presigned_url(
             ClientMethod='get_object',
