@@ -61,7 +61,11 @@ from mi.views.ukregion_views import (
     UKRegionCampaignsView,
     UKRegionOverview
 )
-
+from mi.views.csv_views import (
+    ExportWinsCSVFile,
+    LatestExportWinsCSVFile,
+    GenerateOTUForExportWinsCSVFile
+)
 
 urlpatterns = [
     url(r"^sector_teams/$", SectorTeamsListView.as_view(), name="sector_teams"),
@@ -153,4 +157,11 @@ urlpatterns = [
         name="uk_regions_months"),
     url(r"^uk_regions/(?P<team_slug>[\w\-]+)/campaigns/$", UKRegionCampaignsView.as_view(team_type='itt'),
         name="uk_regions_campaigns"),
+
+    url(r"^csv_files/$", ExportWinsCSVFile.as_view(), name='csv_upload'),
+    url(r"^csv_files/latest/$", LatestExportWinsCSVFile.as_view(), name='csv_latest'),
+    # generate One Time URL for downloading EW CSV
+    url(r"^csv_files/generate_otu/(?P<file_id>\d+)/$",
+        GenerateOTUForExportWinsCSVFile.as_view(),
+        name='csv_generate_otu'),
 ]
