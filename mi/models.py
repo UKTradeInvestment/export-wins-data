@@ -9,6 +9,8 @@ from django_countries.fields import CountryField
 from extended_choices import Choices
 from pytz import UTC
 
+from users.models import User
+
 from wins.constants import UK_REGIONS, STATUS as EXPORT_EXPERIENCE
 from wins.models import HVC
 
@@ -424,3 +426,12 @@ class UKRegionTarget(models.Model):
 
     class Meta:
         unique_together = ('financial_year', 'region')
+
+
+class CSVFile(models.Model):
+    s3_path = models.CharField(max_length=255, unique=True)
+    user = models.ForeignKey(User)
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return 'path {} created by {} on {}'.format(self.s3_path, self.user.get_username(), self.created)
