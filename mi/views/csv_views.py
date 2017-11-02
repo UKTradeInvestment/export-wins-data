@@ -27,7 +27,7 @@ class ExportWinsCSVFile(APIView):
     def post(self, request):
         path = request.data['path']
         user = User.objects.get(email=request.user.email)
-        new_file = CSVFile.objects.create(s3_path=path, user=user)
+        CSVFile.objects.create(s3_path=path, user=user)
         return Response({}, status=status.HTTP_201_CREATED)
 
     def get(self, request):
@@ -96,7 +96,7 @@ class GenerateOTUForExportWinsCSVFile(APIView):
             latest_csv_file = CSVFile.objects.get(id=file_id)
             results = {
                 'id': latest_csv_file.id,
-                'one_time_url': self._generate_one_time_url(latest_csv_file.path)
+                'one_time_url': self._generate_one_time_url(latest_csv_file.s3_path)
             }
 
             return Response(results, status=status.HTTP_200_OK)

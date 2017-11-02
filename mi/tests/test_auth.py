@@ -7,7 +7,7 @@ from django.test.utils import override_settings
 from alice.tests.client import AliceClient
 from mi.models import OverseasRegion, SectorTeam, HVCGroup
 from sso.tests import BaseSSOTestCase
-from wins.factories import HVCFactory, UserFactory
+from wins.factories import HVCFactory
 
 from users.models import User
 
