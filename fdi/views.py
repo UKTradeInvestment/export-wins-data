@@ -30,6 +30,25 @@ ANNOTATIONS = dict(
 )
 
 
+def fill_in_missing_performance(data, target: GlobalTargets):
+    """
+    takes a dict of performance dicts e.g. {'high'; {..}
+    and fills in the missing if there is no good/standard/high key
+    in the dictionary.
+    """
+    for k in ['high', 'good', 'standard']:
+        if not data.get(k):
+            data[k] = {
+                "number_new_jobs__sum": 0,
+                "number_safeguarded_jobs__sum": 0,
+                "investment_value__sum": 0,
+                "count": 0,
+                "target": getattr(target, k),
+                "value__percent": 0
+            }
+    return data
+
+
 class BaseFDIView(BaseMIView):
 
     queryset = Investments.objects.all()
@@ -90,6 +109,8 @@ class BaseFDIView(BaseMIView):
                 "value__percent": two_digit_float((x['count'] / total) * 100)
             } for x in data
         ], key='value', flatten=True)
+
+        formatted_breakdown_by_value = fill_in_missing_performance(formatted_breakdown_by_value, fdi_target)
 
         return {
             "target": fdi_target.total,
