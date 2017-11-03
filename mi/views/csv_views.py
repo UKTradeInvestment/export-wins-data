@@ -51,7 +51,11 @@ class LatestExportWinsCSVFile(APIView):
     permission_classes = (IsMIServer, IsMIUser)
 
     def get(self, request):
-        latest_csv_file = CSVFile.objects.latest('created')
+        try:
+            latest_csv_file = CSVFile.objects.latest('created')
+        except CSVFile.DoesNotExist:
+            raise NotFound()
+
         results = {
             'id': latest_csv_file.id,
             'created': latest_csv_file.created
