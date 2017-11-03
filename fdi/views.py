@@ -313,7 +313,7 @@ class FDISectorTeamWinTable(FDIBaseSectorTeamView):
             target=Coalesce(Sum('hvc_target'), 0))['target']
         non_hvc_target = self.get_targets().aggregate(
             target=Coalesce(Sum('non_hvc_target'), 0))['target']
-        investments = InvestmentsSerializer(self.get_queryset(), many=True)
+        investments = InvestmentsSerializer(self.get_queryset().annotate(**ANNOTATIONS), many=True)
 
         return {
             "name": self.team.name,
