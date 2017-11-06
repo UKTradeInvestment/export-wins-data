@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 import boto3
 
 from django.conf import settings
+from django.utils.timezone import now
 
 from rest_framework import status
 from rest_framework.exceptions import NotFound
@@ -12,26 +13,52 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from alice.authenticators import IsAdminServer, IsMIServer, IsMIUser
-from ..models import File as CSVFile
+from csv.constants import FILE_TYPES
+from csv.models import File as CSVFile
 from users.models import User
 
 
-class ExportWinsCSVFile(APIView):
+class CSVFileView(APIView):
     """
     Helps storing file details of a file that was uploaded into S3
     Post creates a new entry
-    Get returns all active entries from the database
     """
     permission_classes = (IsAdminUser, IsAdminServer)
 
+    file_type = None
+
     def post(self, request):
+        name = request.data['name']
+        if not name:
+            name = FILE_TYPES[self.file_type]
+
         path = request.data['path']
+
+        report_date = request.data['report_date']
+
+        if not report_date:
+            report_date = now()
+
         user = User.objects.get(email=request.user.email)
-        CSVFile.objects.create(s3_path=path, user=user)
+        CSVFile.objects.create(
+            name=name,
+            s3_path=path,
+            user=user,
+            file_type=self.file_type,
+            report_date=report_date,
+        )
         return Response({}, status=status.HTTP_201_CREATED)
 
+
+class CSVFilesListView(APIView):
+    """
+    Get returns all active entries from the database
+    """
+    permission_classes = (IsMIServer, IsMIUser)
+
     def get(self, request):
-        files = CSVFile.objects.all()
+        files = CSVFile.objects.filter(
+            file_type=FILE_TYPES.EXPORT_WINS, is_active=True)
         results = [
             {
                 'id': csv_file.id,
@@ -44,14 +71,15 @@ class ExportWinsCSVFile(APIView):
         return Response(sorted(results, key=itemgetter('created'), reverse=True), status=status.HTTP_200_OK)
 
 
-class LatestExportWinsCSVFile(APIView):
+class LatestCSVFileView(APIView):
     """
     Returns last uploaded file into S3
     """
     permission_classes = (IsMIServer, IsMIUser)
 
     def get(self, request):
-        latest_csv_file = CSVFile.objects.latest('created')
+        latest_csv_file = CSVFile.objects.filter(
+            file_type=FILE_TYPES.EXPORT_WINS, is_active=True).latest('created')
         results = {
             'id': latest_csv_file.id,
             'created': latest_csv_file.created
@@ -59,7 +87,7 @@ class LatestExportWinsCSVFile(APIView):
         return Response(results, status=status.HTTP_200_OK)
 
 
-class GenerateOTUForExportWinsCSVFile(APIView):
+class GenerateOTUForCSVFileView(APIView):
     """
     This view generates a One Time URL for given file ID
     that was already uploaded into S3.

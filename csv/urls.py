@@ -1,18 +1,22 @@
 from django.conf.urls import url
 
-from .views.export_wins_views import (
-    ExportWinsCSVFile,
-    LatestExportWinsCSVFile,
-    GenerateOTUForExportWinsCSVFile
+from csv.views import (
+    CSVFileView,
+    CSVFilesListView,
+    LatestCSVFileView,
+    GenerateOTUForCSVFileView
 )
 
 
 urlpatterns = [
-    url(r"^export-wins/$", ExportWinsCSVFile.as_view(), name='ew_csv_upload'),
+    url(r"^export-wins/$", CSVFileView.as_view(file_type='export_wins'),
+        name='ew_csv_upload'),
+    url(r"^export-wins/list/$",
+        CSVFilesListView.as_view(file_type='export_wins'), name='ew_csv_list'),
     url(r"^export-wins/latest/$",
-        LatestExportWinsCSVFile.as_view(), name='ew_csv_latest'),
+        LatestCSVFileView.as_view(file_type='export_wins'), name='ew_csv_latest'),
     # generate One Time URL for downloading EW CSV
     url(r"^export-wins/generate_otu/(?P<file_id>\d+)/$",
-        GenerateOTUForExportWinsCSVFile.as_view(),
+        GenerateOTUForCSVFileView.as_view(file_type='export_wins'),
         name='ew_csv_generate_otu'),
 ]
