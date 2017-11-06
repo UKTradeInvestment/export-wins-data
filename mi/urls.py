@@ -61,11 +61,6 @@ from mi.views.ukregion_views import (
     UKRegionCampaignsView,
     UKRegionOverview
 )
-from mi.views.csv_views import (
-    ExportWinsCSVFile,
-    LatestExportWinsCSVFile,
-    GenerateOTUForExportWinsCSVFile
-)
 
 urlpatterns = [
     url(r"^sector_teams/$", SectorTeamsListView.as_view(), name="sector_teams"),
