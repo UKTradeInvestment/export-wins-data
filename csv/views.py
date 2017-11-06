@@ -12,45 +12,68 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from alice.authenticators import IsAdminServer, IsMIServer, IsMIUser
+from alice.authenticators import (
+    IsAdminServer,
+    IsMIServer,
+    IsMIUser,
+    IsDataTeamServer
+)
+
 from csv.constants import FILE_TYPES
 from csv.models import File as CSVFile
 from users.models import User
 
 
-class CSVFileView(APIView):
+class CSVBaseView(APIView):
+    file_type = None
+
+    @classmethod
+    def as_view(cls, **initkwargs):
+        # ensure file type is correct and crash early if not
+        if not FILE_TYPES.has_constant(initkwargs['file_type']):
+            raise ValueError('file_type is not valid')
+        return super().as_view(**initkwargs)
+
+    @property
+    def file_type_choice(self):
+        return FILE_TYPES.for_constant(self.file_type)
+
+
+class CSVFileView(CSVBaseView):
     """
     Helps storing file details of a file that was uploaded into S3
     Post creates a new entry
     """
     permission_classes = (IsAdminUser, IsAdminServer)
 
-    file_type = None
-
     def post(self, request):
-        name = request.data['name']
-        if not name:
-            name = FILE_TYPES[self.file_type]
-
+        name = request.data.get('name', self.file_type_choice.display)
         path = request.data['path']
 
-        report_date = request.data['report_date']
-
-        if not report_date:
-            report_date = now()
+        report_date = request.data.get('report_date', now())
 
         user = User.objects.get(email=request.user.email)
         CSVFile.objects.create(
             name=name,
             s3_path=path,
             user=user,
-            file_type=self.file_type,
+            file_type=self.file_type_choice.value,
             report_date=report_date,
         )
         return Response({}, status=status.HTTP_201_CREATED)
 
 
-class CSVFilesListView(APIView):
+class ExportWinsCSVFileView(CSVBaseView):
+
+    permission_classes = (IsAdminUser, IsAdminServer)
+
+
+class DataTeamCSVFileView(CSVBaseView):
+
+    permission_classes = (IsDataTeamServer,)
+
+
+class CSVFilesListView(CSVBaseView):
     """
     Get returns all active entries from the database
     """
@@ -71,7 +94,7 @@ class CSVFilesListView(APIView):
         return Response(sorted(results, key=itemgetter('created'), reverse=True), status=status.HTTP_200_OK)
 
 
-class LatestCSVFileView(APIView):
+class LatestCSVFileView(CSVBaseView):
     """
     Returns last uploaded file into S3
     """
@@ -87,7 +110,7 @@ class LatestCSVFileView(APIView):
         return Response(results, status=status.HTTP_200_OK)
 
 
-class GenerateOTUForCSVFileView(APIView):
+class GenerateOTUForCSVFileView(CSVBaseView):
     """
     This view generates a One Time URL for given file ID
     that was already uploaded into S3.

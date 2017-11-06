@@ -1,4 +1,5 @@
-from extended_choices import Choices
+from django.contrib.postgres.fields import JSONField
+from django.core.serializers.json import DjangoJSONEncoder
 
 from django.db import models
 
@@ -14,6 +15,7 @@ class File(models.Model):
     report_date = models.DateTimeField(auto_now_add=True)
     created = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    metadata = JSONField(encoder=DjangoJSONEncoder, default={})
 
     def __str__(self):
         return 'path {} created by {} on {}'.format(

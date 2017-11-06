@@ -1,22 +1,30 @@
+from collections import defaultdict
 from django.conf.urls import url
 
+from csv.constants import FILE_TYPES
 from csv.views import (
-    CSVFileView,
+    ExportWinsCSVFileView,
+    DataTeamCSVFileView,
     CSVFilesListView,
     LatestCSVFileView,
     GenerateOTUForCSVFileView
 )
 
+UPLOAD_VIEW_OVERRIDE = defaultdict(lambda: DataTeamCSVFileView)
+UPLOAD_VIEW_OVERRIDE[FILE_TYPES.EXPORT_WINS.constant] = ExportWinsCSVFileView
 
-urlpatterns = [
-    url(r"^export-wins/$", CSVFileView.as_view(file_type='export_wins'),
-        name='ew_csv_upload'),
-    url(r"^export-wins/list/$",
-        CSVFilesListView.as_view(file_type='export_wins'), name='ew_csv_list'),
-    url(r"^export-wins/latest/$",
-        LatestCSVFileView.as_view(file_type='export_wins'), name='ew_csv_latest'),
-    # generate One Time URL for downloading EW CSV
-    url(r"^export-wins/generate_otu/(?P<file_id>\d+)/$",
-        GenerateOTUForCSVFileView.as_view(file_type='export_wins'),
-        name='ew_csv_generate_otu'),
-]
+urlpatterns = []
+
+for ft in FILE_TYPES.entries:
+    urlpatterns.extend([
+        url(rf"^{ft.prefix}/$", UPLOAD_VIEW_OVERRIDE[ft.constant].as_view(file_type=ft.constant),
+            name=f"{ft.ns}_csv_upload"),
+        url(rf"^{ft.prefix}/list/$",
+            CSVFilesListView.as_view(file_type=ft.constant), name=f'{ft.ns}_csv_list'),
+        url(rf"^{ft.prefix}/latest/$",
+            LatestCSVFileView.as_view(file_type=ft.constant), name=f'{ft.ns}_csv_latest'),
+        # generate One Time URL for downloading CSV
+        url(rf"^{ft.prefix}/generate_otu/(?P<file_id>\d+)/$",
+            GenerateOTUForCSVFileView.as_view(file_type=ft.constant),
+            name=f'{ft.ns}_csv_generate_otu'),
+    ])
