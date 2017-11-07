@@ -10,7 +10,7 @@ from users.models import User
 class File(models.Model):
     name = models.CharField(max_length=255)
     s3_path = models.CharField(max_length=255, unique=True)
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, null=True)
     file_type = models.PositiveSmallIntegerField(choices=FILE_TYPES.choices)
     report_date = models.DateTimeField(auto_now_add=True)
     created = models.DateTimeField(auto_now_add=True)

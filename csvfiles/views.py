@@ -21,8 +21,7 @@ from alice.authenticators import (
 
 from csvfiles.constants import FILE_TYPES
 from csvfiles.models import File as CSVFile
-from csvfiles.serializers import FileSerializer
-from users.models import User
+from csvfiles.serializers import FileSerializer, ExportWinsFileSerializer
 
 
 class CSVBaseView(APIView):
@@ -49,36 +48,61 @@ class CSVFileView(CSVBaseView):
     """
     permission_classes = (IsAdminUser, IsAdminServer)
 
+    def immutable_data(self):
+        """
+        :return: data that can't be overridden by request.data
+        """
+        return {
+            'user': self.request.user.id,
+        }
+
+    def default_data(self):
+        """
+        :return: data that the user is allowed to override
+        """
+        return {
+            'file_type': self.file_type,
+            'name': self.file_type_choice.display,
+            'report_date': now()
+        }
+
     def get_metadata(self, data):
-        # TODO validate using form / serializer
         metadata = {}
         for key in self.metadata_keys:
             metadata[key] = data.get(key)
         return metadata
 
+    def submitted_data(self):
+        """
+        :return: data that may be provided by request
+        """
+        return {
+            's3_path': self.request.data.get('path'),
+            'metadata': self.get_metadata(self.request.data)
+        }
+
+    def get_merged_data(self):
+        return {
+            **self.default_data(),
+            **self.submitted_data(),
+            **self.immutable_data()
+        }
+
     def post(self, request):
-        name = request.data.get('name', self.file_type_choice.display)
-        path = request.data['path']
 
-        report_date = request.data.get('report_date', now())
+        serializer = self.serializer_class(data=self.get_merged_data())
 
-        metadata = self.get_metadata(request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        user = User.objects.get(email=request.user.email)
-        CSVFile.objects.create(
-            name=name,
-            s3_path=path,
-            user=user,
-            file_type=self.file_type_choice.value,
-            report_date=report_date,
-            metadata=metadata
-        )
+        serializer.save()
         return Response({}, status=status.HTTP_201_CREATED)
 
 
 class ExportWinsCSVFileView(CSVFileView):
 
     permission_classes = (IsAdminUser, IsAdminServer)
+    serializer_class = ExportWinsFileSerializer
 
 
 class DataTeamCSVFileView(CSVFileView):
@@ -94,7 +118,7 @@ class CSVFilesListView(CSVBaseView):
 
     def get(self, request):
         files = CSVFile.objects.filter(
-            file_type=FILE_TYPES.EXPORT_WINS, is_active=True)
+            file_type=self.file_type_choice.value, is_active=True)
         results = self.serializer_class(instance=files, many=True).data
         return Response(sorted(results, key=itemgetter('created'), reverse=True), status=status.HTTP_200_OK)
 
