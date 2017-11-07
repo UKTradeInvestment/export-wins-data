@@ -52,9 +52,12 @@ class CSVFileView(CSVBaseView):
         """
         :return: data that can't be overridden by request.data
         """
-        return {
-            'user': self.request.user.id,
-        }
+        user = self.request.user
+        if user.is_authenticated:
+            return {
+                'user': self.request.user.id,
+            }
+        return {}
 
     def default_data(self):
         """
@@ -76,10 +79,15 @@ class CSVFileView(CSVBaseView):
         """
         :return: data that may be provided by request
         """
-        return {
+        data = {
             's3_path': self.request.data.get('path'),
-            'metadata': self.get_metadata(self.request.data)
+            'metadata': self.get_metadata(self.request.data),
         }
+        report_date = self.request.data.get('report_date')
+        if report_date:
+            data['report_date'] = report_date
+
+        return data
 
     def get_merged_data(self):
         return {

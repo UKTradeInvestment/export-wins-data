@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from rest_framework.fields import SerializerMethodField, CharField, ChoiceField
+from rest_framework.fields import SerializerMethodField, CharField, ChoiceField, DateTimeField
 from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer
 from rest_framework.validators import UniqueValidator
@@ -34,6 +34,7 @@ class FileSerializer(ModelSerializer):
         UniqueValidator(queryset=File.objects.all()),
         is_valid_s3_url
     ], required=True)
+    report_date = DateTimeField(allow_null=True, required=False)
 
     def get_file_type_display(self, obj):
         return obj.get_file_type_display()
@@ -54,7 +55,8 @@ class FileSerializer(ModelSerializer):
             'user',
             'created',
             'is_active',
-            'metadata'
+            'metadata',
+            'report_date'
         ]
 
 
