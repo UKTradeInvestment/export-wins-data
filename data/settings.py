@@ -55,7 +55,7 @@ INSTALLED_APPS = [
     "sso.apps.SsoConfig",
     "fixturedb.apps.FixtureDBConfig",
     "fdi.apps.InvestmentConfig",
-    "csv",
+    "csvfiles",
 
     # drf
     "rest_framework",

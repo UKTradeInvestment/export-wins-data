@@ -1,7 +1,7 @@
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer
 
-from csv.models import File
+from csvfiles.models import File
 
 
 class FileSerializer(ModelSerializer):

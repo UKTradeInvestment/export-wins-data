@@ -19,9 +19,9 @@ from alice.authenticators import (
     IsDataTeamServer
 )
 
-from csv.constants import FILE_TYPES
-from csv.models import File as CSVFile
-from csv.serializers import FileSerializer
+from csvfiles.constants import FILE_TYPES
+from csvfiles.models import File as CSVFile
+from csvfiles.serializers import FileSerializer
 from users.models import User
 
 
@@ -76,12 +76,12 @@ class CSVFileView(CSVBaseView):
         return Response({}, status=status.HTTP_201_CREATED)
 
 
-class ExportWinsCSVFileView(CSVBaseView):
+class ExportWinsCSVFileView(CSVFileView):
 
     permission_classes = (IsAdminUser, IsAdminServer)
 
 
-class DataTeamCSVFileView(CSVBaseView):
+class DataTeamCSVFileView(CSVFileView):
 
     permission_classes = (IsDataTeamServer,)
 

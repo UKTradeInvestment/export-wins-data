@@ -14,6 +14,7 @@ COPY fixturedb /app/fixturedb
 COPY sso /app/sso
 COPY core /app/core
 COPY fdi /app/fdi
+COPY csvfiles /app/csvfiles
 
 COPY requirements.txt /app/requirements.txt
 COPY manage.py /app/manage.py

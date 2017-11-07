@@ -1,8 +1,8 @@
 from collections import defaultdict
 from django.conf.urls import url
 
-from csv.constants import FILE_TYPES
-from csv.views import (
+from csvfiles.constants import FILE_TYPES
+from csvfiles.views import (
     ExportWinsCSVFileView,
     DataTeamCSVFileView,
     CSVFilesListView,

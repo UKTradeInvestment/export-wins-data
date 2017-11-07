@@ -3,7 +3,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 
 from django.db import models
 
-from csv.constants import FILE_TYPES
+from csvfiles.constants import FILE_TYPES
 from users.models import User
 
 
