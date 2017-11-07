@@ -26,7 +26,7 @@ class CSVUploadPermissionTestCase(TestCase):
     @override_settings(ADMIN_SECRET=AliceClient.SECRET)
     def test_csv_upload_allowed_admin_secret(self):
         self._admin_login()
-        upload_url = reverse("mi:csv_upload")
+        upload_url = reverse("csv:ew_csv_upload")
         response = self.alice_client.post(
             upload_url, data={'path': 'dummy path'})
         self.assertEqual(response.status_code, 201)
@@ -34,7 +34,7 @@ class CSVUploadPermissionTestCase(TestCase):
     @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_csv_upload_not_allowed_mi_secret(self):
         self._admin_login()
-        upload_url = reverse("mi:csv_upload")
+        upload_url = reverse("csv:ew_csv_upload")
         response = self.alice_client.post(
             upload_url, data={'path': 'dummy path'})
         self.assertEqual(response.status_code, 403)
@@ -42,7 +42,7 @@ class CSVUploadPermissionTestCase(TestCase):
     @override_settings(UI_SECRET=AliceClient.SECRET)
     def test_csv_upload_not_allowed_ui_secret(self):
         self._admin_login()
-        upload_url = reverse("mi:csv_upload")
+        upload_url = reverse("csv:ew_csv_upload")
         response = self.alice_client.post(
             upload_url, data={'path': 'dummy path'})
         self.assertEqual(response.status_code, 403)
@@ -50,15 +50,15 @@ class CSVUploadPermissionTestCase(TestCase):
     @override_settings(ADMIN_SECRET=AliceClient.SECRET)
     def test_csv_upload_not_allowed_admin_secret_but_non_staff_normal_user(self):
         self._login()
-        upload_url = reverse("mi:csv_upload")
+        upload_url = reverse("csv:ew_csv_upload")
         response = self.alice_client.post(
             upload_url, data={'path': 'dummy path'})
         self.assertEqual(response.status_code, 403)
 
     @override_settings(ADMIN_SECRET=AliceClient.SECRET)
-    def test_csv_upload_not_allowed_admin_secret_but_staff_normal_user(self):
+    def test_csv_upload_allowed_admin_secret_but_staff_normal_user(self):
         self._login(is_staff=True)
-        upload_url = reverse("mi:csv_upload")
+        upload_url = reverse("csv:ew_csv_upload")
         response = self.alice_client.post(
             upload_url, data={'path': 'dummy path'})
         self.assertEqual(response.status_code, 201)
@@ -66,7 +66,7 @@ class CSVUploadPermissionTestCase(TestCase):
     @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_csv_upload_not_allowed_mi_secret_non_staff_normal_user(self):
         self._login()
-        upload_url = reverse("mi:csv_upload")
+        upload_url = reverse("csv:ew_csv_upload")
         response = self.alice_client.post(
             upload_url, data={'path': 'dummy path'})
         self.assertEqual(response.status_code, 403)
@@ -74,7 +74,7 @@ class CSVUploadPermissionTestCase(TestCase):
     @override_settings(UI_SECRET=AliceClient.SECRET)
     def test_csv_upload_not_allowed_ui_secret_non_staff_normal_user(self):
         self._login()
-        upload_url = reverse("mi:csv_upload")
+        upload_url = reverse("csv:ew_csv_upload")
         response = self.alice_client.post(
             upload_url, data={'path': 'dummy path'})
         self.assertEqual(response.status_code, 403)
@@ -82,7 +82,7 @@ class CSVUploadPermissionTestCase(TestCase):
     @override_settings(MI_SECRET=AliceClient.SECRET)
     def test_csv_upload_not_allowed_mi_secret_staff_normal_user(self):
         self._login(is_staff=True)
-        upload_url = reverse("mi:csv_upload")
+        upload_url = reverse("csv:ew_csv_upload")
         response = self.alice_client.post(
             upload_url, data={'path': 'dummy path'})
         self.assertEqual(response.status_code, 403)
@@ -90,7 +90,7 @@ class CSVUploadPermissionTestCase(TestCase):
     @override_settings(UI_SECRET=AliceClient.SECRET)
     def test_csv_upload_not_allowed_ui_secret_staff_normal_user(self):
         self._login(is_staff=True)
-        upload_url = reverse("mi:csv_upload")
+        upload_url = reverse("csv:ew_csv_upload")
         response = self.alice_client.post(
             upload_url, data={'path': 'dummy path'})
         self.assertEqual(response.status_code, 403)

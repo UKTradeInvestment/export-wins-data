@@ -7,7 +7,7 @@ from django.conf import settings
 from django.utils.timezone import now
 
 from rest_framework import status
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, ParseError
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -19,9 +19,46 @@ from alice.authenticators import (
     IsDataTeamServer
 )
 
-from csv.constants import FILE_TYPES
-from csv.models import File as CSVFile
+from .constants import FILE_TYPES
+from .models import File as CSVFile
 from users.models import User
+
+
+class AllCSVFilesView(CSVBaseView):
+    """
+    Get returns all active CSV files for all file types from the database
+    ExportWins
+    FDI:
+        FDI Monthly
+        FDI Daily
+    Service Delivery:
+        SDI Monthly
+        SDI Daily
+    Companies
+        By UK Region
+        By Sector Team
+    Contacts
+        By UK Region
+        By Sector Team
+    """
+    permission_classes = (IsMIServer, IsMIUser)
+
+    def get(self, request):
+        results = []
+        for super_type in FILE_TYPES.subsets:
+            for sub_type in FILE_TYPES[super_type]:
+                files = self.files_list(sub_type.value)
+                results = [
+                    {
+                        'id': csv_file.id,
+                        'name': csv_file.name,
+                        'report_date': csv_file.report_date,
+                        'user_email': csv_file.user.email,
+                        'created': csv_file.created
+                    }
+                    for csv_file in files
+                ]
+        return Response(sorted(results, key=itemgetter('created'), reverse=True), status=status.HTTP_200_OK)
 
 
 class CSVBaseView(APIView):
@@ -38,6 +75,21 @@ class CSVBaseView(APIView):
     def file_type_choice(self):
         return FILE_TYPES.for_constant(self.file_type)
 
+    def files_list(self, file_type=None):
+        if not file_type:
+            file_type = self.file_type_choice.value
+
+        if file_type == 'EXPORT_WINS':  # get latest file per FY
+            CSVFile.objects.filter(
+                file_type=self.file_type_choice.value, is_active=True)
+            pass
+        elif file_type == 'FDI_MONTHLY':    # get latest one for each month available for current FY
+            pass
+        elif file_type == 'FDI_DAILY':  # get latest file
+            pass
+        elif file_type == 'COMPANIES':  # get a file per region
+            pass
+
 
 class CSVFileView(CSVBaseView):
     """
@@ -47,9 +99,11 @@ class CSVFileView(CSVBaseView):
     permission_classes = (IsAdminUser, IsAdminServer)
 
     def post(self, request):
-        name = request.data.get('name', self.file_type_choice.display)
-        path = request.data['path']
+        path = request.data.get('path', None)
+        if not path:
+            raise ParseError(detail='Mandatory field, path missing')
 
+        name = request.data.get('name', self.file_type_choice.display)
         report_date = request.data.get('report_date', now())
 
         user = User.objects.get(email=request.user.email)
@@ -80,12 +134,12 @@ class CSVFilesListView(CSVBaseView):
     permission_classes = (IsMIServer, IsMIUser)
 
     def get(self, request):
-        files = CSVFile.objects.filter(
-            file_type=FILE_TYPES.EXPORT_WINS, is_active=True)
+        files = self.files_list()
         results = [
             {
                 'id': csv_file.id,
-                'path': csv_file.name,
+                'name': csv_file.name,
+                'report_date': csv_file.report_date,
                 'user_email': csv_file.user.email,
                 'created': csv_file.created
             }
@@ -102,7 +156,7 @@ class LatestCSVFileView(CSVBaseView):
 
     def get(self, request):
         latest_csv_file = CSVFile.objects.filter(
-            file_type=FILE_TYPES.EXPORT_WINS, is_active=True).latest('created')
+            file_type=self.file_type_choice.value, is_active=True).latest('created')
         results = {
             'id': latest_csv_file.id,
             'created': latest_csv_file.created
