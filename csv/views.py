@@ -21,11 +21,14 @@ from alice.authenticators import (
 
 from csv.constants import FILE_TYPES
 from csv.models import File as CSVFile
+from csv.serializers import FileSerializer
 from users.models import User
 
 
 class CSVBaseView(APIView):
     file_type = None
+    metadata_keys = list()
+    serializer_class = FileSerializer
 
     @classmethod
     def as_view(cls, **initkwargs):
@@ -46,11 +49,20 @@ class CSVFileView(CSVBaseView):
     """
     permission_classes = (IsAdminUser, IsAdminServer)
 
+    def get_metadata(self, data):
+        # TODO validate using form / serializer
+        metadata = {}
+        for key in self.metadata_keys:
+            metadata[key] = data.get(key)
+        return metadata
+
     def post(self, request):
         name = request.data.get('name', self.file_type_choice.display)
         path = request.data['path']
 
         report_date = request.data.get('report_date', now())
+
+        metadata = self.get_metadata(request.data)
 
         user = User.objects.get(email=request.user.email)
         CSVFile.objects.create(
@@ -59,6 +71,7 @@ class CSVFileView(CSVBaseView):
             user=user,
             file_type=self.file_type_choice.value,
             report_date=report_date,
+            metadata=metadata
         )
         return Response({}, status=status.HTTP_201_CREATED)
 
@@ -82,15 +95,7 @@ class CSVFilesListView(CSVBaseView):
     def get(self, request):
         files = CSVFile.objects.filter(
             file_type=FILE_TYPES.EXPORT_WINS, is_active=True)
-        results = [
-            {
-                'id': csv_file.id,
-                'path': csv_file.name,
-                'user_email': csv_file.user.email,
-                'created': csv_file.created
-            }
-            for csv_file in files
-        ]
+        results = self.serializer_class(instance=files, many=True).data
         return Response(sorted(results, key=itemgetter('created'), reverse=True), status=status.HTTP_200_OK)
 
 
@@ -103,10 +108,7 @@ class LatestCSVFileView(CSVBaseView):
     def get(self, request):
         latest_csv_file = CSVFile.objects.filter(
             file_type=FILE_TYPES.EXPORT_WINS, is_active=True).latest('created')
-        results = {
-            'id': latest_csv_file.id,
-            'created': latest_csv_file.created
-        }
+        results = self.serializer_class(instance=latest_csv_file).data
         return Response(results, status=status.HTTP_200_OK)
 
 

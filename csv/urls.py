@@ -17,7 +17,7 @@ urlpatterns = []
 
 for ft in FILE_TYPES.entries:
     urlpatterns.extend([
-        url(rf"^{ft.prefix}/$", UPLOAD_VIEW_OVERRIDE[ft.constant].as_view(file_type=ft.constant),
+        url(rf"^{ft.prefix}/$", UPLOAD_VIEW_OVERRIDE[ft.constant].as_view(file_type=ft.constant, metadata_keys=getattr(ft, 'metadata_keys', [])),
             name=f"{ft.ns}_csv_upload"),
         url(rf"^{ft.prefix}/list/$",
             CSVFilesListView.as_view(file_type=ft.constant), name=f'{ft.ns}_csv_list'),
