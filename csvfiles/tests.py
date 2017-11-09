@@ -1,7 +1,10 @@
-from django.test import TestCase, override_settings
+from django.test import TestCase, override_settings, SimpleTestCase, tag, RequestFactory
 from django.urls import reverse
+from extended_choices.helpers import ChoiceEntry
 
 from alice.tests.client import AliceClient
+from csvfiles.views import CSVBaseView, CSVFileView
+from users.factories import UserFactory
 
 from users.models import User
 
@@ -94,3 +97,41 @@ class CSVUploadPermissionTestCase(TestCase):
         response = self.alice_client.post(
             upload_url, data={'path': 'dummy path'})
         self.assertEqual(response.status_code, 403)
+
+
+GOOD_FILE_TYPE = 'EXPORT_WINS'
+
+
+@tag('csvfiles', 'views')
+class CSVFileBaseViewTestCase(SimpleTestCase):
+
+    def test_bad_filetype(self):
+        with self.assertRaises(ValueError):
+            CSVBaseView.as_view(file_type='foo')
+
+        f = CSVBaseView.as_view(file_type=GOOD_FILE_TYPE)
+        self.assertEqual(f.view_initkwargs['file_type'], GOOD_FILE_TYPE)
+
+    def test_filetype_kwarg_resolves_to_correct_choices_object(self):
+        view = CSVBaseView(file_type=GOOD_FILE_TYPE)
+        self.assertIsInstance(view.file_type_choice, ChoiceEntry)
+        self.assertEqual(view.file_type_choice.constant, GOOD_FILE_TYPE)
+
+
+class AuthenticatedRequestFactoryMixin():
+
+    factory = RequestFactory()
+
+    def req(self, path='/', user=None):
+        request = self.factory.get(path)
+        request.user = user or UserFactory()
+        return request
+
+
+@tag('csvfiles', 'views')
+class CSVFileViewTestCase(AuthenticatedRequestFactoryMixin, TestCase):
+
+    def test_immutable_data(self):
+        request = self.req()
+        view = CSVFileView(file_type=GOOD_FILE_TYPE, request=request)
+        self.assertEqual({'user': request.user.id}, view.immutable_data())

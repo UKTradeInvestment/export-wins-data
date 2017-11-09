@@ -8,17 +8,23 @@ from csvfiles.views import (
     CSVFilesListView,
     LatestCSVFileView,
     GenerateOTUForCSVFileView,
-    AllCSVFilesView
+    AllCSVFilesView,
+    CSVFileWithRegionView
 )
 
 UPLOAD_VIEW_OVERRIDE = defaultdict(lambda: DataTeamCSVFileView)
 UPLOAD_VIEW_OVERRIDE[FILE_TYPES.EXPORT_WINS.constant] = ExportWinsCSVFileView
+UPLOAD_VIEW_OVERRIDE[FILE_TYPES.CONTACTS.constant] = CSVFileWithRegionView
+UPLOAD_VIEW_OVERRIDE[FILE_TYPES.COMPANIES.constant] = CSVFileWithRegionView
 
 urlpatterns = []
 
 for ft in FILE_TYPES.entries:
     urlpatterns.extend([
-        url(rf"^{ft.prefix}/$", UPLOAD_VIEW_OVERRIDE[ft.constant].as_view(file_type=ft.constant, metadata_keys=getattr(ft, 'metadata_keys', [])),
+        url(rf"^{ft.prefix}/$",
+            UPLOAD_VIEW_OVERRIDE[ft.constant].as_view(
+                file_type=ft.constant,
+                metadata_keys=getattr(ft, 'metadata_keys', [])),
             name=f"{ft.ns}_csv_upload"),
         url(rf"^{ft.prefix}/list/$",
             CSVFilesListView.as_view(file_type=ft.constant), name=f'{ft.ns}_csv_list'),

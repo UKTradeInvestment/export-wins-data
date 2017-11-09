@@ -1,6 +1,7 @@
-from rest_framework import serializers
 from urllib.parse import urlparse
+
 from django.conf import settings
+from rest_framework import serializers
 
 VALID_BUCKET = settings.AWS_BUCKET_CSV
 

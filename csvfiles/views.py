@@ -1,17 +1,15 @@
-from datetime import datetime
-from operator import itemgetter
 from urllib.parse import urlparse
 
 import boto3
 
 from django.db import models
 from django.conf import settings
-from django.db.models import Func, F, Max
+from django.db.models import Func, F
 from django.utils.timezone import now
 from django.utils.functional import cached_property
 
 from rest_framework import status
-from rest_framework.exceptions import NotFound, ParseError
+from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -25,9 +23,8 @@ from alice.authenticators import (
 
 from csvfiles.constants import FILE_TYPES
 from csvfiles.models import File as CSVFile
-from csvfiles.serializers import FileSerializer, ExportWinsFileSerializer
+from csvfiles.serializers import FileSerializer, ExportWinsFileSerializer, FileWithRegionSerializer
 from mi.models import FinancialYear
-from users.models import User
 
 
 class Month(Func):
@@ -128,30 +125,10 @@ class CSVFileView(CSVBaseView):
             'report_date': now()
         }
 
-    def get_metadata(self, data):
-        metadata = {}
-        for key in self.metadata_keys:
-            metadata[key] = data.get(key)
-        return metadata
-
-    def submitted_data(self):
-        """
-        :return: data that may be provided by request
-        """
-        data = {
-            's3_path': self.request.data.get('path'),
-            'metadata': self.get_metadata(self.request.data),
-        }
-        report_date = self.request.data.get('report_date')
-        if report_date:
-            data['report_date'] = report_date
-
-        return data
-
     def get_merged_data(self):
         return {
             **self.default_data(),
-            **self.submitted_data(),
+            **self.request.data.dict(),
             **self.immutable_data()
         }
 
@@ -174,6 +151,12 @@ class ExportWinsCSVFileView(CSVFileView):
 class DataTeamCSVFileView(CSVFileView):
 
     permission_classes = (IsDataTeamServer,)
+
+
+class CSVFileWithRegionView(CSVFileView):
+
+    permission_classes = (IsDataTeamServer,)
+    serializer_class = FileWithRegionSerializer
 
 
 class CSVFilesListView(CSVBaseView):

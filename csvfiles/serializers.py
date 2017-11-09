@@ -1,5 +1,11 @@
 from django.contrib.auth import get_user_model
-from rest_framework.fields import SerializerMethodField, CharField, ChoiceField, DateTimeField
+from rest_framework.fields import (
+    SerializerMethodField,
+    CharField,
+    ChoiceField,
+    DateTimeField,
+    JSONField
+)
 from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer
 from rest_framework.validators import UniqueValidator
@@ -9,6 +15,16 @@ from csvfiles.models import File
 from csvfiles.validators import is_valid_s3_url
 
 User = get_user_model()
+
+
+class MetadataField(JSONField):
+
+    def __init__(self, *args, **kwargs):
+        self.metadata_keys = set(kwargs.pop('metadata_keys', []))
+        super().__init__(*args, **kwargs)
+
+    def get_value(self, dictionary):
+        return {k: v for k, v in dictionary.items() if k in self.metadata_keys}
 
 
 class FileTypeChoiceField(ChoiceField):
@@ -31,11 +47,14 @@ class FileSerializer(ModelSerializer):
     user_email = SerializerMethodField()
     user = PrimaryKeyRelatedField(write_only=True, queryset=User.objects.all(),
                                   required=False, allow_null=True, allow_empty=True)
-    s3_path = CharField(max_length=255, validators=[
+
+    path = CharField(max_length=255, validators=[
         UniqueValidator(queryset=File.objects.all()),
         is_valid_s3_url
-    ], required=True)
+    ], required=True, source='s3_path')
+
     report_date = DateTimeField(allow_null=True, required=False)
+    metadata = MetadataField(required=False, allow_null=True)
 
     def get_file_type_display(self, obj):
         return obj.get_file_type_display()
@@ -50,17 +69,24 @@ class FileSerializer(ModelSerializer):
         fields = [
             'id',
             'name',
-            's3_path',
+            'path',
             'file_type',
             'user_email',
             'user',
             'created',
             'is_active',
             'metadata',
-            'report_date'
+            'report_date',
         ]
 
 
 class ExportWinsFileSerializer(FileSerializer):
+    """
+    Serializer for Export wins files, which do have a user - so let's make it mandatory.
+    """
     user = PrimaryKeyRelatedField(write_only=True, queryset=User.objects.all(),
                                   required=True, allow_null=False, allow_empty=False)
+
+
+class FileWithRegionSerializer(FileSerializer):
+    metadata = MetadataField(required=False, allow_null=True, metadata_keys=['region'])
