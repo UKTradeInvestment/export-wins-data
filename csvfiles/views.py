@@ -25,7 +25,7 @@ from alice.authenticators import (
 
 from csvfiles.constants import FILE_TYPES
 from csvfiles.models import File as CSVFile
-from csvfiles.serializers import FileSerializer
+from csvfiles.serializers import FileSerializer, ExportWinsFileSerializer
 from mi.models import FinancialYear
 from users.models import User
 
@@ -66,7 +66,7 @@ class CSVBaseView(APIView):
 
         try:
             return CSVFile.objects.filter(file_type=file_type.value,
-                                          is_active=True).latest('created')
+                                          is_active=True).latest('report_date')
         except CSVFile.DoesNotExist:
             return None
 
@@ -107,38 +107,68 @@ class CSVFileView(CSVBaseView):
     """
     permission_classes = (IsAdminUser, IsAdminServer)
 
+    def immutable_data(self):
+        """
+        :return: data that can't be overridden by request.data
+        """
+        user = self.request.user
+        if user.is_authenticated:
+            return {
+                'user': self.request.user.id,
+            }
+        return {}
+
+    def default_data(self):
+        """
+        :return: data that the user is allowed to override
+        """
+        return {
+            'file_type': self.file_type,
+            'name': self.file_type_choice.display,
+            'report_date': now()
+        }
+
     def get_metadata(self, data):
-        # TODO validate using form / serializer
         metadata = {}
         for key in self.metadata_keys:
             metadata[key] = data.get(key)
         return metadata
 
+    def submitted_data(self):
+        """
+        :return: data that may be provided by request
+        """
+        data = {
+            's3_path': self.request.data.get('path'),
+            'metadata': self.get_metadata(self.request.data),
+        }
+        report_date = self.request.data.get('report_date')
+        if report_date:
+            data['report_date'] = report_date
+
+        return data
+
+    def get_merged_data(self):
+        return {
+            **self.default_data(),
+            **self.submitted_data(),
+            **self.immutable_data()
+        }
+
     def post(self, request):
-        path = request.data.get('path', None)
-        if not path:
-            raise ParseError(detail='Mandatory field, path missing')
+        serializer = self.serializer_class(data=self.get_merged_data())
 
-        name = request.data.get('name', self.file_type_choice.display)
-        report_date = request.data.get('report_date', now())
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        metadata = self.get_metadata(request.data)
-
-        user = User.objects.get(email=request.user.email)
-        CSVFile.objects.create(
-            name=name,
-            s3_path=path,
-            user=user,
-            file_type=self.file_type_choice.value,
-            report_date=report_date,
-            metadata=metadata
-        )
+        serializer.save()
         return Response({}, status=status.HTTP_201_CREATED)
 
 
 class ExportWinsCSVFileView(CSVFileView):
 
     permission_classes = (IsAdminUser, IsAdminServer)
+    serializer_class = ExportWinsFileSerializer
 
 
 class DataTeamCSVFileView(CSVFileView):
@@ -153,7 +183,6 @@ class CSVFilesListView(CSVBaseView):
     permission_classes = (IsMIServer, IsMIUser)
 
     def get(self, request):
-
         list_files = self.files_list()
 
         if not list_files:

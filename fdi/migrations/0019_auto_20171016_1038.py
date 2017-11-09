@@ -555,8 +555,8 @@ def first_import_of_dh_data(apps, schema_editor):
 
     for country in dh_countries:
         Country(
-            id=country['id'], 
-            name=country['name'], 
+            id=country['id'],
+            name=country['name'],
             iso_code=datahub_country_iso_code(country['name'])).save()
 
     for region in dh_uk_regions:

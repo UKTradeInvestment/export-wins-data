@@ -6,7 +6,6 @@ from django.utils.timezone import now
 
 from csvfiles.constants import FILE_TYPES
 from users.models import User
-from mi.models import FinancialYear
 
 
 class File(models.Model):
@@ -18,6 +17,12 @@ class File(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
     metadata = JSONField(encoder=DjangoJSONEncoder, default={})
+
+    def save(self, **kwargs):
+        if not self.report_date:
+            self.report_date = self.created
+
+        super(File, self).save(**kwargs)
 
     def __str__(self):
         return 'file {} with path {} on {}'.format(
