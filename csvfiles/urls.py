@@ -1,13 +1,14 @@
 from collections import defaultdict
 from django.conf.urls import url
 
-from csv.constants import FILE_TYPES
-from csv.views import (
+from csvfiles.constants import FILE_TYPES
+from csvfiles.views import (
     ExportWinsCSVFileView,
     DataTeamCSVFileView,
     CSVFilesListView,
     LatestCSVFileView,
-    GenerateOTUForCSVFileView
+    GenerateOTUForCSVFileView,
+    AllCSVFilesView
 )
 
 UPLOAD_VIEW_OVERRIDE = defaultdict(lambda: DataTeamCSVFileView)
@@ -17,7 +18,7 @@ urlpatterns = []
 
 for ft in FILE_TYPES.entries:
     urlpatterns.extend([
-        url(rf"^{ft.prefix}/$", UPLOAD_VIEW_OVERRIDE[ft.constant].as_view(file_type=ft.constant),
+        url(rf"^{ft.prefix}/$", UPLOAD_VIEW_OVERRIDE[ft.constant].as_view(file_type=ft.constant, metadata_keys=getattr(ft, 'metadata_keys', [])),
             name=f"{ft.ns}_csv_upload"),
         url(rf"^{ft.prefix}/list/$",
             CSVFilesListView.as_view(file_type=ft.constant), name=f'{ft.ns}_csv_list'),
@@ -28,3 +29,11 @@ for ft in FILE_TYPES.entries:
             GenerateOTUForCSVFileView.as_view(file_type=ft.constant),
             name=f'{ft.ns}_csv_generate_otu'),
     ])
+
+urlpatterns.extend(
+    [
+        url(r"^all_files/$", AllCSVFilesView.as_view(), name="csv_list"),
+        url(r"^generate_otu/(?P<file_id>\d+)/$", GenerateOTUForCSVFileView.as_view(),
+            name="csv_generate_otu")
+    ]
+)

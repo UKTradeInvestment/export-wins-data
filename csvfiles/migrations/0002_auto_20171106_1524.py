@@ -10,7 +10,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('csv', '0001_initial'),
+        ('csvfiles', '0001_initial'),
     ]
 
     operations = [

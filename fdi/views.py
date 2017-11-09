@@ -198,7 +198,7 @@ class FDISectorTeamDetailView(FDIBaseSectorTeamView):
         }
         return data
 
-    def _market_breakdown(self, investments, market, max_hvc_target):
+    def _market_breakdown(self, investments, market):
         def classify_stage(investment):
             if investment.stage == 'Verify win':
                 return 'verified'
@@ -252,10 +252,8 @@ class FDISectorTeamDetailView(FDIBaseSectorTeamView):
         results['overview'] = self._get_fdi_summary()
 
         markets = Market.objects.all()
-        max_hvc_target = Target.objects.filter(sector_team=self.team).aggregate(
-            Max('hvc_target'))['hvc_target__max']
         market_data = [self._market_breakdown(
-            investments_in_scope, market, max_hvc_target) for market in markets]
+            investments_in_scope, market) for market in markets]
 
         results['markets'] = market_data
         return self._success(results)
