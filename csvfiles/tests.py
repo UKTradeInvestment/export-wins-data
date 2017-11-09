@@ -1,5 +1,7 @@
 from django.test import TestCase, override_settings, SimpleTestCase, tag, RequestFactory
 from django.urls import reverse
+from django.conf import settings
+
 from extended_choices.helpers import ChoiceEntry
 
 from alice.tests.client import AliceClient
@@ -10,6 +12,9 @@ from users.models import User
 
 
 class CSVUploadPermissionTestCase(TestCase):
+
+    VALID_BUCKET = settings.AWS_BUCKET_CSV
+    VALID_S3_PATH = 's3://{}/export-wins/2017/11/2017-11-01T15:11:42.566651+00:00.csv'.format(VALID_BUCKET)
 
     def setUp(self):
         self.alice_client = AliceClient()
@@ -31,7 +36,7 @@ class CSVUploadPermissionTestCase(TestCase):
         self._admin_login()
         upload_url = reverse("csv:ew_csv_upload")
         response = self.alice_client.post(
-            upload_url, data={'path': 'dummy path'})
+            upload_url, data={'path': self.VALID_S3_PATH})
         self.assertEqual(response.status_code, 201)
 
     @override_settings(MI_SECRET=AliceClient.SECRET)
@@ -63,7 +68,7 @@ class CSVUploadPermissionTestCase(TestCase):
         self._login(is_staff=True)
         upload_url = reverse("csv:ew_csv_upload")
         response = self.alice_client.post(
-            upload_url, data={'path': 'dummy path'})
+            upload_url, data={'path': self.VALID_S3_PATH})
         self.assertEqual(response.status_code, 201)
 
     @override_settings(MI_SECRET=AliceClient.SECRET)

@@ -2,8 +2,9 @@ from urllib.parse import urlparse
 
 import boto3
 
-from django.db import models
 from django.conf import settings
+from django.contrib.postgres.fields.jsonb import KeyTextTransform
+from django.db import models
 from django.db.models import Func, F
 from django.utils.timezone import now
 from django.utils.functional import cached_property
@@ -85,14 +86,20 @@ class CSVBaseView(APIView):
         elif file_type.constant in ('FDI_MONTHLY', 'SERVICE_DELIVERIES_MONTHLY'):
             try:
                 return CSVFile.objects.filter(
-                    report_date__gt=fy_start_date, file_type=file_type.value, is_active=True
+                    report_date__gte=fy_start_date, file_type=file_type.value, is_active=True
                 ).annotate(month=Month('report_date')
                            ).order_by('month', '-report_date').distinct('month')
             except CSVFile.DoesNotExist:
                 return None
         # metadata based, latest file available
         elif file_type.constant in ('CONTACTS', 'COMPANIES'):
-            return None
+            try:
+                return CSVFile.objects.filter(
+                    file_type=file_type.value, is_active=True
+                ).annotate(region=KeyTextTransform('region', 'metadata')
+                           ).order_by('region', '-report_date').distinct('region')
+            except CSVFile.DoesNotExist:
+                return None
         else:
             return None
 
@@ -249,6 +256,8 @@ class AllCSVFilesView(CSVBaseView):
         sdi_monthly_files = self.files_list(
             FILE_TYPES.SERVICE_DELIVERIES_MONTHLY)
         sdi_daily_file = self.latest_file(FILE_TYPES.SERVICE_DELIVERIES_DAILY)
+        contacts_files = self.files_list(FILE_TYPES.CONTACTS)
+        company_files = self.files_list(FILE_TYPES.COMPANIES)
         results = {
             'export': {},
             'fdi': {},
@@ -317,13 +326,35 @@ class AllCSVFilesView(CSVBaseView):
                 'created': sdi_daily_file.created,
             }
 
-        # 'List of UK Contacts': {},
-        # 'List of UK Companies': {}
-        # all_files = []
-        # for super_type in FILE_TYPES.subsets:
-        #     for sub_type in FILE_TYPES[super_type]:
-        #         all_files.append(self.files_list(sub_type.value))
+        if contacts_files:
+            results['contacts']['regions'] = [
+                {
+                    'id': x.id,
+                    'name': x.name,
+                    'report_date': x.report_date,
+                    'created': x.created,
+                    'region': x.region,
+                } for x in contacts_files
+            ]
 
-        # results = self.serializer_class(instance=all_files).data
+        if company_files:
+            results['companies']['regions'] = [
+                {
+                    'id': x.id,
+                    'name': x.name,
+                    'report_date': x.report_date,
+                    'created': x.created,
+                    'region': x.region,
+                } for x in company_files
+            ]
+
+            # 'List of UK Contacts': {},
+            # 'List of UK Companies': {}
+            # all_files = []
+            # for super_type in FILE_TYPES.subsets:
+            #     for sub_type in FILE_TYPES[super_type]:
+            #         all_files.append(self.files_list(sub_type.value))
+
+            # results = self.serializer_class(instance=all_files).data
 
         return Response(results, status=status.HTTP_200_OK)
