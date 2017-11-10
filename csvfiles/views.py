@@ -27,7 +27,8 @@ from csvfiles.models import File as CSVFile
 from csvfiles.serializers import (
     FileSerializer,
     ExportWinsFileSerializer,
-    FileWithRegionOrSectorSerializer
+    FileWithRegionSerializer,
+    FileWithSectorSerializer
 )
 from mi.models import FinancialYear
 
@@ -98,12 +99,21 @@ class CSVBaseView(APIView):
                 return None
 
         # metadata based, latest file available
-        if file_type.constant in ('CONTACTS', 'COMPANIES'):
+        if file_type.constant in ('CONTACTS_REGION', 'COMPANIES_REGION'):
             try:
                 return CSVFile.objects.filter(
                     file_type=file_type.value, is_active=True
                 ).annotate(region=KeyTextTransform('region', 'metadata')
                            ).order_by('region', '-report_date').distinct('region')
+            except CSVFile.DoesNotExist:
+                return None
+
+        if file_type.constant in ('CONTACTS_SECTOR', 'COMPANIES_SECTOR'):
+            try:
+                return CSVFile.objects.filter(
+                    file_type=file_type.value, is_active=True
+                ).annotate(sector=KeyTextTransform('sector', 'metadata')
+                           ).order_by('sector', '-report_date').distinct('sector')
             except CSVFile.DoesNotExist:
                 return None
 
@@ -169,7 +179,13 @@ class DataTeamCSVFileView(CSVFileView):
 class CSVFileWithRegionView(CSVFileView):
 
     permission_classes = (IsDataTeamServer,)
-    serializer_class = FileWithRegionOrSectorSerializer
+    serializer_class = FileWithRegionSerializer
+
+
+class CSVFileWithSectorView(CSVFileView):
+
+    permission_classes = (IsDataTeamServer,)
+    serializer_class = FileWithSectorSerializer
 
 
 class CSVFilesListView(CSVBaseView):
@@ -262,18 +278,16 @@ class AllCSVFilesView(CSVBaseView):
         sdi_monthly_files = self.files_list(
             FILE_TYPES.SERVICE_DELIVERIES_MONTHLY)
         sdi_daily_file = self.latest_file(FILE_TYPES.SERVICE_DELIVERIES_DAILY)
-        contacts_files = self.files_list(FILE_TYPES.CONTACTS)
-        company_files = self.files_list(FILE_TYPES.COMPANIES)
-        results = {
-            'export': {},
-            'fdi': {},
-            'sdi': {},
-            'contacts': {},
-            'companies': {}
-        }
+        cont_region_files = self.files_list(FILE_TYPES.CONTACTS_REGION)
+        comp_region_files = self.files_list(FILE_TYPES.COMPANIES_REGION)
+        cont_sector_files = self.files_list(FILE_TYPES.CONTACTS_SECTOR)
+        comp_sector_files = self.files_list(FILE_TYPES.COMPANIES_SECTOR)
+        results = {}
+
         if ew_files:
             current_ew_files = [
                 x for x in ew_files if x.year == self.current_fy.description]
+            results['export'] = {}
             if current_ew_files:
                 current_ew = current_ew_files[0]
                 results['export']['current'] = {
@@ -296,6 +310,9 @@ class AllCSVFilesView(CSVBaseView):
                 } for x in prev_ew_files
             ]
 
+        if fdi_monthly_files or fdi_daily_file:
+            results['fdi'] = {}
+
         if fdi_monthly_files:
             results['fdi']['months'] = [
                 {
@@ -313,6 +330,9 @@ class AllCSVFilesView(CSVBaseView):
                 'report_date': fdi_daily_file.report_date,
                 'created': fdi_daily_file.created,
             }
+
+        if sdi_monthly_files or sdi_daily_file:
+            results['sdi'] = {}
 
         if sdi_monthly_files:
             results['sdi']['months'] = [
@@ -332,7 +352,10 @@ class AllCSVFilesView(CSVBaseView):
                 'created': sdi_daily_file.created,
             }
 
-        if contacts_files:
+        if cont_region_files or cont_sector_files:
+            results['contacts'] = {}
+
+        if cont_region_files:
             results['contacts']['regions'] = [
                 {
                     'id': x.id,
@@ -340,10 +363,24 @@ class AllCSVFilesView(CSVBaseView):
                     'report_date': x.report_date,
                     'created': x.created,
                     'region': x.region,
-                } for x in contacts_files
+                } for x in cont_region_files
             ]
 
-        if company_files:
+        if cont_sector_files:
+            results['contacts']['sectors'] = [
+                {
+                    'id': x.id,
+                    'name': x.name,
+                    'report_date': x.report_date,
+                    'created': x.created,
+                    'sector': x.sector,
+                } for x in cont_sector_files
+            ]
+
+        if comp_region_files or comp_sector_files:
+            results['companies'] = {}
+
+        if comp_region_files:
             results['companies']['regions'] = [
                 {
                     'id': x.id,
@@ -351,7 +388,18 @@ class AllCSVFilesView(CSVBaseView):
                     'report_date': x.report_date,
                     'created': x.created,
                     'region': x.region,
-                } for x in company_files
+                } for x in comp_region_files
+            ]
+
+        if comp_sector_files:
+            results['companies']['sectors'] = [
+                {
+                    'id': x.id,
+                    'name': x.name,
+                    'report_date': x.report_date,
+                    'created': x.created,
+                    'sector': x.sector,
+                } for x in comp_sector_files
             ]
 
         return Response(results, status=status.HTTP_200_OK)

@@ -14,15 +14,19 @@ FILE_TYPES = Choices(
     ("SERVICE_DELIVERIES_DAILY", 5, "Service Deliveries Daily",
      {'prefix': 'service-deliveries/daily', 'ns': 'sd_daily'}),
 
-    ("CONTACTS", 6, "Contacts", {'prefix': 'contacts',
-                                 'ns': 'contacts', 'metadata_keys': ['region']}),
-    ("COMPANIES", 7, "Companies", {
-     'prefix': 'companies', 'ns': 'companies', 'metadata_keys': ['region']})
+    ("CONTACTS_REGION", 6, "Contacts for Regions", {'prefix': 'contacts/region',
+                                                    'ns': 'cont_region', 'metadata_keys': ['region']}),
+    ("CONTACTS_SECTOR", 7, "Contacts for Sectors", {'prefix': 'contacts/sector',
+                                                    'ns': 'cont_sector', 'metadata_keys': ['sector']}),
+    ("COMPANIES_REGION", 8, "Companies for Regions", {
+     'prefix': 'companies/region', 'ns': 'comp_region', 'metadata_keys': ['region']}),
+    ("COMPANIES_SECTOR", 9, "Companies for Sectors", {
+     'prefix': 'companies/sector', 'ns': 'comp_sector', 'metadata_keys': ['sector']})
 )
 
 FILE_TYPES.add_subset('EW', ('EXPORT_WINS',))
 FILE_TYPES.add_subset('FDI', ('FDI_MONTHLY', 'FDI_DAILY',))
 FILE_TYPES.add_subset(
     'SDI', ('SERVICE_DELIVERIES_MONTHLY', 'SERVICE_DELIVERIES_DAILY',))
-FILE_TYPES.add_subset('CONT', ('CONTACTS',))
-FILE_TYPES.add_subset('COMP', ('COMPANIES',))
+FILE_TYPES.add_subset('CONT', ('CONTACTS_REGION', 'CONTACTS_SECTOR',))
+FILE_TYPES.add_subset('COMP', ('COMPANIES_REGION', 'COMPANIES_SECTOR',))

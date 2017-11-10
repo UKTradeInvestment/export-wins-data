@@ -93,5 +93,11 @@ class ExportWinsFileSerializer(FileSerializer):
                                   required=True, allow_null=False, allow_empty=False)
 
 
-class FileWithRegionOrSectorSerializer(FileSerializer):
-    metadata = MetadataField(required=True, allow_null=False, metadata_keys=['region', 'sector'])
+class FileWithRegionSerializer(FileSerializer):
+    metadata = MetadataField(
+        required=True, allow_null=False, metadata_keys=['region'])
+
+
+class FileWithSectorSerializer(FileSerializer):
+    metadata = MetadataField(
+        required=True, allow_null=False, metadata_keys=['sector'])

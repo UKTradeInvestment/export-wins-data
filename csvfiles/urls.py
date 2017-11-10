@@ -9,13 +9,16 @@ from csvfiles.views import (
     LatestCSVFileView,
     GenerateOTUForCSVFileView,
     AllCSVFilesView,
-    CSVFileWithRegionView
+    CSVFileWithRegionView,
+    CSVFileWithSectorView
 )
 
 UPLOAD_VIEW_OVERRIDE = defaultdict(lambda: DataTeamCSVFileView)
 UPLOAD_VIEW_OVERRIDE[FILE_TYPES.EXPORT_WINS.constant] = ExportWinsCSVFileView
-UPLOAD_VIEW_OVERRIDE[FILE_TYPES.CONTACTS.constant] = CSVFileWithRegionView
-UPLOAD_VIEW_OVERRIDE[FILE_TYPES.COMPANIES.constant] = CSVFileWithRegionView
+UPLOAD_VIEW_OVERRIDE[FILE_TYPES.CONTACTS_REGION.constant] = CSVFileWithRegionView
+UPLOAD_VIEW_OVERRIDE[FILE_TYPES.COMPANIES_REGION.constant] = CSVFileWithRegionView
+UPLOAD_VIEW_OVERRIDE[FILE_TYPES.CONTACTS_SECTOR.constant] = CSVFileWithSectorView
+UPLOAD_VIEW_OVERRIDE[FILE_TYPES.COMPANIES_SECTOR.constant] = CSVFileWithSectorView
 
 urlpatterns = []
 
