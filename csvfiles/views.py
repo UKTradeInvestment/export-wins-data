@@ -24,7 +24,11 @@ from alice.authenticators import (
 
 from csvfiles.constants import FILE_TYPES
 from csvfiles.models import File as CSVFile
-from csvfiles.serializers import FileSerializer, ExportWinsFileSerializer, FileWithRegionSerializer
+from csvfiles.serializers import (
+    FileSerializer,
+    ExportWinsFileSerializer,
+    FileWithRegionOrSectorSerializer
+)
 from mi.models import FinancialYear
 
 
@@ -165,7 +169,7 @@ class DataTeamCSVFileView(CSVFileView):
 class CSVFileWithRegionView(CSVFileView):
 
     permission_classes = (IsDataTeamServer,)
-    serializer_class = FileWithRegionSerializer
+    serializer_class = FileWithRegionOrSectorSerializer
 
 
 class CSVFilesListView(CSVBaseView):

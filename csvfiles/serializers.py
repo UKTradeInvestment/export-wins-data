@@ -21,10 +21,15 @@ class MetadataField(JSONField):
 
     def __init__(self, *args, **kwargs):
         self.metadata_keys = set(kwargs.pop('metadata_keys', []))
+        self.default_error_messages['null'] = \
+            f"One of [{', '.join(self.metadata_keys)}] must be provided"
         super().__init__(*args, **kwargs)
 
     def get_value(self, dictionary):
-        return {k: v for k, v in dictionary.items() if k in self.metadata_keys}
+        value = {k: v for k, v in dictionary.items() if k in self.metadata_keys}
+        if self.required:
+            return value if value else None
+        return value
 
 
 class FileTypeChoiceField(ChoiceField):
@@ -88,5 +93,5 @@ class ExportWinsFileSerializer(FileSerializer):
                                   required=True, allow_null=False, allow_empty=False)
 
 
-class FileWithRegionSerializer(FileSerializer):
-    metadata = MetadataField(required=False, allow_null=True, metadata_keys=['region'])
+class FileWithRegionOrSectorSerializer(FileSerializer):
+    metadata = MetadataField(required=True, allow_null=False, metadata_keys=['region', 'sector'])
