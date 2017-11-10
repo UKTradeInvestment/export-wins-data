@@ -1,10 +1,14 @@
+from django.contrib.auth.models import AnonymousUser
 from django.test import TestCase, override_settings, SimpleTestCase, tag, RequestFactory
 from django.urls import reverse
 from django.conf import settings
 
+from django.utils.timezone import now
 from extended_choices.helpers import ChoiceEntry
+from freezegun import freeze_time
 
 from alice.tests.client import AliceClient
+from csvfiles.constants import FILE_TYPES
 from csvfiles.views import CSVBaseView, CSVFileView
 from users.factories import UserFactory
 
@@ -113,7 +117,7 @@ class CSVUploadPermissionTestCase(TestCase):
 
 
 GOOD_FILE_TYPE = 'EXPORT_WINS'
-
+FROZEN_DATE = now()
 
 @tag('csvfiles', 'views')
 class CSVFileBaseViewTestCase(SimpleTestCase):
@@ -142,9 +146,27 @@ class AuthenticatedRequestFactoryMixin():
 
 
 @tag('csvfiles', 'views')
+@freeze_time(FROZEN_DATE)
 class CSVFileViewTestCase(AuthenticatedRequestFactoryMixin, TestCase):
+
 
     def test_immutable_data(self):
         request = self.req()
         view = CSVFileView(file_type=GOOD_FILE_TYPE, request=request)
         self.assertEqual({'user': request.user.id}, view.immutable_data())
+
+    def test_immutable_data_no_user(self):
+        request = self.req(user=AnonymousUser())
+        view = CSVFileView(file_type=GOOD_FILE_TYPE, request=request)
+        self.assertEqual({}, view.immutable_data())
+
+    def test_default_data(self):
+        request = self.req()
+        view = CSVFileView(file_type=GOOD_FILE_TYPE, request=request)
+        self.assertEqual({
+            'file_type': FILE_TYPES[GOOD_FILE_TYPE].constant,
+            'name': FILE_TYPES[GOOD_FILE_TYPE].display,
+            'report_date': FROZEN_DATE
+
+        }, view.default_data())
+
