@@ -14,7 +14,8 @@ from users.models import User
 class CSVUploadPermissionTestCase(TestCase):
 
     VALID_BUCKET = settings.AWS_BUCKET_CSV
-    VALID_S3_PATH = 's3://{}/export-wins/2017/11/2017-11-01T15:11:42.566651+00:00.csv'.format(VALID_BUCKET)
+    VALID_S3_PATH = 's3://{}/export-wins/2017/11/2017-11-01T15:11:42.566651+00:00.csv'.format(
+        VALID_BUCKET)
 
     def setUp(self):
         self.alice_client = AliceClient()
@@ -102,6 +103,13 @@ class CSVUploadPermissionTestCase(TestCase):
         response = self.alice_client.post(
             upload_url, data={'path': 'dummy path'})
         self.assertEqual(response.status_code, 403)
+
+    @override_settings(MI_SECRET=AliceClient.SECRET)
+    def test_ew_csv_list(self):
+        self._login()
+        url = reverse("csv:ew_csv_list")
+        response = self.alice_client.get(url)
+        self.assertEqual(response.status_code, 200)
 
 
 GOOD_FILE_TYPE = 'EXPORT_WINS'

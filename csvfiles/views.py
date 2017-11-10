@@ -82,8 +82,9 @@ class CSVBaseView(APIView):
                            ).order_by('year', '-report_date').distinct('year')
             except CSVFile.DoesNotExist:
                 return None
+
         # get latest one for each month available for current FY
-        elif file_type.constant in ('FDI_MONTHLY', 'SERVICE_DELIVERIES_MONTHLY'):
+        if file_type.constant in ('FDI_MONTHLY', 'SERVICE_DELIVERIES_MONTHLY'):
             try:
                 return CSVFile.objects.filter(
                     report_date__gte=fy_start_date, file_type=file_type.value, is_active=True
@@ -91,8 +92,9 @@ class CSVBaseView(APIView):
                            ).order_by('month', '-report_date').distinct('month')
             except CSVFile.DoesNotExist:
                 return None
+
         # metadata based, latest file available
-        elif file_type.constant in ('CONTACTS', 'COMPANIES'):
+        if file_type.constant in ('CONTACTS', 'COMPANIES'):
             try:
                 return CSVFile.objects.filter(
                     file_type=file_type.value, is_active=True
@@ -100,8 +102,8 @@ class CSVBaseView(APIView):
                            ).order_by('region', '-report_date').distinct('region')
             except CSVFile.DoesNotExist:
                 return None
-        else:
-            return None
+
+        return None
 
 
 class CSVFileView(CSVBaseView):
@@ -180,7 +182,7 @@ class CSVFilesListView(CSVBaseView):
 
         results = self.serializer_class(
             instance=list_files, many=True).data
-        # return Response(sorted(results, key=itemgetter('report_date'), reverse=True), status=status.HTTP_200_OK)
+
         return Response(results, status=status.HTTP_200_OK)
 
 
@@ -347,14 +349,5 @@ class AllCSVFilesView(CSVBaseView):
                     'region': x.region,
                 } for x in company_files
             ]
-
-            # 'List of UK Contacts': {},
-            # 'List of UK Companies': {}
-            # all_files = []
-            # for super_type in FILE_TYPES.subsets:
-            #     for sub_type in FILE_TYPES[super_type]:
-            #         all_files.append(self.files_list(sub_type.value))
-
-            # results = self.serializer_class(instance=all_files).data
 
         return Response(results, status=status.HTTP_200_OK)
