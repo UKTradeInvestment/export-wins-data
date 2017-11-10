@@ -8,7 +8,7 @@ from rest_framework.fields import (
 )
 from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer
-from rest_framework.validators import UniqueValidator
+from rest_framework.validators import UniqueTogetherValidator
 
 from csvfiles.constants import FILE_TYPES
 from csvfiles.models import File
@@ -54,7 +54,6 @@ class FileSerializer(ModelSerializer):
                                   required=False, allow_null=True, allow_empty=True)
 
     path = CharField(max_length=255, validators=[
-        UniqueValidator(queryset=File.objects.all()),
         is_valid_s3_url
     ], required=True, source='s3_path')
 
@@ -82,6 +81,13 @@ class FileSerializer(ModelSerializer):
             'is_active',
             'metadata',
             'report_date',
+        ]
+
+        validators = [
+            UniqueTogetherValidator(
+                queryset=File.objects.all(),
+                fields=('s3_path', 'file_type')
+            )
         ]
 
 
