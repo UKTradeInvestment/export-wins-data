@@ -68,7 +68,8 @@ class CSVBaseView(APIView):
             file_type = self.file_type_choice
 
         try:
-            return CSVFile.objects.filter(file_type=file_type.value,
+            return CSVFile.objects.filter(report_date__gte=self.current_fy.start,
+                                          file_type=file_type.value,
                                           is_active=True).latest('report_date')
         except CSVFile.DoesNotExist:
             return None
@@ -97,6 +98,10 @@ class CSVBaseView(APIView):
                            ).order_by('month', '-report_date').distinct('month')
             except CSVFile.DoesNotExist:
                 return None
+
+        # get latest one available for current FY
+        if file_type.constant in ('FDI_DAILY', 'SERVICE_DELIVERIES_DAILY'):
+            return self.latest_file(file_type)
 
         # metadata based, latest file available
         if file_type.constant in ('CONTACTS_REGION', 'COMPANIES_REGION'):
