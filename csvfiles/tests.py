@@ -111,13 +111,6 @@ class CSVUploadPermissionTestCase(TestCase):
             upload_url, data={'path': 'dummy path'})
         self.assertEqual(response.status_code, 403)
 
-    @override_settings(MI_SECRET=AliceClient.SECRET)
-    def test_ew_csv_list(self):
-        self._login()
-        url = reverse("csv:ew_csv_list")
-        response = self.alice_client.get(url)
-        self.assertEqual(response.status_code, 200)
-
 
 GOOD_FILE_TYPE = 'EXPORT_WINS'
 FROZEN_DATE = now()
@@ -219,7 +212,8 @@ class CSVFileSerializerFieldTestCase(SimpleTestCase):
 
     def test_metadata_field(self):
         f = MetadataField(metadata_keys=['a', 'b'])
-        self.assertEqual({'a': 1, 'b': 2}, f.get_value({'a': 1, 'b': 2, 'c': 3}))
+        self.assertEqual({'a': 1, 'b': 2}, f.get_value(
+            {'a': 1, 'b': 2, 'c': 3}))
 
     def test_metadata_field_subset_keys_in_dict(self):
         f = MetadataField(metadata_keys=['a', 'b'])
