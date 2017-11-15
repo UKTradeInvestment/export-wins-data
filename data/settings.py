@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "sso.apps.SsoConfig",
     "fixturedb.apps.FixtureDBConfig",
     "fdi.apps.InvestmentConfig",
+    "csvfiles",
 
     # drf
     "rest_framework",
@@ -221,6 +222,7 @@ OAUTH2_INTROSPECT_INTERVAL = int(
 AWS_KEY_CSV_READ_ONLY_ACCESS = os.getenv("AWS_KEY_CSV_READ_ONLY_ACCESS")
 AWS_SECRET_CSV_READ_ONLY_ACCESS = os.getenv("AWS_SECRET_CSV_READ_ONLY_ACCESS")
 AWS_REGION_CSV = os.getenv("AWS_REGION_CSV")
+AWS_BUCKET_CSV = os.getenv("AWS_BUCKET_CSV", "csv.exportwins.dev")
 
 BASEDIR = os.path.dirname(os.path.abspath(__file__))
 

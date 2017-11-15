@@ -30,6 +30,7 @@ urlpatterns = [
     url(r'^mi/', include('mi.urls', namespace="mi", app_name="mi")),
     url(r'^mi/fdi/', include('fdi.urls', namespace="fdi", app_name="fdi")),
     url(r"^csv/$", CSVView.as_view(), name="csv"),
+    url(r"^csv/", include('csvfiles.urls', namespace="csv", app_name="csv")),
     url(
         r"^admin/add-user/$",
         AddUserView.as_view(),
