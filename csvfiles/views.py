@@ -1,13 +1,15 @@
 from urllib.parse import urlparse
 
 import boto3
+import itertools
 
 from django.conf import settings
 from django.contrib.postgres.fields.jsonb import KeyTextTransform
 from django.db import models
-from django.db.models import Func, F
+from django.db.models import Func, F, Max
 from django.utils.timezone import now
 from django.utils.functional import cached_property
+from django.views.generic import TemplateView
 
 from rest_framework import status
 from rest_framework.exceptions import NotFound
@@ -23,7 +25,7 @@ from alice.authenticators import (
 )
 
 from csvfiles.constants import FILE_TYPES
-from csvfiles.models import File as CSVFile
+from csvfiles.models import File as CSVFile, File
 from csvfiles.serializers import (
     FileSerializer,
     ExportWinsFileSerializer,
@@ -408,3 +410,46 @@ class AllCSVFilesView(CSVBaseView):
             ]
 
         return Response(results, status=status.HTTP_200_OK)
+
+
+class PingdomCustomCheckView(TemplateView):
+    """
+    A view which will respond with a NOT OK status if
+    the latest csv uploaded by the data science team is
+    > 25 hours.
+    """
+
+    template_name = 'pingdom.xml'
+    content_type = 'text/xml; charset=utf-8'
+    error_after_seconds = 25 * 60 * 60  # 25 hours (25 * 60 mins * 60 seconds)
+
+    file_types_filter = [x for x in FILE_TYPES.subsets if x != 'EW']
+
+    @cached_property
+    def _get_filtered_filetypes(self):
+        """
+        return file_type ids that are delivered by the data science team
+        """
+        return [y[0] for y in itertools.chain.from_iterable(getattr(FILE_TYPES, x) for x in self.file_types_filter)]
+
+    def get_context_data(self, **kwargs):
+        files_type_and_created = File.objects.filter(
+            file_type__in=self._get_filtered_filetypes
+        ).aggregate(
+            Max('created')
+        )
+        status = 'NOT OK'
+        latest_iso = None
+        if files_type_and_created:
+            latest = files_type_and_created['created__max']
+            if latest:
+                latest_iso = latest.isoformat()
+                delta = now() - latest
+                if delta.total_seconds() < self.error_after_seconds:
+                    status = 'OK'
+
+        return {
+            'status': status,
+            'response_time': 1,
+            'last_uploaded': latest_iso
+        }

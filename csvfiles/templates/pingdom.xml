@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pingdom_http_custom_check>
+    <status>{{ status }}</status>
+    <response_time>{{ response_time }}</response_time>
+    <last_uploaded>{{ last_uploaded }}</last_uploaded>
+</pingdom_http_custom_check>
