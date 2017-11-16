@@ -4,7 +4,7 @@ from django.test import TestCase, Client, override_settings, RequestFactory, Sim
 from django.core.urlresolvers import reverse
 
 from ..authenticators import AlicePermission
-from ..middleware import SignatureRejectionMiddleware
+from ..middleware import SignatureRejectionMiddleware, alice_exempt
 from .client import AliceClient
 
 
@@ -56,12 +56,16 @@ class SignatureRejectionMiddlewareTestCase(BaseSignatureTestCase):
     @override_settings(UI_SECRET=AliceClient.SECRET)
     def test_process_request_pass(self):
         self.request.META['HTTP_X_SIGNATURE'] = self.sig
-        self.assertEqual(self.middleware.process_request(self.request), None)
+        self.assertEqual(self.middleware.process_view(self.request, lambda: True, (), {}), None)
 
     def test_process_request_fail(self):
-        response = self.middleware.process_request(self.request)
+        response = self.middleware.process_view(self.request, lambda: True, (), {})
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.content, b'PFO')
+
+    def test_process_request_not_fail_if_exempt(self):
+        response = self.middleware.process_view(self.request, alice_exempt(lambda: True), (), {})
+        self.assertEqual(response, None)
 
 
 class AlicePermissionTestCase(BaseSignatureTestCase):

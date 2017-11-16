@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.postgres.fields.jsonb import KeyTextTransform
 from django.db import models
 from django.db.models import Func, F, Max
+from django.utils.decorators import method_decorator
 from django.utils.timezone import now
 from django.utils.functional import cached_property
 from django.views.generic import TemplateView
@@ -23,6 +24,7 @@ from alice.authenticators import (
     IsMIUser,
     IsDataTeamServer
 )
+from alice.middleware import alice_exempt
 
 from csvfiles.constants import FILE_TYPES
 from csvfiles.models import File as CSVFile, File
@@ -412,6 +414,7 @@ class AllCSVFilesView(CSVBaseView):
         return Response(results, status=status.HTTP_200_OK)
 
 
+@method_decorator(alice_exempt, name='dispatch')
 class PingdomCustomCheckView(TemplateView):
     """
     A view which will respond with a NOT OK status if
