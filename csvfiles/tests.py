@@ -1,3 +1,4 @@
+import datetime
 from django.contrib.auth.models import AnonymousUser
 from django.test import TestCase, override_settings, SimpleTestCase, tag, RequestFactory
 from django.urls import reverse
@@ -5,6 +6,8 @@ from django.conf import settings
 
 from django.utils.timezone import now
 from extended_choices.helpers import ChoiceEntry
+from factory.django import DjangoModelFactory
+from factory.fuzzy import FuzzyChoice
 from freezegun import freeze_time
 from rest_framework.exceptions import ValidationError
 
@@ -12,10 +15,18 @@ from alice.tests.client import AliceClient
 from csvfiles.constants import FILE_TYPES
 from csvfiles.serializers import FileTypeChoiceField, MetadataField, FileSerializer
 from csvfiles.validators import is_valid_s3_url
-from csvfiles.views import CSVBaseView, CSVFileView
+from csvfiles.views import CSVBaseView, CSVFileView, PingdomCustomCheckView
 from users.factories import UserFactory
 
 from users.models import User
+
+
+class FileFactory(DjangoModelFactory):
+
+    file_type = FuzzyChoice([x[0] for x in FILE_TYPES])
+
+    class Meta:
+        model = 'csvfiles.File'
 
 
 class CSVUploadPermissionTestCase(TestCase):
@@ -244,3 +255,49 @@ class CSVFileSerializerTestCase(TestCase):
             'file_type': 1,
             'metadata': {}
         }, dict(fs.validated_data))
+
+
+@tag('csvfiles')
+@freeze_time(FROZEN_DATE)
+class PingdomViewTestCase(TestCase):
+
+    expected_keys = {'status', 'response_time', 'last_uploaded'}
+
+    def assertKeys(self, data):
+        self.assertEqual(set(data.keys()), self.expected_keys)
+
+    def test_files_notok_because_none_ever_uploaded(self):
+        v = PingdomCustomCheckView()
+        data = v.get_context_data()
+        self.assertKeys(data)
+        self.assertEqual('NOT OK', data['status'])
+
+    def test_files_ok(self):
+        for ft_id, ft_const in FILE_TYPES:
+            with self.subTest(file_type=ft_id, constant=ft_const):
+                f = FileFactory(created=now(), file_type=ft_id)
+                v = PingdomCustomCheckView()
+                data = v.get_context_data()
+                self.assertKeys(data)
+                expected_status = 'OK' if ft_id in v._get_filtered_filetypes else 'NOT OK'
+                self.assertEqual(expected_status, data['status'], msg=data)
+                # it's a subTest so clean up after ourselves
+                f.delete()
+
+    def test_files_notok_too_old(self):
+        v = PingdomCustomCheckView()
+        yesterday_time = now() - datetime.timedelta(seconds=v.error_after_seconds + 1)
+        f = FileFactory(file_type=2)
+        f.created = yesterday_time
+        f.save()
+        data = v.get_context_data()
+        self.assertKeys(data)
+        self.assertEqual('NOT OK', data['status'], msg=data)
+
+    def test_files_notok_wrong_type_uploaded(self):
+        v = PingdomCustomCheckView()
+        f = FileFactory(file_type=1)
+        f.save()
+        data = v.get_context_data()
+        self.assertKeys(data)
+        self.assertEqual('NOT OK', data['status'], msg=data)

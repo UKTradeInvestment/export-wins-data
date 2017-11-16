@@ -10,8 +10,8 @@ from csvfiles.views import (
     GenerateOTUForCSVFileView,
     AllCSVFilesView,
     CSVFileWithRegionView,
-    CSVFileWithSectorView
-)
+    CSVFileWithSectorView,
+    PingdomCustomCheckView)
 
 UPLOAD_VIEW_OVERRIDE = defaultdict(lambda: DataTeamCSVFileView)
 UPLOAD_VIEW_OVERRIDE[FILE_TYPES.EXPORT_WINS.constant] = ExportWinsCSVFileView
@@ -43,6 +43,7 @@ urlpatterns.extend(
     [
         url(r"^all_files/$", AllCSVFilesView.as_view(), name="csv_list"),
         url(r"^generate_otu/(?P<file_id>\d+)/$", GenerateOTUForCSVFileView.as_view(),
-            name="csv_generate_otu")
+            name="csv_generate_otu"),
+        url(r"^pingdom/$", PingdomCustomCheckView.as_view(), name="pingdom")
     ]
 )
