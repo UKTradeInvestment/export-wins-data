@@ -59,7 +59,7 @@ class Command(BaseCommand):
                 live_i.foreign_equity_investment = pending_i.data[
                     "foreign_equity_investment"]
             if pending_i.data["client_relationship_manager_team"]:
-                live_i.company_country = pending_i.data["client_relationship_manager_team"]
+                live_i.client_relationship_manager_team = pending_i.data["client_relationship_manager_team"]['name']
             if pending_i.data["investor_company_country"]:
                 live_i.company_country_id = pending_i.data["investor_company_country"]["id"]
             live_i.save()
