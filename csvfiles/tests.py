@@ -171,7 +171,7 @@ class CSVFileViewTestCase(AuthenticatedRequestFactoryMixin, TestCase):
         self.assertEqual({
             'file_type': FILE_TYPES[GOOD_FILE_TYPE].constant,
             'name': FILE_TYPES[GOOD_FILE_TYPE].display,
-            'report_date': FROZEN_DATE
+            'report_start_date': FROZEN_DATE
 
         }, view.default_data())
 

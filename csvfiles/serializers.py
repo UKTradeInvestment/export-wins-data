@@ -57,7 +57,8 @@ class FileSerializer(ModelSerializer):
         is_valid_s3_url
     ], required=True, source='s3_path')
 
-    report_date = DateTimeField(allow_null=True, required=False)
+    report_start_date = DateTimeField(allow_null=True, required=False)
+    report_end_date = DateTimeField(allow_null=True, required=False)
     metadata = MetadataField(required=False, allow_null=True)
 
     def get_file_type_display(self, obj):
@@ -80,7 +81,8 @@ class FileSerializer(ModelSerializer):
             'created',
             'is_active',
             'metadata',
-            'report_date',
+            'report_start_date',
+            'report_end_date',
         ]
 
         validators = [

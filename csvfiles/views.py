@@ -72,9 +72,9 @@ class CSVBaseView(APIView):
             file_type = self.file_type_choice
 
         try:
-            return CSVFile.objects.filter(report_date__gte=self.current_fy.start,
+            return CSVFile.objects.filter(report_start_date__gte=self.current_fy.start,
                                           file_type=file_type.value,
-                                          is_active=True).latest('report_date')
+                                          is_active=True).latest('report_start_date')
         except CSVFile.DoesNotExist:
             return None
 
@@ -88,8 +88,8 @@ class CSVBaseView(APIView):
             try:
                 return CSVFile.objects.filter(
                     file_type=file_type.value, is_active=True
-                ).annotate(year=Func(F('report_date'), function='get_financial_year')
-                           ).order_by('year', '-report_date').distinct('year')
+                ).annotate(year=Func(F('report_start_date'), function='get_financial_year')
+                           ).order_by('year', '-report_start_date').distinct('year')
             except CSVFile.DoesNotExist:
                 return None
 
@@ -97,9 +97,9 @@ class CSVBaseView(APIView):
         if file_type.constant in ('FDI_MONTHLY', 'SERVICE_DELIVERIES_MONTHLY'):
             try:
                 return CSVFile.objects.filter(
-                    report_date__gte=fy_start_date, file_type=file_type.value, is_active=True
-                ).annotate(month=Month('report_date')
-                           ).order_by('month', '-report_date').distinct('month')
+                    report_start_date__gte=fy_start_date, file_type=file_type.value, is_active=True
+                ).annotate(month=Month('report_start_date')
+                           ).order_by('month', '-report_start_date').distinct('month')
             except CSVFile.DoesNotExist:
                 return None
 
@@ -113,7 +113,7 @@ class CSVBaseView(APIView):
                 return CSVFile.objects.filter(
                     file_type=file_type.value, is_active=True
                 ).annotate(region=KeyTextTransform('region', 'metadata')
-                           ).order_by('region', '-report_date').distinct('region')
+                           ).order_by('region', '-report_start_date').distinct('region')
             except CSVFile.DoesNotExist:
                 return None
 
@@ -122,7 +122,7 @@ class CSVBaseView(APIView):
                 return CSVFile.objects.filter(
                     file_type=file_type.value, is_active=True
                 ).annotate(sector=KeyTextTransform('sector', 'metadata')
-                           ).order_by('sector', '-report_date').distinct('sector')
+                           ).order_by('sector', '-report_start_date').distinct('sector')
             except CSVFile.DoesNotExist:
                 return None
 
@@ -154,7 +154,8 @@ class CSVFileView(CSVBaseView):
         return {
             'file_type': self.file_type,
             'name': self.file_type_choice.display,
-            'report_date': now()
+            'report_start_date': now(),
+            'report_end_date': now(),
         }
 
     def get_merged_data(self):
@@ -302,7 +303,8 @@ class AllCSVFilesView(CSVBaseView):
                 results['export']['current'] = {
                     'id': current_ew.id,
                     'name': current_ew.name,
-                    'report_date': current_ew.report_date,
+                    'report_start_date': current_ew.report_start_date,
+                    'report_end_date': current_ew.report_end_date,
                     'created': current_ew.created,
                     'financial_year': current_ew.year,
                 }
@@ -313,7 +315,8 @@ class AllCSVFilesView(CSVBaseView):
                 {
                     'id': x.id,
                     'name': x.name,
-                    'report_date': x.report_date,
+                    'report_start_date': x.report_start_date,
+                    'report_end_date': x.report_end_date,
                     'created': x.created,
                     'financial_year': x.year,
                 } for x in prev_ew_files
@@ -327,7 +330,8 @@ class AllCSVFilesView(CSVBaseView):
                 {
                     'id': x.id,
                     'name': x.name,
-                    'report_date': x.report_date,
+                    'report_start_date': x.report_start_date,
+                    'report_end_date': x.report_end_date,
                     'created': x.created,
                 } for x in fdi_monthly_files
             ]
@@ -336,7 +340,8 @@ class AllCSVFilesView(CSVBaseView):
             results['fdi']['latest'] = {
                 'id': fdi_daily_file.id,
                 'name': fdi_daily_file.name,
-                'report_date': fdi_daily_file.report_date,
+                'report_start_date': fdi_daily_file.report_start_date,
+                'report_end_date': fdi_daily_file.report_end_date,
                 'created': fdi_daily_file.created,
             }
 
@@ -348,7 +353,8 @@ class AllCSVFilesView(CSVBaseView):
                 {
                     'id': x.id,
                     'name': x.name,
-                    'report_date': x.report_date,
+                    'report_start_date': x.report_start_date,
+                    'report_end_date': x.report_end_date,
                     'created': x.created,
                 } for x in sdi_monthly_files
             ]
@@ -357,7 +363,8 @@ class AllCSVFilesView(CSVBaseView):
             results['sdi']['latest'] = {
                 'id': sdi_daily_file.id,
                 'name': sdi_daily_file.name,
-                'report_date': sdi_daily_file.report_date,
+                'report_start_date': sdi_daily_file.report_start_date,
+                'report_end_date': sdi_daily_file.report_end_date,
                 'created': sdi_daily_file.created,
             }
 
@@ -369,7 +376,8 @@ class AllCSVFilesView(CSVBaseView):
                 {
                     'id': x.id,
                     'name': x.name,
-                    'report_date': x.report_date,
+                    'report_start_date': x.report_start_date,
+                    'report_end_date': x.report_end_date,
                     'created': x.created,
                     'region': x.region,
                 } for x in cont_region_files
@@ -380,7 +388,8 @@ class AllCSVFilesView(CSVBaseView):
                 {
                     'id': x.id,
                     'name': x.name,
-                    'report_date': x.report_date,
+                    'report_start_date': x.report_start_date,
+                    'report_end_date': x.report_end_date,
                     'created': x.created,
                     'sector': x.sector,
                 } for x in cont_sector_files
@@ -394,7 +403,8 @@ class AllCSVFilesView(CSVBaseView):
                 {
                     'id': x.id,
                     'name': x.name,
-                    'report_date': x.report_date,
+                    'report_start_date': x.report_start_date,
+                    'report_end_date': x.report_end_date,
                     'created': x.created,
                     'region': x.region,
                 } for x in comp_region_files
@@ -405,7 +415,8 @@ class AllCSVFilesView(CSVBaseView):
                 {
                     'id': x.id,
                     'name': x.name,
-                    'report_date': x.report_date,
+                    'report_start_date': x.report_start_date,
+                    'report_end_date': x.report_end_date,
                     'created': x.created,
                     'sector': x.sector,
                 } for x in comp_sector_files
