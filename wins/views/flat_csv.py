@@ -8,9 +8,11 @@ import mimetypes
 
 from django.conf import settings
 from django.db import connection
+from django.db.models import Q
 from django.http import HttpResponse, StreamingHttpResponse
 from django.utils.decorators import method_decorator
 from django.utils.timezone import now
+from django.utils.functional import cached_property
 from django.views.decorators.gzip import gzip_page
 
 from rest_framework import permissions
@@ -213,7 +215,8 @@ class CSVView(APIView):
         email_sent = bool(notifications or win['complete'])
         win_data['customer email sent'] = self._val_to_str(email_sent)
         if notifications:
-            win_data['customer email date'] = str(notifications[0].created.date())
+            win_data['customer email date'] = str(
+                notifications[0].created.date())
         elif win['complete']:
             win_data['customer email date'] = '[manual]'
         else:
@@ -295,6 +298,7 @@ class Echo(object):
     """An object that implements just the write method of the file-like
     interface.
     """
+
     def write(self, value):
         """Write the value by returning it, instead of storing in a buffer."""
         return value
@@ -342,4 +346,284 @@ class CompleteWinsCSVView(CSVView):
             content_type=mimetypes.types_map['.csv'],
         )
         resp['Content-Disposition'] = f'attachent; filename="wins_complete_{now().isoformat()}.csv"'
+        return resp
+
+
+@method_decorator(gzip_page, name='dispatch')
+class CurrentFinancialYearWins(CompleteWinsCSVView):
+
+    @cached_property
+    def current_fy_start(self):
+        today = now()
+        if today.month < 4:
+            return datetime.combine(
+                datetime(today.year - 1, 4, 1),
+                datetime.min.time()
+            ).replace(tzinfo=UTC)
+        else:
+            return datetime.combine(
+                datetime(today.year, 4, 1),
+                datetime.min.time()
+            ).replace(tzinfo=UTC)
+
+    def _extract_breakdowns(self, win):
+        """ Return list of 10 tuples, 5 for export, 5 for non-export """
+
+        breakdowns = self.table_maps['breakdowns'][win.id]
+        retval = []
+        for db_val, name in BREAKDOWN_TYPES:
+
+            # get breakdowns of given type sorted by year
+            type_breakdowns = [b for b in breakdowns if b.type == db_val]
+            type_breakdowns = sorted(type_breakdowns, key=attrgetter('year'))
+
+            # we currently solicit 5 years worth of breakdowns, but historic
+            # data may have no input for some years
+            for index in range(5):
+                try:
+                    breakdown = "{0}: £{1:,}".format(
+                        type_breakdowns[index].year,
+                        type_breakdowns[index].value,
+                    )
+                except IndexError:
+                    breakdown = None
+
+                retval.append((
+                    "{0} breakdown {1}".format(name, index + 1),
+                    breakdown,
+                ))
+
+        return retval
+
+    def _confirmation(self, win):
+        """ Add fields for confirmation """
+
+        if win.id in self.table_maps['confirmations']:
+            confirmation = self.table_maps['confirmations'][win.id][0]
+        else:
+            confirmation = None
+
+        values = [
+            ('customer response recieved',
+             self._val_to_str(bool(confirmation)))
+        ]
+        for field_name in self.customerresponse_fields:
+            if field_name in ['win']:
+                continue
+
+            model_field = self._get_customerresponse_field(field_name)
+            if confirmation:
+                if model_field.choices:
+                    display_fn = getattr(
+                        confirmation, "get_{0}_display".format(field_name)
+                    )
+                    value = display_fn()
+                else:
+                    value = getattr(confirmation, field_name)
+            else:
+                value = ''
+
+            model_field_name = model_field.verbose_name or model_field.name
+            if model_field_name == 'created':
+                csv_field_name = 'date response received'
+                if value:
+                    value = value.date()  # just want date
+            else:
+                csv_field_name = model_field_name
+
+            values.append((csv_field_name, self._val_to_str(value)))
+        return values
+
+    def _get_win_data(self, win):
+        """ Take Win dict, return ordered dict of {name -> value} """
+
+        # want consistent ordering so CSVs are always same format
+        win_data = collections.OrderedDict()
+
+        # local fields
+        for field_name in self.win_fields:
+            if field_name in self.IGNORE_FIELDS:
+                continue
+
+            model_field = self._get_win_field(field_name)
+            if field_name == 'user':
+                value = str(self.users_map[win.user_id])
+            elif field_name == 'created':
+                value = win.created.date()  # don't care about time
+            elif field_name == 'cdms_reference':
+                # numeric cdms reference numbers should be prefixed with
+                # an apostrophe to make excel interpret them as text
+                value = win.cdms_reference
+                try:
+                    int(value)
+                except ValueError:
+                    pass
+                else:
+                    if value.startswith('0'):
+                        value = "'" + value
+            elif field_name == 'id':
+                value = win.id
+            elif field_name == 'company_name':
+                value = win.company_name
+            elif field_name == 'customer_name':
+                value = win.customer_name
+            elif field_name == 'customer_job_title':
+                value = win.customer_job_title
+            elif field_name == 'customer_email_address':
+                value = win.customer_email_address
+            elif field_name == 'customer_location':
+                value = win.customer_location
+            elif field_name == 'description':
+                value = win.description
+            elif field_name == 'type':
+                value = win.type
+            elif field_name == 'date':
+                value = win.date
+            elif field_name == 'country':
+                value = win.country
+            elif field_name == 'total_expected_export_value':
+                value = win.total_expected_export_value
+            elif field_name == 'goods_vs_services':
+                value = win.goods_vs_services
+            elif field_name == 'total_expected_non_export_value':
+                value = win.total_expected_non_export_value
+            elif field_name == 'sector':
+                value = win.sector
+            elif field_name == 'is_prosperity_fund_related':
+                value = win.is_prosperity_fund_related
+            elif field_name == 'hvo_programme':
+                value = win.hvo_programme
+            elif field_name == 'has_hvo_specialist_involvement':
+                value = win.has_hvo_specialist_involvement
+            elif field_name == 'is_e_exported':
+                value = win.is_e_exported
+            elif field_name == 'type_of_support_1':
+                value = win.type_of_support_1
+            elif field_name == 'type_of_support_2':
+                value = win.type_of_support_2
+            elif field_name == 'type_of_support_3':
+                value = win.type_of_support_3
+            elif field_name == 'associated_programme_1':
+                value = win.associated_programme_1
+            elif field_name == 'associated_programme_2':
+                value = win.associated_programme_2
+            elif field_name == 'associated_programme_3':
+                value = win.associated_programme_3
+            elif field_name == 'is_personally_confirmed':
+                value = win.is_personally_confirmed
+            elif field_name == 'is_line_manager_confirmed':
+                value = win.is_line_manager_confirmed
+            elif field_name == 'lead_officer_name':
+                value = win.lead_officer_name
+            elif field_name == 'line_anager_name':
+                value = win.line_anager_name
+            elif field_name == 'team_type':
+                value = win.team_type
+            elif field_name == 'hq_team':
+                value = win.hq_team
+            elif field_name == 'location':
+                value = win.location
+            elif field_name == 'business_type':
+                value = win.business_type
+            elif field_name == 'name_of_customer':
+                value = win.name_of_customer
+            elif field_name == 'name_of_export':
+                value = win.name_of_export
+            elif field_name == 'lead_officer_email_address':
+                value = win.lead_officer_email_address
+            elif field_name == 'other_official_email_address':
+                value = win.other_official_email_address
+            elif field_name == 'complete':
+                value = win.complete
+            elif field_name == 'updated':
+                value = win.updated
+            elif field_name == 'is_active':
+                value = win.is_active
+            elif field_name == 'hvc':
+                value = win.hvc
+            elif field_name == 'audit':
+                value = win.audit
+            elif field_name == 'total_expected_odi_value':
+                value = win.total_expected_odi_value
+            elif field_name == 'export_experience':
+                value = win.export_experience
+            elif field_name == 'line_manager_name':
+                value = win.line_manager_name
+            else:
+                print(field_name)
+                #value = win[field_name]
+            # if it is a choicefield, do optimized lookup of the display value
+            if model_field.choices and value:
+                try:
+                    value = self._choices_dict(model_field.choices)[value]
+                except KeyError as e:
+                    if model_field.attname == 'hvc':
+                        value = value
+                    else:
+                        raise e
+            else:
+                comma_fields = [
+                    'total_expected_export_value',
+                    'total_expected_non_export_value',
+                    'total_expected_odi_value',
+                ]
+                if field_name in comma_fields:
+                    value = "£{:,}".format(value)
+
+            model_field_name = model_field.verbose_name or model_field.name
+            win_data[model_field_name] = self._val_to_str(value)
+
+        # remote fields
+        win_data['contributing advisors/team'] = (
+            ', '.join(map(str, self.table_maps['advisors'][win.id]))
+        )
+
+        # get customer email sent & date
+        notifications = self.table_maps['notifications'][win.id]
+        # old Wins do not have notifications
+        email_sent = bool(notifications or win.complete)
+        win_data['customer email sent'] = self._val_to_str(email_sent)
+        if notifications:
+            win_data['customer email date'] = str(
+                notifications[0].created.date())
+        elif win.complete:
+            win_data['customer email date'] = '[manual]'
+        else:
+            win_data['customer email date'] = ''
+
+        win_data.update(self._extract_breakdowns(win))
+        win_data.update(self._confirmation(win))
+
+        return win_data
+
+    def _make_flat_wins_csv(self):
+        """ Make CSV of all Wins, with non-local data flattened """
+        # remove all rows where:
+        # 1. total expected export value = 0 and total non export value = 0 and total odi value = 0
+        # 2. date created = today (not necessary if this task runs before end of the day for next day download)
+        # 3. customer email sent is False / No
+        # 4. Customer response received is not from this financial year
+        wins = Win.objects.raw("select * from wins_completed_wins_fy")
+
+        for win in wins:
+            yield self._get_win_data(win)
+
+    def _make_flat_wins_csv_stream(self, win_data_generator):
+        stringio = Echo()
+        yield stringio.write(u'\ufeff')
+        first = next(win_data_generator)
+        csv_writer = csv.DictWriter(stringio, first.keys())
+        header = dict(zip(first.keys(), first.keys()))
+        yield csv_writer.writerow(header)
+        yield csv_writer.writerow(first)
+
+        for win_data in win_data_generator:
+            yield csv_writer.writerow(win_data)
+
+    def get(self, request, format=None):
+        resp = StreamingHttpResponse(
+            self._make_flat_wins_csv_stream(self._make_flat_wins_csv()),
+            content_type=mimetypes.types_map['.csv'],
+        )
+        resp['Content-Disposition'] = f'attachent; filename="wins_current_fy_{now().isoformat()}.csv"'
         return resp

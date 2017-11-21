@@ -10,7 +10,8 @@ from wins.views import (
     WinViewSet, BreakdownViewSet, AdvisorViewSet, ConfirmationViewSet,
     LimitedWinViewSet, CSVView, DetailsWinViewSet, AddUserView,
     NewPasswordView, SendCustomerEmailView, ChangeCustomerEmailView,
-    SoftDeleteWinView, SendAdminEmailView, CompleteWinsCSVView
+    SoftDeleteWinView, SendAdminEmailView, CompleteWinsCSVView,
+    CurrentFinancialYearWins
 )
 
 WINS_CSV_SECRET_PATH = os.environ.get('WINS_CSV_SECRET_PATH')
@@ -77,4 +78,7 @@ if settings.API_DEBUG or WINS_CSV_SECRET_PATH:
     secret_path = '/' + WINS_CSV_SECRET_PATH if WINS_CSV_SECRET_PATH else ''
     urlpatterns.append(
         url(fr"^csv{secret_path}/wins/$", CompleteWinsCSVView.as_view(), name="csv_wins"),
+    )
+    urlpatterns.append(
+        url(fr"^csv{secret_path}/wins_fy/$", CurrentFinancialYearWins.as_view(), name="csv_wins_fy"),
     )
