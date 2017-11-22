@@ -13,20 +13,24 @@ class File(models.Model):
     s3_path = models.CharField(max_length=255)
     user = models.ForeignKey(User, null=True)
     file_type = models.PositiveSmallIntegerField(choices=FILE_TYPES.choices)
-    report_date = models.DateTimeField(default=now)
+    report_start_date = models.DateTimeField(default=now)
+    report_end_date = models.DateTimeField(null=True)
     created = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
     metadata = JSONField(encoder=DjangoJSONEncoder, default={})
 
     def save(self, **kwargs):
-        if not self.report_date:
-            self.report_date = self.created
+        if not self.report_start_date:
+            self.report_start_date = self.created
+        if not self.report_end_date:
+            self.report_end_date = self.report_start_date
 
         super(File, self).save(**kwargs)
 
     def __str__(self):
-        return 'file {} with path {} on {}'.format(
+        return 'file {} with path {} from {} to {}'.format(
             self.name,
             self.s3_path,
-            self.report_date
+            self.report_start_date,
+            self.report_end_date
         )
