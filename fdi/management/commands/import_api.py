@@ -8,14 +8,15 @@ from django.db import transaction
 from django.core.management import BaseCommand
 
 from fdi.models import ImportLog, InvestmentLoad
+from dateutil.parser import parse
 
 
 def valid_date(s):
-    """ Validates input date format to be YYYY-MM-DDTHH:Mi:SS, as API strictly expects it like that"""
+    """ Validates input date format to be YYYY-MM-DDTHH:Mi:SSZ, as API strictly expects it like that"""
     try:
-        return datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ")
+        return parse(s)
     except ValueError:
-        msg = "Not a valid date: '{0}'. Expected format is YYYY-MM-DDTHH:Mi:SS".format(
+        msg = "Not a valid date: '{0}'. Expected format is YYYY-MM-DDTHH:Mi:SSZ".format(
             s)
         raise argparse.ArgumentTypeError(msg)
 
@@ -32,15 +33,16 @@ class Command(BaseCommand):
         CLIENT_SECRET = settings.DH_CLIENT_SECRET
         TOKEN_URL = settings.DH_TOKEN_URL
         INVEST_URL = settings.DH_INVEST_URL
-        response = requests.post(TOKEN_URL, verify=False,
-                                 data={'grant_type': 'client_credentials'}, auth=(CLIENT_ID, CLIENT_SECRET))
+        response = requests.post(
+            TOKEN_URL,
+            data={'grant_type': 'client_credentials'},
+            auth=(CLIENT_ID, CLIENT_SECRET))
 
         token = response.json()['access_token']
 
         response = requests.get(
             INVEST_URL,
             params={'time': startdate},
-            verify=False,
             headers={'Authorization': f'bearer {token}'}
         )
         return response
