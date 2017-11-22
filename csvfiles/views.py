@@ -74,7 +74,7 @@ class CSVBaseView(APIView):
         try:
             return CSVFile.objects.filter(report_start_date__gte=self.current_fy.start,
                                           file_type=file_type.value,
-                                          is_active=True).latest('report_start_date')
+                                          is_active=True).latest('report_end_date')
         except CSVFile.DoesNotExist:
             return None
 
@@ -88,8 +88,8 @@ class CSVBaseView(APIView):
             try:
                 return CSVFile.objects.filter(
                     file_type=file_type.value, is_active=True
-                ).annotate(year=Func(F('report_start_date'), function='get_financial_year')
-                           ).order_by('year', '-report_start_date').distinct('year')
+                ).annotate(year=Func(F('report_end_date'), function='get_financial_year')
+                           ).order_by('year', '-report_end_date').distinct('year')
             except CSVFile.DoesNotExist:
                 return None
 
@@ -113,7 +113,7 @@ class CSVBaseView(APIView):
                 return CSVFile.objects.filter(
                     file_type=file_type.value, is_active=True
                 ).annotate(region=KeyTextTransform('region', 'metadata')
-                           ).order_by('region', '-report_start_date').distinct('region')
+                           ).order_by('region', '-report_end_date').distinct('region')
             except CSVFile.DoesNotExist:
                 return None
 
@@ -122,7 +122,7 @@ class CSVBaseView(APIView):
                 return CSVFile.objects.filter(
                     file_type=file_type.value, is_active=True
                 ).annotate(sector=KeyTextTransform('sector', 'metadata')
-                           ).order_by('sector', '-report_start_date').distinct('sector')
+                           ).order_by('sector', '-report_end_date').distinct('sector')
             except CSVFile.DoesNotExist:
                 return None
 
