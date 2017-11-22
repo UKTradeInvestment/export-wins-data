@@ -85,8 +85,12 @@ class BaseSectorMIView(BaseWinMIView):
 
     def _get_group_wins(self, group):
         """ HVC wins of the HVC Group, for given `FinancialYear` """
+        campaigns_for_year = self._get_group_campaigns_for_year(group)
+        if not campaigns_for_year:
+            return self._hvc_wins().none()
         group_hvcs = [hvc[:4]
-                      for hvc in self._get_group_campaigns_for_year(group)]
+                      for hvc in campaigns_for_year]
+
         filter = reduce(
             operator.or_, [Q(hvc__startswith=hvc) for hvc in group_hvcs])
         return self._hvc_wins().filter(filter)
