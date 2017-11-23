@@ -596,21 +596,22 @@ class BaseWinMIView(BaseExportMIView):
 
         # make a lookup to get names efficiently
         sector_id_to_name = {s.id: s.name for s in Sector.objects.all()}
-        top_value = int(non_hvc_wins[0]['total_value']
-                        ) if non_hvc_wins else None
-        return [
-            {
+        top_value = int(non_hvc_wins[0].get('total_value', 0)
+                        ) if non_hvc_wins else 0
+        data = []
+        for w in non_hvc_wins:
+            data.append({
                 'region': DjangoCountry(w['country']).name,
                 'sector': sector_id_to_name[w['sector']],
                 'totalValue': w['total_value'],
                 'totalWins': w['total_wins'],
-                'percentComplete': int(percentage(w['total_value'], top_value)),
-                'averageWinValue': int(w['total_value'] / w['total_wins']),
-                'averageWinPercent': int(percentage((w['total_value'] / w['total_wins']), top_value)),
-            }
-            for w in non_hvc_wins
-        ]
-
+                'percentComplete': int(percentage(w.get('total_value', 0), top_value) or 0),
+                'averageWinValue': int(w.get('total_value', 0) / w.get('total_wins', 0)),
+                'averageWinPercent': int(
+                    percentage((w.get('total_value', 0) / w.get('total_wins', 0)), top_value) or 0
+                ),
+            })
+        return data
     def _win_table_wins(self, hvc_wins, non_hvc_wins=None):
         all_hvcs = {"{}{}".format(x["campaign_id"], x["financial_year"]): x["name"]
                     for x in HVC.objects.all().values("campaign_id", "financial_year", "name")}
