@@ -35,7 +35,7 @@ class Command(BaseCommand):
 
         s3 = boto3.client(
             's3',
-            aws_access_key_id=settings.AWS_KEY_CSV_UPLOAD_ACCESS + '1',
+            aws_access_key_id=settings.AWS_KEY_CSV_UPLOAD_ACCESS,
             aws_secret_access_key=settings.AWS_SECRET_CSV_UPLOAD_ACCESS,
             region_name=settings.AWS_REGION_CSV
         )
