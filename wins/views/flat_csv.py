@@ -352,6 +352,8 @@ class CompleteWinsCSVView(CSVView):
 @method_decorator(gzip_page, name='dispatch')
 class CurrentFinancialYearWins(CompleteWinsCSVView):
 
+    permission_classes = (permissions.IsAdminUser,)
+
     @cached_property
     def current_fy_start(self):
         today = now()

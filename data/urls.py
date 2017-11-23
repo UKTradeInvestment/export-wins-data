@@ -31,6 +31,7 @@ urlpatterns = [
     url(r'^mi/', include('mi.urls', namespace="mi", app_name="mi")),
     url(r'^mi/fdi/', include('fdi.urls', namespace="fdi", app_name="fdi")),
     url(r"^csv/$", CSVView.as_view(), name="csv"),
+    url(r"^csv/auto/$", CurrentFinancialYearWins.as_view(), name="csv_auto"),
     url(r"^csv/", include('csvfiles.urls', namespace="csv", app_name="csv")),
     url(
         r"^admin/add-user/$",
@@ -78,7 +79,4 @@ if settings.API_DEBUG or WINS_CSV_SECRET_PATH:
     secret_path = '/' + WINS_CSV_SECRET_PATH if WINS_CSV_SECRET_PATH else ''
     urlpatterns.append(
         url(fr"^csv{secret_path}/wins/$", CompleteWinsCSVView.as_view(), name="csv_wins"),
-    )
-    urlpatterns.append(
-        url(fr"^csv{secret_path}/wins_fy/$", CurrentFinancialYearWins.as_view(), name="csv_wins_fy"),
     )
