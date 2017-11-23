@@ -1,4 +1,3 @@
-import csv
 import sys
 from tempfile import NamedTemporaryFile
 from django.conf import settings
