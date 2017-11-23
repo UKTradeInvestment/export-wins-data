@@ -8,7 +8,7 @@ from .admin import (
     SendCustomerEmailView,
     SoftDeleteWinView,
 )
-from .flat_csv import CSVView, CompleteWinsCSVView
+from .flat_csv import CSVView, CompleteWinsCSVView, CurrentFinancialYearWins
 from .model_views import (
     StandardPagination,
     WinViewSet,

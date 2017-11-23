@@ -10,7 +10,8 @@ from wins.views import (
     WinViewSet, BreakdownViewSet, AdvisorViewSet, ConfirmationViewSet,
     LimitedWinViewSet, CSVView, DetailsWinViewSet, AddUserView,
     NewPasswordView, SendCustomerEmailView, ChangeCustomerEmailView,
-    SoftDeleteWinView, SendAdminEmailView, CompleteWinsCSVView
+    SoftDeleteWinView, SendAdminEmailView, CompleteWinsCSVView,
+    CurrentFinancialYearWins
 )
 
 WINS_CSV_SECRET_PATH = os.environ.get('WINS_CSV_SECRET_PATH')
@@ -30,6 +31,7 @@ urlpatterns = [
     url(r'^mi/', include('mi.urls', namespace="mi", app_name="mi")),
     url(r'^mi/fdi/', include('fdi.urls', namespace="fdi", app_name="fdi")),
     url(r"^csv/$", CSVView.as_view(), name="csv"),
+    url(r"^csv/auto/$", CurrentFinancialYearWins.as_view(), name="csv_auto"),
     url(r"^csv/", include('csvfiles.urls', namespace="csv", app_name="csv")),
     url(
         r"^admin/add-user/$",
