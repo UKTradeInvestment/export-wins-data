@@ -1,10 +1,11 @@
+import json
+
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from django.utils.timezone import now
 
 from django_countries.fields import Country
 from factory.fuzzy import FuzzyInteger, FuzzyChoice, FuzzyDate
-from freezegun import freeze_time
 from jmespath import search as s
 from pytz import UTC
 
@@ -71,6 +72,10 @@ class GenericTopNonHvcWinsTestMixin:
 
                 # only 1 win so average win percent should be 100%
                 self.assertEqual(sector1['averageWinPercent'], 100)
+
+                # 1 win in count
+
+                self.assertEqual(json.loads(self._api_response_json)['count'], 1)
 
     def test_annotated_total_value_top_non_hvc(self):
         """
@@ -223,6 +228,34 @@ class GenericTopNonHvcWinsTestMixin:
                     data[0]['totalValue'],
                     data[1]['totalValue']
                 )
+
+    def test_non_hvc_load_more(self):
+        for year in self.fin_years:
+            with self.subTest(year=year):
+                self.url = self.get_url_for_year(year)
+                win_date = getattr(self, f'win_date_{year}')
+                # create 10 wins
+                wins = []
+                n_sectors = len(self._win_factory_function.sector_choices)
+                for i in range(n_sectors):
+                    wins.append(self._create_non_hvc_win(
+                        win_date=win_date,
+                        sector_id=self._win_factory_function.sector_choices[i],
+                        confirm=True,
+                        fin_year=year,
+                        export_value=1,
+                        country=self.TEST_COUNTRY_CODE
+                    ))
+
+                # will only return 5 sectors
+                self.assertEqual(sum([x['totalWins'] for x in self._api_response_data]), 5)
+                # there will be 10 in total
+                self.assertEqual(json.loads(self._api_response_json)['count'], n_sectors)
+
+                self.url = self.url + '&all=1'
+                self.assertEqual(sum([x['totalWins'] for x in self._api_response_data]), n_sectors)
+                # there will be 10 in total
+                self.assertEqual(json.loads(self._api_response_json)['count'], n_sectors)
 
 
 class GenericWinTableTestMixin:

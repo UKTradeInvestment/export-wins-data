@@ -12,7 +12,7 @@ from mi.models import (
     Target,
 )
 from mi.utils import sort_campaigns_by
-from mi.views.base_view import BaseWinMIView
+from mi.views.base_view import BaseWinMIView, TopNonHvcMixin
 
 
 def get_campaigns_from_group(g: HVCGroup, **kwargs):
@@ -136,16 +136,15 @@ class BaseSectorMIView(BaseWinMIView):
         }
 
 
-class TopNonHvcSectorCountryWinsView(BaseSectorMIView):
+class TopNonHvcSectorCountryWinsView(BaseSectorMIView, TopNonHvcMixin):
     """ Sector Team non-HVC Win data broken down by country """
 
-    def get(self, request, team_id):
-        team = self._get_team(team_id)
-        if not team:
-            return self._invalid('team not found')
-        non_hvc_wins_qs = self._get_non_hvc_wins(team)
-        results = self._top_non_hvc(non_hvc_wins_qs)
-        return self._success(results)
+    entity_name = 'team'
+
+    def __init__(self, **kwargs):
+        self.entity_getter_fn = self._get_team
+        self.non_hvc_qs_getter_fn = self._get_non_hvc_wins
+        super().__init__(**kwargs)
 
 
 class SectorTeamsListView(BaseSectorMIView):

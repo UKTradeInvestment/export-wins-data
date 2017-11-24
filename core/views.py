@@ -77,7 +77,7 @@ class BaseMIView(APIView):
     def _invalid(self, msg):
         raise ParseError({'error': msg})
 
-    def _success(self, results):
+    def _success(self, results, **extra):
         if self.fin_year is not None:
             response = {
                 "timestamp": now(),
@@ -85,7 +85,8 @@ class BaseMIView(APIView):
                     "id": self.fin_year.id,
                     "description": self.fin_year.description,
                 },
-                "results": results
+                "results": results,
+                **extra
             }
 
             if self.date_range is not None:

@@ -8,7 +8,7 @@ from django.db.models import Q
 from django_countries.fields import Country as DjangoCountry
 
 from mi.models import Country
-from mi.views.base_view import BaseWinMIView, BaseExportMIView
+from mi.views.base_view import BaseWinMIView, BaseExportMIView, TopNonHvcMixin
 from mi.utils import sort_campaigns_by
 
 
@@ -129,12 +129,15 @@ class CountryCampaignsView(BaseCountriesMIView):
         return self._success(results)
 
 
-class CountryTopNonHvcWinsView(BaseCountriesMIView):
+class CountryTopNonHvcWinsView(BaseCountriesMIView, TopNonHvcMixin):
 
-    def get(self, request, country_code):
-        non_hvc_wins_qs = self._get_non_hvc_wins(self.country)
-        results = self._top_non_hvc(non_hvc_wins_qs)
-        return self._success(results)
+    entity_name = 'country'
+    entity_id_kwarg = 'country_code'
+
+    def __init__(self, **kwargs):
+        self.entity_getter_fn = lambda x: self.country
+        self.non_hvc_qs_getter_fn = self._get_non_hvc_wins
+        super().__init__(**kwargs)
 
 
 class CountryWinTableView(BaseCountriesMIView):
