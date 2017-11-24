@@ -338,13 +338,16 @@ class CompleteWinsCSVView(CSVView):
         for win_data in win_data_generator:
             yield csv_writer.writerow(win_data)
 
-    def get(self, request, format=None):
+    def streaming_response(self, filename):
         resp = StreamingHttpResponse(
             self._make_flat_wins_csv_stream(self._make_flat_wins_csv()),
             content_type=mimetypes.types_map['.csv'],
         )
-        resp['Content-Disposition'] = f'attachent; filename="wins_complete_{now().isoformat()}.csv"'
+        resp['Content-Disposition'] = f'attachent; filename={filename}'
         return resp
+
+    def get(self, request, format=None):
+        return self.streaming_response(f'wins_complete_{now().isoformat()}.csv')
 
 
 @method_decorator(gzip_page, name='dispatch')
@@ -352,105 +355,25 @@ class CurrentFinancialYearWins(CompleteWinsCSVView):
 
     permission_classes = (permissions.IsAdminUser,)
 
-    def _extract_breakdowns(self, win):
-        """ Return list of 10 tuples, 5 for export, 5 for non-export """
-
-        breakdowns = self.table_maps['breakdowns'][win.id]
-        retval = []
-        for db_val, name in BREAKDOWN_TYPES:
-
-            # get breakdowns of given type sorted by year
-            type_breakdowns = [b for b in breakdowns if b.type == db_val]
-            type_breakdowns = sorted(type_breakdowns, key=attrgetter('year'))
-
-            # we currently solicit 5 years worth of breakdowns, but historic
-            # data may have no input for some years
-            for index in range(5):
-                try:
-                    breakdown = "{0}: £{1:,}".format(
-                        type_breakdowns[index].year,
-                        type_breakdowns[index].value,
-                    )
-                except IndexError:
-                    breakdown = None
-
-                retval.append((
-                    "{0} breakdown {1}".format(name, index + 1),
-                    breakdown,
-                ))
-
-        return retval
-
-    def _confirmation(self, win):
-        """ Add fields for confirmation """
-
-        if win.id in self.table_maps['confirmations']:
-            confirmation = self.table_maps['confirmations'][win.id][0]
-        else:
-            confirmation = None
-
-        values = [
-            ('customer response recieved',
-             self._val_to_str(bool(confirmation)))
-        ]
-        for field_name in self.customerresponse_fields:
-            if field_name in ['win']:
-                continue
-
-            model_field = self._get_customerresponse_field(field_name)
-            if confirmation:
-                if model_field.choices:
-                    display_fn = getattr(
-                        confirmation, "get_{0}_display".format(field_name)
-                    )
-                    value = display_fn()
-                else:
-                    value = getattr(confirmation, field_name)
-            else:
-                value = ''
-
-            model_field_name = model_field.verbose_name or model_field.name
-            if model_field_name == 'created':
-                csv_field_name = 'date response received'
-                if value:
-                    value = value.date()  # just want date
-            else:
-                csv_field_name = model_field_name
-
-            values.append((csv_field_name, self._val_to_str(value)))
-        return values
-
     def _make_flat_wins_csv(self, **kwargs):
-        """ Make CSV of all Wins, with non-local data flattened """
-        # remove all rows where:
-        # 1. total expected export value = 0 and total non export value = 0 and total odi value = 0
-        # 2. date created = today (not necessary if this task runs before end of the day for next day download)
-        # 3. customer email sent is False / No
-        # 4. Customer response received is not from this financial year
+        """
+        Make CSV of all completed Wins till now for this financial year, with non-local data flattened
+        remove all rows where:
+        1. total expected export value = 0 and total non export value = 0 and total odi value = 0
+        2. date created = today (not necessary if this task runs before end of the day for next day download)
+        3. customer email sent is False / No
+        4. Customer response received is not from this financial year
+        Note that this view removes win, notification and customer response entries
+        that might have been made inactive in duecourse
+        """
         with connection.cursor() as cursor:
             cursor.execute("SELECT id FROM wins_completed_wins_fy")
             ids = cursor.fetchall()
-        wins = Win.objects.filter(id__in=ids)
+
+        wins = Win.objects.filter(id__in=[id[0] for id in ids]).values()
 
         for win in wins:
             yield self._get_win_data(win)
 
-    def _make_flat_wins_csv_stream(self, win_data_generator):
-        stringio = Echo()
-        yield stringio.write(u'\ufeff')
-        first = next(win_data_generator)
-        csv_writer = csv.DictWriter(stringio, first.keys())
-        header = dict(zip(first.keys(), first.keys()))
-        yield csv_writer.writerow(header)
-        yield csv_writer.writerow(first)
-
-        for win_data in win_data_generator:
-            yield csv_writer.writerow(win_data)
-
     def get(self, request, format=None):
-        resp = StreamingHttpResponse(
-            self._make_flat_wins_csv_stream(self._make_flat_wins_csv()),
-            content_type=mimetypes.types_map['.csv'],
-        )
-        resp['Content-Disposition'] = f'attachent; filename="wins_current_fy_{now().isoformat()}.csv"'
-        return resp
+        return self.streaming_response(f'wins_current_fy_{now().isoformat()}.csv')
