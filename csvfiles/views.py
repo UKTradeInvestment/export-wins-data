@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.postgres.fields.jsonb import KeyTextTransform
 from django.db import models
 from django.db.models import Func, F, Max
+from django.db.models.functions import Lower
 from django.utils.decorators import method_decorator
 from django.utils.timezone import now
 from django.utils.functional import cached_property
@@ -112,8 +113,11 @@ class CSVBaseView(APIView):
             try:
                 return CSVFile.objects.filter(
                     file_type=file_type.value, is_active=True
-                ).annotate(region=KeyTextTransform('region', 'metadata')
-                           ).order_by('region', '-report_end_date').distinct('region')
+                ).annotate(region=KeyTextTransform('region', 'metadata'),
+                           region_lower=Lower(
+                               KeyTextTransform('region', 'metadata'))
+                           ).order_by('region_lower', '-report_end_date'
+                                      ).distinct('region_lower')
             except CSVFile.DoesNotExist:
                 return None
 
@@ -121,8 +125,10 @@ class CSVBaseView(APIView):
             try:
                 return CSVFile.objects.filter(
                     file_type=file_type.value, is_active=True
-                ).annotate(sector=KeyTextTransform('sector', 'metadata')
-                           ).order_by('sector', '-report_end_date').distinct('sector')
+                ).annotate(sector=KeyTextTransform('sector', 'metadata'),
+                           sector_lower=Lower(
+                               KeyTextTransform('sector', 'metadata'))
+                           ).order_by('sector_lower', '-report_end_date').distinct('sector_lower')
             except CSVFile.DoesNotExist:
                 return None
 
