@@ -8,7 +8,7 @@ from django.db.models import Q
 from mi.models import OverseasRegion, OverseasRegionGroup
 from mi.serializers import OverseasRegionGroupSerializer
 from mi.utils import sort_campaigns_by
-from mi.views.base_view import BaseWinMIView, BaseExportMIView
+from mi.views.base_view import BaseWinMIView, BaseExportMIView, TopNonHvcMixin
 
 
 class BaseOverseasRegionGroupMIView(BaseExportMIView):
@@ -178,17 +178,15 @@ class OverseasRegionCampaignsView(BaseOverseasRegionsMIView):
         return self._success(results)
 
 
-class OverseasRegionsTopNonHvcWinsView(BaseOverseasRegionsMIView):
+class OverseasRegionsTopNonHvcWinsView(BaseOverseasRegionsMIView, TopNonHvcMixin):
     """ Top n HVCs with win-breakdown for given Overseas Region"""
 
-    def get(self, request, region_id):
-        region = self._get_region(region_id)
-        if not region:
-            return self._invalid('region not found')
+    entity_name = 'region'
 
-        non_hvc_wins_qs = self._get_region_non_hvc_wins(region)
-        results = self._top_non_hvc(non_hvc_wins_qs)
-        return self._success(results)
+    def __init__(self, **kwargs):
+        self.entity_getter_fn = self._get_region
+        self.non_hvc_qs_getter_fn = self._get_region_non_hvc_wins
+        super(OverseasRegionsTopNonHvcWinsView, self).__init__(**kwargs)
 
 
 class OverseasRegionOverviewView(BaseOverseasRegionsMIView):

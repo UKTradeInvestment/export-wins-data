@@ -592,7 +592,10 @@ class BaseWinMIView(BaseExportMIView):
         ).annotate(
             total_value=Sum('total_expected_export_value'),
             total_wins=Count('id')
-        ).order_by('-total_value')[:records_to_retrieve]
+        ).order_by('-total_value')
+
+        if records_to_retrieve:
+            non_hvc_wins = non_hvc_wins[:records_to_retrieve]
 
         # make a lookup to get names efficiently
         sector_id_to_name = {s.id: s.name for s in Sector.objects.all()}
@@ -612,6 +615,7 @@ class BaseWinMIView(BaseExportMIView):
                 ),
             })
         return data
+
     def _win_table_wins(self, hvc_wins, non_hvc_wins=None):
         all_hvcs = {"{}{}".format(x["campaign_id"], x["financial_year"]): x["name"]
                     for x in HVC.objects.all().values("campaign_id", "financial_year", "name")}
@@ -714,3 +718,33 @@ class BaseWinMIView(BaseExportMIView):
         sorted_month_grouping = sorted(month_grouping, key=lambda tup: tup[0])
         # return only months between date range, FY by default
         return [wins for wins in sorted_month_grouping if wins[0] in months_range]
+
+
+class TopNonHvcMixin:
+
+    # the name of the 'entity' that the view is about.
+    # e.g. region, sector, sector_team
+    entity_name = 'entity'
+
+    # the function name on `self` that given a entity_id, returns a entity object
+    entity_getter_fn = None
+
+    # the function name on `self` that returns a non_hvc_qs (queryset)
+    non_hvc_qs_getter_fn = None
+
+    @property
+    def entity_id_kwarg(self):
+        return f'{self.entity_name}_id'
+
+    def get(self, request, **kwargs):
+        entity_id = kwargs.get(self.entity_id_kwarg)
+        entity = self.entity_getter_fn(entity_id)
+        if not entity:
+            return self._invalid(f'{self.entity_name} not found')
+
+        non_hvc_wins_qs = self.non_hvc_qs_getter_fn(entity)
+
+        records_to_retrieve = None if self.request.GET.get('all') else 5
+
+        results = self._top_non_hvc(non_hvc_wins_qs, records_to_retrieve=records_to_retrieve)
+        return self._success(results, count=non_hvc_wins_qs.count())

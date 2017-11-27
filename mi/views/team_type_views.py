@@ -174,8 +174,14 @@ class TeamTypeWinTableView(BaseTeamTypeMIView):
 
 class TeamTypeNonHvcWinsView(BaseTeamTypeMIView):
 
+    def get(self, request, *args, **kwargs):
+        results, count = self._result()
+        return self._success(results, count=count)
+
     def _result(self):
-        return self._top_non_hvc(self._non_hvc_wins())
+        records_to_retrieve = None if self.request.GET.get('all') else 5
+        non_hvc_wins_qs = self._non_hvc_wins()
+        return self._top_non_hvc(non_hvc_wins_qs, records_to_retrieve=records_to_retrieve), non_hvc_wins_qs.count()
 
 
 class TeamTypeMonthsView(BaseTeamTypeMIView):
