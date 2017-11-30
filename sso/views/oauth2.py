@@ -53,16 +53,20 @@ def callback(request):
         abc_data = resp.json()
 
         user_model = get_user_model()
+        name = ' '.join(filter(bool, [abc_data.get('first_name'), abc_data.get('last_name')]))[:128].strip()
         # 1. log them in if they already exist
         try:
             user = user_model.objects.get(email=abc_data['email'])
+            if user.name != name:
+                user.name = name
             user.save()
             login(request, user, backend=settings.AUTHENTICATION_BACKENDS[0])
         # or
         except user_model.DoesNotExist:
             # 2. create new User object for them and log them in
             new_user = user_model.objects.create(
-                email=abc_data['email']
+                email=abc_data['email'],
+                name=name
             )
             # they won't ever need to login using user/pass
             new_user.set_unusable_password()

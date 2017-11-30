@@ -5,8 +5,8 @@ from django.utils.timezone import now
 
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework import serializers
+from rest_framework.fields import SerializerMethodField
 
-from sso.models import ADFSUser
 from .models import User, LoginFailure
 
 
@@ -42,6 +42,11 @@ class LoggingAuthTokenSerializer(AuthTokenSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
 
+    name = SerializerMethodField()
+
+    def get_name(self, obj):
+        return getattr(obj, 'name', obj.email)
+
     class Meta:
-        model = ADFSUser
-        fields = ('email', 'last_login')
+        model = User
+        fields = ('email', 'last_login', 'name')
