@@ -114,9 +114,9 @@ class Target(models.Model):
     Some of them are considered HVC, some non-HVC """
     sector_team = models.ForeignKey(SectorTeam, related_name="targets")
     market = models.ForeignKey(Market, related_name="targets")
-    hvc_target = models.IntegerField()
-    non_hvc_target = models.IntegerField()
-    financial_year = models.OneToOneField(FinancialYear)
+    hvc_target = models.IntegerField(null=True)
+    non_hvc_target = models.IntegerField(null=True)
+    financial_year = models.ForeignKey(FinancialYear)
 
     def __str__(self):
         return f'{self.financial_year} - {self.sector_team}/{self.market}: ' \
