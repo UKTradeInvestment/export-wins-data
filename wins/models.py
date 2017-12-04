@@ -190,7 +190,7 @@ class Win(SoftDeleteModel):
     company_name = models.CharField(
         max_length=128, verbose_name="Organisation or company name")
     cdms_reference = models.CharField(
-        max_length=128, verbose_name="CDMS Reference")
+        max_length=128, verbose_name="Data Hub (Companies House) or CDMS reference number")
 
     customer_name = models.CharField(
         max_length=128, verbose_name="Contact name")
