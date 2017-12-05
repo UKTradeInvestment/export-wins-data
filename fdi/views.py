@@ -219,6 +219,21 @@ class FDISectorTeamDetailView(FDIBaseSectorTeamView):
         }
         return data
 
+    def _get_market_target(self, market):
+        target = 0
+        try:
+            target_obj = Target.objects.get(
+                sector_team=self.team, market=market)
+            # both HVC and non-HVC targets
+            if target_obj.hvc_target:
+                target += target_obj.hvc_target
+            if target_obj.non_hvc_target:
+                target += target_obj.non_hvc_target
+        except Target.DoesNotExist:
+            return 0
+        
+        return target
+
     def _market_breakdown(self, investments, market):
         def classify_stage(investment):
             if investment.stage == 'Verify win':
@@ -234,13 +249,8 @@ class FDISectorTeamDetailView(FDIBaseSectorTeamView):
                 'stage', 'approved_high_value', 'approved_good_value')
         grouped = self._group_investments(market_investments, classify_stage)
 
-        try:
-            target_obj = Target.objects.get(
-                sector_team=self.team, market=market)
-        except Target.DoesNotExist:
-            target_obj = None
+        target = self._get_market_target(market)
 
-        target = target_obj.hvc_target if target_obj else 0
         # TODO target distribution needs a home in database, not here
         target_data = {
             'total': target,
