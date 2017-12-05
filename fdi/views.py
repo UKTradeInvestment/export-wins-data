@@ -71,7 +71,7 @@ class BaseFDIView(BaseMIView):
             fdi_target = GlobalTargets(
                 financial_year=self.fin_year, high=0, good=0, standard=0)
         return fdi_target
-        
+
     def _get_fdi_summary(self):
         fdi_target = self._get_target()
 
@@ -236,7 +236,7 @@ class FDISectorTeamDetailView(FDIBaseSectorTeamView):
                 target += target_obj.non_hvc_target
         except Target.DoesNotExist:
             return 0
-        
+
         return target
 
     def _market_breakdown(self, investments, market):
