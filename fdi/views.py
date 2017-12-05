@@ -231,7 +231,7 @@ class FDISectorTeamDetailView(FDIBaseSectorTeamView):
                 target += target_obj.non_hvc_target
         except Target.DoesNotExist:
             return 0
-        
+
         return target
 
     def _market_breakdown(self, investments, market):
