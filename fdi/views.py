@@ -302,7 +302,7 @@ class FDISectorTeamHVCDetailView(FDISectorTeamDetailView):
         qs = qs.for_sector_team(self.team)
         hvc_markets = [t.market for t in Target.objects.filter(hvc_target__isnull=False, sector_team=self.team.id)]
         hvc_countries = Country.objects.filter(market__in=hvc_markets)
-        return qs.filter(company_country=hvc_countries)
+        return qs.filter(company_country__in=hvc_countries)
 
     def _get_market_target(self, market):
         target = 0
@@ -344,7 +344,7 @@ class FDISectorTeamNonHVCDetailView(FDISectorTeamDetailView):
         non_hvc_markets = [t.market for t in Target.objects.filter(
             non_hvc_target__isnull=False, sector_team=self.team.id)]
         non_hvc_countries = Country.objects.filter(market__in=non_hvc_markets)
-        return qs.filter(company_country=non_hvc_countries)
+        return qs.filter(company_country__in=non_hvc_countries)
 
     def _get_market_target(self, market):
         target = 0
