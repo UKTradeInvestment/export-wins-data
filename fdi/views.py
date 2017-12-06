@@ -1,15 +1,15 @@
 import itertools
-from operator import itemgetter
+from typing import List
+
 from collections import defaultdict
 
-from django.db.models import Func, F, Sum, Count, When, Case, Value, CharField, Max, Count
+from django.db.models import Func, F, Sum, When, Case, Value, CharField, Count
 from django.db.models.functions import Coalesce
 
 from core.utils import group_by_key
 from fdi.models import (
     Investments,
     GlobalTargets,
-    Sector,
     SectorTeam,
     Market,
     Target,
@@ -31,6 +31,15 @@ ANNOTATIONS = dict(
 )
 
 
+def classify_stage(investment):
+    if investment.stage == 'Verify win':
+        return 'verified'
+    elif investment.stage == 'Won':
+        return 'confirmed'
+    else:
+        return 'pipeline'
+
+
 def fill_in_missing_performance(data, target: GlobalTargets):
     """
     takes a dict of performance dicts e.g. {'high'; {..}
@@ -49,6 +58,14 @@ def fill_in_missing_performance(data, target: GlobalTargets):
             }
     return data
 
+
+def classify_quality(investment):
+    if investment.approved_high_value:
+        return 'high'
+    elif investment.approved_good_value:
+        return 'good'
+    else:
+        return 'standard'
 
 class BaseFDIView(BaseMIView):
 
@@ -181,18 +198,10 @@ class FDISectorTeamListView(BaseFDIView):
         return self._success(formatted_sector_teams)
 
 
-class FDISectorTeamOverview(BaseFDIView):
-    pass
-
-
 class FDIOverview(BaseFDIView):
 
     def get_results(self):
         return self._get_fdi_summary()
-
-
-class FDISectorOverview(BaseFDIView):
-    pass
 
 
 class FDISectorTeamDetailView(FDIBaseSectorTeamView):
@@ -205,23 +214,31 @@ class FDISectorTeamDetailView(FDIBaseSectorTeamView):
             groups[stage] = list(wins)
         return groups
 
-    def _item_breakdown(self, investments, hvc_target):
-        def classify_quality(investment):
-            if investment.approved_high_value:
-                return 'high'
-            elif investment.approved_good_value:
-                return 'good'
-            else:
-                return 'standard'
+    def _item_breakdown(self, investments: List[Investments], target_num: int, target_objs=None):
+
+        hvc_data = {}
+        if target_objs:
+
+            hvc_targets = set(target_objs.filter(hvc_target__gte=0).values_list('market', flat=True))
+
+            def check_is_hvc(investment: Investments):
+                market = investment.company_country_id
+                return market in hvc_targets
+
+            hvc_data['hvc_count'] = len([x for x in investments if check_is_hvc(x)])
+
 
         grouped = self._group_investments(investments, classify_quality)
         data = {
             'total': len(investments),
-            'progress': two_digit_float(len(investments) * 100 / hvc_target) if hvc_target else 0.0,
+            'progress': two_digit_float(len(investments) * 100 / target_num) if target_num else 0.0,
             'high': len(grouped['high']),
             'good': len(grouped['good']),
             'standard': len(grouped['standard']),
+            'value': sum([x.investment_value for x in investments]),
+            **hvc_data
         }
+
         return data
 
     def _get_market_target(self, market):
@@ -240,14 +257,6 @@ class FDISectorTeamDetailView(FDIBaseSectorTeamView):
         return target
 
     def _market_breakdown(self, investments, market):
-        def classify_stage(investment):
-            if investment.stage == 'Verify win':
-                return 'verified'
-            elif investment.stage == 'Won':
-                return 'confirmed'
-            else:
-                return 'pipeline'
-
         # order investments by stage and then by quality so as to group them easily
         market_investments = investments.filter(
             company_country__in=market.countries.all()).order_by(
@@ -378,6 +387,77 @@ class FDISectorTeamNonHVCDetailView(FDISectorTeamDetailView):
         results['markets'] = market_data
         return self._success(results)
 
+
+class FDISectorTeamOverview(FDISectorTeamDetailView):
+
+    def initial(self, request, team_id, *args, **kwargs):
+        super(FDIBaseSectorTeamView, self).initial(
+            request, team_id, *args, **kwargs)
+
+    def _get_team(self, team_id):
+        """ Get SectorTeam object or False if invalid ID """
+        return False
+
+    def get_queryset(self):
+        qs = super(FDIBaseSectorTeamView, self).get_queryset().filter(date_won__range=(
+            self._date_range_start(), self._date_range_end()))
+        return qs
+
+    def _get_sector_target(self, sector_team):
+        target = 0
+        target_objs = Target.objects.filter(
+            sector_team=sector_team, financial_year=self.fin_year)
+        # both HVC and non-HVC targets
+        for t in target_objs:
+            if t.hvc_target:
+                target += t.hvc_target
+            if t.non_hvc_target:
+                target += t.non_hvc_target
+        return target, target_objs
+
+    def _sector_team_breakdown(self, investments, sector_team: SectorTeam):
+
+        # order investments by stage and then by quality so as to group them easily
+        sector_team_investments = investments.filter(
+            sector__in=sector_team.sectors.all()).order_by(
+            'stage', 'approved_high_value', 'approved_good_value')
+        grouped = self._group_investments(sector_team_investments, classify_stage)
+
+        target, target_objs = self._get_sector_target(sector_team)
+
+        # TODO target distribution needs a home in database, not here
+        target_data = {
+            'total': target,
+            'progress': 100.0,
+            'high': target * 40 / 100,
+            'good': target * 30 / 100,
+            'standard': target * 30 / 100,
+        }
+
+        sector_team_data = {
+            "id": sector_team.id,
+            "name": sector_team.name,
+            "verified": self._item_breakdown(grouped['verfied'], target, target_objs),
+            "confirmed": self._item_breakdown(grouped['confirmed'], target, target_objs),
+            "pipeline": self._item_breakdown(grouped['pipeline'], 0, target_objs),
+            "target": target_data,
+        }
+        return sector_team_data
+
+    def get(self, request, *args, **kwargs):
+        investments_in_scope = self.get_queryset()
+
+        results = {}
+        results['name'] = 'ALL'
+        results['description'] = 'All'
+        results['overview'] = self._get_fdi_summary()
+
+        sector_teams = SectorTeam.objects.all()
+        sector_teams_data = [self._sector_team_breakdown(
+            investments_in_scope, sector_team) for sector_team in sector_teams]
+
+        results['sector_teams'] = sector_teams_data
+        return self._success(results)
 
 class FDIYearOnYearComparison(BaseFDIView):
 
