@@ -368,12 +368,11 @@ class CurrentFinancialYearWins(CompleteWinsCSVView):
         Note that this view removes win, notification and customer response entries
         that might have been made inactive in duecourse
         """
-        sql_str = "SELECT id FROM wins_completed_wins_fy"
-        if self.end_date:
-            sql_str = f"{sql_str} where created <= '{self.end_date.strftime('%m-%d-%Y')}'"
-
         with connection.cursor() as cursor:
-            cursor.execute(sql_str)
+            if self.end_date:
+                cursor.execute("SELECT id FROM wins_completed_wins_fy where created <= %s", (self.end_date,))
+            else:
+                cursor.execute("SELECT id FROM wins_completed_wins_fy")
             ids = cursor.fetchall()
 
         wins = Win.objects.filter(id__in=[id[0] for id in ids]).values()
