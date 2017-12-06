@@ -7,7 +7,8 @@ from operator import attrgetter
 import mimetypes
 
 from django.conf import settings
-from django.db import connection
+from django.core.exceptions import ValidationError
+from django.db import connection, models
 from django.http import HttpResponse, StreamingHttpResponse
 from django.utils.decorators import method_decorator
 from django.utils.timezone import now
@@ -353,7 +354,8 @@ class CompleteWinsCSVView(CSVView):
 @method_decorator(gzip_page, name='dispatch')
 class CurrentFinancialYearWins(CompleteWinsCSVView):
 
-    permission_classes = (permissions.IsAdminUser,)
+    # permission_classes = (permissions.IsAdminUser,)
+    end_date = None
 
     def _make_flat_wins_csv(self, **kwargs):
         """
@@ -366,8 +368,12 @@ class CurrentFinancialYearWins(CompleteWinsCSVView):
         Note that this view removes win, notification and customer response entries
         that might have been made inactive in duecourse
         """
+        sql_str = "SELECT id FROM wins_completed_wins_fy"
+        if self.end_date:
+            sql_str = f"{sql_str} where created <= '{self.end_date.strftime('%m-%d-%Y')}'"
+
         with connection.cursor() as cursor:
-            cursor.execute("SELECT id FROM wins_completed_wins_fy")
+            cursor.execute(sql_str)
             ids = cursor.fetchall()
 
         wins = Win.objects.filter(id__in=[id[0] for id in ids]).values()
@@ -376,4 +382,11 @@ class CurrentFinancialYearWins(CompleteWinsCSVView):
             yield self._get_win_data(win)
 
     def get(self, request, format=None):
+        end_str = request.GET.get("end", None)
+        if end_str:
+            try:
+                self.end_date = models.DateField().to_python(end_str)
+            except ValidationError:
+                self.end_date = None
+
         return self.streaming_response(f'wins_current_fy_{now().isoformat()}.csv')
