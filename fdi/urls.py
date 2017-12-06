@@ -6,7 +6,9 @@ from fdi.views import (
     FDIOverview,
     FDISectorTeamWinTable,
     FDISectorTeamOverview,
-    FDISectorTeamDetailView
+    FDISectorTeamDetailView,
+    FDISectorTeamHVCDetailView,
+    FDISectorTeamNonHVCDetailView
 )
 
 
@@ -18,4 +20,8 @@ urlpatterns = [
     url(r"^overview/$", FDIOverview.as_view(), name="overview"),
     url(r"^sector_teams/(?P<team_id>\d+)/$",
         FDISectorTeamDetailView.as_view(), name="sector_team_detail"),
+    url(r"^sector_teams/(?P<team_id>\d+)/hvc/$",
+        FDISectorTeamHVCDetailView.as_view(), name="sector_team_hvc"),
+    url(r"^sector_teams/(?P<team_id>\d+)/non_hvc/$",
+        FDISectorTeamNonHVCDetailView.as_view(), name="sector_team_non_hvc"),
 ]

@@ -12,7 +12,8 @@ from fdi.models import (
     Sector,
     SectorTeam,
     Market,
-    Target
+    Target,
+    Country
 )
 from core.views import BaseMIView
 from fdi.serializers import InvestmentsSerializer
@@ -62,13 +63,17 @@ class BaseFDIView(BaseMIView):
     def get(self, request, *args, **kwargs):
         return self._success(self.get_results())
 
-    def _get_fdi_summary(self):
+    def _get_target(self):
         try:
             fdi_target = GlobalTargets.objects.get(
                 financial_year=self.fin_year)
         except GlobalTargets.DoesNotExist:
             fdi_target = GlobalTargets(
                 financial_year=self.fin_year, high=0, good=0, standard=0)
+        return fdi_target
+
+    def _get_fdi_summary(self):
+        fdi_target = self._get_target()
 
         investments_in_scope = self.get_queryset().won().filter(
             date_won__range=(self._date_range_start(), self._date_range_end())
@@ -285,6 +290,90 @@ class FDISectorTeamDetailView(FDIBaseSectorTeamView):
         markets = Market.objects.all()
         market_data = [self._market_breakdown(
             investments_in_scope, market) for market in markets]
+
+        results['markets'] = market_data
+        return self._success(results)
+
+
+class FDISectorTeamHVCDetailView(FDISectorTeamDetailView):
+    def get_queryset(self):
+        qs = super().get_queryset().filter(date_won__range=(
+            self._date_range_start(), self._date_range_end()))
+        qs = qs.for_sector_team(self.team)
+        hvc_markets = [t.market for t in Target.objects.filter(hvc_target__isnull=False, sector_team=self.team.id)]
+        hvc_countries = Country.objects.filter(market__in=hvc_markets)
+        return qs.filter(company_country__in=hvc_countries)
+
+    def _get_market_target(self, market):
+        target = 0
+        try:
+            target_obj = Target.objects.get(
+                sector_team=self.team, market=market)
+            if target_obj.hvc_target:
+                target += target_obj.hvc_target
+        except Target.DoesNotExist:
+            return 0
+
+        return target
+
+    def get(self, request, team_id):
+        self.team = self._get_team(team_id)
+        investments_in_scope = self.get_queryset()
+
+        if not self.team:
+            return self._invalid('team not found')
+
+        results = {}
+        results['name'] = self.team.name
+        results['description'] = self.team.description
+        results['overview'] = self._get_fdi_summary()
+
+        hvc_markets = [t.market for t in Target.objects.filter(hvc_target__isnull=False, sector_team=self.team.id)]
+        market_data = [self._market_breakdown(
+            investments_in_scope, market) for market in hvc_markets]
+
+        results['markets'] = market_data
+        return self._success(results)
+
+
+class FDISectorTeamNonHVCDetailView(FDISectorTeamDetailView):
+    def get_queryset(self):
+        qs = super().get_queryset().filter(date_won__range=(
+            self._date_range_start(), self._date_range_end()))
+        qs = qs.for_sector_team(self.team)
+        non_hvc_markets = [t.market for t in Target.objects.filter(
+            non_hvc_target__isnull=False, sector_team=self.team.id)]
+        non_hvc_countries = Country.objects.filter(market__in=non_hvc_markets)
+        return qs.filter(company_country__in=non_hvc_countries)
+
+    def _get_market_target(self, market):
+        target = 0
+        try:
+            target_obj = Target.objects.get(
+                sector_team=self.team, market=market)
+            if target_obj.non_hvc_target:
+                target += target_obj.non_hvc_target
+        except Target.DoesNotExist:
+            return 0
+
+        return target
+
+    def get(self, request, team_id):
+        self.team = self._get_team(team_id)
+        investments_in_scope = self.get_queryset()
+
+        if not self.team:
+            return self._invalid('team not found')
+
+        results = {}
+        results['name'] = self.team.name
+        results['description'] = self.team.description
+        results['overview'] = self._get_fdi_summary()
+
+        non_hvc_markets = [t.market for t in Target.objects.filter(
+            non_hvc_target__isnull=False, sector_team=self.team.id)]
+        market_data = [self._market_breakdown(
+            investments_in_scope, market) for market in non_hvc_markets]
 
         results['markets'] = market_data
         return self._success(results)
