@@ -437,6 +437,7 @@ class FDISectorTeamOverview(FDISectorTeamDetailView):
         sector_team_data = {
             "id": sector_team.id,
             "name": sector_team.name,
+            "description": sector_team.description,
             "verified": self._item_breakdown(grouped['verfied'], target, target_objs),
             "confirmed": self._item_breakdown(grouped['confirmed'], target, target_objs),
             "pipeline": self._item_breakdown(grouped['pipeline'], 0, target_objs),
