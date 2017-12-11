@@ -67,6 +67,7 @@ def classify_quality(investment):
     else:
         return 'standard'
 
+
 class BaseFDIView(BaseMIView):
 
     queryset = Investments.objects.all()
@@ -132,7 +133,8 @@ class BaseFDIView(BaseMIView):
             } for x in data
         ], key='value', flatten=True)
 
-        formatted_breakdown_by_value = fill_in_missing_performance(formatted_breakdown_by_value, fdi_target)
+        formatted_breakdown_by_value = fill_in_missing_performance(
+            formatted_breakdown_by_value, fdi_target)
 
         return {
             "target": fdi_target.total,
@@ -219,14 +221,15 @@ class FDISectorTeamDetailView(FDIBaseSectorTeamView):
         hvc_data = {}
         if target_objs:
 
-            hvc_targets = set(target_objs.filter(hvc_target__gte=0).values_list('market', flat=True))
+            hvc_targets = set(target_objs.filter(
+                hvc_target__gte=0).values_list('market', flat=True))
 
             def check_is_hvc(investment: Investments):
                 market = investment.company_country_id
                 return market in hvc_targets
 
-            hvc_data['hvc_count'] = len([x for x in investments if check_is_hvc(x)])
-
+            hvc_data['hvc_count'] = len(
+                [x for x in investments if check_is_hvc(x)])
 
         grouped = self._group_investments(investments, classify_quality)
         data = {
@@ -309,7 +312,8 @@ class FDISectorTeamHVCDetailView(FDISectorTeamDetailView):
         qs = super().get_queryset().filter(date_won__range=(
             self._date_range_start(), self._date_range_end()))
         qs = qs.for_sector_team(self.team)
-        hvc_markets = [t.market for t in Target.objects.filter(hvc_target__isnull=False, sector_team=self.team.id)]
+        hvc_markets = [t.market for t in Target.objects.filter(
+            hvc_target__isnull=False, sector_team=self.team.id)]
         hvc_countries = Country.objects.filter(market__in=hvc_markets)
         return qs.filter(company_country__in=hvc_countries)
 
@@ -337,7 +341,8 @@ class FDISectorTeamHVCDetailView(FDISectorTeamDetailView):
         results['description'] = self.team.description
         results['overview'] = self._get_fdi_summary()
 
-        hvc_markets = [t.market for t in Target.objects.filter(hvc_target__isnull=False, sector_team=self.team.id)]
+        hvc_markets = [t.market for t in Target.objects.filter(
+            hvc_target__isnull=False, sector_team=self.team.id)]
         market_data = [self._market_breakdown(
             investments_in_scope, market) for market in hvc_markets]
 
@@ -421,7 +426,8 @@ class FDISectorTeamOverview(FDISectorTeamDetailView):
         sector_team_investments = investments.filter(
             sector__in=sector_team.sectors.all()).order_by(
             'stage', 'approved_high_value', 'approved_good_value')
-        grouped = self._group_investments(sector_team_investments, classify_stage)
+        grouped = self._group_investments(
+            sector_team_investments, classify_stage)
 
         target, target_objs = self._get_sector_target(sector_team)
 
@@ -459,6 +465,7 @@ class FDISectorTeamOverview(FDISectorTeamDetailView):
 
         results['sector_teams'] = sector_teams_data
         return self._success(results)
+
 
 class FDIYearOnYearComparison(BaseFDIView):
 
@@ -506,13 +513,33 @@ class FDIYearOnYearComparison(BaseFDIView):
 
 
 class FDISectorTeamWinTable(FDIBaseSectorTeamView):
+    def get_hvc_queryset(self):
+        qs = super().get_queryset().filter(date_won__range=(
+            self._date_range_start(), self._date_range_end()))
+        qs = qs.for_sector_team(self.team)
+        hvc_markets = [t.market for t in Target.objects.filter(
+            hvc_target__isnull=False, sector_team=self.team.id)]
+        hvc_countries = Country.objects.filter(market__in=hvc_markets)
+        return qs.filter(company_country__in=hvc_countries)
+
+    def get_non_hvc_queryset(self):
+        qs = super().get_queryset().filter(date_won__range=(
+            self._date_range_start(), self._date_range_end()))
+        qs = qs.for_sector_team(self.team)
+        non_hvc_markets = [t.market for t in Target.objects.filter(
+            non_hvc_target__isnull=False, sector_team=self.team.id)]
+        non_hvc_countries = Country.objects.filter(market__in=non_hvc_markets)
+        return qs.filter(company_country__in=non_hvc_countries)
 
     def get_results(self):
         hvc_target = self.get_targets().aggregate(
             target=Coalesce(Sum('hvc_target'), 0))['target']
         non_hvc_target = self.get_targets().aggregate(
             target=Coalesce(Sum('non_hvc_target'), 0))['target']
-        investments = InvestmentsSerializer(self.get_queryset().annotate(**ANNOTATIONS), many=True)
+        hvc_investments = InvestmentsSerializer(
+            self.get_hvc_queryset().annotate(**ANNOTATIONS), many=True)
+        non_hvc_investments = InvestmentsSerializer(
+            self.get_non_hvc_queryset().annotate(**ANNOTATIONS), many=True)
 
         return {
             "name": self.team.name,
@@ -522,5 +549,8 @@ class FDISectorTeamWinTable(FDIBaseSectorTeamView):
                 "non_hvc": non_hvc_target,
                 "total": sum([hvc_target, non_hvc_target])
             },
-            "investments": investments.data
+            "investments": {
+                'hvc': hvc_investments.data,
+                'non_hvc': non_hvc_investments.data
+            }
         }
