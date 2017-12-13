@@ -75,7 +75,7 @@ class CSVBaseView(APIView):
         try:
             return CSVFile.objects.filter(report_start_date__gte=self.current_fy.start,
                                           file_type=file_type.value,
-                                          is_active=True).latest('report_end_date')
+                                          is_active=True).latest('created')
         except CSVFile.DoesNotExist:
             return None
 
