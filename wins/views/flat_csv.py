@@ -354,7 +354,7 @@ class CompleteWinsCSVView(CSVView):
 @method_decorator(gzip_page, name='dispatch')
 class CurrentFinancialYearWins(CompleteWinsCSVView):
 
-    # permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.IsAdminUser,)
     end_date = None
 
     def _make_flat_wins_csv(self, **kwargs):
@@ -370,7 +370,8 @@ class CurrentFinancialYearWins(CompleteWinsCSVView):
         """
         with connection.cursor() as cursor:
             if self.end_date:
-                cursor.execute("SELECT id FROM wins_completed_wins_fy where created <= %s", (self.end_date,))
+                cursor.execute(
+                    "SELECT id FROM wins_completed_wins_fy where created <= %s", (self.end_date,))
             else:
                 cursor.execute("SELECT id FROM wins_completed_wins_fy")
             ids = cursor.fetchall()
