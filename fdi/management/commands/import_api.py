@@ -26,9 +26,13 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--startdate", help="Start Date - format YYYY-MM-DDTHH:Mi:SS", required=True, type=valid_date)
+            "--startdate", help="Start Date - format YYYY-MM-DDTHH:Mi:SS", required=True, type=valid_date,
+        )
+        parser.add_argument(
+            "--enddate", help="End Date - format YYYY-MM-DDTHH:Mi:SS", required=False, type=valid_date
+        )
 
-    def get_api_results(self, startdate):
+    def get_api_results(self, startdate, enddate=None):
         CLIENT_ID = settings.DH_CLIENT_ID
         CLIENT_SECRET = settings.DH_CLIENT_SECRET
         TOKEN_URL = settings.DH_TOKEN_URL
@@ -39,10 +43,14 @@ class Command(BaseCommand):
             auth=(CLIENT_ID, CLIENT_SECRET))
 
         token = response.json()['access_token']
+        params = {'modified_on__gte': startdate}
+
+        if enddate:
+            params['modified_on__lte'] = enddate
 
         response = requests.get(
             INVEST_URL,
-            params={'time': startdate},
+            params=params,
             headers={'Authorization': f'bearer {token}'}
         )
         return response
@@ -50,8 +58,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         full_import = True
         startdate = options["startdate"]
+        enddate = options.get("enddate")
         full_import = False
-        response = self.get_api_results(startdate)
+        response = self.get_api_results(startdate, enddate=enddate)
         metadata = {"request_time": datetime.strftime(datetime.now(), "%Y-%m-%dT%H:%M:%SZ"),
                     "startdate": datetime.strftime(startdate, "%Y-%m-%dT%H:%M:%SZ"),
                     "status": response.status_code}
