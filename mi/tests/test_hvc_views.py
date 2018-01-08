@@ -857,7 +857,7 @@ class HVCWinTableTestCase(HVCBaseViewTestCase, GenericWinTableTestMixin):
         self.assertEqual(win_item["status"], "customer_rejected")
         self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
         self.assertEqual(win_item["company"]["name"], "company name")
-        self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
+        self.assertEqual(win_item["company"]["id"], "cdms reference")
         self.assertFalse(win_item["credit"])
 
     def test_win_table_2017_confirmed_non_hvc_empty_result(self):

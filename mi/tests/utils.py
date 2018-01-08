@@ -9,6 +9,7 @@ from factory.fuzzy import FuzzyInteger, FuzzyChoice, FuzzyDate
 from jmespath import search as s
 from pytz import UTC
 
+from wins import constants
 from wins.factories import NotificationFactory
 from wins.models import Notification
 
@@ -299,6 +300,8 @@ class GenericWinTableTestMixin:
         for year in self.fin_years:
             with self.subTest(year=year):
                 win_date = getattr(self, f'win_date_{year}')
+                export_exp = FuzzyChoice(constants.STATUS).fuzz()[0]
+                export_exp_constant = constants.STATUS.for_value(export_exp).constant
                 self._create_hvc_win(
                     hvc_code=self.TEST_CAMPAIGN_ID,
                     win_date=win_date,
@@ -306,7 +309,8 @@ class GenericWinTableTestMixin:
                     confirm=True,
                     fin_year=year,
                     export_value=self.export_value,
-                    country=self.TEST_COUNTRY_CODE
+                    country=self.TEST_COUNTRY_CODE,
+                    export_experience=export_exp
                 )
                 self.url = self.get_url_for_year(year)
                 api_response = self._api_response_data
@@ -321,8 +325,9 @@ class GenericWinTableTestMixin:
                                  "name"], "lead officer name")
                 self.assertEqual(win_item["company"]["name"], "company name")
                 self.assertEqual(win_item["company"][
-                                 "cdms_id"], "cdms reference")
+                                 "id"], "cdms reference")
                 self.assertTrue(win_item["credit"])
+                self.assertEqual(win_item["export_experience"]["key"], export_exp_constant)
 
     def test_win_table_2017_one_unconfirmed_hvc_win(self):
         self._create_hvc_win(
@@ -343,7 +348,7 @@ class GenericWinTableTestMixin:
         self.assertEqual(win_item["status"], "email_not_sent")
         self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
         self.assertEqual(win_item["company"]["name"], "company name")
-        self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
+        self.assertEqual(win_item["company"]["id"], "cdms reference")
         self.assertFalse(win_item["credit"])
 
     def test_win_table_one_unconfirmed_hvc_win_with_multiple_customer_notifications(self):
@@ -422,7 +427,7 @@ class GenericWinTableTestMixin:
         self.assertEqual(win_item["status"], "customer_rejected")
         self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
         self.assertEqual(win_item["company"]["name"], "company name")
-        self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
+        self.assertEqual(win_item["company"]["id"], "cdms reference")
         self.assertFalse(win_item["credit"])
 
     def test_win_table_2017_one_hvc_win_from_2016_confirmed_in_2017(self):
@@ -446,7 +451,7 @@ class GenericWinTableTestMixin:
         self.assertEqual(win_item["status"], "customer_rejected")
         self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
         self.assertEqual(win_item["company"]["name"], "company name")
-        self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
+        self.assertEqual(win_item["company"]["id"], "cdms reference")
         self.assertFalse(win_item["credit"])
 
     def test_win_table_2017_one_hvc_win_from_2016_confirmed_in_2016_no_result(self):
@@ -480,7 +485,7 @@ class GenericWinTableTestMixin:
         self.assertEqual(win_item["status"], "customer_confirmed")
         self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
         self.assertEqual(win_item["company"]["name"], "company name")
-        self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
+        self.assertEqual(win_item["company"]["id"], "cdms reference")
         self.assertTrue(win_item["credit"])
 
     def test_win_table_2017_unconfirmed_non_hvc(self):
@@ -500,7 +505,7 @@ class GenericWinTableTestMixin:
         self.assertEqual(win_item["status"], "email_not_sent")
         self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
         self.assertEqual(win_item["company"]["name"], "company name")
-        self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
+        self.assertEqual(win_item["company"]["id"], "cdms reference")
         self.assertFalse(win_item["credit"])
 
 

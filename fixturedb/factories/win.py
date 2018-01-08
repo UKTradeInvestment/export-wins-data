@@ -17,7 +17,7 @@ def create_win_factory(user, sector_choices=None, default_date=None, default_tea
 
     def inner(hvc_code, sector_id=None, win_date=None, export_value=None,
               confirm=False, notify_date=None, response_date=None, country=None,
-              fin_year=2016, agree_with_win=True, team_type=None, hq_team=None):
+              fin_year=2016, agree_with_win=True, team_type=None, hq_team=None, export_experience=None):
         """ generic function creating `Win` """
         if not sector_id:
             sector_id = FuzzyChoice(sector_choices)
@@ -51,16 +51,18 @@ def create_win_factory(user, sector_choices=None, default_date=None, default_tea
 
         if country is not None:
             win.country = country
-            win.save()
 
         if export_value is not None:
             win.total_expected_export_value = export_value
-            win.save()
 
         if team_type is not None:
             win.team_type = team_type
             win.hq_team = hq_team
-            win.save()
+
+        if export_experience:
+            win.export_experience = export_experience
+
+        win.save()
 
         if confirm:
             if not notify_date:
