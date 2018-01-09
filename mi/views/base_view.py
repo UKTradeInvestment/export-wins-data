@@ -638,6 +638,7 @@ class BaseWinMIView(BaseExportMIView):
             total_wins=Count('id')
         ).order_by('-total_value')
 
+        total_count = len(non_hvc_wins)
         if records_to_retrieve:
             non_hvc_wins = non_hvc_wins[:records_to_retrieve]
 
@@ -658,7 +659,7 @@ class BaseWinMIView(BaseExportMIView):
                     percentage((w.get('total_value', 0) / w.get('total_wins', 0)), top_value) or 0
                 ),
             })
-        return data
+        return data, total_count
 
     def _win_table_wins(self, hvc_wins, non_hvc_wins=None):
         all_hvcs = {"{}{}".format(x["campaign_id"], x["financial_year"]): x["name"]
@@ -772,5 +773,5 @@ class TopNonHvcMixin:
 
         records_to_retrieve = None if self.request.GET.get('all') else 5
 
-        results = self._top_non_hvc(non_hvc_wins_qs, records_to_retrieve=records_to_retrieve)
-        return self._success(results, count=non_hvc_wins_qs.count())
+        results, count = self._top_non_hvc(non_hvc_wins_qs, records_to_retrieve=records_to_retrieve)
+        return self._success(results, count=count)
