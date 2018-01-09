@@ -836,7 +836,7 @@ class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase, GenericWinTableTestMixi
         self.assertEqual(win_item["status"], "customer_confirmed")
         self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
         self.assertEqual(win_item["company"]["name"], "company name")
-        self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
+        self.assertEqual(win_item["company"]["id"], "cdms reference")
         self.assertTrue(win_item["credit"])
 
     def test_win_table_2017_one_unconfirmed_hvc_win(self):
@@ -858,7 +858,7 @@ class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase, GenericWinTableTestMixi
         self.assertEqual(win_item["status"], "email_not_sent")
         self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
         self.assertEqual(win_item["company"]["name"], "company name")
-        self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
+        self.assertEqual(win_item["company"]["id"], "cdms reference")
         self.assertFalse(win_item["credit"])
 
     def test_win_table_2017_one_unconfirmed_hvc_win_with_multiple_customer_notifications(self):
@@ -937,7 +937,7 @@ class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase, GenericWinTableTestMixi
         self.assertEqual(win_item["status"], "customer_rejected")
         self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
         self.assertEqual(win_item["company"]["name"], "company name")
-        self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
+        self.assertEqual(win_item["company"]["id"], "cdms reference")
         self.assertFalse(win_item["credit"])
 
     def test_win_table_2017_one_hvc_win_from_2016_confirmed_in_2017(self):
@@ -961,7 +961,7 @@ class HVCGroupWinTableTestCase(HVCGroupBaseViewTestCase, GenericWinTableTestMixi
         self.assertEqual(win_item["status"], "customer_rejected")
         self.assertEqual(win_item["lead_officer"]["name"], "lead officer name")
         self.assertEqual(win_item["company"]["name"], "company name")
-        self.assertEqual(win_item["company"]["cdms_id"], "cdms reference")
+        self.assertEqual(win_item["company"]["id"], "cdms reference")
         self.assertFalse(win_item["credit"])
 
     def test_win_table_2017_one_hvc_win_from_2016_confirmed_in_2017_with_no2017_target(self):

@@ -20,7 +20,48 @@ from mi.utils import (
     months_between,
     month_iterator,
 )
+from wins.constants import UK_REGIONS, STATUS
 from wins.models import Notification, Win, _get_open_hvcs, HVC
+
+
+def confirmed_date(win):
+    if win["confirmation__created"]:
+        return win["confirmation__created"]
+
+
+def status(win):
+    if not win["notifications__created"]:
+        return "email_not_sent"
+    elif not win["confirmation__created"]:
+        return "response_not_received"
+    elif win["confirmation__agree_with_win"]:
+        return "customer_confirmed"
+    else:
+        return "customer_rejected"
+
+
+def country_name(win):
+    if win['country']:
+        dc = DjangoCountry(win['country'])
+        return dc.name
+
+
+def uk_region_name(win):
+    return UK_REGIONS.for_value(win['customer_location']).display
+
+
+def export_experience(win):
+    exp = None
+    try:
+        exp = STATUS.for_value(win['export_experience'])
+    except KeyError:
+        pass
+
+    if exp:
+        return {
+            "key": exp.constant,
+            "description": exp.display
+        }
 
 
 class BaseExportMIView(BaseMIView):
@@ -105,6 +146,9 @@ class BaseWinMIView(BaseExportMIView):
             'cdms_reference',
             'lead_officer_name',
             'location',
+            'export_experience',
+            'country',
+            'customer_location',
             'export_experience'
         ]
         newest_notification = Notification.objects.filter(win=OuterRef(
@@ -620,24 +664,26 @@ class BaseWinMIView(BaseExportMIView):
         all_hvcs = {"{}{}".format(x["campaign_id"], x["financial_year"]): x["name"]
                     for x in HVC.objects.all().values("campaign_id", "financial_year", "name")}
 
-        def confirmed_date(win):
-            if win["confirmation__created"]:
-                return win["confirmation__created"]
-
-            return None
-
-        def status(win):
-            if not win["notifications__created"]:
-                return "email_not_sent"
-            elif not win["confirmation__created"]:
-                return "response_not_received"
-            elif win["confirmation__agree_with_win"]:
-                return "customer_confirmed"
-            else:
-                return "customer_rejected"
-
         def credit(win):
             return self._win_status(win) == "confirmed"
+
+        def formatted_win_table_row(win):
+            return {
+                "company": {
+                    "name": win["company_name"],
+                    "id": win["cdms_reference"]
+                },
+                "lead_officer": {
+                    "name": win["lead_officer_name"],
+                },
+                "country": country_name(win),
+                "uk_region": uk_region_name(win),
+                "export_experience": export_experience(win),
+                "credit": credit(win),
+                "win_date": confirmed_date(win),
+                "export_amount": win["total_expected_export_value"],
+                "status": status(win)
+            }
 
         results = {
             "hvc": [
@@ -647,17 +693,7 @@ class BaseWinMIView(BaseExportMIView):
                         "code": win["hvc"][:4],
                         "name": all_hvcs[win["hvc"]]
                     },
-                    "company": {
-                        "name": win["company_name"],
-                        "cdms_id": win["cdms_reference"]
-                    },
-                    "lead_officer": {
-                        "name": win["lead_officer_name"],
-                    },
-                    "credit": credit(win),
-                    "win_date": confirmed_date(win),
-                    "export_amount": win["total_expected_export_value"],
-                    "status": status(win)
+                    **formatted_win_table_row(win)
                 }
                 for win in hvc_wins
             ],
@@ -666,17 +702,7 @@ class BaseWinMIView(BaseExportMIView):
             results["non_hvc"] = [
                 {
                     "id": win["id"],
-                    "company": {
-                        "name": win["company_name"],
-                        "cdms_id": win["cdms_reference"]
-                    },
-                    "lead_officer": {
-                        "name": win["lead_officer_name"],
-                    },
-                    "credit": credit(win),
-                    "win_date": confirmed_date(win),
-                    "export_amount": win["total_expected_export_value"],
-                    "status": status(win)
+                    **formatted_win_table_row(win)
                 }
                 for win in non_hvc_wins
             ]
