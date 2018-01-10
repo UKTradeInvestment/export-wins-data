@@ -47,7 +47,6 @@ def create_win_factory(user, sector_choices=None, default_date=None, default_tea
                 sector=sector_id,
                 date=win_date,
             )
-        win.save()
 
         if country is not None:
             win.country = country
