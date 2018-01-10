@@ -91,7 +91,14 @@ class TestFlatCSV(TestCase):
         user.save()
         client.login(username=user.email, password='asdf')
         resp = client.get(self.url)
-        zf = zipfile.ZipFile(io.BytesIO(resp.content), 'r')
+
+        chunks = list(resp.streaming_content)
+        bytesio = io.BytesIO()
+        for chunk in chunks:
+            bytesio.write(chunk)
+        bytesio.seek(0)
+
+        zf = zipfile.ZipFile(bytesio, 'r')
         csv_path = zf.extract('wins_complete.csv', tempfile.mkdtemp())
         with open(csv_path, 'r') as csv_fh:
             csv_str = csv_fh.read()[1:]  # exclude BOM
@@ -99,7 +106,13 @@ class TestFlatCSV(TestCase):
         self._assert_about_win_dict(win_dict)
 
     def test_direct_call(self):
-        csv_str = CSVView()._make_flat_wins_csv()[1:]  # exclude BOM
+        chunks = list(CSVView()._make_flat_wins_csv())
+        bytesio = io.BytesIO()
+        for chunk in chunks:
+            bytesio.write(chunk)
+        bytesio.seek(0)
+        csv_str = bytesio.getvalue().decode('utf-8')[1:]  # exclude BOM
+
         win_dict = list(csv.DictReader(csv_str.split('\n')))[0]
         self._assert_about_win_dict(win_dict)
 
@@ -114,7 +127,13 @@ class TestFlatCSV(TestCase):
         return disp
 
     def test_expected_output(self):
-        actual_lines = CSVView()._make_flat_wins_csv().split('\n')
+        chunks = list(CSVView()._make_flat_wins_csv())
+        bytesio = io.BytesIO()
+        for chunk in chunks:
+            bytesio.write(chunk)
+        bytesio.seek(0)
+        actual_lines = bytesio.getvalue().decode('utf-8').split('\n')  # exclude BOM
+
         expected_lines = '''\ufeffid,user,Organisation or company name,Data Hub (Companies House) or CDMS reference number,Contact name,Job title,Contact email,HQ location,What kind of business deal was this win?,Summarise the support provided to help achieve this win,Overseas customer,What are the goods or services?,Date business won [MM/YY],country,total expected export value,total expected non export value,total expected odi value,Does the expected value relate to,sector,Prosperity Fund,"HVC code, if applicable","HVO Programme, if applicable",An HVO specialist was involved,E-exporting programme,type of support 1,type of support 2,type of support 3,associated programme 1,associated programme 2,associated programme 3,I confirm that this information is complete and accurate,My line manager has confirmed the decision to record this win,Lead officer name,Lead officer email address,Secondary email address,Line manager,team type,"HQ team, Region or Post",export experience,created,audit,contributing advisors/team,customer email sent,customer email date,Export breakdown 1,Export breakdown 2,Export breakdown 3,Export breakdown 4,Export breakdown 5,Non-export breakdown 1,Non-export breakdown 2,Non-export breakdown 3,Non-export breakdown 4,Non-export breakdown 5,Outward Direct Investment breakdown 1,Outward Direct Investment breakdown 2,Outward Direct Investment breakdown 3,Outward Direct Investment breakdown 4,Outward Direct Investment breakdown 5,customer response recieved,date response received,Your name,Please confirm these details are correct,Other comments or changes to the win details,Securing the win overall?,Gaining access to contacts?,Getting information or improved understanding of the country?,Improving your profile or credibility in the country?,Having confidence to explore or expand in the country?,Developing or nurturing critical relationships?,"Overcoming a problem in the country (eg legal, regulatory, commercial)?",The win involved a foreign government or state-owned enterprise (eg as an intermediary or facilitator),Our support was a prerequisite to generate this export value,Our support helped you achieve this win more quickly,What value do you estimate you would have achieved without our support?,"Apart from this win, when did your company last export goods or services?","If you hadn't achieved this win, your company might have stopped exporting","Apart from this win, you already have specific plans to export in the next 12 months",It enabled you to expand into a new market,It enabled you to increase exports as a proportion of your turnover,It enabled you to maintain or expand in an existing market,Would you be willing for DIT/Exporting is GREAT to feature your success in marketing materials?\r
 6e18a056-1a25-46ce-a4bb-0553a912706f,Johnny Fakeman <jfakeman@example.com>,company name,cdms reference,customer name,customer job title,customer@email.address,East Midlands,,description,,,2016-05-25,Canada,"£100,000","£2,300","£6,400",Goods,{sector1},Yes,{hvc2},AER-01: Global Aerospace,Yes,Yes,Market entry advice and support – DIT/FCO in UK,,,,,,Yes,Yes,lead officer name,,,line manager name,Trade (TD or ST),TD - Events - Financial & Professional Business Services,Has never exported before,{created1},,"Name: Billy Bragg, Team DSO - TD - Events - Financial & Professional Business Services, Name: Bobby Beedle, Team Overseas Post - Albania - Tirana",Yes,{sent},"2016: £10,000","2018: £20,000","2020: £2,000,000",,,"2017: £300,000",,,,,"2018: £1,000",,,,,Yes,{response_date},Cakes,{agree},Good work,1,2,3,4,5,1,2,Yes,No,Yes,More than 80%,"Apart from this win, we have exported in the last 12 months",No,Yes,No,Yes,No,No\r
 6e18a056-1a25-46ce-a4bb-0553a912706d,Johnny Fakeman <jfakeman@example.com>,company name,cdms reference,customer name,customer job title,customer@email.address,East Midlands,,description,,,2016-05-25,Canada,"£100,000","£2,300","£6,400",Goods,{sector2},Yes,{hvc2},AER-01: Global Aerospace,Yes,Yes,Market entry advice and support – DIT/FCO in UK,,,,,,Yes,Yes,lead officer name,,,line manager name,Trade (TD or ST),TD - Events - Financial & Professional Business Services,,{created2},changes,,No,,,,,,,,,,,,,,,,,No,,,,,,,,,,,,,,,,,,,,,,\r'''\
