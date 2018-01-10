@@ -35,7 +35,7 @@ termcolor==1.1.0
 WebOb==1.7.3
 zope.interface==4.4.2
 django-extended-choices==1.1.1
-openpyxl==2.4.8
+openpyxl==2.4.9
 URLObject==2.4.3
 requests-oauthlib==0.8.0
 zipstream==1.1.4
