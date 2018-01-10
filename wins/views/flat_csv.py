@@ -1,8 +1,8 @@
 import collections
 import csv
 import functools
-import io
-import zipfile
+import zipstream
+from zipfile import ZIP_DEFLATED
 from operator import attrgetter
 import mimetypes
 
@@ -243,14 +243,14 @@ class CSVView(APIView):
         wins = wins.values()
 
         win_datas = [self._get_win_data(win) for win in wins]
-        stringio = io.StringIO()
-        stringio.write(u'\ufeff')
+        stringio = Echo()
+        yield stringio.write(u'\ufeff').encode('utf-8')
         if win_datas:
             csv_writer = csv.DictWriter(stringio, win_datas[0].keys())
-            csv_writer.writeheader()
+            header = dict(zip(csv_writer.fieldnames, csv_writer.fieldnames))
+            yield csv_writer.writerow(header).encode('utf-8')
             for win_data in win_datas:
-                csv_writer.writerow(win_data)
-        return stringio.getvalue()
+                yield csv_writer.writerow(win_data).encode('utf-8')
 
     def _make_user_csv(self):
         users = User.objects.all()
@@ -258,39 +258,42 @@ class CSVView(APIView):
             {'name': u.name, 'email': u.email, 'joined': u.date_joined}
             for u in users
         ]
-        stringio = io.StringIO()
+        stringio = Echo()
         csv_writer = csv.DictWriter(stringio, user_dicts[0].keys())
-        csv_writer.writeheader()
+        header = dict(zip(csv_writer.fieldnames, csv_writer.fieldnames))
+        yield csv_writer.writerow(header).encode('utf-8')
         for user_dict in user_dicts:
-            csv_writer.writerow(user_dict)
-        return stringio.getvalue()
+            yield csv_writer.writerow(user_dict).encode('utf-8')
 
     def _make_plain_csv(self, table):
         """ Get CSV of table """
 
-        stringio = io.StringIO()
         cursor = connection.cursor()
         cursor.execute("select * from wins_{};".format(table))
-        csv_writer = csv.writer(stringio)
+        csv_writer = csv.writer(Echo())
         header = [i[0] for i in cursor.description]
-        csv_writer.writerow(header)
-        csv_writer.writerows(cursor)
-        return stringio.getvalue()
+        yield csv_writer.writerow(header).encode('utf-8')
+        for row in cursor:
+            yield csv_writer.writerow(row).encode('utf-8')
 
     def get(self, request, format=None):
-        bytesio = io.BytesIO()
-        zf = zipfile.ZipFile(bytesio, 'w')
+        zf = zipstream.ZipFile(mode='w', compression=ZIP_DEFLATED)
         for table in ['customerresponse', 'notification', 'advisor']:
-            csv_str = self._make_plain_csv(table)
-            zf.writestr(table + 's.csv', csv_str)
-        full_csv_str = self._make_flat_wins_csv()
-        zf.writestr('wins_complete.csv', full_csv_str)
-        full_csv_del_str = self._make_flat_wins_csv(deleted=True)
-        zf.writestr('wins_deleted_complete.csv', full_csv_del_str)
-        user_csv_str = self._make_user_csv()
-        zf.writestr('users.csv', user_csv_str)
-        zf.close()
-        return HttpResponse(bytesio.getvalue(), content_type=mimetypes.types_map['.csv'])
+            csv_iter = self._make_plain_csv(table)
+            zf.write_iter(table + 's.csv', csv_iter)
+
+        full_csv_iter = self._make_flat_wins_csv()
+        zf.write_iter('wins_complete.csv', full_csv_iter)
+
+        full_csv_del_iter = self._make_flat_wins_csv(deleted=True)
+        zf.write_iter('wins_deleted_complete.csv', full_csv_del_iter)
+
+        user_csv_iter = self._make_user_csv()
+        zf.write_iter('users.csv', user_csv_iter)
+
+        response = StreamingHttpResponse(zf, content_type=mimetypes.types_map['.csv'])
+
+        return response
 
 
 class Echo(object):
