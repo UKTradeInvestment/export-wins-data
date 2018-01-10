@@ -21,7 +21,9 @@ FILE_TYPES = Choices(
     ("COMPANIES_REGION", 8, "Companies for Regions", {
      'prefix': 'companies/region', 'ns': 'comp_region', 'metadata_keys': ['region']}),
     ("COMPANIES_SECTOR", 9, "Companies for Sectors", {
-     'prefix': 'companies/sector', 'ns': 'comp_sector', 'metadata_keys': ['sector']})
+     'prefix': 'companies/sector', 'ns': 'comp_sector', 'metadata_keys': ['sector']}),
+    ("KANTAR_MONTHLY", 10, "Kantar Report Monthly",
+     {'prefix': 'kantar/monthly', 'ns': 'kantar_monthly'}),
 )
 
 FILE_TYPES.add_subset('EW', ('EXPORT_WINS',))

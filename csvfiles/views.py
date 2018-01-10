@@ -95,7 +95,7 @@ class CSVBaseView(APIView):
                 return None
 
         # get latest one for each month available for current FY
-        if file_type.constant in ('FDI_MONTHLY', 'SERVICE_DELIVERIES_MONTHLY'):
+        if file_type.constant in ('FDI_MONTHLY', 'SERVICE_DELIVERIES_MONTHLY', 'KANTAR_MONTHLY'):
             try:
                 return CSVFile.objects.filter(
                     report_start_date__gte=fy_start_date, file_type=file_type.value, is_active=True
@@ -298,6 +298,7 @@ class AllCSVFilesView(CSVBaseView):
         comp_region_files = self.files_list(FILE_TYPES.COMPANIES_REGION)
         cont_sector_files = self.files_list(FILE_TYPES.CONTACTS_SECTOR)
         comp_sector_files = self.files_list(FILE_TYPES.COMPANIES_SECTOR)
+        kantar_monthly_files = self.files_list(FILE_TYPES.KANTAR_MONTHLY)
         results = {}
 
         if ew_files:
@@ -426,6 +427,17 @@ class AllCSVFilesView(CSVBaseView):
                     'created': x.created,
                     'sector': x.sector,
                 } for x in comp_sector_files
+            ]
+
+        if kantar_monthly_files:
+            results['kantar']['months'] = [
+                {
+                    'id': x.id,
+                    'name': x.name,
+                    'report_start_date': x.report_start_date,
+                    'report_end_date': x.report_end_date,
+                    'created': x.created,
+                } for x in kantar_monthly_files
             ]
 
         return Response(results, status=status.HTTP_200_OK)
