@@ -1,7 +1,6 @@
 from unittest import mock
 
 from django.test import TestCase, Client, override_settings, RequestFactory, SimpleTestCase
-from django.core.urlresolvers import reverse
 
 from ..authenticators import AlicePermission
 from ..middleware import SignatureRejectionMiddleware, alice_exempt

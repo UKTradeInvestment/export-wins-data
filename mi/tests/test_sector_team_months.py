@@ -1,7 +1,7 @@
 import datetime
 import json
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from freezegun import freeze_time
 
 from mi.models import FinancialYear

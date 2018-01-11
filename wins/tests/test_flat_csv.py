@@ -4,7 +4,7 @@ import io
 import tempfile
 import zipfile
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.test import override_settings, TestCase
 
 from ..constants import BREAKDOWN_NAME_TO_ID

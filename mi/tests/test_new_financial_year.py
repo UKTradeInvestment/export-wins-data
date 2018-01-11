@@ -2,7 +2,7 @@ import datetime
 import json
 from operator import eq, gt
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from factory.fuzzy import FuzzyDate
 from freezegun import freeze_time
 
