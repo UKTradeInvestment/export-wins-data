@@ -146,6 +146,7 @@ class CSVView(APIView):
         """ Get field specified in Win model """
         return self._win_fields_map[name]
 
+    @functools.lru_cache(maxsize=8)
     def _val_to_str(self, val):
         if val is True:
             return 'Yes'
@@ -156,6 +157,7 @@ class CSVView(APIView):
         else:
             return str(val)
 
+    @functools.lru_cache(maxsize=8)
     def _choices_dict(self, choices):
         return dict(choices)
 
@@ -300,6 +302,12 @@ class CSVView(APIView):
         response = StreamingHttpResponse(zf, content_type=mimetypes.types_map['.csv'])
 
         return response
+
+    def dispatch(self, request, *args, **kwargs):
+        resp = super(CSVView, self).dispatch(request, *args, **kwargs)
+        self._choices_dict.cache_clear()
+        self._val_to_str.cache_clear()
+        return resp
 
 
 class Echo(object):
