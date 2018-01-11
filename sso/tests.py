@@ -6,7 +6,7 @@ from django.utils.timezone import now
 from freezegun import freeze_time
 from xml.etree import ElementTree
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.test import TestCase, override_settings, tag
 
 from alice.tests.client import AliceClient

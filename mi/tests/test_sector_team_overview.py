@@ -1,6 +1,6 @@
 import datetime
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from factory.fuzzy import FuzzyChoice
 from freezegun import freeze_time
 

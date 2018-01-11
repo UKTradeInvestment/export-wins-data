@@ -2,7 +2,7 @@ import datetime
 import json
 
 from django.core.management import call_command
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.urls import NoReverseMatch
 from django.utils.timezone import now, get_current_timezone
 

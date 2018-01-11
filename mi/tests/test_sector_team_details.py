@@ -1,7 +1,7 @@
 import datetime
 
 from django.core.management import call_command
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from freezegun import freeze_time
 
