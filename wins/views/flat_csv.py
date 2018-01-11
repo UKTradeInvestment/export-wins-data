@@ -11,6 +11,7 @@ from django.core.exceptions import ValidationError
 from django.db import connection, models
 from django.http import HttpResponse, StreamingHttpResponse
 from django.utils.decorators import method_decorator
+from django.utils.functional import cached_property
 from django.utils.timezone import now
 from django.views.decorators.gzip import gzip_page
 
@@ -129,15 +130,21 @@ class CSVView(APIView):
             filter(lambda field: field.name == name, model._meta.fields)
         )
 
-    @functools.lru_cache(None)
+    @cached_property
+    def _customer_response_fields_map(self):
+        return {f.name: f for f in CustomerResponse._meta.fields}
+
     def _get_customerresponse_field(self, name):
         """ Get field specified in CustomerResponse model """
-        return self._get_model_field(CustomerResponse, name)
+        return self._customer_response_fields_map[name]
 
-    @functools.lru_cache(None)
+    @cached_property
+    def _win_fields_map(self):
+        return {f.name: f for f in Win._meta.fields}
+
     def _get_win_field(self, name):
         """ Get field specified in Win model """
-        return self._get_model_field(Win, name)
+        return self._win_fields_map[name]
 
     def _val_to_str(self, val):
         if val is True:
@@ -149,7 +156,6 @@ class CSVView(APIView):
         else:
             return str(val)
 
-    @functools.lru_cache(None)
     def _choices_dict(self, choices):
         return dict(choices)
 
