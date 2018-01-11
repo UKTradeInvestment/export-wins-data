@@ -430,6 +430,7 @@ class AllCSVFilesView(CSVBaseView):
             ]
 
         if kantar_monthly_files:
+            results['kantar'] = {}
             results['kantar']['months'] = [
                 {
                     'id': x.id,
