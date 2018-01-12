@@ -35,6 +35,7 @@ class CSVView(APIView):
     IGNORE_FIELDS = ['responded', 'sent', 'country_name', 'updated',
                      'complete', 'type', 'type_display',
                      'export_experience_display', 'location']
+    _choices_cache = {}
 
     def __init__(self, **kwargs):
         # cache some stuff to make flat CSV. like prefetch but works easily
@@ -146,7 +147,6 @@ class CSVView(APIView):
         """ Get field specified in Win model """
         return self._win_fields_map[name]
 
-    @functools.lru_cache(maxsize=8)
     def _val_to_str(self, val):
         if val is True:
             return 'Yes'
@@ -157,9 +157,16 @@ class CSVView(APIView):
         else:
             return str(val)
 
-    @functools.lru_cache(maxsize=8)
     def _choices_dict(self, choices):
-        return dict(choices)
+        """
+        Memoizes result of conversion of a choices object to a dict.
+        Cache is stored on the instance
+        """
+        key = id(choices)
+        result = self._choices_cache.get(key)
+        if not result:
+            result = self._choices_cache[key] = dict(choices)
+        return result
 
     def _get_win_data(self, win):
         """ Take Win dict, return ordered dict of {name -> value} """
@@ -302,12 +309,6 @@ class CSVView(APIView):
         response = StreamingHttpResponse(zf, content_type=mimetypes.types_map['.csv'])
 
         return response
-
-    def dispatch(self, request, *args, **kwargs):
-        resp = super(CSVView, self).dispatch(request, *args, **kwargs)
-        self._choices_dict.cache_clear()
-        self._val_to_str.cache_clear()
-        return resp
 
 
 class Echo(object):
