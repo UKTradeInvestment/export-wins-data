@@ -5,6 +5,7 @@ from collections import defaultdict
 
 from django.db.models import Func, F, Sum, When, Case, Value, CharField, Count
 from django.db.models.functions import Coalesce
+from django.db import connection
 
 from core.utils import group_by_key
 from fdi.models import (
@@ -475,31 +476,49 @@ class FDIYearOnYearComparison(BaseFDIView):
             "end": self._date_range_end(),
         }
 
+    def raw_queryset_as_values_list(self, raw_qs):
+        columns = raw_qs.columns
+        for row in raw_qs:
+            yield {col: getattr(row, col) for col in columns}
+
     def get_results(self):
-        breakdown = self.get_queryset().won(
-        ).filter(
-            date_won__lt=self._date_range_end()
-        ).values(
-            'date_won'
-        ).annotate(
-            **ANNOTATIONS
-        ).annotate(
-            Count('year'),
-            Count('value'),
-            Sum('number_new_jobs'),
-            Sum('number_safeguarded_jobs'),
-            Sum('investment_value')
-        ).values(
-            'year',
-            'year__count',
-            'number_new_jobs__sum',
-            'number_safeguarded_jobs__sum',
-            'investment_value__sum',
-            'value',
-            'value__count'
-        ).order_by('year')
+        projects_by_fy = """SELECT 
+            get_financial_year(date_won) AS year,
+            CASE
+                WHEN approved_good_value = True THEN 'good'
+                WHEN approved_high_value = True THEN 'high'
+                ELSE 'standard' END
+            AS value,
+            COUNT(get_financial_year(date_won)) AS year__count,
+            COUNT(
+                CASE
+                    WHEN approved_good_value = True THEN 'good'
+                    WHEN approved_high_value = True THEN 'high'
+                    ELSE 'standard' END
+            ) AS value__count,
+            SUM(number_new_jobs) AS number_new_jobs__sum,
+            SUM(number_safeguarded_jobs) AS number_safeguarded_jobs__sum,
+            SUM(investment_value) AS investment_value__sum
+        FROM fdi_investments
+        WHERE (stage = 'Won' AND date_won < %s AND date_won >= '2014-04-01')
+        GROUP BY
+            get_financial_year(date_won),
+            CASE
+                WHEN approved_good_value = True THEN 'good'
+                WHEN approved_high_value = True THEN 'high'
+                ELSE 'standard'
+            END
+        ORDER BY year ASC"""
+
+        breakdown = []
+        args = [self._date_range_end()]
+        with connection.cursor() as cursor:
+            cursor.execute(projects_by_fy, args)
+            columns = [x.name for x in cursor.description]
+            breakdown = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
         year_buckets = sorted(list({x['year'] for x in breakdown}))
-        return [
+        results = [
             {
                 "year": y,
                 **{b['value']: {
@@ -510,6 +529,16 @@ class FDIYearOnYearComparison(BaseFDIView):
                 } for b in breakdown if b['year'] == y}
             } for y in year_buckets
         ]
+        for year in results:
+            for k in ['high', 'good', 'standard']:
+                if not year.get(k):
+                    year[k] = {
+                        "count": 0,
+                        "number_new_jobs__sum": 0,
+                        "number_safeguarded_jobs__sum": 0,
+                        "investment_value__sum": 0,
+                    }
+        return results
 
 
 class FDISectorTeamWinTable(FDIBaseSectorTeamView):

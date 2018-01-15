@@ -22,7 +22,7 @@ class Command(BaseCommand):
         for pending_i in pending_investments:
             project_code = pending_i.data["project_code"]
             try:
-                live_i = Investments.objects.get(project_code=project_code)
+                live_i = Investments.objects.filter(project_code=project_code).latest('id')
                 updated_rows += 1
             except Investments.DoesNotExist:
                 live_i = Investments(project_code=project_code)
@@ -41,6 +41,8 @@ class Command(BaseCommand):
                 live_i.approved_good_value = pending_i.data["approved_good_value"]
             if pending_i.data["actual_land_date"]:
                 live_i.date_won = pending_i.data["actual_land_date"]
+            else:
+                live_i.date_won = pending_i.data["estimated_land_date"]
             if pending_i.data["sector"]:
                 live_i.sector_id = pending_i.data["sector"]["id"]
             if pending_i.data["uk_region_locations"] and len(pending_i.data["uk_region_locations"]) > 0:
