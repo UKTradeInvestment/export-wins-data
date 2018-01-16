@@ -76,7 +76,7 @@ class Investments(models.Model):
 
     date_won = models.DateField(null=True)
     sector = models.ForeignKey(Sector, null=True)
-    uk_region = models.ForeignKey(UKRegion, null=True)
+    uk_regions = models.ManyToManyField(UKRegion, through="InvestmentUKRegion")
 
     client_relationship_manager = models.CharField(max_length=MAX_LENGTH)
     client_relationship_manager_team = models.CharField(
@@ -91,6 +91,16 @@ class Investments(models.Model):
     # set to true if importing from spreadsheet
     legacy = models.BooleanField(default=False, db_index=True)
     objects = InvestmentsQuerySet.as_manager()
+
+
+class InvestmentUKRegion(models.Model):
+    """ representation of UK regions that were benefiting from the investment"""
+
+    investment = models.ForeignKey(Investments)
+    uk_region = models.ForeignKey(UKRegion)
+
+    def __str__(self):
+        return f'{self.investment} - {self.uk_region}'
 
 
 class GlobalTargets(models.Model):

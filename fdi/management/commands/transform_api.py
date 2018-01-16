@@ -1,7 +1,7 @@
 from django.core.management import BaseCommand
 
 from fdi.models.importer import InvestmentLoad
-from fdi.models.live import Investments, Sector, Country, UKRegion
+from fdi.models.live import Investments, Sector, Country, UKRegion, InvestmentUKRegion
 
 
 class Command(BaseCommand):
@@ -22,6 +22,8 @@ class Command(BaseCommand):
         for pending_i in pending_investments:
             project_code = pending_i.data["project_code"]
             try:
+                # there shouldn't be more than one row per project, but just in case
+                # pick up the latest one
                 live_i = Investments.objects.filter(project_code=project_code).latest('id')
                 updated_rows += 1
             except Investments.DoesNotExist:
@@ -45,10 +47,6 @@ class Command(BaseCommand):
                 live_i.date_won = pending_i.data["estimated_land_date"]
             if pending_i.data["sector"]:
                 live_i.sector_id = pending_i.data["sector"]["id"]
-            if pending_i.data["uk_region_locations"] and len(pending_i.data["uk_region_locations"]) > 0:
-                # taking first UK region for now. Need to understand why there would be more than one
-                # and how should we be handling it, when there are more
-                live_i.uk_region_id = pending_i.data["uk_region_locations"][0]["id"]
             if pending_i.data["client_relationship_manager"]:
                 live_i.client_relationship_manager = pending_i.data[
                     "client_relationship_manager"]["name"]
@@ -65,6 +63,14 @@ class Command(BaseCommand):
             if pending_i.data["investor_company_country"]:
                 live_i.company_country_id = pending_i.data["investor_company_country"]["id"]
             live_i.save()
+            if pending_i.data["uk_region_locations"] and len(pending_i.data["uk_region_locations"]) > 0:
+                for location in pending_i.data["uk_region_locations"]:
+                    try:
+                        uk_region = UKRegion.objects.get(id=location["id"])
+                        InvestmentUKRegion(uk_region=uk_region, investment=live_i).save()
+                    except UKRegion.DoesNotExist:
+                        pass
+
             pending_i.transformed = True
             pending_i.save()
 
