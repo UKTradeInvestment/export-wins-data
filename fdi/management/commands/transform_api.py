@@ -1,5 +1,6 @@
 from django.core.management import BaseCommand
 
+from fdi.models.constants import FDI_VALUE
 from fdi.models.importer import InvestmentLoad
 from fdi.models.live import Investments, Sector, Country, UKRegion, InvestmentUKRegion
 
@@ -18,6 +19,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         new_rows = 0
         updated_rows = 0
+        fdi_value_dict = dict((v, k) for k, v in FDI_VALUE)
         pending_investments = InvestmentLoad.objects.filter(transformed=False)
         for pending_i in pending_investments:
             project_code = pending_i.data["project_code"]
@@ -38,7 +40,7 @@ class Command(BaseCommand):
                 live_i.number_safeguarded_jobs = pending_i.data[
                     "number_safeguarded_jobs"]
             if pending_i.data["fdi_value"]:
-                live_i.fdi_value = pending_i.data["fdi_value"]["name"]
+                live_i.fdi_value = fdi_value_dict[pending_i.data["fdi_value"]["name"]]
             if pending_i.data["actual_land_date"]:
                 live_i.date_won = pending_i.data["actual_land_date"]
             else:
@@ -63,7 +65,7 @@ class Command(BaseCommand):
             if pending_i.data["level_of_involvement"]:
                 live_i.level_of_involvement = pending_i.data["level_of_involvement"]["name"]
             if pending_i.data["investment_type"]:
-                live_i.level_of_involvement = pending_i.data["investment_type"]["name"]
+                live_i.investment_type = pending_i.data["investment_type"]["name"]
             live_i.save()
             if pending_i.data["uk_region_locations"] and len(pending_i.data["uk_region_locations"]) > 0:
                 for location in pending_i.data["uk_region_locations"]:

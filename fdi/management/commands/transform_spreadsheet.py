@@ -85,9 +85,10 @@ class Command(BaseCommand):
                     NOT EXISTS (
                         SELECT id FROM fdi_investments WHERE legacy = true
                     )
+              RETURNING id as investment_id, project_code
           )
           INSERT INTO fdi_investmentukregion (investment_id, uk_region_id)
-          SELECT i.id, a.uk_region_id FROM fdi_investments i
+          SELECT i.investment_id, a.uk_region_id FROM projects_insert i
           INNER JOIN unique_projects a ON i.project_code = a.project_code
           WHERE
                 NOT EXISTS (
