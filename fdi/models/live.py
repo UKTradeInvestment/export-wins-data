@@ -1,7 +1,7 @@
 from django.db import models
 
 from fdi.models.metadata import Country, Sector, UKRegion
-from fdi.models.constants import MAX_LENGTH
+from fdi.models.constants import MAX_LENGTH, FDI_VALUE
 from mi.models import FinancialYear
 
 
@@ -71,8 +71,7 @@ class Investments(models.Model):
     number_safeguarded_jobs = models.PositiveIntegerField(
         null=False, default=0)
 
-    approved_high_value = models.BooleanField(default=False)
-    approved_good_value = models.BooleanField(default=False)
+    fdi_value = models.PositiveIntegerField(choices=FDI_VALUE, null=True)
 
     date_won = models.DateField(null=True)
     sector = models.ForeignKey(Sector, null=True)
@@ -87,6 +86,9 @@ class Investments(models.Model):
 
     investment_value = models.BigIntegerField(default=0)
     foreign_equity_investment = models.BigIntegerField(default=0)
+
+    level_of_involvement = models.CharField(max_length=MAX_LENGTH, default='No Involvement')
+    investment_type = models.CharField(max_length=MAX_LENGTH, default='FDI')
 
     # set to true if importing from spreadsheet
     legacy = models.BooleanField(default=False, db_index=True)

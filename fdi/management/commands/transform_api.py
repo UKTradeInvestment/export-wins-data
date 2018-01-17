@@ -37,10 +37,8 @@ class Command(BaseCommand):
             if pending_i.data["number_safeguarded_jobs"]:
                 live_i.number_safeguarded_jobs = pending_i.data[
                     "number_safeguarded_jobs"]
-            if pending_i.data["approved_high_value"]:
-                live_i.approved_high_value = pending_i.data["approved_high_value"]
-            if pending_i.data["approved_good_value"]:
-                live_i.approved_good_value = pending_i.data["approved_good_value"]
+            if pending_i.data["fdi_value"]:
+                live_i.fdi_value = pending_i.data["fdi_value"]["name"]
             if pending_i.data["actual_land_date"]:
                 live_i.date_won = pending_i.data["actual_land_date"]
             else:
@@ -62,6 +60,10 @@ class Command(BaseCommand):
                 live_i.client_relationship_manager_team = pending_i.data["client_relationship_manager_team"]['name']
             if pending_i.data["investor_company_country"]:
                 live_i.company_country_id = pending_i.data["investor_company_country"]["id"]
+            if pending_i.data["level_of_involvement"]:
+                live_i.level_of_involvement = pending_i.data["level_of_involvement"]["name"]
+            if pending_i.data["investment_type"]:
+                live_i.level_of_involvement = pending_i.data["investment_type"]["name"]
             live_i.save()
             if pending_i.data["uk_region_locations"] and len(pending_i.data["uk_region_locations"]) > 0:
                 for location in pending_i.data["uk_region_locations"]:
