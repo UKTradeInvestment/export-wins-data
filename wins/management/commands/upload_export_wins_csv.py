@@ -2,7 +2,7 @@ import sys
 from tempfile import NamedTemporaryFile
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from django.utils.timezone import now
+from django.utils.timezone import now, timedelta
 
 import boto3
 from boto3.exceptions import Boto3Error
@@ -60,8 +60,10 @@ class Command(BaseCommand):
 
             try:
                 result = self.upload_to_s3(ew_file.name)
-
+                # as this report is for data until yesterday
+                yesterday = now() - timedelta(days=1)
                 CSVFile(
+                    report_end_date=yesterday,
                     file_type=FILE_TYPES.EXPORT_WINS,
                     name='Export Wins Daily',
                     s3_path=result
