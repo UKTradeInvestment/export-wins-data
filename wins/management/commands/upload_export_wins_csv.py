@@ -50,23 +50,24 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        v = CurrentFinancialYearWins()
-        csv_stream = v._make_flat_wins_csv_stream(
-            v._make_flat_wins_csv())
+        try:
+            v = CurrentFinancialYearWins()
+            csv_stream = v._make_flat_wins_csv_stream(
+                v._make_flat_wins_csv())
 
-        with NamedTemporaryFile(mode='w+') as ew_file:
-            for line in csv_stream:
-                ew_file.write(line)
+            with NamedTemporaryFile(mode='w+') as ew_file:
+                for line in csv_stream:
+                    ew_file.write(line)
 
-            try:
                 result = self.upload_to_s3(ew_file.name)
                 # as this report is for data until yesterday
-                yesterday = now() - timedelta(days=1)
+                # yesterday = now() - timedelta(days=1)
                 CSVFile(
-                    report_end_date=yesterday,
+                    # report_end_date=yesterday,
                     file_type=FILE_TYPES.EXPORT_WINS,
                     name='Export Wins Daily',
                     s3_path=result
                 ).save()
-            except (Boto3Error, ClientError):
-                sentry.captureException(exc_info=sys.exc_info())
+        except Exception:
+            sentry.captureException(exc_info=sys.exc_info())
+            raise
