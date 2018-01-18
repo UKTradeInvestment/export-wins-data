@@ -1,7 +1,8 @@
 from django.core.management import BaseCommand
 
+from fdi.models.constants import FDI_VALUE
 from fdi.models.importer import InvestmentLoad
-from fdi.models.live import Investments, Sector, Country, UKRegion
+from fdi.models.live import Investments, Sector, Country, UKRegion, InvestmentUKRegion
 
 
 class Command(BaseCommand):
@@ -18,10 +19,13 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         new_rows = 0
         updated_rows = 0
+        fdi_value_dict = dict((v, k) for k, v in FDI_VALUE)
         pending_investments = InvestmentLoad.objects.filter(transformed=False)
         for pending_i in pending_investments:
             project_code = pending_i.data["project_code"]
             try:
+                # there shouldn't be more than one row per project, but just in case
+                # pick up the latest one
                 live_i = Investments.objects.filter(project_code=project_code).latest('id')
                 updated_rows += 1
             except Investments.DoesNotExist:
@@ -35,20 +39,14 @@ class Command(BaseCommand):
             if pending_i.data["number_safeguarded_jobs"]:
                 live_i.number_safeguarded_jobs = pending_i.data[
                     "number_safeguarded_jobs"]
-            if pending_i.data["approved_high_value"]:
-                live_i.approved_high_value = pending_i.data["approved_high_value"]
-            if pending_i.data["approved_good_value"]:
-                live_i.approved_good_value = pending_i.data["approved_good_value"]
+            if pending_i.data["fdi_value"]:
+                live_i.fdi_value = fdi_value_dict[pending_i.data["fdi_value"]["name"]]
             if pending_i.data["actual_land_date"]:
                 live_i.date_won = pending_i.data["actual_land_date"]
             else:
                 live_i.date_won = pending_i.data["estimated_land_date"]
             if pending_i.data["sector"]:
                 live_i.sector_id = pending_i.data["sector"]["id"]
-            if pending_i.data["uk_region_locations"] and len(pending_i.data["uk_region_locations"]) > 0:
-                # taking first UK region for now. Need to understand why there would be more than one
-                # and how should we be handling it, when there are more
-                live_i.uk_region_id = pending_i.data["uk_region_locations"][0]["id"]
             if pending_i.data["client_relationship_manager"]:
                 live_i.client_relationship_manager = pending_i.data[
                     "client_relationship_manager"]["name"]
@@ -64,7 +62,19 @@ class Command(BaseCommand):
                 live_i.client_relationship_manager_team = pending_i.data["client_relationship_manager_team"]['name']
             if pending_i.data["investor_company_country"]:
                 live_i.company_country_id = pending_i.data["investor_company_country"]["id"]
+            if pending_i.data["level_of_involvement"]:
+                live_i.level_of_involvement = pending_i.data["level_of_involvement"]["name"]
+            if pending_i.data["investment_type"]:
+                live_i.investment_type = pending_i.data["investment_type"]["name"]
             live_i.save()
+            if pending_i.data["uk_region_locations"] and len(pending_i.data["uk_region_locations"]) > 0:
+                for location in pending_i.data["uk_region_locations"]:
+                    try:
+                        uk_region = UKRegion.objects.get(id=location["id"])
+                        InvestmentUKRegion(uk_region=uk_region, investment=live_i).save()
+                    except UKRegion.DoesNotExist:
+                        pass
+
             pending_i.transformed = True
             pending_i.save()
 

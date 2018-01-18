@@ -23,11 +23,13 @@ from mi.utils import two_digit_float
 ANNOTATIONS = dict(
     year=Func(F('date_won'), function='get_financial_year'),
     value=Case(
-        When(approved_good_value=True, then=Value(
+        When(fdi_value=2, then=Value(
             'good', output_field=CharField(max_length=10))),
-        When(approved_high_value=True, then=Value(
+        When(fdi_value=1, then=Value(
             'high', output_field=CharField(max_length=10))),
-        default=Value('standard', output_field=CharField(max_length=10))
+        When(fdi_value=3, then=Value(
+            'standard', output_field=CharField(max_length=10))),
+        default=Value('unknown', output_field=CharField(max_length=10))
     )
 )
 
@@ -61,12 +63,14 @@ def fill_in_missing_performance(data, target: GlobalTargets):
 
 
 def classify_quality(investment):
-    if investment.approved_high_value:
+    if investment.fdi_value == 1:
         return 'high'
-    elif investment.approved_good_value:
+    elif investment.fdi_value == 2:
         return 'good'
-    else:
+    elif investment.fdi_value == 3:
         return 'standard'
+    else:
+        return 'unknown'
 
 
 class BaseFDIView(BaseMIView):
@@ -110,7 +114,7 @@ class BaseFDIView(BaseMIView):
 
         total = investments_in_scope.count()
         data = investments_in_scope.values(
-            'approved_high_value', 'approved_good_value'
+            'fdi_value'
         ).annotate(
             value=ANNOTATIONS['value']
         ).annotate(
@@ -264,7 +268,7 @@ class FDISectorTeamDetailView(FDIBaseSectorTeamView):
         # order investments by stage and then by quality so as to group them easily
         market_investments = investments.filter(
             company_country__in=market.countries.all()).order_by(
-                'stage', 'approved_high_value', 'approved_good_value')
+                'stage', 'fdi_value')
         grouped = self._group_investments(market_investments, classify_stage)
 
         target = self._get_market_target(market)
@@ -426,7 +430,7 @@ class FDISectorTeamOverview(FDISectorTeamDetailView):
         # order investments by stage and then by quality so as to group them easily
         sector_team_investments = investments.filter(
             sector__in=sector_team.sectors.all()).order_by(
-            'stage', 'approved_high_value', 'approved_good_value')
+            'stage', 'fdi_value')
         grouped = self._group_investments(
             sector_team_investments, classify_stage)
 
@@ -485,16 +489,18 @@ class FDIYearOnYearComparison(BaseFDIView):
         projects_by_fy = """SELECT 
             get_financial_year(date_won) AS year,
             CASE
-                WHEN approved_good_value = True THEN 'good'
-                WHEN approved_high_value = True THEN 'high'
-                ELSE 'standard' END
+                WHEN fdi_value = 2 THEN 'good'
+                WHEN fdi_value = 1 THEN 'high'
+                WHEN fdi_value = 3 THEN 'standard'
+                ELSE 'unknown' END
             AS value,
             COUNT(get_financial_year(date_won)) AS year__count,
             COUNT(
                 CASE
-                    WHEN approved_good_value = True THEN 'good'
-                    WHEN approved_high_value = True THEN 'high'
-                    ELSE 'standard' END
+                WHEN fdi_value = 2 THEN 'good'
+                WHEN fdi_value = 1 THEN 'high'
+                WHEN fdi_value = 3 THEN 'standard'
+                ELSE 'unknown' END
             ) AS value__count,
             SUM(number_new_jobs) AS number_new_jobs__sum,
             SUM(number_safeguarded_jobs) AS number_safeguarded_jobs__sum,
@@ -504,9 +510,10 @@ class FDIYearOnYearComparison(BaseFDIView):
         GROUP BY
             get_financial_year(date_won),
             CASE
-                WHEN approved_good_value = True THEN 'good'
-                WHEN approved_high_value = True THEN 'high'
-                ELSE 'standard'
+                WHEN fdi_value = 2 THEN 'good'
+                WHEN fdi_value = 1 THEN 'high'
+                WHEN fdi_value = 3 THEN 'standard'
+                ELSE 'unknown'
             END
         ORDER BY year ASC"""
 

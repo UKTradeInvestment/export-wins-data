@@ -16,20 +16,28 @@ class Command(BaseCommand):
 
     def handle(self, *files, **options):
         query = """
-        INSERT INTO fdi_investments (project_code, stage, number_new_jobs, number_safeguarded_jobs,
-        approved_high_value, approved_good_value, date_won, sector_id, uk_region_id, client_relationship_manager,
-        company_name, company_reference, investment_value, foreign_equity_investment, legacy, company_country_id)
         WITH all_projects as (
           SELECT i.id, i.data->>'Project Reference Code' as project_code,
               i.data->>'Project Status' as stage,
               (i.data->>'Number Of New Jobs')::int as number_new_jobs,
               (i.data->>'Number Of Safe Jobs')::int as number_safeguarded_jobs,
-              i.data->>'Project Value (New)' LIKE 'High%' as approved_high_value,
+              CASE
+                WHEN i.data->>'Project Value (New)' LIKE 'High%' THEN 1
+                WHEN i.data->>'Project Value (New)' LIKE 'Good%' THEN 2
+                WHEN i.data->>'Project Value (New)' LIKE 'Standard%' THEN 3
+                ELSE NULL
+              END as fdi_value,
               i.data->>'Project Value (New)' LIKE 'Good%' as approved_good_value,
               to_timestamp(i.data->>' Project Decision Date', 'YYYY-MM-DD')::date as date_won,
               fdi_sector.id as sector_id,
               fdi_ukregion.id as uk_region_id,
               'unknown' as client_relationship_manager,
+              i.data->>'Project Level Of Involvement' as level_of_involvement,
+              CASE
+                WHEN i.data->>'Type of Investment (FDI)' = 'Other (non-FDI)' THEN 'Non-FDI'
+                WHEN i.data->>'Type of Investment (FDI)' = 'Commitment to Invest' THEN 'Commitment to invest'
+                ELSE 'FDI'
+              END as investment_type,
               parent_c.data->>'Organisation Name' as company_name,
               parent_c.data->>'Organisation Reference Code' as comapny_reference,
               (i.data->>'Total Value of Investment')::DECIMAL::BIGINT as investment_value,
@@ -51,15 +59,37 @@ class Command(BaseCommand):
               SELECT Max(id) id, data->>'Project Reference Code' as project_code
               FROM   fdi_investmentlegacyload
               GROUP BY data->>'Project Reference Code'
+          ),
+          unique_projects AS
+          (
+              SELECT
+                  DISTINCT ON (a.project_code)
+                  a.project_code, a.stage, a.number_new_jobs, a.number_safeguarded_jobs,
+                  a.fdi_value, a.date_won, a.sector_id, a.uk_region_id, a.client_relationship_manager,
+                  a.level_of_involvement, a.investment_type, a.company_name, a.comapny_reference,
+                  a.investment_value, a.foreign_equity_investment, a.legacy, a.company_country_id
+              FROM all_projects a
+                  INNER JOIN latest_projects l ON l.id = a.id
+          ),
+          projects_insert AS (
+              INSERT INTO fdi_investments (project_code, stage, number_new_jobs, number_safeguarded_jobs,
+              fdi_value, date_won, sector_id, client_relationship_manager, level_of_involvement, investment_type,
+              company_name, company_reference, investment_value, foreign_equity_investment, legacy, company_country_id)
+              SELECT
+                  a.project_code, a.stage, a.number_new_jobs, a.number_safeguarded_jobs,
+                  a.fdi_value, a.date_won, a.sector_id, a.client_relationship_manager,
+                  a.level_of_involvement, a.investment_type, a.company_name, a.comapny_reference,
+                  a.investment_value, a.foreign_equity_investment, a.legacy, a.company_country_id
+              FROM unique_projects a
+              WHERE
+                    NOT EXISTS (
+                        SELECT id FROM fdi_investments WHERE legacy = true
+                    )
+              RETURNING id as investment_id, project_code
           )
-          SELECT
-              DISTINCT ON (a.project_code)
-              a.project_code, a.stage, a.number_new_jobs, a.number_safeguarded_jobs,
-              a.approved_high_value, a.approved_good_value, a.date_won, a.sector_id, a.uk_region_id,
-              a.client_relationship_manager, a.company_name, a.comapny_reference, a.investment_value,
-              a.foreign_equity_investment, a.legacy, a.company_country_id
-          FROM all_projects a
-              INNER JOIN latest_projects l ON l.id = a.id
+          INSERT INTO fdi_investmentukregion (investment_id, uk_region_id)
+          SELECT i.investment_id, a.uk_region_id FROM projects_insert i
+          INNER JOIN unique_projects a ON i.project_code = a.project_code
           WHERE
                 NOT EXISTS (
                     SELECT id FROM fdi_investments WHERE legacy = true
