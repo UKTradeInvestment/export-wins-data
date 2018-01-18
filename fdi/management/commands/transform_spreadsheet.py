@@ -96,7 +96,6 @@ class Command(BaseCommand):
                 )
         ;
         """
-        # TODO migrate UK Regions
         with connection.cursor() as cursor:
             cursor.execute(query)
             print(f'updated {cursor.rowcount} rows.')

@@ -5,4 +5,3 @@ FDI_VALUE = (
     (2, "Good"),
     (3, "Standard"),
 )
-
