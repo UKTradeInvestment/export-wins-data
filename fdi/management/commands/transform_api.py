@@ -1,6 +1,5 @@
 from django.core.management import BaseCommand
 
-from fdi.models.constants import FDI_VALUE
 from fdi.models.importer import InvestmentLoad
 from fdi.models.live import Investments, Sector, Country, UKRegion, InvestmentUKRegion
 
@@ -19,7 +18,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         new_rows = 0
         updated_rows = 0
-        fdi_value_dict = dict((v, k) for k, v in FDI_VALUE)
         pending_investments = InvestmentLoad.objects.filter(transformed=False)
         for pending_i in pending_investments:
             project_code = pending_i.data["project_code"]
@@ -33,14 +31,16 @@ class Command(BaseCommand):
                 new_rows += 1
 
             if pending_i.data["stage"]:
-                live_i.stage = pending_i.data["stage"]["name"]
+                live_i.stage = pending_i.data["stage"]["name"].lower()
+            if pending_i.data["status"]:
+                live_i.status = pending_i.data["status"].lower()
             if pending_i.data["number_new_jobs"]:
                 live_i.number_new_jobs = pending_i.data["number_new_jobs"]
             if pending_i.data["number_safeguarded_jobs"]:
                 live_i.number_safeguarded_jobs = pending_i.data[
                     "number_safeguarded_jobs"]
             if pending_i.data["fdi_value"]:
-                live_i.fdi_value = fdi_value_dict[pending_i.data["fdi_value"]["name"]]
+                live_i.fdi_value_id = pending_i.data["fdi_value"]["id"]
             if pending_i.data["actual_land_date"]:
                 live_i.date_won = pending_i.data["actual_land_date"]
             else:
@@ -63,9 +63,11 @@ class Command(BaseCommand):
             if pending_i.data["investor_company_country"]:
                 live_i.company_country_id = pending_i.data["investor_company_country"]["id"]
             if pending_i.data["level_of_involvement"]:
-                live_i.level_of_involvement = pending_i.data["level_of_involvement"]["name"]
+                live_i.level_of_involvement_id = pending_i.data["level_of_involvement"]["id"]
             if pending_i.data["investment_type"]:
-                live_i.investment_type = pending_i.data["investment_type"]["name"]
+                live_i.investment_type_id = pending_i.data["investment_type"]["id"]
+            if pending_i.data["specific_programme"]:
+                live_i.specific_program_id = pending_i.data["specific_programme"]["id"]
             live_i.save()
             if pending_i.data["uk_region_locations"] and len(pending_i.data["uk_region_locations"]) > 0:
                 for location in pending_i.data["uk_region_locations"]:

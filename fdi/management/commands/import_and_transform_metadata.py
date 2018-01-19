@@ -8,7 +8,11 @@ from urlobject import URLObject
 from fdi.models import (
     UKRegion,
     Sector,
-    Country
+    Country,
+    Involvement,
+    InvestmentType,
+    FDIValue,
+    SpecificProgramme,
 )
 
 
@@ -18,6 +22,10 @@ class Command(BaseCommand):
         './uk-region/': UKRegion,
         './sector/': Sector,
         './country/': Country,
+        './investment-involvement/': Involvement,
+        './investment-type/': InvestmentType,
+        './fdi-value/': FDIValue,
+        './investment-specific-programme/': SpecificProgramme,
     }
 
     @transaction.atomic()

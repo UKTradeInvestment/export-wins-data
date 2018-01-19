@@ -39,3 +39,19 @@ class Country(BaseMetadataModel):
     def save(self, **kwargs):
         self.iso_code = datahub_country_iso_code(self.name)
         super().save(**kwargs)
+
+
+class Involvement(BaseMetadataModel):
+    pass
+
+
+class InvestmentType(BaseMetadataModel):
+    pass
+
+
+class SpecificProgramme(BaseMetadataModel):
+    pass
+
+
+class FDIValue(BaseMetadataModel):
+    pass

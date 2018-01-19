@@ -43,22 +43,12 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='investments',
-            name='fdi_value',
-            field=models.PositiveIntegerField(choices=[(1, 'Higher'), (2, 'Good'), (3, 'Standard')], null=True),
-        ),
-        migrations.AddField(
-            model_name='investments',
-            name='investment_type',
-            field=models.CharField(default='FDI', max_length=255),
-        ),
-        migrations.AddField(
-            model_name='investments',
-            name='level_of_involvement',
-            field=models.CharField(default='No Involvement', max_length=255),
-        ),
-        migrations.AddField(
-            model_name='investments',
             name='uk_regions',
             field=models.ManyToManyField(through='fdi.InvestmentUKRegion', to='fdi.UKRegion'),
+        ),
+        migrations.AddField(
+            model_name='investments',
+            name='status',
+            field=models.CharField(max_length=255, null=True),
         ),
     ]

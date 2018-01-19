@@ -1,23 +1,32 @@
 from django.db import models
 
-from fdi.models.metadata import Country, Sector, UKRegion
-from fdi.models.constants import MAX_LENGTH, FDI_VALUE
+from fdi.models.metadata import (
+    Country,
+    FDIValue,
+    Involvement,
+    InvestmentType,
+    Sector,
+    SpecificProgramme,
+    UKRegion,
+)
+
+from fdi.models.constants import MAX_LENGTH
 from mi.models import FinancialYear
 
 
 class InvestmentsQuerySet(models.QuerySet):
 
     def won(self):
-        return self.filter(stage='Won')
+        return self.filter(stage='won')
 
     def for_sector_team(self, sector_team):
         return self.filter(sector__in=sector_team.sectors.all())
 
     def verified(self):
-        return self.filter(stage='Verify win')
+        return self.filter(stage='verify win')
 
     def pipeline(self):
-        return self.exclude(stage__in=['Won', 'Verify win'])
+        return self.exclude(stage__in=['won', 'verify win'])
 
 
 class SectorTeam(models.Model):
@@ -67,11 +76,12 @@ class Investments(models.Model):
         null=False, blank=False, db_index=True, max_length=MAX_LENGTH)
 
     stage = models.CharField(max_length=MAX_LENGTH)
+    status = models.CharField(max_length=MAX_LENGTH, null=True)
     number_new_jobs = models.PositiveIntegerField(null=False, default=0)
     number_safeguarded_jobs = models.PositiveIntegerField(
         null=False, default=0)
 
-    fdi_value = models.PositiveIntegerField(choices=FDI_VALUE, null=True)
+    fdi_value = models.ForeignKey(FDIValue, null=True)
 
     date_won = models.DateField(null=True)
     sector = models.ForeignKey(Sector, null=True)
@@ -87,8 +97,9 @@ class Investments(models.Model):
     investment_value = models.BigIntegerField(default=0)
     foreign_equity_investment = models.BigIntegerField(default=0)
 
-    level_of_involvement = models.CharField(max_length=MAX_LENGTH, default='No Involvement')
-    investment_type = models.CharField(max_length=MAX_LENGTH, default='FDI')
+    level_of_involvement = models.ForeignKey(Involvement, null=True)
+    investment_type = models.ForeignKey(InvestmentType, null=True)
+    specific_program = models.ForeignKey(SpecificProgramme, null=True)
 
     # set to true if importing from spreadsheet
     legacy = models.BooleanField(default=False, db_index=True)
