@@ -44,7 +44,8 @@ class Command(BaseCommand):
                 ELSE 'FDI'
               END as investment_type,
               CASE
-                WHEN i.data->>'Specific Investment Programme' = 'Venture/ Equity Capital' THEN 'Venture / Equity Capital'
+                WHEN i.data->>'Specific Investment Programme'
+                        = 'Venture/ Equity Capital' THEN 'Venture / Equity Capital'
                 ELSE i.data->>'Specific Investment Programme'
               END as specific_programme,
               parent_c.data->>'Organisation Name' as company_name,
@@ -68,7 +69,7 @@ class Command(BaseCommand):
           (
               SELECT i.id, i.project_code, i.stage, i.status, i.number_new_jobs, i.number_safeguarded_jobs,
               fdi_fdivalue.id as fdi_value_id, i.date_won, i.sector_id, i.uk_region_id,
-              i.client_relationship_manager, fdi_involvement.id as level_of_involvement_id, 
+              i.client_relationship_manager, fdi_involvement.id as level_of_involvement_id,
               fdi_investmenttype.id as investment_type_id,
               i.company_name, i.comapny_reference, i.investment_value,
               i.foreign_equity_investment, i.legacy, i.company_country_id,
