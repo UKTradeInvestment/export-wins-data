@@ -11,7 +11,7 @@ from users.models import User
 class File(models.Model):
     name = models.CharField(max_length=255)
     s3_path = models.CharField(max_length=255)
-    user = models.ForeignKey(User, null=True)
+    user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
     file_type = models.PositiveSmallIntegerField(choices=FILE_TYPES.choices)
     report_start_date = models.DateTimeField(default=now)
     report_end_date = models.DateTimeField(null=True)

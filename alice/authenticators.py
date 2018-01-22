@@ -16,7 +16,7 @@ class AlicePermission(BasePermission):
                 return True
 
         # as IsAuthenticated permission
-        if request.user and request.user.is_authenticated():
+        if request.user and request.user.is_authenticated:
             return True
 
         return False

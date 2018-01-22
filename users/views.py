@@ -48,7 +48,7 @@ class IsLoggedIn(APIView):
     http_method_names = ("get",)
 
     def get(self, request):
-        return HttpResponse(json.dumps(bool(request.user.is_authenticated())))
+        return HttpResponse(json.dumps(bool(request.user.is_authenticated)))
 
 
 class UserRetrieveViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):

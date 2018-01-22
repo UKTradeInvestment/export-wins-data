@@ -14,9 +14,9 @@ from wins.models import HVC
 
 
 class OverseasRegionGroupYear(models.Model):
-    financial_year = models.ForeignKey('mi.FinancialYear')
-    region = models.ForeignKey('mi.OverseasRegion')
-    group = models.ForeignKey('mi.OverseasRegionGroup')
+    financial_year = models.ForeignKey('mi.FinancialYear', on_delete=models.PROTECT)
+    region = models.ForeignKey('mi.OverseasRegion', on_delete=models.PROTECT)
+    group = models.ForeignKey('mi.OverseasRegionGroup', on_delete=models.PROTECT)
 
 
 class OverseasRegionGroup(models.Model):
@@ -105,9 +105,9 @@ class OverseasRegion(models.Model):
 
 
 class OverseasRegionYear(models.Model):
-    country = models.ForeignKey('Country')
-    financial_year = models.ForeignKey('FinancialYear')
-    overseas_region = models.ForeignKey(OverseasRegion)
+    country = models.ForeignKey('Country', on_delete=models.PROTECT)
+    financial_year = models.ForeignKey('FinancialYear', on_delete=models.PROTECT)
+    overseas_region = models.ForeignKey(OverseasRegion, on_delete=models.PROTECT)
 
     def __str__(self):
         return '{country} - {year} - {overseas_region}'.format(
@@ -211,7 +211,7 @@ class ParentSector(models.Model):
     """ CDMS groupings of CDMS Sectors """
 
     name = models.CharField(max_length=128)
-    sector_team = models.ForeignKey(SectorTeam, related_name="parent_sectors")
+    sector_team = models.ForeignKey(SectorTeam, related_name="parent_sectors", on_delete=models.PROTECT)
 
     def __str__(self):
         return 'ParentSector: {} ({})'.format(self.name, self.sector_team)
@@ -235,7 +235,7 @@ class HVCGroup(models.Model):
     """
 
     name = models.CharField(max_length=128)
-    sector_team = models.ForeignKey(SectorTeam, related_name="hvc_groups")
+    sector_team = models.ForeignKey(SectorTeam, related_name="hvc_groups", on_delete=models.CASCADE)
 
     def __str__(self):
         return 'HVCGroup: {} ({})'.format(self.name, self.sector_team)
@@ -331,13 +331,13 @@ class Target(models.Model):
 
     campaign_id = models.CharField(max_length=4)
     target = models.BigIntegerField()
-    sector_team = models.ForeignKey(SectorTeam, related_name="targets")
+    sector_team = models.ForeignKey(SectorTeam, related_name="targets", on_delete=models.CASCADE)
     hvc_group = models.ForeignKey(
         HVCGroup, related_name="targets", on_delete=PROTECT)
     country = models.ManyToManyField(Country, related_name="targets",
                                      through="TargetCountry")
     financial_year = models.ForeignKey(
-        FinancialYear, related_name="targets", null=False)
+        FinancialYear, related_name="targets", null=False, on_delete=models.PROTECT)
 
     objects = TargetManager()
 
@@ -368,8 +368,8 @@ class Target(models.Model):
 
 
 class TargetCountry(models.Model):
-    target = models.ForeignKey('Target')
-    country = models.ForeignKey('Country')
+    target = models.ForeignKey('Target', on_delete=models.PROTECT)
+    country = models.ForeignKey('Country', on_delete=models.PROTECT)
     contributes_to_target = models.BooleanField(default=False)
 
     class Meta:
@@ -380,7 +380,7 @@ class TargetCountry(models.Model):
 class UKRegionTarget(models.Model):
 
     financial_year = models.ForeignKey(
-        FinancialYear, related_name="volume_targets", null=False)
+        FinancialYear, related_name="volume_targets", null=False, on_delete=models.PROTECT)
 
     new_exporters = ArrayField(models.BigIntegerField(), size=12)
     sustainable = ArrayField(models.BigIntegerField(), size=12)

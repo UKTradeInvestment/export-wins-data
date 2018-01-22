@@ -186,7 +186,7 @@ class Win(SoftDeleteModel):
         verbose_name_plural = "Export Wins"
 
     id = models.UUIDField(primary_key=True)
-    user = models.ForeignKey(User, related_name="wins")
+    user = models.ForeignKey(User, related_name="wins", on_delete=models.PROTECT)
     company_name = models.CharField(
         max_length=128, verbose_name="Organisation or company name")
     cdms_reference = models.CharField(
@@ -427,7 +427,7 @@ class Breakdown(SoftDeleteModel):
     class Meta:
         ordering = ["year"]
 
-    win = models.ForeignKey(Win, related_name="breakdowns")
+    win = models.ForeignKey(Win, related_name="breakdowns", on_delete=models.CASCADE)
     type = models.PositiveIntegerField(choices=constants.BREAKDOWN_TYPES)
     year = models.PositiveIntegerField()
     value = models.BigIntegerField()
@@ -444,7 +444,7 @@ class Breakdown(SoftDeleteModel):
 class Advisor(SoftDeleteModel):
     """ Member of another team who helped with a Win """
 
-    win = models.ForeignKey(Win, related_name="advisors")
+    win = models.ForeignKey(Win, related_name="advisors", on_delete=models.CASCADE)
     name = models.CharField(max_length=128)
     team_type = models.CharField(max_length=128, choices=constants.TEAMS)
     hq_team = models.CharField(
@@ -469,7 +469,7 @@ class Advisor(SoftDeleteModel):
 class CustomerResponse(SoftDeleteModel):
     """ Customer's response to being asked about a Win (aka Confirmation) """
 
-    win = models.OneToOneField(Win, related_name="confirmation")
+    win = models.OneToOneField(Win, related_name="confirmation", on_delete=models.CASCADE)
 
     our_support = models.PositiveIntegerField(
         choices=constants.RATINGS,
@@ -565,9 +565,9 @@ class Notification(SoftDeleteModel):
     TYPE_OFFICER = {y: x for x, y in constants.NOTIFICATION_TYPES}['Officer']
     TYPE_CUSTOMER = {y: x for x, y in constants.NOTIFICATION_TYPES}['Customer']
 
-    win = models.ForeignKey(Win, related_name="notifications")
+    win = models.ForeignKey(Win, related_name="notifications", on_delete=models.CASCADE)
     user = models.ForeignKey(
-        User, blank=True, null=True, related_name="notifications")
+        User, blank=True, null=True, related_name="notifications", on_delete=models.PROTECT)
     recipient = models.EmailField()
     type = models.CharField(max_length=1, choices=constants.NOTIFICATION_TYPES)
     created = models.DateTimeField(auto_now_add=True)
