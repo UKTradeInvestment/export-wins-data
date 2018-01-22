@@ -23,11 +23,11 @@ from mi.utils import two_digit_float
 ANNOTATIONS = dict(
     year=Func(F('date_won'), function='get_financial_year'),
     value=Case(
-        When(fdi_value=2, then=Value(
-            'good', output_field=CharField(max_length=10))),
-        When(fdi_value=1, then=Value(
+        When(fdi_value='38e36c77-61ad-4186-a7a8-ac6a1a1104c6', then=Value(
             'high', output_field=CharField(max_length=10))),
-        When(fdi_value=3, then=Value(
+        When(fdi_value='002c18d9-f5c7-4f3c-b061-aee09fce8416', then=Value(
+            'good', output_field=CharField(max_length=10))),
+        When(fdi_value='2bacde8d-128f-4d0a-849b-645ceafe4cf9', then=Value(
             'standard', output_field=CharField(max_length=10))),
         default=Value('unknown', output_field=CharField(max_length=10))
     )
@@ -35,9 +35,9 @@ ANNOTATIONS = dict(
 
 
 def classify_stage(investment):
-    if investment.stage == 'Verify win':
+    if investment.stage == 'verify win':
         return 'verified'
-    elif investment.stage == 'Won':
+    elif investment.stage == 'won':
         return 'confirmed'
     else:
         return 'pipeline'
@@ -63,11 +63,11 @@ def fill_in_missing_performance(data, target: GlobalTargets):
 
 
 def classify_quality(investment):
-    if investment.fdi_value == 1:
+    if investment.fdi_value.id == 1:
         return 'high'
-    elif investment.fdi_value == 2:
+    elif investment.fdi_value.id == 2:
         return 'good'
-    elif investment.fdi_value == 3:
+    elif investment.fdi_value.id == 3:
         return 'standard'
     else:
         return 'unknown'
@@ -104,7 +104,7 @@ class BaseFDIView(BaseMIView):
         pending = self.get_queryset().filter(
             date_won=None
         ).exclude(
-            stage='Won'
+            stage='won'
         ).aggregate(
             Sum('number_new_jobs'),
             Sum('number_safeguarded_jobs'),
@@ -114,7 +114,7 @@ class BaseFDIView(BaseMIView):
 
         total = investments_in_scope.count()
         data = investments_in_scope.values(
-            'fdi_value'
+            'fdi_value__name'
         ).annotate(
             value=ANNOTATIONS['value']
         ).annotate(
@@ -268,7 +268,7 @@ class FDISectorTeamDetailView(FDIBaseSectorTeamView):
         # order investments by stage and then by quality so as to group them easily
         market_investments = investments.filter(
             company_country__in=market.countries.all()).order_by(
-                'stage', 'fdi_value')
+                'stage', 'fdivalue__name')
         grouped = self._group_investments(market_investments, classify_stage)
 
         target = self._get_market_target(market)
@@ -430,7 +430,7 @@ class FDISectorTeamOverview(FDISectorTeamDetailView):
         # order investments by stage and then by quality so as to group them easily
         sector_team_investments = investments.filter(
             sector__in=sector_team.sectors.all()).order_by(
-            'stage', 'fdi_value')
+            'stage', 'fdivalue__name')
         grouped = self._group_investments(
             sector_team_investments, classify_stage)
 
@@ -489,30 +489,30 @@ class FDIYearOnYearComparison(BaseFDIView):
         projects_by_fy = """SELECT 
             get_financial_year(date_won) AS year,
             CASE
-                WHEN fdi_value = 2 THEN 'good'
-                WHEN fdi_value = 1 THEN 'high'
-                WHEN fdi_value = 3 THEN 'standard'
+                WHEN fdi_value_id = '002c18d9-f5c7-4f3c-b061-aee09fce8416' THEN 'good'
+                WHEN fdi_value_id = '38e36c77-61ad-4186-a7a8-ac6a1a1104c6' THEN 'high'
+                WHEN fdi_value_id = '2bacde8d-128f-4d0a-849b-645ceafe4cf9' THEN 'standard'
                 ELSE 'unknown' END
             AS value,
             COUNT(get_financial_year(date_won)) AS year__count,
             COUNT(
                 CASE
-                WHEN fdi_value = 2 THEN 'good'
-                WHEN fdi_value = 1 THEN 'high'
-                WHEN fdi_value = 3 THEN 'standard'
+                WHEN fdi_value_id = '002c18d9-f5c7-4f3c-b061-aee09fce8416' THEN 'good'
+                WHEN fdi_value_id = '38e36c77-61ad-4186-a7a8-ac6a1a1104c6' THEN 'high'
+                WHEN fdi_value_id = '2bacde8d-128f-4d0a-849b-645ceafe4cf9' THEN 'standard'
                 ELSE 'unknown' END
             ) AS value__count,
             SUM(number_new_jobs) AS number_new_jobs__sum,
             SUM(number_safeguarded_jobs) AS number_safeguarded_jobs__sum,
             SUM(investment_value) AS investment_value__sum
         FROM fdi_investments
-        WHERE (stage = 'Won' AND date_won < %s AND date_won >= '2014-04-01')
+        WHERE (stage = 'won' AND date_won < %s AND date_won >= '2014-04-01')
         GROUP BY
             get_financial_year(date_won),
             CASE
-                WHEN fdi_value = 2 THEN 'good'
-                WHEN fdi_value = 1 THEN 'high'
-                WHEN fdi_value = 3 THEN 'standard'
+                WHEN fdi_value_id = '002c18d9-f5c7-4f3c-b061-aee09fce8416' THEN 'good'
+                WHEN fdi_value_id = '38e36c77-61ad-4186-a7a8-ac6a1a1104c6' THEN 'high'
+                WHEN fdi_value_id = '2bacde8d-128f-4d0a-849b-645ceafe4cf9' THEN 'standard'
                 ELSE 'unknown'
             END
         ORDER BY year ASC"""
