@@ -1,9 +1,11 @@
 import json
 
 from django.conf import settings
-from django.contrib.auth import login
+from django.contrib.auth import login, logout as auth_logout
 from django.contrib.auth.models import AnonymousUser
 from django.http import HttpResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
 
 from rest_framework import parsers, renderers, mixins, viewsets
 from rest_framework.exceptions import PermissionDenied
@@ -41,6 +43,23 @@ class LoginView(APIView):
             'email': user.email,
             'is_staff': user.is_staff,
         })
+
+
+class LogoutView(APIView):
+
+    renderer_classes = (renderers.JSONRenderer,)
+
+    @method_decorator(never_cache)
+    def dispatch(self, request, *args, **kwargs):
+        auth_logout(request)
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        """Logout may be done via POST."""
+        return self.get(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        return Response({})
 
 
 class IsLoggedIn(APIView):

@@ -9,8 +9,9 @@ import fdi.urls
 import mi.urls
 import sso.saml2_urls
 import sso.oauth2_urls
+import rest_framework.urls
 
-from users.views import IsLoggedIn, LoginView, UserRetrieveViewSet
+from users.views import IsLoggedIn, LoginView, UserRetrieveViewSet, LogoutView
 from wins.views import (
     WinViewSet, BreakdownViewSet, AdvisorViewSet, ConfirmationViewSet,
     LimitedWinViewSet, CSVView, DetailsWinViewSet, AddUserView,
@@ -76,7 +77,7 @@ urlpatterns = [
     url(r"^user/me/$",
         UserRetrieveViewSet.as_view({'get': 'retrieve'}), name="user_profile"),
 
-    url(r"^auth/", include('rest_framework.urls', namespace="rest_framework")),
+    url(r"^auth/logout/", LogoutView.as_view(), name="logout"),
 
 ]
 
