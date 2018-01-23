@@ -41,8 +41,8 @@ class SectorTeam(models.Model):
 
 class SectorTeamSector(models.Model):
     """ SectorTeam to Sector mapping """
-    team = models.ForeignKey(SectorTeam)
-    sector = models.ForeignKey(Sector)
+    team = models.ForeignKey(SectorTeam, on_delete=models.PROTECT)
+    sector = models.ForeignKey(Sector, on_delete=models.PROTECT)
 
     def __str__(self):
         return f'{self.team} - {self.sector}'
@@ -61,8 +61,8 @@ class Market(models.Model):
 class MarketCountry(models.Model):
     """ One to many representation of Market and Country """
 
-    market = models.ForeignKey('Market')
-    country = models.ForeignKey(Country)
+    market = models.ForeignKey('Market', on_delete=models.PROTECT)
+    country = models.ForeignKey(Country, on_delete=models.PROTECT)
 
     def __str__(self):
         return f'{self.market} - {self.country}'
@@ -81,10 +81,10 @@ class Investments(models.Model):
     number_safeguarded_jobs = models.PositiveIntegerField(
         null=False, default=0)
 
-    fdi_value = models.ForeignKey(FDIValue, null=True)
+    fdi_value = models.ForeignKey(FDIValue, null=True, on_delete=models.PROTECT)
 
     date_won = models.DateField(null=True)
-    sector = models.ForeignKey(Sector, null=True)
+    sector = models.ForeignKey(Sector, null=True, on_delete=models.PROTECT)
     uk_regions = models.ManyToManyField(UKRegion, through="InvestmentUKRegion")
 
     client_relationship_manager = models.CharField(max_length=MAX_LENGTH)
@@ -92,14 +92,14 @@ class Investments(models.Model):
         max_length=MAX_LENGTH, null=True)
     company_name = models.CharField(max_length=MAX_LENGTH)
     company_reference = models.CharField(max_length=MAX_LENGTH)
-    company_country = models.ForeignKey(Country, null=True)
+    company_country = models.ForeignKey(Country, null=True, on_delete=models.PROTECT)
 
     investment_value = models.BigIntegerField(default=0)
     foreign_equity_investment = models.BigIntegerField(default=0)
 
-    level_of_involvement = models.ForeignKey(Involvement, null=True)
-    investment_type = models.ForeignKey(InvestmentType, null=True)
-    specific_program = models.ForeignKey(SpecificProgramme, null=True)
+    level_of_involvement = models.ForeignKey(Involvement, null=True, on_delete=models.PROTECT)
+    investment_type = models.ForeignKey(InvestmentType, null=True, on_delete=models.PROTECT)
+    specific_program = models.ForeignKey(SpecificProgramme, null=True, on_delete=models.PROTECT)
 
     # set to true if importing from spreadsheet
     legacy = models.BooleanField(default=False, db_index=True)
@@ -109,8 +109,8 @@ class Investments(models.Model):
 class InvestmentUKRegion(models.Model):
     """ representation of UK regions that were benefiting from the investment"""
 
-    investment = models.ForeignKey(Investments)
-    uk_region = models.ForeignKey(UKRegion)
+    investment = models.ForeignKey(Investments, on_delete=models.CASCADE)
+    uk_region = models.ForeignKey(UKRegion, on_delete=models.CASCADE)
 
     def __str__(self):
         return f'{self.investment} - {self.uk_region}'
@@ -119,7 +119,7 @@ class InvestmentUKRegion(models.Model):
 class GlobalTargets(models.Model):
     """ FDI type of investment based global targets per FY """
 
-    financial_year = models.OneToOneField(FinancialYear)
+    financial_year = models.OneToOneField(FinancialYear, on_delete=models.PROTECT)
     high = models.PositiveIntegerField(null=False)
     good = models.PositiveIntegerField(null=False)
     standard = models.PositiveIntegerField(null=False)
@@ -135,11 +135,11 @@ class GlobalTargets(models.Model):
 class Target(models.Model):
     """ Targets for SectorTeam and Market combinations, per FY.
     Some of them are considered HVC, some non-HVC """
-    sector_team = models.ForeignKey(SectorTeam, related_name="targets")
-    market = models.ForeignKey(Market, related_name="targets")
+    sector_team = models.ForeignKey(SectorTeam, related_name="targets", on_delete=models.PROTECT)
+    market = models.ForeignKey(Market, related_name="targets", on_delete=models.PROTECT)
     hvc_target = models.IntegerField(null=True)
     non_hvc_target = models.IntegerField(null=True)
-    financial_year = models.ForeignKey(FinancialYear)
+    financial_year = models.ForeignKey(FinancialYear, on_delete=models.PROTECT)
 
     def __str__(self):
         return f'{self.financial_year} - {self.sector_team}/{self.market}: ' \

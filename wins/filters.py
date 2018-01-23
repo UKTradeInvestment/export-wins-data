@@ -1,9 +1,9 @@
-from rest_framework import filters
+from django_filters.rest_framework import FilterSet
 
 from .models import CustomerResponse
 
 
-class CustomerResponseFilterSet(filters.FilterSet):
+class CustomerResponseFilterSet(FilterSet):
 
     class Meta(object):
         model = CustomerResponse

@@ -5,6 +5,7 @@ from django.conf import settings
 from django.http import HttpResponseBadRequest
 from django.utils.crypto import constant_time_compare
 from django.utils.decorators import available_attrs
+from django.utils.deprecation import MiddlewareMixin
 
 
 def alice_exempt(view_func):
@@ -20,7 +21,7 @@ def alice_exempt(view_func):
     return wraps(view_func, assigned=available_attrs(view_func))(wrapped_view)
 
 
-class SignatureRejectionMiddleware(object):
+class SignatureRejectionMiddleware(MiddlewareMixin):
     """ Rejects requests that are not signed by a known server """
 
     def process_view(self, request, view_func, view_args, view_kwargs):

@@ -12,7 +12,7 @@ from factory.fuzzy import FuzzyDate
 from jmespath import search as s
 
 from fixturedb.factories.win import create_win_factory
-from mi.models import Target
+from mi.models import Target, TargetCountry
 from mi.tests.base_test_case import MiApiViewsBaseTestCase, MiApiViewsWithWinsBaseTestCase
 from mi.tests.utils import GenericTopNonHvcWinsTestMixin, GenericWinTableTestMixin
 from mi.utils import sort_campaigns_by
@@ -876,6 +876,8 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
             s('sum(campaigns[].totals[].hvc.value.confirmed)', data),
             w1.total_expected_export_value
         )
+
+        TargetCountry.objects.filter(target=t).delete()
         t.delete()
         data = self._api_response_data
         self.assertEqual(

@@ -1,11 +1,16 @@
 import os
+
 from django.conf import settings
 from django.conf.urls import url, include
-
 from rest_framework.routers import DefaultRouter
 
-from users.views import IsLoggedIn, LoginView, UserRetrieveViewSet
+import csvfiles.urls
+import fdi.urls
+import mi.urls
+import sso.saml2_urls
+import sso.oauth2_urls
 
+from users.views import IsLoggedIn, LoginView, UserRetrieveViewSet
 from wins.views import (
     WinViewSet, BreakdownViewSet, AdvisorViewSet, ConfirmationViewSet,
     LimitedWinViewSet, CSVView, DetailsWinViewSet, AddUserView,
@@ -25,14 +30,14 @@ router.register(r"breakdowns", BreakdownViewSet)
 router.register(r"advisors", AdvisorViewSet)
 
 urlpatterns = [
-    url(r"^", include(router.urls, namespace="drf")),
-    url(r'^saml2/', include('sso.saml2_urls', namespace="saml2")),
-    url(r'^oauth2/', include('sso.oauth2_urls', namespace="oauth2")),
-    url(r'^mi/', include('mi.urls', namespace="mi", app_name="mi")),
-    url(r'^mi/fdi/', include('fdi.urls', namespace="fdi", app_name="fdi")),
+    url(r"^", include((router.urls, 'wins'), namespace="drf")),
+    url(r'^saml2/', include((sso.saml2_urls, 'sso'), namespace="saml2")),
+    url(r'^oauth2/', include((sso.oauth2_urls, 'sso'), namespace="oauth2")),
+    url(r'^mi/', include((mi.urls, 'mi'), namespace="mi")),
+    url(r'^mi/fdi/', include((fdi.urls, 'fdi'), namespace="fdi")),
     url(r"^csv/$", CSVView.as_view(), name="csv"),
     url(r"^csv/auto/$", CurrentFinancialYearWins.as_view(), name="csv_auto"),
-    url(r"^csv/", include('csvfiles.urls', namespace="csv", app_name="csv")),
+    url(r"^csv/", include((csvfiles.urls, 'csv'), namespace="csv")),
     url(
         r"^admin/add-user/$",
         AddUserView.as_view(),

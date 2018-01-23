@@ -2,12 +2,13 @@
 import django
 from django.test import override_settings
 from django.contrib.auth.models import AnonymousUser
+from django.utils.deprecation import MiddlewareMixin
 
 from sso.models import ADFSUser
 from sso.views import get_user_attributes, has_MI_permission
 
 
-class SSOAuthenticationMiddleware(object):
+class SSOAuthenticationMiddleware(MiddlewareMixin):
     """ SSO version of AuthenticationMiddleware
 
     Avoid using actual middleware since changing AUTHENTICATION_BACKENDS in
@@ -23,7 +24,7 @@ class SSOAuthenticationMiddleware(object):
         adfsuser = django.contrib.auth.get_user(request)
         assert isinstance(adfsuser, (AnonymousUser, ADFSUser)), \
             'Incorrect User model'  # in case of problem with settins override
-        return adfsuser and adfsuser.is_authenticated()
+        return adfsuser and adfsuser.is_authenticated
 
     def process_request(self, request):
         request.mi_permission = request.session.get('_source', None) == 'oauth2'

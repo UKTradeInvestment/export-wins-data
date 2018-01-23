@@ -61,9 +61,11 @@ class OverseasRegionGroupListViewTestCase(MiApiViewsBaseTestCase):
     @classmethod
     def setUpTestData(cls):
         # clear out existing hierarchy for this test
-        OverseasRegion.objects.all().delete()
-        OverseasRegionGroup.objects.all().delete()
         OverseasRegionGroupYear.objects.all().delete()
+        OverseasRegionGroup.objects.all().delete()
+        osr = OverseasRegion.objects.all()
+        OverseasRegionYear.objects.filter(overseas_region__in=osr).delete()
+        osr.delete()
 
         cls.fy2017 = FinancialYear.objects.get(id=2017)
         cls.fy2016 = FinancialYear.objects.get(id=2016)

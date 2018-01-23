@@ -1,6 +1,6 @@
 from unittest import mock
 
-from django.test import TestCase, Client, override_settings, RequestFactory, SimpleTestCase
+from django.test import override_settings, RequestFactory, SimpleTestCase
 
 from ..authenticators import AlicePermission
 from ..middleware import SignatureRejectionMiddleware, alice_exempt
@@ -73,7 +73,7 @@ class AlicePermissionTestCase(BaseSignatureTestCase):
         super().setUp()
         self.view = mock.Mock()
         self.request.user = mock.Mock()
-        self.request.user.is_authenticated = lambda: False
+        self.request.user.is_authenticated = False
         self.alice_perm = AlicePermission().has_permission
 
     def test_has_permission_schema_valid_signature(self):
