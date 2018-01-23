@@ -748,6 +748,7 @@ HQ_TEAM_REGION_OR_POST = tuple([
     ("other:7", "Export Control Unit"),
     ("other:8", "Life Sciences Organisation"),
     ("other:9", "UK Export Finance"),
+    ("other:10", "GREAT BRITAIN Campaign"),
 
     ('itt:DIT Dubai Regional Hub', 'DIT Dubai Regional Hub'),
     ('itt:DIT North East Regional International Trade Office',
