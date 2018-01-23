@@ -409,6 +409,6 @@ if len(sys.argv) > 1 and sys.argv[1] == 'test':
 COUNTRIES_OVERRIDE = {
     'XK': 'Kosovo',
     'XG': 'Global',
-    'FK': None,
+    'FK': 'Falkland Islands',
     'CZ': 'Czech Republic',
 }
