@@ -408,5 +408,7 @@ if len(sys.argv) > 1 and sys.argv[1] == 'test':
 # adding Global (XG) to deal with global HVCs
 COUNTRIES_OVERRIDE = {
     'XK': 'Kosovo',
-    'XG': 'Global'
+    'XG': 'Global',
+    'FK': 'Falkland Islands',
+    'CZ': 'Czech Republic',
 }
