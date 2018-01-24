@@ -91,16 +91,16 @@ class OverseasRegion(models.Model):
             targetcountry__contributes_to_target=True)
         return countries.values_list('country', flat=True)
 
-    def fin_year_country_ids(self, year):
+    def fin_year_country_ids(self, year, contributes_to_target=None):
         """ List of all countries within the `OverseasRegion` """
-        countries = self.countries.filter(
-            overseasregionyear__financial_year_id=year.id, targetcountry__contributes_to_target=True)
-        return countries.values_list('country', flat=True)
-
-    def fin_year_non_contributing_country_ids(self, year):
-        """ List of all secondary market countries within the `OverseasRegion` """
-        countries = self.countries.filter(
-            overseasregionyear__financial_year_id=year.id, targetcountry__contributes_to_target=False)
+        if not contributes_to_target:
+            # all countires in the region
+            countries = self.countries.filter(overseasregionyear__financial_year_id=year.id)
+        else:
+            # only countries that either contributes to target or not
+            countries = self.countries.filter(
+                overseasregionyear__financial_year_id=year.id,
+                targetcountry__contributes_to_target=contributes_to_target)
         return countries.values_list('country', flat=True)
 
 
