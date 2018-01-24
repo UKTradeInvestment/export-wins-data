@@ -1,9 +1,13 @@
+sudo: false
 language: python
 python:
   - 3.6
 services:
   - postgresql
-cache: pip
+cache:
+  - pip
+  - packages
+
 addons:
   apt:
     packages:
@@ -15,5 +19,5 @@ before_script:
   - psql -c 'create database test;' -U postgres
   - export DATABASE_URL=postgres://postgres@localhost/test
 install: pip install -r requirements.txt
-script: python -Wd `which coverage3` run ./manage.py test
+script: python -Wd `which coverage3` run --source=. ./manage.py test --failfast
 after_success: codeclimate-test-reporter
