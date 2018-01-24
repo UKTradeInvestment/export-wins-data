@@ -5,7 +5,7 @@ codeclimate-test-reporter==0.2.3
 cryptography==2.1.1
 dj-database-url==0.4.2
 Django==2.0.1
-django-countries==4.6.1
+django-countries==5.0
 django-crispy-forms==1.7.0
 django-extensions==1.9.9
 django-filter==1.0.4
