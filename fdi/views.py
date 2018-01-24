@@ -63,14 +63,15 @@ def fill_in_missing_performance(data, target: GlobalTargets):
 
 
 def classify_quality(investment):
-    if investment.fdi_value.id == 1:
-        return 'high'
-    elif investment.fdi_value.id == 2:
-        return 'good'
-    elif investment.fdi_value.id == 3:
-        return 'standard'
-    else:
-        return 'unknown'
+    if investment.fdi_value:
+        if investment.fdi_value.id == '38e36c77-61ad-4186-a7a8-ac6a1a1104c6':
+            return 'high'
+        elif investment.fdi_value.id == '002c18d9-f5c7-4f3c-b061-aee09fce8416':
+            return 'good'
+        elif investment.fdi_value.id == '2bacde8d-128f-4d0a-849b-645ceafe4cf9':
+            return 'standard'
+
+    return 'unknown'
 
 
 class BaseFDIView(BaseMIView):
@@ -268,7 +269,7 @@ class FDISectorTeamDetailView(FDIBaseSectorTeamView):
         # order investments by stage and then by quality so as to group them easily
         market_investments = investments.filter(
             company_country__in=market.countries.all()).order_by(
-                'stage', 'fdivalue__name')
+                'stage', 'fdi_value__name')
         grouped = self._group_investments(market_investments, classify_stage)
 
         target = self._get_market_target(market)
@@ -430,7 +431,7 @@ class FDISectorTeamOverview(FDISectorTeamDetailView):
         # order investments by stage and then by quality so as to group them easily
         sector_team_investments = investments.filter(
             sector__in=sector_team.sectors.all()).order_by(
-            'stage', 'fdivalue__name')
+            'stage', 'fdi_value__name')
         grouped = self._group_investments(
             sector_team_investments, classify_stage)
 
