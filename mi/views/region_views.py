@@ -58,11 +58,10 @@ class BaseOverseasRegionsMIView(BaseWinMIView):
 
     def _region_non_hvc_filter(self, region):
         """ specific filter for non-HVC, with all countries for the given region """
-        region_countries = region.fin_year_country_ids(
-            self.fin_year) | region.fin_year_non_contributing_country_ids(self.fin_year)
-        region.fin_year_non_contributing_country_ids(self.fin_year)
+        region_countries = region.fin_year_country_ids(self.fin_year)
         region_non_hvc_filter = Q(
             Q(hvc__isnull=True) | Q(hvc='')) & Q(country__in=region_countries)
+
         return region_non_hvc_filter
 
     def _get_region_wins(self, region):
@@ -196,7 +195,7 @@ class OverseasRegionOverviewView(BaseOverseasRegionsMIView):
         """ Calculate HVC & non-HVC data for an Overseas region """
 
         targets = region_obj.fin_year_targets(self.fin_year)
-        country_ids = region_obj.fin_year_country_ids(self.fin_year)
+        country_ids = region_obj.fin_year_country_ids(self.fin_year, contributes_to_target=True)
         total_countries = len(country_ids)
         total_target = sum(t.target for t in targets)
 
