@@ -100,7 +100,7 @@ class CSVBaseView(APIView):
                 return CSVFile.objects.filter(
                     report_start_date__gte=fy_start_date, file_type=file_type.value, is_active=True
                 ).annotate(month=Month('report_start_date')
-                           ).order_by('month', '-report_start_date').distinct('month')
+                           ).order_by('month', '-created').distinct('month')
             except CSVFile.DoesNotExist:
                 return None
 
