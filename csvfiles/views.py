@@ -95,7 +95,12 @@ class CSVBaseView(APIView):
                 return None
 
         # get latest one for each month available for current FY
-        if file_type.constant in ('FDI_MONTHLY', 'SERVICE_DELIVERIES_MONTHLY', 'KANTAR_MONTHLY'):
+        if file_type.constant in (
+                'FDI_MONTHLY',
+                'SERVICE_DELIVERIES_MONTHLY',
+                'KANTAR_MONTHLY',
+                'MARKETING_COMPANIES_CONTACTS_COUNTRY_TIERS_MONTHLY'
+        ):
             try:
                 return CSVFile.objects.filter(
                     report_start_date__gte=fy_start_date, file_type=file_type.value, is_active=True
@@ -105,7 +110,11 @@ class CSVBaseView(APIView):
                 return None
 
         # get latest one available for current FY
-        if file_type.constant in ('FDI_DAILY', 'SERVICE_DELIVERIES_DAILY'):
+        if file_type.constant in (
+                'FDI_DAILY',
+                'SERVICE_DELIVERIES_DAILY',
+                'MARKETING_COMPANIES_CONTACTS_COUNTRY_TIERS_DAILY'
+        ):
             return self.latest_file(file_type)
 
         # metadata based, latest file available
