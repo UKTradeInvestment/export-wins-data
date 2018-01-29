@@ -24,6 +24,17 @@ FILE_TYPES = Choices(
      'prefix': 'companies/sector', 'ns': 'comp_sector', 'metadata_keys': ['sector']}),
     ("KANTAR_MONTHLY", 10, "Kantar Report Monthly",
      {'prefix': 'kantar/monthly', 'ns': 'kantar_monthly'}),
+
+    ("MARKETING_COMPANIES_CONTACTS_COUNTRY_TIERS_DAILY", 11, "Marketing Companies' Contacts by Country Tiers Daily",
+     {
+         'prefix': 'marketing_companies_contacts_country_tiers/daily',
+         'ns': 'marketing_companies_contacts_country_tiers_daily'
+     }),
+    ("MARKETING_COMPANIES_CONTACTS_COUNTRY_TIERS_MONTHLY", 12,
+     "Marketing Companies' Contacts by Country Tiers Monthly", {
+         'prefix': 'marketing_companies_contacts_country_tiers/monthly',
+         'ns': 'marketing_companies_contacts_country_tiers_monthly'
+     })
 )
 
 FILE_TYPES.add_subset('EW', ('EXPORT_WINS',))
