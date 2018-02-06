@@ -1,15 +1,16 @@
 import collections
 import csv
-import functools
 import zipstream
 from zipfile import ZIP_DEFLATED
 from operator import attrgetter
 import mimetypes
 
 from django.conf import settings
+from django.contrib.auth.hashers import UNUSABLE_PASSWORD_PREFIX
 from django.core.exceptions import ValidationError
 from django.db import connection, models
-from django.http import HttpResponse, StreamingHttpResponse
+from django.db.models import F, Func
+from django.http import StreamingHttpResponse
 from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
 from django.utils.timezone import now
@@ -23,6 +24,11 @@ from ..constants import BREAKDOWN_TYPES
 from ..models import Advisor, Breakdown, CustomerResponse, Notification, Win
 from ..serializers import CustomerResponseSerializer, WinSerializer
 from users .models import User
+
+
+class HasUnusablePassword(Func):
+    function = 'LEFT'
+    template = f'%(function)s(%(expressions)s, 1) != \'{UNUSABLE_PASSWORD_PREFIX}\''
 
 
 class CSVView(APIView):
@@ -255,29 +261,35 @@ class CSVView(APIView):
                 user__email__in=settings.IGNORE_USERS
             )
 
-        wins = wins.values()
+        wins = wins.values().iterator()
 
-        win_datas = [self._get_win_data(win) for win in wins]
+        win_datas = (self._get_win_data(win) for win in wins)
         stringio = Echo()
         yield stringio.write(u'\ufeff').encode('utf-8')
         if win_datas:
-            csv_writer = csv.DictWriter(stringio, win_datas[0].keys())
+            first = next(win_datas)
+            csv_writer = csv.DictWriter(stringio, first.keys())
             header = dict(zip(csv_writer.fieldnames, csv_writer.fieldnames))
             yield csv_writer.writerow(header).encode('utf-8')
+            yield csv_writer.writerow(first).encode('utf-8')
             for win_data in win_datas:
                 yield csv_writer.writerow(win_data).encode('utf-8')
 
     def _make_user_csv(self):
-        users = User.objects.all()
-        user_dicts = [
-            {'name': u.name, 'email': u.email, 'joined': u.date_joined}
-            for u in users
-        ]
+        users = User.objects.all().values(
+            'name',
+            'email',
+            joined=F('date_joined'),
+            has_export_wins_access=HasUnusablePassword(F('password'))
+        ).iterator()
         stringio = Echo()
-        csv_writer = csv.DictWriter(stringio, user_dicts[0].keys())
+        first = next(users)
+        csv_writer = csv.DictWriter(stringio, first.keys())
+        yield stringio.write(u'\ufeff').encode('utf-8')
         header = dict(zip(csv_writer.fieldnames, csv_writer.fieldnames))
         yield csv_writer.writerow(header).encode('utf-8')
-        for user_dict in user_dicts:
+        yield csv_writer.writerow(first).encode('utf-8')
+        for user_dict in users:
             yield csv_writer.writerow(user_dict).encode('utf-8')
 
     def _make_plain_csv(self, table):

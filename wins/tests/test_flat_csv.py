@@ -6,6 +6,7 @@ import zipfile
 
 from django.urls import reverse
 from django.test import override_settings, TestCase
+from django.utils.timezone import now
 
 from ..constants import BREAKDOWN_NAME_TO_ID
 from ..factories import (
@@ -15,7 +16,6 @@ from ..factories import (
     NotificationFactory,
     WinFactory,
 )
-from ..models import HVC
 from ..serializers import WinSerializer
 from alice.tests.client import AliceClient
 from users.factories import UserFactory
@@ -24,8 +24,13 @@ from wins.views.flat_csv import CSVView
 
 class TestFlatCSV(TestCase):
 
+    DATE_JOINED = now().replace(year=2017, month=1, day=1)
+
     def setUp(self):
         user = UserFactory(name='Johnny Fakeman', email="jfakeman@example.com")
+        user.date_joined = self.DATE_JOINED
+        user.save()
+
         win1 = WinFactory(
             user=user,
             id='6e18a056-1a25-46ce-a4bb-0553a912706f',
@@ -148,6 +153,23 @@ class TestFlatCSV(TestCase):
             hvc2=self._choice_to_str(self.win2, 'hvc'),
             agree=CSVView()._val_to_str(self.win1.confirmation.agree_with_win),
         ).split('\n')
+
+        # note these aren't really col-based since just split by comma
+        for actual_line, expected_line in zip(actual_lines, expected_lines):
+            zipped_cols = zip(actual_line.split(','), expected_line.split(','))
+            for actual_col, expected_col in zipped_cols:
+                self.assertEqual(actual_col, expected_col)
+
+    def test_users_expected_output(self):
+        chunks = list(CSVView()._make_user_csv())
+        bytesio = io.BytesIO()
+        for chunk in chunks:
+            bytesio.write(chunk)
+        bytesio.seek(0)
+        actual_lines = bytesio.getvalue().decode('utf-8').split('\n')  # exclude BOM
+
+        expected_lines = f'''\ufeffname,email,joined,has_export_wins_access\r
+Johnny Fakeman,jfakeman@example.com,{self.DATE_JOINED},True\r'''.split('\n')
 
         # note these aren't really col-based since just split by comma
         for actual_line, expected_line in zip(actual_lines, expected_lines):
