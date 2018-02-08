@@ -401,6 +401,9 @@ else:
 if len(sys.argv) > 1 and sys.argv[1] == 'test':
     logging.disable(logging.CRITICAL)
 
+FIXTURE_DIRS = (
+   '/fdi/fixtures/',
+)
 
 # django countries only uses ISO countries. Wikipedia says, "XK is a
 # 'user assigned' ISO 3166 code not designated by the standard, but used by

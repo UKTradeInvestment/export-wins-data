@@ -3,7 +3,7 @@ from typing import List
 
 from collections import defaultdict
 
-from django.db.models import Func, F, Sum, When, Case, Value, CharField, Count
+from django.db.models import Func, F, Q, Sum, When, Case, Value, CharField, Count
 from django.db.models.functions import Coalesce
 from django.db import connection
 
@@ -13,7 +13,8 @@ from fdi.models import (
     GlobalTargets,
     SectorTeam,
     Market,
-    Target,
+    SectorTeamTarget,
+    MarketTarget,
     Country
 )
 from core.views import BaseMIView
@@ -79,7 +80,11 @@ class BaseFDIView(BaseMIView):
     queryset = Investments.objects.all()
 
     def get_queryset(self):
-        return self.queryset
+        """
+        Exclude projects that have no DIT involvement (level_of_involvement: No Involvement)
+        Include Project only of FDI type, NOT non-FDI and NOT Commitment to Invest. (investment_type: FDI)
+        """
+        return self.queryset.filter(~Q(level_of_involvement__name='No Involvement'), investment_type__name='FDI')
 
     def get_results(self):
         return []
@@ -194,13 +199,12 @@ class FDIBaseSectorTeamView(BaseFDIView):
 class FDISectorTeamListView(BaseFDIView):
 
     def get(self, request, *args, **kwargs):
-        all_sectors = SectorTeam.objects.all()
+        all_sectors = SectorTeam.objects.all().order_by('id')
         formatted_sector_teams = [
             {
                 'id': x.id,
                 'name': x.name,
                 'description': x.description,
-                'sectors': x.sectors.all().values()
             } for x in all_sectors
         ]
         return self._success(formatted_sector_teams)
@@ -253,14 +257,24 @@ class FDISectorTeamDetailView(FDIBaseSectorTeamView):
     def _get_market_target(self, market):
         target = 0
         try:
-            target_obj = Target.objects.get(
+            target_obj = MarketTarget.objects.get(
                 sector_team=self.team, market=market)
-            # both HVC and non-HVC targets
-            if target_obj.hvc_target:
-                target += target_obj.hvc_target
-            if target_obj.non_hvc_target:
-                target += target_obj.non_hvc_target
-        except Target.DoesNotExist:
+
+            if target_obj.target:
+                target += target_obj.target
+        except MarketTarget.DoesNotExist:
+            return 0
+
+        return target
+
+    def _get_sector_team_target(self, market):
+        target = 0
+        try:
+            target_obj = SectorTeamTarget.objects.get(
+                sector_team=self.team, market=market)
+            if target_obj.target:
+                target += target_obj.target
+        except SectorTeamTarget.DoesNotExist:
             return 0
 
         return target
@@ -318,19 +332,19 @@ class FDISectorTeamHVCDetailView(FDISectorTeamDetailView):
         qs = super().get_queryset().filter(date_won__range=(
             self._date_range_start(), self._date_range_end()))
         qs = qs.for_sector_team(self.team)
-        hvc_markets = [t.market for t in Target.objects.filter(
-            hvc_target__isnull=False, sector_team=self.team.id)]
+        hvc_markets = [t.market for t in SectorTeamTarget.objects.filter(
+            target__isnull=False, sector_team=self.team.id)]
         hvc_countries = Country.objects.filter(market__in=hvc_markets)
         return qs.filter(company_country__in=hvc_countries)
 
-    def _get_market_target(self, market):
+    def _get_sector_team_target(self, market):
         target = 0
         try:
-            target_obj = Target.objects.get(
+            target_obj = SectorTeamTarget.objects.get(
                 sector_team=self.team, market=market)
-            if target_obj.hvc_target:
-                target += target_obj.hvc_target
-        except Target.DoesNotExist:
+            if target_obj.target:
+                target += target_obj.target
+        except SectorTeamTarget.DoesNotExist:
             return 0
 
         return target
@@ -347,8 +361,8 @@ class FDISectorTeamHVCDetailView(FDISectorTeamDetailView):
         results['description'] = self.team.description
         results['overview'] = self._get_fdi_summary()
 
-        hvc_markets = [t.market for t in Target.objects.filter(
-            hvc_target__isnull=False, sector_team=self.team.id)]
+        hvc_markets = [t.market for t in SectorTeamTarget.objects.filter(
+            target__isnull=False, sector_team=self.team.id)]
         market_data = [self._market_breakdown(
             investments_in_scope, market) for market in hvc_markets]
 
@@ -361,19 +375,19 @@ class FDISectorTeamNonHVCDetailView(FDISectorTeamDetailView):
         qs = super().get_queryset().filter(date_won__range=(
             self._date_range_start(), self._date_range_end()))
         qs = qs.for_sector_team(self.team)
-        non_hvc_markets = [t.market for t in Target.objects.filter(
-            non_hvc_target__isnull=False, sector_team=self.team.id)]
+        non_hvc_markets = [t.market for t in MarketTarget.objects.filter(
+            target__isnull=False, sector_team=self.team.id)]
         non_hvc_countries = Country.objects.filter(market__in=non_hvc_markets)
         return qs.filter(company_country__in=non_hvc_countries)
 
     def _get_market_target(self, market):
         target = 0
         try:
-            target_obj = Target.objects.get(
+            target_obj = MarketTarget.objects.get(
                 sector_team=self.team, market=market)
-            if target_obj.non_hvc_target:
-                target += target_obj.non_hvc_target
-        except Target.DoesNotExist:
+            if target_obj.target:
+                target += target_obj.target
+        except MarketTarget.DoesNotExist:
             return 0
 
         return target
@@ -390,8 +404,8 @@ class FDISectorTeamNonHVCDetailView(FDISectorTeamDetailView):
         results['description'] = self.team.description
         results['overview'] = self._get_fdi_summary()
 
-        non_hvc_markets = [t.market for t in Target.objects.filter(
-            non_hvc_target__isnull=False, sector_team=self.team.id)]
+        non_hvc_markets = [t.market for t in MarketTarget.objects.filter(
+            target__isnull=False, sector_team=self.team.id)]
         market_data = [self._market_breakdown(
             investments_in_scope, market) for market in non_hvc_markets]
 
@@ -416,14 +430,12 @@ class FDISectorTeamOverview(FDISectorTeamDetailView):
 
     def _get_sector_target(self, sector_team):
         target = 0
-        target_objs = Target.objects.filter(
+        target_objs = SectorTeamTarget.objects.filter(
             sector_team=sector_team, financial_year=self.fin_year)
         # both HVC and non-HVC targets
         for t in target_objs:
-            if t.hvc_target:
-                target += t.hvc_target
-            if t.non_hvc_target:
-                target += t.non_hvc_target
+            if t.target:
+                target += t.target
         return target, target_objs
 
     def _sector_team_breakdown(self, investments, sector_team: SectorTeam):
@@ -554,8 +566,8 @@ class FDISectorTeamWinTable(FDIBaseSectorTeamView):
         qs = super().get_queryset().filter(date_won__range=(
             self._date_range_start(), self._date_range_end()))
         qs = qs.for_sector_team(self.team)
-        hvc_markets = [t.market for t in Target.objects.filter(
-            hvc_target__isnull=False, sector_team=self.team.id)]
+        hvc_markets = [t.market for t in SectorTeamTarget.objects.filter(
+            target__isnull=False, sector_team=self.team.id)]
         hvc_countries = Country.objects.filter(market__in=hvc_markets)
         return qs.filter(company_country__in=hvc_countries)
 
@@ -563,8 +575,8 @@ class FDISectorTeamWinTable(FDIBaseSectorTeamView):
         qs = super().get_queryset().filter(date_won__range=(
             self._date_range_start(), self._date_range_end()))
         qs = qs.for_sector_team(self.team)
-        non_hvc_markets = [t.market for t in Target.objects.filter(
-            non_hvc_target__isnull=False, sector_team=self.team.id)]
+        non_hvc_markets = [t.market for t in MarketTarget.objects.filter(
+            target__isnull=False, sector_team=self.team.id)]
         non_hvc_countries = Country.objects.filter(market__in=non_hvc_markets)
         return qs.filter(company_country__in=non_hvc_countries)
 

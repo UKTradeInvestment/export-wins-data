@@ -61,11 +61,31 @@ class Market(models.Model):
 class MarketCountry(models.Model):
     """ One to many representation of Market and Country """
 
-    market = models.ForeignKey('Market', on_delete=models.PROTECT)
+    market = models.ForeignKey(Market, on_delete=models.PROTECT)
     country = models.ForeignKey(Country, on_delete=models.PROTECT)
 
     def __str__(self):
         return f'{self.market} - {self.country}'
+
+
+class MarketGroup(models.Model):
+    """ MI's representation of FDI MarketGroups """
+
+    name = models.CharField(max_length=MAX_LENGTH, unique=True)
+    markets = models.ManyToManyField(Market, through="MarketGroupMarket")
+
+    def __str__(self):
+        return self.name
+
+
+class MarketGroupMarket(models.Model):
+    """ One to many representation of MarketGroup and Market """
+
+    market_group = models.ForeignKey(MarketGroup, on_delete=models.PROTECT)
+    market = models.ForeignKey(Market, on_delete=models.PROTECT)
+
+    def __str__(self):
+        return f'{self.market_group} - {self.market}'
 
 
 class Investments(models.Model):
@@ -105,6 +125,8 @@ class Investments(models.Model):
     legacy = models.BooleanField(default=False, db_index=True)
     objects = InvestmentsQuerySet.as_manager()
 
+    hvc_code = models.CharField(max_length=5, null=True)
+
 
 class InvestmentUKRegion(models.Model):
     """ representation of UK regions that were benefiting from the investment"""
@@ -132,15 +154,29 @@ class GlobalTargets(models.Model):
         return f'{self.financial_year.description} - h{self.high},g{self.good},s{self.standard},∑{self.total}'
 
 
-class Target(models.Model):
+class MarketTarget(models.Model):
     """ Targets for SectorTeam and Market combinations, per FY.
     Some of them are considered HVC, some non-HVC """
-    sector_team = models.ForeignKey(SectorTeam, related_name="targets", on_delete=models.PROTECT)
-    market = models.ForeignKey(Market, related_name="targets", on_delete=models.PROTECT)
-    hvc_target = models.IntegerField(null=True)
-    non_hvc_target = models.IntegerField(null=True)
+
+    sector_team = models.ForeignKey(SectorTeam, related_name="market_targets", on_delete=models.PROTECT)
+    market = models.ForeignKey(Market, related_name="market_targets", on_delete=models.PROTECT)
+    target = models.IntegerField(null=True)
     financial_year = models.ForeignKey(FinancialYear, on_delete=models.PROTECT)
 
     def __str__(self):
-        return f'{self.financial_year} - {self.sector_team}/{self.market}: ' \
-            f'HVC: {self.hvc_target} non-HVC: {self.non_hvc_target}'
+        return f'{self.financial_year} - {self.sector_team}/{self.market}: non-HVC: {self.non_hvc_target}'
+
+
+class SectorTeamTarget(models.Model):
+    """ Targets for SectorTeam and Market combinations, per FY.
+    Some of them are considered HVC, some non-HVC """
+
+    hvc_code = models.CharField(max_length=5)
+    sector_team = models.ForeignKey(SectorTeam, related_name="sector_targets", on_delete=models.PROTECT)
+    market_group = models.ForeignKey(MarketGroup, related_name="sector_targets", on_delete=models.PROTECT)
+    target = models.IntegerField(null=True)
+    financial_year = models.ForeignKey(FinancialYear, on_delete=models.PROTECT)
+
+    def __str__(self):
+        return f'{self.financial_year} - {self.sector_team}/{self.market_group}: ' \
+            f'HVC: {self.hvc_target}'
