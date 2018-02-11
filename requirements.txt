@@ -1,5 +1,5 @@
 boto3==1.5.24
-coverage>=4.0,<4.4
+coverage==4.5.1
 codeclimate-test-reporter==0.2.3
 dj-database-url==0.4.2
 Django==2.0.2
