@@ -1,3 +1,5 @@
+from unittest import skip
+
 from django.test import TestCase
 from django.urls import reverse
 from django.utils.datetime_safe import datetime
@@ -169,6 +171,7 @@ class SectorTeamListTestCase(FdiBaseTestCase):
 class FDIOverviewTestCase(FdiBaseTestCase):
     url = reverse('fdi:overview')
 
+    @skip('skipped until after rewrite')
     def test_overview_no_wins_2017(self):
         self.url = self.get_url_for_year(2017, self.url)
         api_response = self._api_response_data
@@ -202,6 +205,7 @@ class FDIOverviewTestCase(FdiBaseTestCase):
 
         self.assertEqual(api_response["verified_met_percent"], 0)
 
+    @skip('skipped until after rewrite')
     def test_overview_no_wins_2016(self):
         self.url = self.get_url_for_year(2016, self.url)
         api_response = self._api_response_data

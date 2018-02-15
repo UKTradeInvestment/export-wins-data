@@ -31,6 +31,7 @@ class InvestmentsQuerySet(models.QuerySet):
     def won_and_verify(self):
         return self.filter(stage__in=['won', 'verify win'])
 
+
 class SectorTeam(models.Model):
     """ FDI's team structure that maps to Sectors """
     name = models.CharField(max_length=MAX_LENGTH, unique=True)
