@@ -72,20 +72,20 @@ class MarketGroup(models.Model):
     """ MI's representation of FDI MarketGroups """
 
     name = models.CharField(max_length=MAX_LENGTH, unique=True)
-    markets = models.ManyToManyField(Market, through="MarketGroupMarket")
+    countries = models.ManyToManyField(Country, through="MarketGroupCountry")
 
     def __str__(self):
         return self.name
 
 
-class MarketGroupMarket(models.Model):
-    """ One to many representation of MarketGroup and Market """
+class MarketGroupCountry(models.Model):
+    """ One to many representation of MarketGroup and Country """
 
     market_group = models.ForeignKey(MarketGroup, on_delete=models.PROTECT)
-    market = models.ForeignKey(Market, on_delete=models.PROTECT)
+    country = models.ForeignKey(Country, on_delete=models.PROTECT)
 
     def __str__(self):
-        return f'{self.market_group} - {self.market}'
+        return f'{self.market_group} - {self.country}'
 
 
 class Investments(models.Model):
@@ -180,3 +180,21 @@ class SectorTeamTarget(models.Model):
     def __str__(self):
         return f'{self.financial_year} - {self.sector_team}/{self.market_group}: ' \
             f'HVC: {self.hvc_target}'
+
+
+class OverseasRegion(models.Model):
+    name = models.CharField(max_length=MAX_LENGTH)
+    markets = models.ManyToManyField(Market, through="OverseasRegionMarket")
+
+    def __str__(self):
+        return self.name
+
+
+class OverseasRegionMarket(models.Model):
+    """ One to many representation of OverseasRegion and Market """
+
+    overseas_region = models.ForeignKey(OverseasRegion, on_delete=models.PROTECT)
+    market = models.ForeignKey(Market, on_delete=models.PROTECT)
+
+    def __str__(self):
+        return f'{self.overseas_region} - {self.market}'
