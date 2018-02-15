@@ -6,6 +6,7 @@ from django.utils.timezone import now
 from pytz import UTC
 from rest_framework import status
 from rest_framework.exceptions import ParseError, NotFound
+from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -17,7 +18,7 @@ from alice.authenticators import IsMIServer, IsMIUser
 MI_PERMISSION_CLASSES = (IsMIServer, IsMIUser)
 
 
-class BaseMIView(APIView):
+class BaseMIView(GenericAPIView):
     """ Base view for other MI endpoints to inherit from """
 
     permission_classes = MI_PERMISSION_CLASSES

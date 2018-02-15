@@ -3,23 +3,23 @@ from typing import List
 
 from collections import defaultdict
 
-from django.db.models import Func, F, Q, Sum, When, Case, Value, CharField, Count
+from django.db.models import Func, F, Q, Sum, When, Case, Value, CharField, Count, BooleanField
 from django.db.models.functions import Coalesce
 from django.db import connection
+import django_filters.rest_framework as filters
 
 from core.utils import group_by_key
 from fdi.models import (
     Investments,
-    GlobalTargets,
     SectorTeam,
     Market,
     SectorTeamTarget,
     MarketTarget,
-    Country
+    Country,
 )
 from core.views import BaseMIView
 from fdi.serializers import InvestmentsSerializer
-from mi.utils import two_digit_float
+from mi.utils import two_digit_float, percentage_formatted
 
 ANNOTATIONS = dict(
     year=Func(F('date_won'), function='get_financial_year'),
@@ -31,6 +31,10 @@ ANNOTATIONS = dict(
         When(fdi_value='2bacde8d-128f-4d0a-849b-645ceafe4cf9', then=Value(
             'standard', output_field=CharField(max_length=10))),
         default=Value('unknown', output_field=CharField(max_length=10))
+    ),
+    is_hvc=Case(
+        When(hvc_code__isnull=False, then=Value(True, output_field=BooleanField())),
+        default=Value(False, output_field=BooleanField())
     )
 )
 
@@ -44,7 +48,7 @@ def classify_stage(investment):
         return 'pipeline'
 
 
-def fill_in_missing_performance(data, target: GlobalTargets):
+def fill_in_missing_performance(data):
     """
     takes a dict of performance dicts e.g. {'high'; {..}
     and fills in the missing if there is no good/standard/high key
@@ -53,12 +57,12 @@ def fill_in_missing_performance(data, target: GlobalTargets):
     for k in ['high', 'good', 'standard']:
         if not data.get(k):
             data[k] = {
-                "number_new_jobs__sum": 0,
-                "number_safeguarded_jobs__sum": 0,
-                "investment_value__sum": 0,
                 "count": 0,
-                "target": getattr(target, k),
-                "value__percent": 0
+                "hvc_count": 0,
+                "non_hvc_count": 0,
+                "jobs_new": 0,
+                "jobs_safeguarded": 0,
+                "jobs_total": 0,
             }
     return data
 
@@ -75,16 +79,71 @@ def classify_quality(investment):
     return 'unknown'
 
 
+def make_nested(perf_by_value):
+    total = sum([x['count'] for x in perf_by_value.values()])
+    ret = {}
+    for key, perf in perf_by_value.items():
+        ret[key] = {
+            "count": perf['count'],
+            "percent": percentage_formatted(perf['count'], total),
+            "campaign": {
+                "hvc": {
+                    "count": perf['hvc_count'],
+                    "percent": percentage_formatted(perf['hvc_count'], perf['count'])
+                },
+                "non_hvc": {
+                    "count": perf['non_hvc_count'],
+                    "percent": percentage_formatted(perf['non_hvc_count'], perf['count'])
+                }
+            },
+            "jobs": {
+                "new": perf['jobs_new'],
+                "safeguarded": perf['jobs_safeguarded'],
+                "total": perf['jobs_total']
+            }
+        }
+    return ret
+
+
+class SectorTeamFilter(filters.NumberFilter):
+
+    def filter(self, qs, value):
+        if not value:
+            return qs
+
+        try:
+            sector_team = SectorTeam.objects.get(pk=value)
+            return qs.filter(sector__in=sector_team.sectors.all())
+        except SectorTeam.DoesNotExist:
+            return qs.none()
+
+
+class InvestmentsFilterSet(filters.FilterSet):
+
+    quality = filters.CharFilter(field_name='fdi_value__name', lookup_expr='iexact')
+    sector_team = SectorTeamFilter(field_name='sector')
+
+    class Meta:
+        model = Investments
+        fields = ('quality', 'sector_team',)
+
+
 class BaseFDIView(BaseMIView):
 
     queryset = Investments.objects.all()
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = InvestmentsFilterSet
 
     def get_queryset(self):
         """
         Exclude projects that have no DIT involvement (level_of_involvement: No Involvement)
         Include Project only of FDI type, NOT non-FDI and NOT Commitment to Invest. (investment_type: FDI)
         """
-        return self.queryset.filter(~Q(level_of_involvement__name='No Involvement'), investment_type__name='FDI')
+        return self.queryset.filter(
+            ~Q(level_of_involvement__name='No Involvement'), investment_type__name='FDI'
+        ).filter(
+            date_won__range=(self._date_range_start(), self._date_range_end())
+        )
 
     def get_results(self):
         return []
@@ -93,79 +152,87 @@ class BaseFDIView(BaseMIView):
         return self._success(self.get_results())
 
     def _get_target(self):
-        try:
-            fdi_target = GlobalTargets.objects.get(
-                financial_year=self.fin_year)
-        except GlobalTargets.DoesNotExist:
-            fdi_target = GlobalTargets(
-                financial_year=self.fin_year, high=0, good=0, standard=0)
-        return fdi_target
+        raise NotImplementedError()
 
     def _get_fdi_summary(self):
-        fdi_target = self._get_target()
+        investments_in_scope = self.filter_queryset(self.get_queryset())
+        won_and_verify = investments_in_scope.won_and_verify()
+        pipeline_active = investments_in_scope.filter(stage='active')
 
-        investments_in_scope = self.get_queryset().won().filter(
-            date_won__range=(self._date_range_start(), self._date_range_end())
-        )
-        pending = self.get_queryset().filter(
-            date_won=None
-        ).exclude(
-            stage='won'
-        ).aggregate(
-            Sum('number_new_jobs'),
-            Sum('number_safeguarded_jobs'),
-            Sum('investment_value'),
-            count=Count('id'),
-        )
+        won_and_verify_dict = self.performance_for_qs(won_and_verify)
+        pipeline_active_dict = self.performance_for_qs(pipeline_active)
 
-        total = investments_in_scope.count()
-        data = investments_in_scope.values(
+        return {
+            "wins": won_and_verify_dict,
+            "pipeline": {
+                "active": pipeline_active_dict
+            }
+        }
+
+    def performance_for_qs(self, won_and_verify):
+        won_and_verify_count = won_and_verify.count()
+        total_value = won_and_verify.aggregate(total_investment_value__sum=Sum('investment_value'))
+        jobs = won_and_verify.aggregate(
+            new=Sum('number_new_jobs'),
+            safeguarded=Sum('number_safeguarded_jobs'),
+            total=Sum(F('number_new_jobs') + F('number_safeguarded_jobs'))
+        )
+        campaign = won_and_verify.values(
+            'hvc_code'
+        ).annotate(
+            is_hvc=ANNOTATIONS['is_hvc'],
+            hvc_count=Count('is_hvc', filter=Q(is_hvc=True)),
+            non_hvc_count=Count('is_hvc', filter=Q(is_hvc=False)),
+        ).values(
+            'hvc_count',
+            'non_hvc_count'
+        )[0]
+        campaign_total = campaign['hvc_count'] + campaign['non_hvc_count']
+        assert campaign_total == won_and_verify_count
+        performance = won_and_verify.values(
             'fdi_value__name'
         ).annotate(
-            value=ANNOTATIONS['value']
-        ).annotate(
-            Sum('number_new_jobs'),
-            Sum('number_safeguarded_jobs'),
-            Sum('investment_value'),
+            value=ANNOTATIONS['value'],
             count=Count('value'),
         ).values(
             'value',
-            'count',
-            'number_new_jobs__sum',
-            'number_safeguarded_jobs__sum',
-            'investment_value__sum',
+            'count'
         )
-
-        formatted_breakdown_by_value = group_by_key([
-            {
-                **x,
-                "target": getattr(fdi_target, x['value'], 0),
-                "value__percent": two_digit_float((x['count'] / total) * 100)
-            } for x in data
-        ], key='value', flatten=True)
-
-        formatted_breakdown_by_value = fill_in_missing_performance(
-            formatted_breakdown_by_value, fdi_target)
-
-        return {
-            "target": fdi_target.total,
-            "performance": {
-                "verified": formatted_breakdown_by_value if formatted_breakdown_by_value else None,
-            },
-            "total": {
-                "verified": {
-                    "number_new_jobs__sum": sum(x['number_new_jobs__sum'] for x in data),
-                    "number_safeguarded_jobs__sum": sum(x['number_safeguarded_jobs__sum'] for x in data),
-                    "investment_value__sum": sum(x['investment_value__sum'] for x in data),
-                    "count": total
+        perf_hvc = performance.annotate(
+            is_hvc=ANNOTATIONS['is_hvc'],
+            hvc_count=Count('is_hvc', filter=Q(is_hvc=True)),
+            non_hvc_count=Count('is_hvc', filter=Q(is_hvc=False)),
+            jobs_new=Sum('number_new_jobs'),
+            jobs_safeguarded=Sum('number_safeguarded_jobs'),
+            jobs_total=Sum(F('number_new_jobs') + F('number_safeguarded_jobs'))
+        ).values(
+            'value',
+            'count',
+            'hvc_count',
+            'non_hvc_count',
+            'jobs_new',
+            'jobs_safeguarded',
+            'jobs_total'
+        )
+        perf_by_value = fill_in_missing_performance(group_by_key(list(perf_hvc), 'value', flatten=True))
+        performance_dict = make_nested(perf_by_value)
+        won_and_verify_dict = {
+            "count": won_and_verify_count,
+            **total_value,
+            "jobs": jobs,
+            "campaign": {
+                "hvc": {
+                    "count": campaign['hvc_count'],
+                    "percent": percentage_formatted(campaign['hvc_count'], won_and_verify_count)
                 },
-                "pending": {k: v or 0 for k, v in pending.items()}
+                "non_hvc": {
+                    "count": campaign['non_hvc_count'],
+                    "percent": percentage_formatted(campaign['non_hvc_count'], won_and_verify_count)
+                }
             },
-            "verified_met_percent": two_digit_float(
-                total / fdi_target.total * 100
-            ) if fdi_target.total > 0 and total > 0 else 0.0
-
+            "performance": performance_dict,
         }
+        return won_and_verify_dict
 
 
 class FDIBaseSectorTeamView(BaseFDIView):

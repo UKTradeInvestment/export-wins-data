@@ -28,6 +28,9 @@ class InvestmentsQuerySet(models.QuerySet):
     def pipeline(self):
         return self.exclude(stage__in=['won', 'verify win'])
 
+    def won_and_verify(self):
+        return self.filter(stage__in=['won', 'verify win'])
+
 
 class SectorTeam(models.Model):
     """ FDI's team structure that maps to Sectors """
