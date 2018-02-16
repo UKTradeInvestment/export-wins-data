@@ -67,11 +67,11 @@ def percentage(part, total):
     """ Helper function to calculate percentage """
     if total == 0:
         return None
-    return round(100 * part / total)
+    return round(100 * part / float(total), 2)
 
 
 def percentage_formatted(part, total):
-    return two_digit_float(percentage(part, total)) or 0
+    return two_digit_float(percentage(part, total)) or 0.0
 
 
 def lookup(dictionary, key, *keys):

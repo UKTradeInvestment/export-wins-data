@@ -120,6 +120,10 @@ def make_nested(perf_by_value):
     return ret
 
 
+def replace_spaces_with_underscore(text):
+    return text.replace(' ', '_')
+
+
 def investments_breakdown_by_stage(qs):
     data = qs.values(
         'stage'
@@ -132,7 +136,12 @@ def investments_breakdown_by_stage(qs):
     total = sum((x['count'] for x in grouped.values()))
     for v in grouped.values():
         v['percent'] = percentage_formatted(v['count'], total)
-    return fill_in_missing_stages(grouped)
+
+    return {
+        replace_spaces_with_underscore(k): v
+        for k, v
+        in fill_in_missing_stages(grouped).items()
+    }
 
 
 class SectorTeamFilter(filters.NumberFilter):
