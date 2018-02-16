@@ -48,23 +48,38 @@ def classify_stage(investment):
         return 'pipeline'
 
 
+def fill_in_missing(data, keys, defaults):
+    for k in keys:
+        if not data.get(k):
+            data[k] = defaults
+    return data
+
+
 def fill_in_missing_performance(data):
     """
     takes a dict of performance dicts e.g. {'high'; {..}
     and fills in the missing if there is no good/standard/high key
     in the dictionary.
     """
-    for k in ['high', 'good', 'standard']:
-        if not data.get(k):
-            data[k] = {
-                "count": 0,
-                "hvc_count": 0,
-                "non_hvc_count": 0,
-                "jobs_new": 0,
-                "jobs_safeguarded": 0,
-                "jobs_total": 0,
-            }
-    return data
+    keys = ['high', 'good', 'standard']
+    defaults = {
+        "count": 0,
+        "hvc_count": 0,
+        "non_hvc_count": 0,
+        "jobs_new": 0,
+        "jobs_safeguarded": 0,
+        "jobs_total": 0,
+    }
+
+    return fill_in_missing(data, keys, defaults)
+
+
+def fill_in_missing_stages(data):
+    return fill_in_missing(
+        data,
+        ['won', 'prospect', 'active', 'assign pm', 'verify win'],
+        {'count': 0, 'percent': 0},
+    )
 
 
 def classify_quality(investment):
@@ -103,6 +118,21 @@ def make_nested(perf_by_value):
             }
         }
     return ret
+
+
+def investments_breakdown_by_stage(qs):
+    data = qs.values(
+        'stage'
+    ).annotate(
+        count=Count('stage'),
+    ).values(
+        'stage', 'count'
+    )
+    grouped = group_by_key(list(data), 'stage', flatten=True)
+    total = sum((x['count'] for x in grouped.values()))
+    for v in grouped.values():
+        v['percent'] = percentage_formatted(v['count'], total)
+    return fill_in_missing_stages(grouped)
 
 
 class SectorTeamFilter(filters.NumberFilter):
@@ -166,11 +196,13 @@ class BaseFDIView(BaseMIView):
             "wins": won_and_verify_dict,
             "pipeline": {
                 "active": pipeline_active_dict
-            }
+            },
+            "stages": investments_breakdown_by_stage(investments_in_scope)
         }
 
     def performance_for_qs(self, won_and_verify):
         won_and_verify_count = won_and_verify.count()
+        stage_breakdown = investments_breakdown_by_stage(won_and_verify)
         total_value = won_and_verify.aggregate(total_investment_value__sum=Sum('investment_value'))
         jobs = won_and_verify.aggregate(
             new=Sum('number_new_jobs'),
@@ -231,6 +263,7 @@ class BaseFDIView(BaseMIView):
                 }
             },
             "performance": performance_dict,
+            "stages": stage_breakdown
         }
         return won_and_verify_dict
 
