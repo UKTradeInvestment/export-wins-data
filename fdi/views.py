@@ -8,7 +8,7 @@ from django.db.models.functions import Coalesce
 from django.db import connection
 import django_filters.rest_framework as filters
 
-from core.utils import group_by_key
+from core.utils import group_by_key, getitem_or_default
 from fdi.models import (
     Investments,
     SectorTeam,
@@ -120,6 +120,15 @@ def make_nested(perf_by_value):
     return ret
 
 
+def add_is_on_target(data):
+    high_percent = data['high']['percent']
+    high_and_good_percent = high_percent + data['good']['percent']
+    data['high']['on_target'] = high_percent > 40
+    data['good']['on_target'] = high_and_good_percent > 70
+    data['standard']['on_target'] = 100 - high_and_good_percent < 30
+    return data
+
+
 def replace_spaces_with_underscore(text):
     return text.replace(' ', '_')
 
@@ -212,13 +221,16 @@ class BaseFDIView(BaseMIView):
     def performance_for_qs(self, won_and_verify):
         won_and_verify_count = won_and_verify.count()
         stage_breakdown = investments_breakdown_by_stage(won_and_verify)
-        total_value = won_and_verify.aggregate(total_investment_value__sum=Sum('investment_value'))
-        jobs = won_and_verify.aggregate(
-            new=Sum('number_new_jobs'),
-            safeguarded=Sum('number_safeguarded_jobs'),
-            total=Sum(F('number_new_jobs') + F('number_safeguarded_jobs'))
+        total_value = won_and_verify.aggregate(
+            total_investment_value__sum=Coalesce(Sum('investment_value'), Value(0))
         )
-        campaign = won_and_verify.values(
+        jobs = won_and_verify.aggregate(
+            new=Coalesce(Sum('number_new_jobs'), Value(0)),
+            safeguarded=Coalesce(Sum('number_safeguarded_jobs'), Value(0)),
+            total=Coalesce(Sum(F('number_new_jobs') + F('number_safeguarded_jobs')), Value(0))
+        )
+
+        campaign = getitem_or_default(won_and_verify.values(
             'hvc_code'
         ).annotate(
             is_hvc=ANNOTATIONS['is_hvc'],
@@ -227,9 +239,14 @@ class BaseFDIView(BaseMIView):
         ).values(
             'hvc_count',
             'non_hvc_count'
-        )[0]
+        ), 0, {
+            'hvc_count': 0,
+            'non_hvc_count': 0
+        })
         campaign_total = campaign['hvc_count'] + campaign['non_hvc_count']
+
         assert campaign_total == won_and_verify_count
+
         performance = won_and_verify.values(
             'fdi_value__name'
         ).annotate(
@@ -241,11 +258,11 @@ class BaseFDIView(BaseMIView):
         )
         perf_hvc = performance.annotate(
             is_hvc=ANNOTATIONS['is_hvc'],
-            hvc_count=Count('is_hvc', filter=Q(is_hvc=True)),
-            non_hvc_count=Count('is_hvc', filter=Q(is_hvc=False)),
-            jobs_new=Sum('number_new_jobs'),
-            jobs_safeguarded=Sum('number_safeguarded_jobs'),
-            jobs_total=Sum(F('number_new_jobs') + F('number_safeguarded_jobs'))
+            hvc_count=Coalesce(Count('is_hvc', filter=Q(is_hvc=True)), Value(0)),
+            non_hvc_count=Coalesce(Count('is_hvc', filter=Q(is_hvc=False)), Value(0)),
+            jobs_new=Coalesce(Sum('number_new_jobs'), Value(0)),
+            jobs_safeguarded=Coalesce(Sum('number_safeguarded_jobs'), Value(0)),
+            jobs_total=Coalesce(Sum(F('number_new_jobs') + F('number_safeguarded_jobs')), Value(0))
         ).values(
             'value',
             'count',
@@ -257,6 +274,7 @@ class BaseFDIView(BaseMIView):
         )
         perf_by_value = fill_in_missing_performance(group_by_key(list(perf_hvc), 'value', flatten=True))
         performance_dict = make_nested(perf_by_value)
+        performance_dict = add_is_on_target(performance_dict)
         won_and_verify_dict = {
             "count": won_and_verify_count,
             **total_value,

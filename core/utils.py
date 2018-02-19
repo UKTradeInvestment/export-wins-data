@@ -21,3 +21,17 @@ def group_by_key(l: List[MutableMapping], key: str, flatten: bool = False) -> Mu
     for group, vals in itertools.groupby(l, key=key_getter):
         groups[group] = [filter_key(data, key) for data in vals]
     return {k: v[0] if flatten else v for k, v in groups.items()}
+
+
+def getitem_or_default(l, idx, default=None):
+    """
+    gets the item at position idx or returns the default value
+    :param list: list of things
+    :param idx: position
+    :param default: optional default value
+    :return: thing at index idx or default
+    """
+    try:
+        return l[idx]
+    except IndexError:
+        return default
