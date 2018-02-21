@@ -34,8 +34,8 @@ class InvestmentFactory(factory.DjangoModelFactory):
 
     project_code = ""
 
-    stage = "Won"
-    status = "Won"
+    stage = "won"
+    status = "won"
     number_new_jobs = 10
     number_safeguarded_jobs = 10
 
@@ -56,6 +56,6 @@ class InvestmentFactory(factory.DjangoModelFactory):
     investment_value = FuzzyChoice(VALUE)
     foreign_equity_investment = FuzzyChoice(VALUE)
 
-    level_of_involvement = FuzzyChoice(Involvement.objects.all())
-    investment_type = FuzzyChoice(InvestmentType.objects.all())
+    level_of_involvement = FuzzyChoice(Involvement.objects.exclude(name='No Involvement'))
+    investment_type = FuzzyChoice(InvestmentType.objects.filter(name='FDI'))
     specific_program = FuzzyChoice(SpecificProgramme.objects.all())

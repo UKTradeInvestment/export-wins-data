@@ -125,7 +125,7 @@ def add_is_on_target(data):
     high_and_good_percent = high_percent + data['good']['percent']
     data['high']['on_target'] = high_percent > 40
     data['good']['on_target'] = high_and_good_percent > 70
-    data['standard']['on_target'] = 100 - high_and_good_percent < 30
+    data['standard']['on_target'] = False
     return data
 
 
