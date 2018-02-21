@@ -89,55 +89,58 @@ class FDIOverviewTestCase(FdiBaseTestCase):
         api_response = self._api_response_data
         self.assert_response_zeros(api_response)
 
-    def test_overview_1_non_hvc_win_all_fdi_values_won_and_verify_win(self):
+    def test_overview_1_win_all_fdi_values_won_and_verify_win(self):
         fdi_values = FDIValueMapping.keys()
         stages = ['won', 'verify win']
+        hvcs = [True, False]
         years = FinancialYear.objects.all()
         base_url = self.url
         for year in years:
             self.url = self.get_url_for_year(2017, base_url)
             for value_id in fdi_values:
                 for stage in stages:
-                    with self.subTest(value_id=value_id, stage=stage, year=year):
-                        self.assertEqual(Investments.objects.count(), 0)
-                        win = self.factory(fdi_value_id=value_id, stage=stage)
+                    for hvc in hvcs:
+                        with self.subTest(value_id=value_id, stage=stage, year=year):
+                            self._test_single_win(stage, value_id, hvc=hvc)
 
-                        stage = stage.replace(' ', '_')
+    def _test_single_win(self, stage, value_id, hvc):
+        self.assertEqual(Investments.objects.count(), 0)
+        hvc_code = 'I123' if hvc else None
+        win = self.factory(fdi_value_id=value_id, stage=stage, hvc_code=hvc_code)
+        stage = stage.replace(' ', '_')
+        self.assertEqual(Investments.objects.count(), 1)
+        if stage == 'won':
+            self.assertEqual(Investments.objects.won().count(), 1)
+        self.assertEqual(Investments.objects.won_and_verify().count(), 1)
+        api_response = self._api_response_data
+        expected = self.all_paths_with_zero_expected
+        expected['wins.count'] = 1
+        expected['wins.total_investment_value__sum'] = win.investment_value
+        expected['wins.jobs.new'] = win.number_new_jobs
+        expected['wins.jobs.safeguarded'] = win.number_safeguarded_jobs
+        expected['wins.jobs.total'] = win.number_safeguarded_jobs + win.number_new_jobs
 
-                        self.assertEqual(Investments.objects.count(), 1)
-                        if stage == 'won':
-                            self.assertEqual(Investments.objects.won().count(), 1)
+        hvc_path = 'hvc' if hvc else 'non_hvc'
+        expected[f'wins.campaign.{hvc_path}.count'] = 1
+        expected[f'wins.campaign.{hvc_path}.percent'] = 100
 
-                        self.assertEqual(Investments.objects.won_and_verify().count(), 1)
-                        api_response = self._api_response_data
-                        expected = self.all_paths_with_zero_expected
-                        expected['wins.count'] = 1
-                        expected['wins.total_investment_value__sum'] = win.investment_value
-                        expected['wins.jobs.new'] = win.number_new_jobs
-                        expected['wins.jobs.safeguarded'] = win.number_safeguarded_jobs
-                        expected['wins.jobs.total'] = win.number_safeguarded_jobs + win.number_new_jobs
-                        expected['wins.campaign.non_hvc.count'] = 1
-                        expected['wins.campaign.non_hvc.percent'] = 100
-
-                        expected[('wins', 'performance', FDIValueMapping[win.fdi_value_id], 'count')] = 1
-                        expected[('wins', 'performance', FDIValueMapping[win.fdi_value_id], 'percent')] = 100
-                        expected[('wins', 'performance', FDIValueMapping[win.fdi_value_id], 'campaign', 'non_hvc', 'count')] = 1
-                        expected[('wins', 'performance', FDIValueMapping[win.fdi_value_id], 'campaign', 'non_hvc', 'percent')] = 100
-                        expected[('wins', 'performance', FDIValueMapping[win.fdi_value_id], 'jobs', 'new')] = win.number_new_jobs
-                        expected[('wins', 'performance', FDIValueMapping[win.fdi_value_id], 'jobs', 'safeguarded')] = win.number_safeguarded_jobs
-                        expected[('wins', 'performance', FDIValueMapping[win.fdi_value_id], 'jobs', 'total')] = win.number_safeguarded_jobs + win.number_new_jobs
-
-                        del expected['wins.performance.high.on_target']
-                        del expected[('wins', 'performance', 'good', 'on_target',)]
-
-                        expected[('wins', 'stages', stage, 'count')] = 1
-                        expected[('wins', 'stages', stage, 'percent')] = 100
-
-                        expected[('stages', stage, 'count')] = 1
-                        expected[('stages', stage, 'percent')] = 100
-
-                        self.assert_path_and_expected(api_response, expected)
-                        Investments.objects.all().delete()
+        expected[('wins', 'performance', FDIValueMapping[win.fdi_value_id], 'count')] = 1
+        expected[('wins', 'performance', FDIValueMapping[win.fdi_value_id], 'percent')] = 100
+        expected[('wins', 'performance', FDIValueMapping[win.fdi_value_id], 'campaign', hvc_path, 'count')] = 1
+        expected[('wins', 'performance', FDIValueMapping[win.fdi_value_id], 'campaign', hvc_path, 'percent')] = 100
+        expected[('wins', 'performance', FDIValueMapping[win.fdi_value_id], 'jobs', 'new')] = win.number_new_jobs
+        expected[(
+        'wins', 'performance', FDIValueMapping[win.fdi_value_id], 'jobs', 'safeguarded')] = win.number_safeguarded_jobs
+        expected[('wins', 'performance', FDIValueMapping[win.fdi_value_id], 'jobs',
+                  'total')] = win.number_safeguarded_jobs + win.number_new_jobs
+        del expected['wins.performance.high.on_target']
+        del expected['wins.performance.good.on_target']
+        expected[('wins', 'stages', stage, 'count')] = 1
+        expected[('wins', 'stages', stage, 'percent')] = 100
+        expected[('stages', stage, 'count')] = 1
+        expected[('stages', stage, 'percent')] = 100
+        self.assert_path_and_expected(api_response, expected)
+        Investments.objects.all().delete()
 
     def test_overview_no_wins_2016(self):
         self.url = self.get_url_for_year(2016, self.url)
