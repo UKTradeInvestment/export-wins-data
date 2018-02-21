@@ -83,3 +83,6 @@ mi/.DS_Store
 
 .vscode/
 /venv
+/.tmontmp/
+/.pytest_cache/
+/.testmondata

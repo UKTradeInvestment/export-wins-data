@@ -31,3 +31,9 @@ factory-boy==2.10.0
 raven==6.5.0
 freezegun==0.3.9
 jmespath==0.9.3
+pytest-testmon==0.9.9
+pytest-cov==2.5.1
+pytest-xdist==1.22.1
+pytest==3.4.1
+pytest-django==3.1.2
+coverage-pth==0.0.2
