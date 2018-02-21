@@ -78,7 +78,7 @@ def fill_in_missing_stages(data):
     return fill_in_missing(
         data,
         ['won', 'prospect', 'active', 'assign pm', 'verify win'],
-        {'count': 0, 'percent': 0},
+        {'count': 0, 'percent': 0.0},
     )
 
 
