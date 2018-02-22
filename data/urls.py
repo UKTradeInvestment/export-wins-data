@@ -7,9 +7,7 @@ from rest_framework.routers import DefaultRouter
 import csvfiles.urls
 import fdi.urls
 import mi.urls
-import sso.saml2_urls
 import sso.oauth2_urls
-import rest_framework.urls
 
 from users.views import IsLoggedIn, LoginView, UserRetrieveViewSet, LogoutView
 from wins.views import (
@@ -32,7 +30,6 @@ router.register(r"advisors", AdvisorViewSet)
 
 urlpatterns = [
     url(r"^", include((router.urls, 'wins'), namespace="drf")),
-    url(r'^saml2/', include((sso.saml2_urls, 'sso'), namespace="saml2")),
     url(r'^oauth2/', include((sso.oauth2_urls, 'sso'), namespace="oauth2")),
     url(r'^mi/', include((mi.urls, 'mi'), namespace="mi")),
     url(r'^mi/fdi/', include((fdi.urls, 'fdi'), namespace="fdi")),
