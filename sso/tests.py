@@ -4,13 +4,13 @@ from datetime import timedelta, datetime
 from django.conf import settings
 from django.utils.timezone import now
 from freezegun import freeze_time
-from xml.etree import ElementTree
 
 from django.urls import reverse
 from django.test import TestCase, override_settings, tag
 
 from alice.tests.client import AliceClient
-from sso.models import ADFSUser, AuthorizationState
+from sso.models import AuthorizationState
+from users.models import User
 
 
 class BaseSSOTestCase(TestCase):
@@ -19,15 +19,13 @@ class BaseSSOTestCase(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.alice_client = AliceClient()
-        cls.adfs_user = ADFSUser(email='test@example.com')
+        cls.adfs_user = User(email='test@example.com')
         cls.adfs_user.save()
 
     def _login(self):
-        # note login side-steps SAML/XML stuff
         self.alice_client.force_login(
-            self.adfs_user, 'djangosaml2.backends.Saml2Backend')
+            self.adfs_user, 'django.contrib.auth.backends.ModelBackend')
 
-    @patch('sso.middleware.saml2.get_user_attributes', lambda _: {})
     def _get_status_no_secret(self, url, status_code=200, perm=False):
         if perm:
             with patch('sso.middleware.saml2.has_MI_permission', lambda _: True):
@@ -50,7 +48,7 @@ class BaseSSOTestCase(TestCase):
         return self._get_status_no_secret(*args, **kwargs)
 
     def _get(self, name, status_code=200, perm=False):
-        url = reverse('saml2:' + name)
+        url = reverse('oauth2:' + name)
         return self._get_status_mi_secret(url, status_code, perm)
 
     @override_settings(MI_SECRET=AliceClient.SECRET)
@@ -72,57 +70,6 @@ class SSOTestCase(BaseSSOTestCase):
         content = response.content.decode("utf-8")
         for expected_str in expected_strs:
             self.assertTrue(expected_str in content)
-
-    def test_metadata(self):
-        response = self._get('saml2_metadata')
-        ElementTree.fromstring(response.content)  # check well formed
-        expected = [
-            'AuthnRequestsSigned="true"',
-            'WantAssertionsSigned="true"',
-            'entityID="https://sso.datahub.service.trade.gov.uk/sp"',
-            'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified',
-        ]
-        self._assert_response_has_strings(response, expected)
-
-    def test_login(self):
-        response = self._get('saml2_login')
-        expected = [
-            'document.SSO_Login.submit()',
-            'name="SAMLRequest"',
-            '<input type="submit" value="Log in" />',
-        ]
-        self._assert_response_has_strings(response, expected)
-        self.assertGreater(len(response.content), 1300)
-
-    def test_acs_not_post(self):
-        self._get('saml2_acs', 400)
-
-    def test_acs_bad_post(self):
-        self._post('saml2:saml2_acs', {}, 400)
-
-    # def test_acs_valid(self):
-    #     self._post('saml2_acs', {'SAMLResponse': '<xml>'})
-    #     # mock everything?
-
-    def _assert_not_logged_in_adfs(self):
-        self._get('adfs_attributes', 403)
-
-    def test_adfs_not_logged_in_rejected(self):
-        self._assert_not_logged_in_adfs()
-
-    def test_adfs_access_no_perm(self):
-        self._login()
-        self._get('adfs_attributes', 403)
-
-    def test_adfs_access_with_perm(self):
-        self._login()
-        self._get('adfs_attributes', perm=True)
-
-    def test_logout(self):
-        self._login()
-        self._get('adfs_logout')
-        self._assert_not_logged_in_adfs()
-
 
 @tag('oauth2')
 @freeze_time(datetime(2017, 1, 1, 12))

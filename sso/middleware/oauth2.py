@@ -8,6 +8,7 @@ from django.utils.timezone import now, make_aware
 
 from requests_oauthlib import OAuth2Session
 
+has_MI_permission = False
 
 class OAuth2IntrospectToken(MiddlewareMixin):
     """
@@ -32,6 +33,7 @@ class OAuth2IntrospectToken(MiddlewareMixin):
             if now() < token_introspect_time + timedelta(seconds=settings.OAUTH2_INTROSPECT_INTERVAL):
                 return None
 
+        request.mi_permission = has_MI_permission
         if source == 'oauth2' and user_token:
             user_access_token = user_token['access_token']
             intro_response = client.post(settings.OAUTH2_INTROSPECT_URL,
@@ -43,4 +45,5 @@ class OAuth2IntrospectToken(MiddlewareMixin):
                     raise PermissionDenied()
                 request.session['_token_introspected_at'] = now().timestamp()
                 request.session.save()
+                request.mi_permission = True
         return None
