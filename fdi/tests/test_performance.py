@@ -89,7 +89,8 @@ class FDIOverviewTestCase(FdiBaseTestCase):
             for value_id in fdi_values:
                 for stage in stages:
                     for hvc in hvcs:
-                        with self.subTest(value_id=value_id, stage=stage, year=year, hvc=hvc):
+                        msg = f'1 investment: value_id={value_id}, stage={stage}, year={year}, hvc={hvc}'
+                        with self.subTest(value_id=value_id, stage=stage, year=year, hvc=hvc, msg=msg):
                             self._test_single_win(stage, value_id, year, hvc)
                         # clean up
                         Investments.objects.all().delete()
@@ -140,6 +141,7 @@ class FDIOverviewTestCase(FdiBaseTestCase):
         performance['jobs']['new'] = win.number_new_jobs
         performance['jobs']['safeguarded'] = win.number_safeguarded_jobs
         performance['jobs']['total'] = win.number_safeguarded_jobs + win.number_new_jobs
+
         # TODO: handle 'on_target' later
         expected['wins']['performance']['high']['on_target'] = api_response['wins']['performance']['high']['on_target']
         expected['wins']['performance']['good']['on_target'] = api_response['wins']['performance']['good']['on_target']

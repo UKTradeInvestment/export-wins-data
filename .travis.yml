@@ -4,12 +4,9 @@ python:
   - 3.6
 services:
   - postgresql
-before_cache: mkdir -p .cache && cp .testmondata .cache/
 cache:
   pip: true
   packages: true
-  directories:
-    - .cache/
 addons:
   apt:
     packages:
@@ -20,7 +17,6 @@ before_script:
   - export SAML_CERT=`base64 -d <<< $SAML_CERT_B64`
   - psql -c 'create database test;' -U postgres
   - export DATABASE_URL=postgres://postgres@localhost/test
-  - cp .cache/.testmondata . | true
 install: pip install -r requirements.txt
-script: pytest --testmon --cov=. --cov-report xml --cov-report term-missing:skip-covered --tlf
+script: pytest --cov=. --cov-report xml --cov-report term-missing:skip-covered -n 2
 after_success: codeclimate-test-reporter
