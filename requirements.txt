@@ -20,7 +20,7 @@ openpyxl==2.5.0
 URLObject==2.4.3
 requests-oauthlib==0.8.0
 zipstream==1.1.4
-cytoolz==0.9.0
+cytoolz==0.9.0.1
 
 # Tests
 Faker==0.8.11
