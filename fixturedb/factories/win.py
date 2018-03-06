@@ -32,7 +32,7 @@ def create_win_factory(user, sector_choices=None, default_date=None, default_tea
             hq_team = default_hq_team
 
         if team_type and not hq_team:
-            hq_team = FuzzyChoice([id for id, name in HQ_TEAM_REGION_OR_POST if id.startswith(team_type)])
+            hq_team = FuzzyChoice([id for id, name in HQ_TEAM_REGION_OR_POST if id.startswith(team_type)]).fuzz()
 
         if hvc_code is not None:
             win = WinFactory(
