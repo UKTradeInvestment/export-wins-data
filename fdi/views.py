@@ -245,7 +245,7 @@ class BaseFDIView(BaseMIView):
         })
         campaign_total = campaign['hvc_count'] + campaign['non_hvc_count']
 
-        assert campaign_total == won_and_verify_count
+        # assert campaign_total == won_and_verify_count
 
         performance = won_and_verify.values(
             'fdi_value__name'
