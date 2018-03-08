@@ -248,6 +248,7 @@ class BaseFDIView(BaseMIView):
     queryset = Investments.objects.all()
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = InvestmentsFilterSet
+    target = None
 
     def get_queryset(self):
         """
@@ -260,14 +261,31 @@ class BaseFDIView(BaseMIView):
             date_won__range=(self._date_range_start(), self._date_range_end())
         )
 
-    def get_results(self):
+    def dispatch(self, request, *args, **kwargs):
+        self.set_breakdown(request)
+        return super().dispatch(request, *args, **kwargs)
+
+    def set_breakdown(self, request):
+        target = request.GET.get('target')
+        if target and target in ['sector_team', 'os_region']:
+            self.target = target
+
+    def get_results(self, *args, **kwargs):
         return []
 
     def get(self, request, *args, **kwargs):
         return self._success(self.get_results())
 
     def _get_target(self):
-        raise NotImplementedError()
+        sector_team_target_qs = SectorTeamTarget.objects.filter(financial_year=self.fin_year)
+        market_target_qs = MarketTarget.objects.filter(financial_year=self.fin_year)
+        sector_team = sector_team_target_qs.aggregate(target=Coalesce(Sum('target'), Value(0)))
+        os_region = market_target_qs.aggregate(target=Coalesce(Sum('target'), Value(0)))
+
+        return {
+            "sector_team": sector_team['target'],
+            "os_region": os_region['target']
+        }
 
     def _get_fdi_summary(self):
         investments_in_scope = self.filter_queryset(self.get_queryset())
@@ -276,8 +294,14 @@ class BaseFDIView(BaseMIView):
 
         won_and_verify_dict = self.performance_for_qs(won_and_verify)
         pipeline_active_dict = self.performance_for_qs(pipeline_active)
+        target_dict = self._get_target()
+
+        if self.target:
+            self._add_target_progress(target_dict, won_and_verify_dict)
+            self._add_target_progress(target_dict, pipeline_active_dict)
 
         return {
+            "targets": target_dict,
             "wins": won_and_verify_dict,
             "pipeline": {
                 "active": pipeline_active_dict
@@ -366,6 +390,20 @@ class BaseFDIView(BaseMIView):
             "performance": performance_dict,
             "stages": stage_breakdown
         }
+        return won_and_verify_dict
+
+    def _add_target_progress(self, target_dict, won_and_verify_dict):
+        count = 0
+        if self.target == 'os_region':
+            count = won_and_verify_dict['count']
+        elif self.target == 'sector_team':
+            # only hvc wins count towards sector team target
+            count = won_and_verify_dict['campaign']['hvc']['count']
+
+        won_and_verify_dict['percent_of_target'] = percentage_formatted(
+            count,
+            target_dict[self.target]
+        )
         return won_and_verify_dict
 
 
@@ -505,7 +543,7 @@ class FDITabOverview(BaseFDIView):
                 stage, hvc, os_region) for os_region in os_regions]
             return os_region_data
 
-    def get(self, request, name):
+    def get(self, request, name, *args, **kwargs):
         valid_names = ['sector', 'os_region']
         if name not in valid_names:
             self._not_found()
