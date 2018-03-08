@@ -1,7 +1,10 @@
 from django.core.management import BaseCommand
 
 from fdi.models.importer import InvestmentLoad
-from fdi.models.live import Investments, Sector, Country, UKRegion, InvestmentUKRegion
+from fdi.models.live import (
+    Investments, Sector, Country, UKRegion, InvestmentUKRegion, SectorTeamSector,
+    MarketGroupCountry, SectorTeamTarget
+)
 
 
 class Command(BaseCommand):
@@ -24,7 +27,8 @@ class Command(BaseCommand):
             try:
                 # there shouldn't be more than one row per project, but just in case
                 # pick up the latest one
-                live_i = Investments.objects.filter(project_code=project_code).latest('id')
+                live_i = Investments.objects.filter(
+                    project_code=project_code).latest('id')
                 updated_rows += 1
             except Investments.DoesNotExist:
                 live_i = Investments(project_code=project_code)
@@ -59,7 +63,8 @@ class Command(BaseCommand):
                 live_i.foreign_equity_investment = pending_i.data[
                     "foreign_equity_investment"]
             if pending_i.data["client_relationship_manager_team"]:
-                live_i.client_relationship_manager_team = pending_i.data["client_relationship_manager_team"]['name']
+                live_i.client_relationship_manager_team = pending_i.data[
+                    "client_relationship_manager_team"]['name']
             if pending_i.data["investor_company_country"]:
                 live_i.company_country_id = pending_i.data["investor_company_country"]["id"]
             if pending_i.data["level_of_involvement"]:
@@ -69,11 +74,29 @@ class Command(BaseCommand):
             if pending_i.data["specific_programme"]:
                 live_i.specific_program_id = pending_i.data["specific_programme"]["id"]
             live_i.save()
+            # hvc
+            try:
+                sector_team_sector = SectorTeamSector.objects.get(
+                    sector=live_i.sector)
+                market_groups_countires = MarketGroupCountry.objects.filter(
+                    country=live_i.company_country)
+                if market_groups_countires is not None:
+                    market_groups = [
+                        mgc.market_group for mgc in market_groups_countires]
+                    target = SectorTeamTarget.objects.filter(
+                        sector_team=sector_team_sector.team, market_group__in=market_groups).first()
+                    if target is not None:
+                        live_i.hvc_code = target.hvc_code
+                        live_i.save()
+            except (SectorTeamSector.DoesNotExist, SectorTeamTarget.DoesNotExist):
+                pass
+
             if pending_i.data["uk_region_locations"] and len(pending_i.data["uk_region_locations"]) > 0:
                 for location in pending_i.data["uk_region_locations"]:
                     try:
                         uk_region = UKRegion.objects.get(id=location["id"])
-                        InvestmentUKRegion(uk_region=uk_region, investment=live_i).save()
+                        InvestmentUKRegion(
+                            uk_region=uk_region, investment=live_i).save()
                     except UKRegion.DoesNotExist:
                         pass
 

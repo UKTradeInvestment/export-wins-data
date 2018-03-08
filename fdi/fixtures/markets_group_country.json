@@ -1,0 +1,514 @@
+[
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 1,
+  "fields": {
+    "market_group": 1,
+    "country": "9f5f66a0-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 2,
+  "fields": {
+    "market_group": 1,
+    "country": "1c50bdb8-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 3,
+  "fields": {
+    "market_group": 2,
+    "country": "a75f66a0-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 4,
+  "fields": {
+    "market_group": 2,
+    "country": "876a9ab2-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 5,
+  "fields": {
+    "market_group": 3,
+    "country": "a05f66a0-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 6,
+  "fields": {
+    "market_group": 4,
+    "country": "5daf72a6-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 7,
+  "fields": {
+    "market_group": 5,
+    "country": "63af72a6-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 8,
+  "fields": {
+    "market_group": 6,
+    "country": "70af72a6-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 9,
+  "fields": {
+    "market_group": 7,
+    "country": "daf682ac-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 10,
+  "fields": {
+    "market_group": 8,
+    "country": "82756b9a-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 11,
+  "fields": {
+    "market_group": 9,
+    "country": "83756b9a-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 12,
+  "fields": {
+    "market_group": 10,
+    "country": "f0f682ac-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 13,
+  "fields": {
+    "market_group": 11,
+    "country": "6f6a9ab2-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 14,
+  "fields": {
+    "market_group": 12,
+    "country": "736a9ab2-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 15,
+  "fields": {
+    "market_group": 13,
+    "country": "746a9ab2-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 16,
+  "fields": {
+    "market_group": 14,
+    "country": "84756b9a-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 17,
+  "fields": {
+    "market_group": 15,
+    "country": "85756b9a-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 18,
+  "fields": {
+    "market_group": 16,
+    "country": "1950bdb8-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 19,
+  "fields": {
+    "market_group": 17,
+    "country": "4961b8be-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 20,
+  "fields": {
+    "market_group": 18,
+    "country": "5461b8be-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 21,
+  "fields": {
+    "market_group": 19,
+    "country": "1f0be5c4-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 22,
+  "fields": {
+    "market_group": 20,
+    "country": "7c6a9ab2-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 23,
+  "fields": {
+    "market_group": 21,
+    "country": "86756b9a-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 24,
+  "fields": {
+    "market_group": 22,
+    "country": "300be5c4-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 25,
+  "fields": {
+    "market_group": 23,
+    "country": "310be5c4-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 26,
+  "fields": {
+    "market_group": 24,
+    "country": "ae6ee1ca-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 27,
+  "fields": {
+    "market_group": 25,
+    "country": "81756b9a-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 28,
+  "fields": {
+    "market_group": 26,
+    "country": "86756b9a-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 29,
+  "fields": {
+    "market_group": 26,
+    "country": "84756b9a-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 30,
+  "fields": {
+    "market_group": 27,
+    "country": "82756b9a-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 31,
+  "fields": {
+    "market_group": 27,
+    "country": "84756b9a-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 32,
+  "fields": {
+    "market_group": 27,
+    "country": "86756b9a-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 33,
+  "fields": {
+    "market_group": 27,
+    "country": "746a9ab2-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 34,
+  "fields": {
+    "market_group": 28,
+    "country": "5461b8be-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 35,
+  "fields": {
+    "market_group": 28,
+    "country": "84756b9a-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 36,
+  "fields": {
+    "market_group": 29,
+    "country": "b05f66a0-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 37,
+  "fields": {
+    "market_group": 29,
+    "country": "0e50bdb8-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 38,
+  "fields": {
+    "market_group": 29,
+    "country": "9c5f66a0-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 39,
+  "fields": {
+    "market_group": 30,
+    "country": "63af72a6-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 40,
+  "fields": {
+    "market_group": 30,
+    "country": "f0f682ac-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 41,
+  "fields": {
+    "market_group": 31,
+    "country": "b46ee1ca-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 42,
+  "fields": {
+    "market_group": 31,
+    "country": "a35f66a0-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 43,
+  "fields": {
+    "market_group": 31,
+    "country": "7d6a9ab2-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 44,
+  "fields": {
+    "market_group": 31,
+    "country": "5661b8be-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 45,
+  "fields": {
+    "market_group": 31,
+    "country": "1a0be5c4-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 46,
+  "fields": {
+    "market_group": 32,
+    "country": "0e50bdb8-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 47,
+  "fields": {
+    "market_group": 32,
+    "country": "b05f66a0-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 48,
+  "fields": {
+    "market_group": 33,
+    "country": "300be5c4-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 49,
+  "fields": {
+    "market_group": 33,
+    "country": "daf682ac-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 50,
+  "fields": {
+    "market_group": 33,
+    "country": "4961b8be-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 51,
+  "fields": {
+    "market_group": 33,
+    "country": "d5f682ac-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 52,
+  "fields": {
+    "market_group": 34,
+    "country": "b05f66a0-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 53,
+  "fields": {
+    "market_group": 34,
+    "country": "0e50bdb8-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 54,
+  "fields": {
+    "market_group": 34,
+    "country": "9c5f66a0-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 55,
+  "fields": {
+    "market_group": 34,
+    "country": "62af72a6-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 56,
+  "fields": {
+    "market_group": 34,
+    "country": "66af72a6-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 57,
+  "fields": {
+    "market_group": 35,
+    "country": "d5f682ac-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 58,
+  "fields": {
+    "market_group": 35,
+    "country": "806a9ab2-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 59,
+  "fields": {
+    "market_group": 35,
+    "country": "866a9ab2-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 60,
+  "fields": {
+    "market_group": 35,
+    "country": "300be5c4-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 61,
+  "fields": {
+    "market_group": 35,
+    "country": "daf682ac-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 62,
+  "fields": {
+    "market_group": 35,
+    "country": "4961b8be-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 63,
+  "fields": {
+    "market_group": 35,
+    "country": "70af72a6-5d95-e211-a939-e4115bead28a"
+  }
+},
+{
+  "model": "fdi.marketgroupcountry",
+  "pk": 64,
+  "fields": {
+    "market_group": 35,
+    "country": "6e6a9ab2-5d95-e211-a939-e4115bead28a"
+  }
+}
+]

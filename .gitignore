@@ -71,7 +71,6 @@ db.sqlite3
 .env
 
 # misc data
-*.json
 *.csv
 *.bak
 *.key

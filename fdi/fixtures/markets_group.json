@@ -1,0 +1,247 @@
+[
+{
+  "model": "fdi.marketgroup",
+  "pk": 1,
+  "fields": {
+    "name": "Market Group 1"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 2,
+  "fields": {
+    "name": "Market Group 2"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 3,
+  "fields": {
+    "name": "Market Group 3"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 4,
+  "fields": {
+    "name": "Market Group 4"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 5,
+  "fields": {
+    "name": "Market Group 5"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 6,
+  "fields": {
+    "name": "Market Group 6"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 7,
+  "fields": {
+    "name": "Market Group 7"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 8,
+  "fields": {
+    "name": "Market Group 8"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 9,
+  "fields": {
+    "name": "Market Group 9"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 10,
+  "fields": {
+    "name": "Market Group 10"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 11,
+  "fields": {
+    "name": "Market Group 11"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 12,
+  "fields": {
+    "name": "Market Group 12"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 13,
+  "fields": {
+    "name": "Market Group 13"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 14,
+  "fields": {
+    "name": "Market Group 14"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 15,
+  "fields": {
+    "name": "Market Group 15"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 16,
+  "fields": {
+    "name": "Market Group 16"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 17,
+  "fields": {
+    "name": "Market Group 17"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 18,
+  "fields": {
+    "name": "Market Group 18"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 19,
+  "fields": {
+    "name": "Market Group 19"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 20,
+  "fields": {
+    "name": "Market Group 20"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 21,
+  "fields": {
+    "name": "Market Group 21"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 22,
+  "fields": {
+    "name": "Market Group 22"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 23,
+  "fields": {
+    "name": "Market Group 23"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 24,
+  "fields": {
+    "name": "Market Group 24"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 25,
+  "fields": {
+    "name": "Market Group 25"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 26,
+  "fields": {
+    "name": "Market Group 26"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 27,
+  "fields": {
+    "name": "Market Group 27"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 28,
+  "fields": {
+    "name": "Market Group 28"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 29,
+  "fields": {
+    "name": "Market Group 29"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 30,
+  "fields": {
+    "name": "Market Group 30"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 31,
+  "fields": {
+    "name": "Market Group 31"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 32,
+  "fields": {
+    "name": "Market Group 32"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 33,
+  "fields": {
+    "name": "Market Group 33"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 34,
+  "fields": {
+    "name": "Market Group 34"
+  }
+},
+{
+  "model": "fdi.marketgroup",
+  "pk": 35,
+  "fields": {
+    "name": "Market Group 35"
+  }
+}
+]

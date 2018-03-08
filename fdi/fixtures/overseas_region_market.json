@@ -1,0 +1,426 @@
+[
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 54,
+  "fields": {
+    "overseas_region": 18,
+    "market": 65
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 55,
+  "fields": {
+    "overseas_region": 28,
+    "market": 66
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 56,
+  "fields": {
+    "overseas_region": 28,
+    "market": 67
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 57,
+  "fields": {
+    "overseas_region": 28,
+    "market": 68
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 58,
+  "fields": {
+    "overseas_region": 28,
+    "market": 69
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 59,
+  "fields": {
+    "overseas_region": 28,
+    "market": 70
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 60,
+  "fields": {
+    "overseas_region": 28,
+    "market": 71
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 61,
+  "fields": {
+    "overseas_region": 28,
+    "market": 72
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 62,
+  "fields": {
+    "overseas_region": 28,
+    "market": 73
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 63,
+  "fields": {
+    "overseas_region": 21,
+    "market": 74
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 64,
+  "fields": {
+    "overseas_region": 21,
+    "market": 75
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 65,
+  "fields": {
+    "overseas_region": 29,
+    "market": 76
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 66,
+  "fields": {
+    "overseas_region": 29,
+    "market": 77
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 67,
+  "fields": {
+    "overseas_region": 29,
+    "market": 78
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 68,
+  "fields": {
+    "overseas_region": 29,
+    "market": 79
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 69,
+  "fields": {
+    "overseas_region": 29,
+    "market": 80
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 70,
+  "fields": {
+    "overseas_region": 29,
+    "market": 81
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 71,
+  "fields": {
+    "overseas_region": 25,
+    "market": 82
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 72,
+  "fields": {
+    "overseas_region": 25,
+    "market": 83
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 73,
+  "fields": {
+    "overseas_region": 25,
+    "market": 84
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 74,
+  "fields": {
+    "overseas_region": 25,
+    "market": 85
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 75,
+  "fields": {
+    "overseas_region": 26,
+    "market": 86
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 76,
+  "fields": {
+    "overseas_region": 26,
+    "market": 87
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 77,
+  "fields": {
+    "overseas_region": 26,
+    "market": 88
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 78,
+  "fields": {
+    "overseas_region": 26,
+    "market": 89
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 79,
+  "fields": {
+    "overseas_region": 26,
+    "market": 90
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 80,
+  "fields": {
+    "overseas_region": 22,
+    "market": 91
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 81,
+  "fields": {
+    "overseas_region": 22,
+    "market": 92
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 82,
+  "fields": {
+    "overseas_region": 22,
+    "market": 93
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 83,
+  "fields": {
+    "overseas_region": 22,
+    "market": 94
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 84,
+  "fields": {
+    "overseas_region": 22,
+    "market": 95
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 85,
+  "fields": {
+    "overseas_region": 27,
+    "market": 96
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 86,
+  "fields": {
+    "overseas_region": 27,
+    "market": 97
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 87,
+  "fields": {
+    "overseas_region": 20,
+    "market": 98
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 88,
+  "fields": {
+    "overseas_region": 20,
+    "market": 99
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 89,
+  "fields": {
+    "overseas_region": 20,
+    "market": 100
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 90,
+  "fields": {
+    "overseas_region": 24,
+    "market": 101
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 91,
+  "fields": {
+    "overseas_region": 16,
+    "market": 102
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 92,
+  "fields": {
+    "overseas_region": 16,
+    "market": 103
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 93,
+  "fields": {
+    "overseas_region": 16,
+    "market": 104
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 94,
+  "fields": {
+    "overseas_region": 16,
+    "market": 105
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 95,
+  "fields": {
+    "overseas_region": 23,
+    "market": 106
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 96,
+  "fields": {
+    "overseas_region": 17,
+    "market": 107
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 97,
+  "fields": {
+    "overseas_region": 17,
+    "market": 108
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 98,
+  "fields": {
+    "overseas_region": 17,
+    "market": 109
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 99,
+  "fields": {
+    "overseas_region": 19,
+    "market": 110
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 100,
+  "fields": {
+    "overseas_region": 19,
+    "market": 111
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 101,
+  "fields": {
+    "overseas_region": 19,
+    "market": 112
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 102,
+  "fields": {
+    "overseas_region": 19,
+    "market": 113
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 103,
+  "fields": {
+    "overseas_region": 19,
+    "market": 114
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 104,
+  "fields": {
+    "overseas_region": 19,
+    "market": 115
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 105,
+  "fields": {
+    "overseas_region": 19,
+    "market": 116
+  }
+},
+{
+  "model": "fdi.overseasregionmarket",
+  "pk": 106,
+  "fields": {
+    "overseas_region": 22,
+    "market": 117
+  }
+}
+]

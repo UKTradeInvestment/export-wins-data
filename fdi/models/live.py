@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models import Sum, Value
+from django.db.models.functions import Coalesce
 
 from fdi.models.metadata import (
     Country,
@@ -31,12 +33,21 @@ class InvestmentsQuerySet(models.QuerySet):
     def won_and_verify(self):
         return self.filter(stage__in=['won', 'verify win'])
 
+    def won_verify_and_active(self):
+        return self.filter(stage__in=['won', 'verify win', 'active'])
+
 
 class SectorTeam(models.Model):
     """ FDI's team structure that maps to Sectors """
     name = models.CharField(max_length=MAX_LENGTH, unique=True)
     description = models.CharField(max_length=MAX_LENGTH)
     sectors = models.ManyToManyField(Sector, through="SectorTeamSector")
+
+    def fin_year_target(self, fin_year):
+        """ Sum of `Target` for `SectorTeam`, filtered by `FinancialYear` """
+        return self.sector_targets.filter(
+            financial_year=fin_year
+        ).aggregate(total=Coalesce(Sum('target'), Value(0)))['total']
 
     def __str__(self):
         return self.name
@@ -56,6 +67,12 @@ class Market(models.Model):
 
     name = models.CharField(max_length=MAX_LENGTH, unique=True)
     countries = models.ManyToManyField(Country, through="MarketCountry")
+
+    def fin_year_target(self, fin_year):
+        """ Sum of `Target` for `Market`, filtered by `FinancialYear` """
+        return self.market_targets.filter(
+            financial_year=fin_year
+        ).aggregate(total=Coalesce(Sum('target'), Value(0)))['total']
 
     def __str__(self):
         return self.name
@@ -104,7 +121,8 @@ class Investments(models.Model):
     number_safeguarded_jobs = models.PositiveIntegerField(
         null=False, default=0)
 
-    fdi_value = models.ForeignKey(FDIValue, null=True, on_delete=models.PROTECT)
+    fdi_value = models.ForeignKey(
+        FDIValue, null=True, on_delete=models.PROTECT)
 
     date_won = models.DateField(null=True)
     sector = models.ForeignKey(Sector, null=True, on_delete=models.PROTECT)
@@ -115,14 +133,18 @@ class Investments(models.Model):
         max_length=MAX_LENGTH, null=True)
     company_name = models.CharField(max_length=MAX_LENGTH)
     company_reference = models.CharField(max_length=MAX_LENGTH)
-    company_country = models.ForeignKey(Country, null=True, on_delete=models.PROTECT)
+    company_country = models.ForeignKey(
+        Country, null=True, on_delete=models.PROTECT)
 
     investment_value = models.BigIntegerField(default=0)
     foreign_equity_investment = models.BigIntegerField(default=0)
 
-    level_of_involvement = models.ForeignKey(Involvement, null=True, on_delete=models.PROTECT)
-    investment_type = models.ForeignKey(InvestmentType, null=True, on_delete=models.PROTECT)
-    specific_program = models.ForeignKey(SpecificProgramme, null=True, on_delete=models.PROTECT)
+    level_of_involvement = models.ForeignKey(
+        Involvement, null=True, on_delete=models.PROTECT)
+    investment_type = models.ForeignKey(
+        InvestmentType, null=True, on_delete=models.PROTECT)
+    specific_program = models.ForeignKey(
+        SpecificProgramme, null=True, on_delete=models.PROTECT)
 
     # set to true if importing from spreadsheet
     legacy = models.BooleanField(default=False, db_index=True)
@@ -144,7 +166,8 @@ class InvestmentUKRegion(models.Model):
 class GlobalTargets(models.Model):
     """ FDI type of investment based global targets per FY """
 
-    financial_year = models.OneToOneField(FinancialYear, on_delete=models.PROTECT)
+    financial_year = models.OneToOneField(
+        FinancialYear, on_delete=models.PROTECT)
     high = models.PositiveIntegerField(null=False)
     good = models.PositiveIntegerField(null=False)
     standard = models.PositiveIntegerField(null=False)
@@ -161,8 +184,10 @@ class MarketTarget(models.Model):
     """ Targets for SectorTeam and Market combinations, per FY.
     Some of them are considered HVC, some non-HVC """
 
-    sector_team = models.ForeignKey(SectorTeam, related_name="market_targets", on_delete=models.PROTECT)
-    market = models.ForeignKey(Market, related_name="market_targets", on_delete=models.PROTECT)
+    sector_team = models.ForeignKey(
+        SectorTeam, related_name="market_targets", on_delete=models.PROTECT)
+    market = models.ForeignKey(
+        Market, related_name="market_targets", on_delete=models.PROTECT)
     target = models.IntegerField(null=True)
     financial_year = models.ForeignKey(FinancialYear, on_delete=models.PROTECT)
 
@@ -175,8 +200,10 @@ class SectorTeamTarget(models.Model):
     Some of them are considered HVC, some non-HVC """
 
     hvc_code = models.CharField(max_length=5)
-    sector_team = models.ForeignKey(SectorTeam, related_name="sector_targets", on_delete=models.PROTECT)
-    market_group = models.ForeignKey(MarketGroup, related_name="sector_targets", on_delete=models.PROTECT)
+    sector_team = models.ForeignKey(
+        SectorTeam, related_name="sector_targets", on_delete=models.PROTECT)
+    market_group = models.ForeignKey(
+        MarketGroup, related_name="sector_targets", on_delete=models.PROTECT)
     target = models.IntegerField(null=True)
     financial_year = models.ForeignKey(FinancialYear, on_delete=models.PROTECT)
 
@@ -189,6 +216,21 @@ class OverseasRegion(models.Model):
     name = models.CharField(max_length=MAX_LENGTH)
     markets = models.ManyToManyField(Market, through="OverseasRegionMarket")
 
+    @property
+    def countries(self):
+        countries_list = set()
+        for market in self.markets.all():
+            for country in market.countries.all():
+                countries_list.add(country)
+        return countries_list
+
+    def fin_year_target(self, fin_year):
+        """ Sum of `Target` for `OverseasRegion`, filtered by `FinancialYear` """
+        target = 0
+        for market in self.markets.all():
+            target += market.fin_year_target(fin_year)
+        return target
+
     def __str__(self):
         return self.name
 
@@ -196,7 +238,8 @@ class OverseasRegion(models.Model):
 class OverseasRegionMarket(models.Model):
     """ One to many representation of OverseasRegion and Market """
 
-    overseas_region = models.ForeignKey(OverseasRegion, on_delete=models.PROTECT)
+    overseas_region = models.ForeignKey(
+        OverseasRegion, on_delete=models.PROTECT)
     market = models.ForeignKey(Market, on_delete=models.PROTECT)
 
     def __str__(self):
