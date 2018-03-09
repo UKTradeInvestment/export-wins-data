@@ -174,7 +174,9 @@ def investments_breakdown_by_sector_team(qs):
         stage_dict.update((k, other_sector.id)
                           for k, v in stage_dict.items() if v is None)
 
-    hvc_data = qs.values(
+    hvc_data = qs.filter(
+        hvc_code__isnull=False, stage__in=['won', 'verify win']
+    ).values(
         'sector__sectorteamsector__team__id',
         'hvc_code'
     ).annotate(
@@ -202,7 +204,9 @@ def investments_breakdown_by_overseas(qs):
         'stage', 'count'
     )
 
-    hvc_data = qs.values(
+    hvc_data = qs.filter(
+        hvc_code__isnull=False, stage__in=['won', 'verify win']
+    ).values(
         'company_country__market__overseasregion__id',
         'hvc_code'
     ).annotate(
