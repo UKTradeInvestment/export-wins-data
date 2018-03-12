@@ -192,7 +192,7 @@ class MarketTarget(models.Model):
     financial_year = models.ForeignKey(FinancialYear, on_delete=models.PROTECT)
 
     def __str__(self):
-        return f'{self.financial_year} - {self.sector_team}/{self.market}: non-HVC: {self.non_hvc_target}'
+        return f'{self.financial_year} - {self.sector_team}/{self.market}: non-HVC: {self.target}'
 
 
 class SectorTeamTarget(models.Model):
@@ -209,7 +209,7 @@ class SectorTeamTarget(models.Model):
 
     def __str__(self):
         return f'{self.financial_year} - {self.sector_team}/{self.market_group}: ' \
-            f'HVC: {self.hvc_target}'
+            f'HVC: {self.target}'
 
 
 class OverseasRegion(models.Model):
