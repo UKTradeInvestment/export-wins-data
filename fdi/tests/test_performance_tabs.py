@@ -9,10 +9,17 @@ class FDIOverviewTabsTestCase(FdiBaseTestCase):
 
     def assert_response_zeros(self, api_response):
         for team in api_response:
-            self.assertEqual(team['wins']['verify_win'], 0)
-            self.assertEqual(team['wins']['won'], 0)
-            self.assertEqual(team['wins']['hvc_wins'], 0)
+            self.assertEqual(team['wins']['verify_win']['count'], 0)
+            self.assertEqual(team['wins']['verify_win']['percent'], 0.0)
+            self.assertEqual(team['wins']['won']['count'], 0)
+            self.assertEqual(team['wins']['won']['percent'], 0)
+            self.assertEqual(team['wins']['hvc']['count'], 0)
+            self.assertEqual(team['wins']['hvc']['percent'], 0)
+            self.assertEqual(team['wins']['non_hvc']['count'], 0)
+            self.assertEqual(team['wins']['non_hvc']['percent'], 0)
+            self.assertEqual(team['wins']['total'], 0)
             self.assertEqual(team['pipeline'], 0)
+            self.assertEqual(team['total_jobs'], 0)
             self.assertTrue(team['target'] >= 0)
 
     def test_overview_sector_tab_no_wins_2017(self):

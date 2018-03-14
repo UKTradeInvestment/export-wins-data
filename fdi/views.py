@@ -1,7 +1,8 @@
 import itertools
 from typing import List
+from operator import itemgetter
 
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 from django.db.models import Func, F, Q, Sum, When, Case, Value, CharField, Count, BooleanField
 from django.db.models.functions import Coalesce
@@ -157,6 +158,33 @@ def investments_breakdown_by_stage(qs):
     }
 
 
+def group_and_sum_dataset(dataset, group_by_key, sum_value_keys):
+
+    container = defaultdict(Counter)
+
+    for item in dataset:
+        key = item[group_by_key]
+        values = {k: item[k] for k in sum_value_keys}
+        container[key].update(values)
+
+    new_dataset = [
+        {
+            group_by_key: item[0],
+            **item[1]
+        }
+        for item in container.items()
+    ]
+    new_dataset.sort(key=lambda item: item[group_by_key])
+
+    return new_dataset
+
+
+def replace_none_id_with_other(dataset, replace_with):
+    for dict_item in dataset:
+        dict_item.update((k, replace_with)
+                         for k, v in dict_item.items() if v is None)
+
+
 def investments_breakdown_by_sector_team(qs):
     other_sector = SectorTeam.objects.get(name='Other')
 
@@ -170,27 +198,39 @@ def investments_breakdown_by_sector_team(qs):
         'stage', 'count'
     )
     # there are some investments with no sector specified, push them to 'Other' team
-    for stage_dict in list(stage_data):
-        stage_dict.update((k, other_sector.id)
-                          for k, v in stage_dict.items() if v is None)
+    replace_none_id_with_other(list(stage_data), other_sector.id)
 
     hvc_data = qs.filter(
-        hvc_code__isnull=False, stage__in=['won', 'verify win']
+        stage__in=['won', 'verify win']
     ).values(
         'sector__sectorteamsector__team__id',
-        'hvc_code'
+        is_hvc=ANNOTATIONS['is_hvc'],
     ).annotate(
-        count=Count('id'),
+        hvc_count=Count('is_hvc', filter=Q(is_hvc=True)),
+        non_hvc_count=Count('is_hvc', filter=Q(is_hvc=False)),
     ).values(
         'sector__sectorteamsector__team__id',
-        'hvc_code', 'count'
+        'hvc_count', 'non_hvc_count'
     )
     # there are some investments with no sector specified, push them to 'Other' team
-    for hvc_dict in list(hvc_data):
-        hvc_dict.update((k, other_sector.id)
-                        for k, v in hvc_dict.items() if v is None)
+    replace_none_id_with_other(list(hvc_data), other_sector.id)
 
-    return list(stage_data), list(hvc_data)
+    grouped_hvc_data = group_and_sum_dataset(
+        list(hvc_data), 'sector__sectorteamsector__team__id', ['hvc_count', 'non_hvc_count'])
+
+    jobs_data = qs.filter(
+        stage__in=['won', 'verify win']
+    ).values(
+        'sector__sectorteamsector__team__id',
+    ).annotate(
+        total_jobs=Coalesce(
+            Sum(F('number_new_jobs') + F('number_safeguarded_jobs')), Value(0))
+    ).values(
+        'sector__sectorteamsector__team__id',
+        'total_jobs'
+    )
+
+    return list(stage_data), grouped_hvc_data, jobs_data
 
 
 def investments_breakdown_by_overseas(qs):
@@ -205,18 +245,34 @@ def investments_breakdown_by_overseas(qs):
     )
 
     hvc_data = qs.filter(
-        hvc_code__isnull=False, stage__in=['won', 'verify win']
+        stage__in=['won', 'verify win']
     ).values(
         'company_country__market__overseasregion__id',
-        'hvc_code'
+        is_hvc=ANNOTATIONS['is_hvc'],
     ).annotate(
-        count=Count('id'),
+        hvc_count=Count('is_hvc', filter=Q(is_hvc=True)),
+        non_hvc_count=Count('is_hvc', filter=Q(is_hvc=False)),
     ).values(
         'company_country__market__overseasregion__id',
-        'hvc_code', 'count'
+        'hvc_count', 'non_hvc_count'
     )
 
-    return list(stage_data), list(hvc_data)
+    jobs_data = qs.filter(
+        stage__in=['won', 'verify win']
+    ).values(
+        'company_country__market__overseasregion__id',
+    ).annotate(
+        total_jobs=Coalesce(
+            Sum(F('number_new_jobs') + F('number_safeguarded_jobs')), Value(0))
+    ).values(
+        'company_country__market__overseasregion__id',
+        'total_jobs'
+    )
+
+    grouped_list = group_and_sum_dataset(
+        list(hvc_data), 'company_country__market__overseasregion__id', ['hvc_count', 'non_hvc_count'])
+
+    return list(stage_data), grouped_list, jobs_data
 
 
 class SectorTeamFilter(filters.NumberFilter):
@@ -452,14 +508,9 @@ class FDITabOverview(BaseFDIView):
             groups[stage] = len(list(wins))
         return groups
 
-    def _sector_team_breakdown(self, stage_investments, hvc_investments, sector_team: SectorTeam):
-
-        stage_team = [
-            i for i in stage_investments if i['sector__sectorteamsector__team__id'] == sector_team.id]
-        hvc_team = [
-            i for i in hvc_investments if i['sector__sectorteamsector__team__id'] == sector_team.id]
+    def _node_data(self, stage, hvc, jobs, target: int, id, name, short_name):
         confirmed = verified = pipeline = 0
-        for i in stage_team:
+        for i in stage:
             if i['stage'] == 'won':
                 confirmed = i['count']
             elif i['stage'] == 'verify win':
@@ -467,80 +518,91 @@ class FDITabOverview(BaseFDIView):
             elif i['stage'] == 'active':
                 pipeline = i['count']
 
-        hvc = 0
-        for i in hvc_team:
-            hvc = i['count']
+        total_wins = verified + confirmed
+        hvc_count = non_hvc_count = 0
+        if len(hvc) > 0:
+            hvc_count = hvc[0]['hvc_count']
+            non_hvc_count = hvc[0]['non_hvc_count']
+        total_jobs = 0
+        if len(jobs) > 0:
+            total_jobs = jobs[0]['total_jobs']
 
-        target = sector_team.fin_year_target(self.fin_year)
-
-        sector_team_data = {
-            "id": sector_team.id,
-            "name": sector_team.description,
-            "short_name": sector_team.name,
+        fdi_obj_data = {
+            "id": id,
+            "name": name,
+            "short_name": short_name,
             "wins": {
-                "verify_win": verified,
-                "won": confirmed,
-                "hvc_wins": hvc,
-                "total": verified + confirmed,
+                "total": total_wins,
+                "verify_win": {
+                    "count": verified,
+                    "percent": percentage_formatted(verified, total_wins)
+                },
+                "won": {
+                    "count": confirmed,
+                    "percent": percentage_formatted(confirmed, total_wins)
+                },
+                "hvc": {
+                    "count": hvc_count,
+                    "percent": percentage_formatted(hvc_count, total_wins)
+                },
+                "non_hvc": {
+                    "count": non_hvc_count,
+                    "percent": percentage_formatted(non_hvc_count, total_wins)
+                }
             },
             "target": target,
+            "total_jobs": total_jobs,
             "pipeline": pipeline
         }
-        return sector_team_data
+        return fdi_obj_data
 
-    def _os_regions_breakdown(self, stage, quality, os_region: OverseasRegion):
+    def _sector_team_breakdown(self, stage_data, hvc_data, jobs_data, sector_team: SectorTeam):
+
+        stage_team = [
+            i for i in stage_data if i['sector__sectorteamsector__team__id'] == sector_team.id
+        ]
+        hvc_team = [
+            i for i in hvc_data if i['sector__sectorteamsector__team__id'] == sector_team.id
+        ]
+        jobs_team = [
+            i for i in jobs_data if i['sector__sectorteamsector__team__id'] == sector_team.id
+        ]
+
+        target = sector_team.fin_year_target(self.fin_year)
+        return self._node_data(stage_team, hvc_team, jobs_team, target,
+                               sector_team.id, sector_team.description, sector_team.name)
+
+    def _os_regions_breakdown(self, stage, quality, jobs_data, os_region: OverseasRegion):
 
         stage_region = [
             i for i in stage if i['company_country__market__overseasregion__id'] == os_region.id]
         hvc_region = [
             i for i in quality if i['company_country__market__overseasregion__id'] == os_region.id]
-        confirmed = verified = pipeline = 0
-        for i in stage_region:
-            if i['stage'] == 'won':
-                confirmed = i['count']
-            elif i['stage'] == 'verify win':
-                verified = i['count']
-            elif i['stage'] == 'active':
-                pipeline = i['count']
-
-        hvc = 0
-        for i in hvc_region:
-            hvc = i['count']
+        jobs_region = [
+            i for i in jobs_data if i['company_country__market__overseasregion__id'] == os_region.id
+        ]
 
         target = os_region.fin_year_target(self.fin_year)
-
-        os_region_data = {
-            "id": os_region.id,
-            "name": os_region.name,
-            "short_name": os_region.name,
-            "wins": {
-                "verify_win": verified,
-                "won": confirmed,
-                "hvc_wins": hvc,
-                "total": verified + confirmed,
-            },
-            "target": target,
-            "pipeline": pipeline
-        }
-        return os_region_data
+        return self._node_data(stage_region, hvc_region, jobs_region, target,
+                               os_region.id, os_region.name, os_region.name)
 
     def get_results(self, name):
         investments_in_scope = self.filter_queryset(self.get_queryset())
         won_verify_and_active = investments_in_scope.won_verify_and_active()
 
         if name == "sector":
-            stage, hvc = investments_breakdown_by_sector_team(
+            stage, hvc, jobs = investments_breakdown_by_sector_team(
                 won_verify_and_active)
             sector_teams = SectorTeam.objects.all()
             sector_teams_data = [self._sector_team_breakdown(
-                stage, hvc, sector_team) for sector_team in sector_teams]
+                stage, hvc, jobs, sector_team) for sector_team in sector_teams]
             return sector_teams_data
         elif name == "os_region":
-            stage, hvc = investments_breakdown_by_overseas(
+            stage, hvc, jobs = investments_breakdown_by_overseas(
                 won_verify_and_active)
             os_regions = OverseasRegion.objects.all()
             os_region_data = [self._os_regions_breakdown(
-                stage, hvc, os_region) for os_region in os_regions]
+                stage, hvc, jobs, os_region) for os_region in os_regions]
             return os_region_data
 
     def get(self, request, name, *args, **kwargs):
