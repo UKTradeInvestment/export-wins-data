@@ -1,5 +1,7 @@
+from datetime import timedelta
+
 from django.db import models
-from django.db.models import Sum, Value
+from django.db.models import Sum, Value, Q
 from django.db.models.functions import Coalesce
 
 from fdi.models.metadata import (
@@ -27,6 +29,9 @@ class InvestmentsQuerySet(models.QuerySet):
     def verified(self):
         return self.filter(stage='verify win')
 
+    def active(self):
+        return self.filter(stage='active')
+
     def pipeline(self):
         return self.exclude(stage__in=['won', 'verify win'])
 
@@ -35,6 +40,15 @@ class InvestmentsQuerySet(models.QuerySet):
 
     def won_verify_and_active(self):
         return self.filter(stage__in=['won', 'verify win', 'active'])
+
+    def for_year(self, year: FinancialYear):
+        # range is not inclusive
+        return self.filter(date_won__range=(year.start, year.end + timedelta(days=1)))
+
+    def involved(self):
+        return self.filter(
+            ~Q(level_of_involvement__name='No Involvement'), investment_type__name='FDI'
+        )
 
 
 class SectorTeam(models.Model):

@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     # misc 3rd party
     "django_extensions",
     "raven.contrib.django.raven_compat",
+    "trackstats",
 
     # local apps
     "core.apps.CoreConfig",
