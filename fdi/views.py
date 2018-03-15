@@ -378,23 +378,13 @@ class BaseFDIView(BaseMIView):
             total=Coalesce(Sum(F('number_new_jobs') +
                                F('number_safeguarded_jobs')), Value(0))
         )
-
-        campaign = getitem_or_default(won_and_verify.values(
-            'hvc_code'
-        ).annotate(
-            is_hvc=ANNOTATIONS['is_hvc'],
-            hvc_count=Count('is_hvc', filter=Q(is_hvc=True)),
-            non_hvc_count=Count('is_hvc', filter=Q(is_hvc=False)),
-        ).values(
-            'hvc_count',
-            'non_hvc_count'
-        ), 0, {
-            'hvc_count': 0,
-            'non_hvc_count': 0
-        })
+        campaign = won_and_verify.aggregate(
+            hvc_count=Count('id', filter=Q(hvc_code__isnull=False)),
+            non_hvc_count=Count('id', filter=Q(hvc_code__isnull=True)),
+        )
         campaign_total = campaign['hvc_count'] + campaign['non_hvc_count']
 
-        # assert campaign_total == won_and_verify_count
+        assert campaign_total == won_and_verify_count
 
         performance = won_and_verify.values(
             'fdi_value__name'
@@ -406,11 +396,10 @@ class BaseFDIView(BaseMIView):
             'count'
         )
         perf_hvc = performance.annotate(
-            is_hvc=ANNOTATIONS['is_hvc'],
             hvc_count=Coalesce(
-                Count('is_hvc', filter=Q(is_hvc=True)), Value(0)),
+                Count('id', filter=Q(hvc_code__isnull=False)), Value(0)),
             non_hvc_count=Coalesce(
-                Count('is_hvc', filter=Q(is_hvc=False)), Value(0)),
+                Count('id', filter=Q(hvc_code__isnull=True)), Value(0)),
             jobs_new=Coalesce(Sum('number_new_jobs'), Value(0)),
             jobs_safeguarded=Coalesce(
                 Sum('number_safeguarded_jobs'), Value(0)),
