@@ -241,149 +241,15 @@ def investments_breakdown(qs, breakdown_field, replace_nulls_with=None, sort=Tru
 def investments_breakdown_by_sector_team(qs):
     other_sector = SectorTeam.objects.get(name='Other')
     return investments_breakdown(qs, 'sector__sectorteamsector__team__id', other_sector.id, sort=True)
-    # stage_data = qs.values(
-    #     'sector__sectorteamsector__team__id',
-    #     'stage'
-    # ).annotate(
-    #     count=Count('id'),
-    # ).values(
-    #     'sector__sectorteamsector__team__id',
-    #     'stage', 'count'
-    # )
-    # # there are some investments with no sector specified, push them to 'Other' team
-    # replace_none_id_with_other(list(stage_data), other_sector.id)
-
-    # hvc_data = qs.filter(
-    #     stage__in=['won', 'verify win']
-    # ).values(
-    #     'sector__sectorteamsector__team__id',
-    #     is_hvc=ANNOTATIONS['is_hvc'],
-    # ).annotate(
-    #     hvc_count=Count('is_hvc', filter=Q(is_hvc=True)),
-    #     non_hvc_count=Count('is_hvc', filter=Q(is_hvc=False)),
-    # ).values(
-    #     'sector__sectorteamsector__team__id',
-    #     'hvc_count', 'non_hvc_count'
-    # )
-    # # there are some investments with no sector specified, push them to 'Other' team
-    # replace_none_id_with_other(list(hvc_data), other_sector.id)
-
-    # grouped_hvc_data = group_and_sum_dataset(
-    #     list(hvc_data), 'sector__sectorteamsector__team__id', ['hvc_count', 'non_hvc_count'])
-
-    # jobs_data = qs.filter(
-    #     stage__in=['won', 'verify win']
-    # ).values(
-    #     'sector__sectorteamsector__team__id',
-    # ).annotate(
-    #     new_jobs=Coalesce(
-    #         Sum(F('number_new_jobs')), Value(0)),
-    #     safe_jobs=Coalesce(
-    #         Sum(F('number_safeguarded_jobs')), Value(0))
-    # ).values(
-    #     'sector__sectorteamsector__team__id',
-    #     'new_jobs', 'safe_jobs'
-    # )
-    # replace_none_id_with_other(list(jobs_data), other_sector.id)
-
-    # return list(stage_data), grouped_hvc_data, list(jobs_data)
 
 
 def investments_breakdown_by_overseas(qs):
     return investments_breakdown(qs, 'company_country__market__overseasregion__id', None, sort=True)
-    # stage_data = qs.values(
-    #     'company_country__market__overseasregion__id',
-    #     'stage'
-    # ).annotate(
-    #     count=Count('id'),
-    # ).values(
-    #     'company_country__market__overseasregion__id',
-    #     'stage', 'count'
-    # )
-
-    # hvc_data = qs.filter(
-    #     stage__in=['won', 'verify win']
-    # ).values(
-    #     'company_country__market__overseasregion__id',
-    #     is_hvc=ANNOTATIONS['is_hvc'],
-    # ).annotate(
-    #     hvc_count=Count('is_hvc', filter=Q(is_hvc=True)),
-    #     non_hvc_count=Count('is_hvc', filter=Q(is_hvc=False)),
-    # ).values(
-    #     'company_country__market__overseasregion__id',
-    #     'hvc_count', 'non_hvc_count'
-    # )
-
-    # jobs_data = qs.filter(
-    #     stage__in=['won', 'verify win']
-    # ).values(
-    #     'company_country__market__overseasregion__id',
-    # ).annotate(
-    #     new_jobs=Coalesce(
-    #         Sum(F('number_new_jobs')), Value(0)),
-    #     safe_jobs=Coalesce(
-    #         Sum(F('number_safeguarded_jobs')), Value(0))
-    # ).values(
-    #     'company_country__market__overseasregion__id',
-    #     'new_jobs', 'safe_jobs'
-    # )
-
-    # grouped_list = group_and_sum_dataset(
-    #     list(hvc_data), 'company_country__market__overseasregion__id', ['hvc_count', 'non_hvc_count'])
-
-    # return list(stage_data), grouped_list, list(jobs_data)
 
 
 def investments_breakdown_by_uk_region(qs):
     non_null_qs = qs.filter(investmentukregion__isnull=False)
     return investments_breakdown(non_null_qs, 'investmentukregion__uk_region__id', None, sort=False)
-
-    # stage_data = qs.filter(
-    #     investmentukregion__isnull=False
-    # ).values(
-    #     'investmentukregion__id',
-    #     'stage'
-    # ).annotate(
-    #     count=Count('id'),
-    # ).values(
-    #     'investmentukregion__id',
-    #     'stage', 'count'
-    # )
-    # replace_none_id_with_other(list(stage_data), all_uk_region.id)
-
-    # hvc_data = qs.filter(
-    #     stage__in=['won', 'verify win']
-    # ).values(
-    #     'investmentukregion__id',
-    #     is_hvc=ANNOTATIONS['is_hvc'],
-    # ).annotate(
-    #     hvc_count=Count('is_hvc', filter=Q(is_hvc=True)),
-    #     non_hvc_count=Count('is_hvc', filter=Q(is_hvc=False)),
-    # ).values(
-    #     'investmentukregion__id',
-    #     'hvc_count', 'non_hvc_count'
-    # )
-    # replace_none_id_with_other(list(hvc_data), all_uk_region.id)
-
-    # jobs_data = qs.filter(
-    #     stage__in=['won', 'verify win']
-    # ).values(
-    #     'investmentukregion__id',
-    # ).annotate(
-    #     new_jobs=Coalesce(
-    #         Sum(F('number_new_jobs')), Value(0)),
-    #     safe_jobs=Coalesce(
-    #         Sum(F('number_safeguarded_jobs')), Value(0))
-    # ).values(
-    #     'investmentukregion__id',
-    #     'new_jobs', 'safe_jobs'
-    # )
-    # replace_none_id_with_other(list(jobs_data), all_uk_region.id)
-
-    # grouped_list = group_and_sum_dataset(
-    #     list(hvc_data), 'investmentukregion__id', ['hvc_count', 'non_hvc_count'], sort=False)
-
-    # return list(stage_data), grouped_list, list(jobs_data)
 
 
 class SectorTeamFilter(filters.NumberFilter):
