@@ -158,7 +158,7 @@ def investments_breakdown_by_stage(qs):
     }
 
 
-def group_and_sum_dataset(dataset, group_by_key, sum_value_keys):
+def group_and_sum_dataset(dataset, group_by_key, sum_value_keys, sort=True):
 
     container = defaultdict(Counter)
 
@@ -174,7 +174,8 @@ def group_and_sum_dataset(dataset, group_by_key, sum_value_keys):
         }
         for item in container.items()
     ]
-    new_dataset.sort(key=lambda item: item[group_by_key])
+    if sort:
+        new_dataset.sort(key=lambda item: item[group_by_key])
 
     return new_dataset
 
@@ -185,94 +186,70 @@ def replace_none_id_with_other(dataset, replace_with):
                          for k, v in dict_item.items() if v is None)
 
 
-def investments_breakdown_by_sector_team(qs):
-    other_sector = SectorTeam.objects.get(name='Other')
-
+def investments_breakdown(qs, breakdown_field, replace_nulls_with=None, sort=True):
     stage_data = qs.values(
-        'sector__sectorteamsector__team__id',
+        breakdown_field,
         'stage'
     ).annotate(
         count=Count('id'),
     ).values(
-        'sector__sectorteamsector__team__id',
+        breakdown_field,
         'stage', 'count'
     )
-    # there are some investments with no sector specified, push them to 'Other' team
-    replace_none_id_with_other(list(stage_data), other_sector.id)
+    if replace_nulls_with:
+        # there are some investments with no sector specified, push them to 'Other' team
+        replace_none_id_with_other(list(stage_data), replace_nulls_with)
 
     hvc_data = qs.filter(
         stage__in=['won', 'verify win']
     ).values(
-        'sector__sectorteamsector__team__id',
+        breakdown_field,
         is_hvc=ANNOTATIONS['is_hvc'],
     ).annotate(
         hvc_count=Count('is_hvc', filter=Q(is_hvc=True)),
         non_hvc_count=Count('is_hvc', filter=Q(is_hvc=False)),
     ).values(
-        'sector__sectorteamsector__team__id',
+        breakdown_field,
         'hvc_count', 'non_hvc_count'
     )
-    # there are some investments with no sector specified, push them to 'Other' team
-    replace_none_id_with_other(list(hvc_data), other_sector.id)
+    if replace_nulls_with:
+        # there are some investments with no sector specified, push them to 'Other' team
+        replace_none_id_with_other(list(hvc_data), replace_nulls_with)
 
     grouped_hvc_data = group_and_sum_dataset(
-        list(hvc_data), 'sector__sectorteamsector__team__id', ['hvc_count', 'non_hvc_count'])
+        list(hvc_data), breakdown_field, ['hvc_count', 'non_hvc_count'], sort)
 
     jobs_data = qs.filter(
         stage__in=['won', 'verify win']
     ).values(
-        'sector__sectorteamsector__team__id',
+        breakdown_field,
     ).annotate(
-        total_jobs=Coalesce(
-            Sum(F('number_new_jobs') + F('number_safeguarded_jobs')), Value(0))
+        new_jobs=Coalesce(
+            Sum(F('number_new_jobs')), Value(0)),
+        safe_jobs=Coalesce(
+            Sum(F('number_safeguarded_jobs')), Value(0))
     ).values(
-        'sector__sectorteamsector__team__id',
-        'total_jobs'
+        breakdown_field,
+        'new_jobs', 'safe_jobs'
     )
+    if replace_nulls_with:
+        replace_none_id_with_other(list(jobs_data), replace_nulls_with)
 
-    return list(stage_data), grouped_hvc_data, jobs_data
+    return list(stage_data), grouped_hvc_data, list(jobs_data)
+
+
+def investments_breakdown_by_sector_team(qs):
+    other_sector = SectorTeam.objects.get(name='Other')
+    return investments_breakdown(qs, 'sector__sectorteamsector__team__id', other_sector.id, sort=True)
 
 
 def investments_breakdown_by_overseas(qs):
-    stage_data = qs.values(
-        'company_country__market__overseasregion__id',
-        'stage'
-    ).annotate(
-        count=Count('id'),
-    ).values(
-        'company_country__market__overseasregion__id',
-        'stage', 'count'
-    )
+    return investments_breakdown(qs, 'company_country__market__overseasregion__id', None, sort=True)
 
-    hvc_data = qs.filter(
-        stage__in=['won', 'verify win']
-    ).values(
-        'company_country__market__overseasregion__id',
-        is_hvc=ANNOTATIONS['is_hvc'],
-    ).annotate(
-        hvc_count=Count('is_hvc', filter=Q(is_hvc=True)),
-        non_hvc_count=Count('is_hvc', filter=Q(is_hvc=False)),
-    ).values(
-        'company_country__market__overseasregion__id',
-        'hvc_count', 'non_hvc_count'
-    )
 
-    jobs_data = qs.filter(
-        stage__in=['won', 'verify win']
-    ).values(
-        'company_country__market__overseasregion__id',
-    ).annotate(
-        total_jobs=Coalesce(
-            Sum(F('number_new_jobs') + F('number_safeguarded_jobs')), Value(0))
-    ).values(
-        'company_country__market__overseasregion__id',
-        'total_jobs'
-    )
-
-    grouped_list = group_and_sum_dataset(
-        list(hvc_data), 'company_country__market__overseasregion__id', ['hvc_count', 'non_hvc_count'])
-
-    return list(stage_data), grouped_list, jobs_data
+def investments_breakdown_by_uk_region(qs):
+    non_null_qs = qs.filter(investmentukregion__isnull=False)
+    return investments_breakdown(non_null_qs, 'investmentukregion__uk_region__id', None, sort=False)
 
 
 class SectorTeamFilter(filters.NumberFilter):
@@ -333,10 +310,14 @@ class BaseFDIView(BaseMIView):
         return self._success(self.get_results())
 
     def _get_target(self):
-        sector_team_target_qs = SectorTeamTarget.objects.filter(financial_year=self.fin_year)
-        market_target_qs = MarketTarget.objects.filter(financial_year=self.fin_year)
-        sector_team = sector_team_target_qs.aggregate(target=Coalesce(Sum('target'), Value(0)))
-        os_region = market_target_qs.aggregate(target=Coalesce(Sum('target'), Value(0)))
+        sector_team_target_qs = SectorTeamTarget.objects.filter(
+            financial_year=self.fin_year)
+        market_target_qs = MarketTarget.objects.filter(
+            financial_year=self.fin_year)
+        sector_team = sector_team_target_qs.aggregate(
+            target=Coalesce(Sum('target'), Value(0)))
+        os_region = market_target_qs.aggregate(
+            target=Coalesce(Sum('target'), Value(0)))
 
         return {
             "sector_team": sector_team['target'],
@@ -512,9 +493,11 @@ class FDITabOverview(BaseFDIView):
         if len(hvc) > 0:
             hvc_count = hvc[0]['hvc_count']
             non_hvc_count = hvc[0]['non_hvc_count']
-        total_jobs = 0
+        new_jobs = safe_jobs = total_jobs = 0
         if len(jobs) > 0:
-            total_jobs = jobs[0]['total_jobs']
+            safe_jobs = jobs[0]['safe_jobs']
+            new_jobs = jobs[0]['new_jobs']
+            total_jobs = safe_jobs + new_jobs
 
         fdi_obj_data = {
             "id": id,
@@ -539,8 +522,12 @@ class FDITabOverview(BaseFDIView):
                     "percent": percentage_formatted(non_hvc_count, total_wins)
                 }
             },
+            "jobs": {
+                "new": new_jobs,
+                "safe": safe_jobs,
+                "total": total_jobs
+            },
             "target": target,
-            "total_jobs": total_jobs,
             "pipeline": pipeline
         }
         return fdi_obj_data
@@ -575,6 +562,19 @@ class FDITabOverview(BaseFDIView):
         return self._node_data(stage_region, hvc_region, jobs_region, target,
                                os_region.id, os_region.name, os_region.name)
 
+    def _uk_regions_breakdown(self, stage, quality, jobs_data, uk_region: UKRegion):
+
+        stage_uk = [
+            i for i in stage if i['investmentukregion__uk_region__id'] == uk_region.id]
+        hvc_uk = [
+            i for i in quality if i['investmentukregion__uk_region__id'] == uk_region.id]
+        jobs_uk = [
+            i for i in jobs_data if i['investmentukregion__uk_region__id'] == uk_region.id]
+
+        target = 0
+        return self._node_data(stage_uk, hvc_uk, jobs_uk, target,
+                               uk_region.id, uk_region.name, uk_region.name)
+
     def get_results(self, name):
         investments_in_scope = self.filter_queryset(self.get_queryset())
         won_verify_and_active = investments_in_scope.won_verify_and_active()
@@ -593,9 +593,16 @@ class FDITabOverview(BaseFDIView):
             os_region_data = [self._os_regions_breakdown(
                 stage, hvc, jobs, os_region) for os_region in os_regions]
             return os_region_data
+        elif name == "uk_region":
+            stage, hvc, jobs = investments_breakdown_by_uk_region(
+                won_verify_and_active)
+            uk_regions = UKRegion.objects.all()
+            uk_region_data = [self._uk_regions_breakdown(
+                stage, hvc, jobs, uk_region) for uk_region in uk_regions]
+            return uk_region_data
 
     def get(self, request, name, *args, **kwargs):
-        valid_names = ['sector', 'os_region']
+        valid_names = ['sector', 'os_region', 'uk_region']
         if name not in valid_names:
             self._not_found()
         return self._success(self.get_results(name))
