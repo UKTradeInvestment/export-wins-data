@@ -265,11 +265,15 @@ class Win(SoftDeleteModel):
         choices=constants.TYPES_OF_SUPPORT, blank=True, null=True)
 
     associated_programme_1 = models.PositiveIntegerField(
-        choices=constants.PROGRAMMES, blank=True, null=True)
+        choices=constants.PROGRAMMES.ACTIVE, blank=True, null=True)
     associated_programme_2 = models.PositiveIntegerField(
-        choices=constants.PROGRAMMES, blank=True, null=True)
+        choices=constants.PROGRAMMES.ACTIVE, blank=True, null=True)
     associated_programme_3 = models.PositiveIntegerField(
-        choices=constants.PROGRAMMES, blank=True, null=True)
+        choices=constants.PROGRAMMES.ACTIVE, blank=True, null=True)
+    associated_programme_4 = models.PositiveIntegerField(
+        choices=constants.PROGRAMMES.ACTIVE, blank=True, null=True)
+    associated_programme_5 = models.PositiveIntegerField(
+        choices=constants.PROGRAMMES.ACTIVE, blank=True, null=True)
 
     is_personally_confirmed = models.BooleanField(
         verbose_name="I confirm that this information is complete and accurate"
