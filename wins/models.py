@@ -554,6 +554,15 @@ class CustomerResponse(SoftDeleteModel):
         blank=True, verbose_name='Other comments or changes to the win details')
     name = models.CharField(max_length=256, verbose_name='Your name')
     created = models.DateTimeField(auto_now_add=True)
+    marketing_source = models.PositiveIntegerField(
+        choices=constants.MARKETING_SOURCE,
+        default=12,
+        verbose_name='How did you first hear about DIT (or its predecessor, UKTI)'
+    )
+    other_marketing_source = models.CharField(
+        max_length=256,
+        verbose_name='Other marketing source',
+        null=True)
 
     def __str__(self):
         return "Customer response to {}".format(self.win)

@@ -1236,3 +1236,18 @@ STATUS = Choices(
 STATUS.add_subset('new_exporter', ['NEVER', 'STALE', 'NOPLAN'])
 STATUS.add_subset('sustainable', ['SMALL', 'MEDIUM'])
 STATUS.add_subset('growth', ['GROWTH'])
+
+MARKETING_SOURCE = (
+    (1, "Business / professional contacts in the private sector"),
+    (2, "Business / professional contacts in the public sector"),
+    (3, "Articles/information I saw or read"),
+    (4, "Advertisements I saw or read about the Exporting is GREAT campaign"),
+    (5, "Great.gov.uk website"),
+    (6, "Searched online"),
+    (7, "Direct call from an international trade advisor"),
+    (8, "The Exporting is GREAT truck"),
+    (9, "UK trade fair"),
+    (10, "Overseas trade fair"),
+    (11, "Other (please specify)"),
+    (12, "Don’t know"),
+)
