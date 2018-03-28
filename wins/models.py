@@ -556,7 +556,7 @@ class CustomerResponse(SoftDeleteModel):
     created = models.DateTimeField(auto_now_add=True)
     marketing_source = models.PositiveIntegerField(
         choices=constants.MARKETING_SOURCE,
-        default=11,
+        default=10,
         verbose_name='How did you first hear about DIT (or its predecessor, UKTI)'
     )
     other_marketing_source = models.CharField(
