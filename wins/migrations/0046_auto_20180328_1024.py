@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
                 (11, 'Other (please specify)'),
                 (12, 'Don’t know')
             ],
-                default=12,
+                default=11,
                 verbose_name='How did you first hear about DIT (or its predecessor, UKTI)'),
         ),
         migrations.AddField(
