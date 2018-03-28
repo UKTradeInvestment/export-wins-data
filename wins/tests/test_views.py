@@ -96,6 +96,7 @@ class AlicePermissionTestCase(TestCase):
             "access_to_contacts": "1",
             "our_support": "1",
             "marketing_source": "1",
+            "other_marketing_source": ""
         }
 
         self.BREAKDOWNS_POST_SAMPLE = {

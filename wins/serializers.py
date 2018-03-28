@@ -321,4 +321,5 @@ class CustomerResponseSerializer(ModelSerializer):
             "has_enabled_expansion_into_existing_market",
             "case_study_willing",
             "marketing_source",
+            "other_marketing_source"
         )
