@@ -596,7 +596,7 @@ class FDITabOverview(BaseFDIView):
         elif name == "uk_region":
             stage, hvc, jobs = investments_breakdown_by_uk_region(
                 won_verify_and_active)
-            uk_regions = UKRegion.objects.all()
+            uk_regions = UKRegion.objects.filter(disabled_on__isnull=True)
             uk_region_data = [self._uk_regions_breakdown(
                 stage, hvc, jobs, uk_region) for uk_region in uk_regions]
             return uk_region_data
