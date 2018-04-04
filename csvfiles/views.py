@@ -319,11 +319,7 @@ class AllCSVFilesView(CSVBaseView):
         results = {}
 
         if ew_files:
-            current_ew_files = [
-                x for x in ew_files if x.year == self.last_fy.description]
-            current_ew_files.extend(
-                [x for x in ew_files if x.year == self.current_fy.description]
-            )
+            current_ew_files = [x for x in ew_files if x.year == self.current_fy.description]
             results['export'] = {}
             if current_ew_files:
                 current_ew = current_ew_files[0]
@@ -336,11 +332,7 @@ class AllCSVFilesView(CSVBaseView):
                     'financial_year': current_ew.year,
                 }
 
-            prev_ew_files = [x for x in ew_files if x.year !=
-                             self.last_fy.description]
-            prev_ew_files.extend(
-                [x for x in ew_files if x.year != self.current_fy.description]
-            )
+            prev_ew_files = [x for x in ew_files if x.year != self.current_fy.description]
             results['export']['previous'] = [
                 {
                     'id': x.id,
