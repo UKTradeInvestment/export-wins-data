@@ -1,0 +1,20 @@
+version: "3"
+services:
+  postgres:
+    image: postgres:9.6
+    restart: always
+    environment:
+      - POSTGRES_DB=export-wins-data
+  export-wins:
+    ports:
+      - 8100:8000
+    env_file:
+      docker-compose.env
+    build: 
+      context: .
+    links:
+      - postgres
+    entrypoint: |
+        dockerize -wait tcp://postgres:5432 -timeout 60s
+    command: /app/start.sh
+    
