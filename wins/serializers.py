@@ -109,6 +109,7 @@ class ChoicesSerializerField(SerializerMethodField):
     requires there to be some choices
 
     """
+
     def to_representation(self, value):
         method_name = 'get_{}_display'.format(self.field_name)
         method = getattr(value, method_name)
@@ -325,4 +326,6 @@ class CustomerResponseSerializer(ModelSerializer):
             "has_increased_exports_as_percent_of_turnover",
             "has_enabled_expansion_into_existing_market",
             "case_study_willing",
+            "marketing_source",
+            "other_marketing_source"
         )
