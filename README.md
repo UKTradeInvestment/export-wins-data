@@ -77,10 +77,38 @@ you want to see any data.
 
 The image for this should be built by docker hub automatically.
 
-### OSX
-
-Create the required env variables and network alias, then run this:
+Ensuring you have the required env variables as mentioned above, start the docker container:
 
 ```bash
-docker run -d -p 8000:8000 -e "SECRET_KEY=${SECRET_KEY}" -e "ADMIN_SECRET=${ADMIN_SECRET}" -e "UI_SECRET=${UI_SECRET}" -e "MI_SECRET=${MI_SECRET}" -e "DATABASE_URL=postgres://postgres@10.200.10.1:5432/export-wins-data" -e "EMAIL_HOST=${EMAIL_HOST}" -e "EMAIL_PORT=${EMAIL_PORT}" ukti/export-wins-data:latest
+docker run --name ew-data -d -p 8000:8000 -e "DEBUG=True" -e "DATA_SECRET=${DATA_SECRET}" -e "API_DEBUG=True" -e "SECRET_KEY=${SECRET_KEY}" -e "ADMIN_SECRET=${ADMIN_SECRET}" -e "UI_SECRET=${UI_SECRET}" -e "MI_SECRET=${MI_SECRET}" -e "DATABASE_URL=${DATABASE_URL}" -e "EMAIL_BACKEND=${EMAIL_BACKEND}" -e "AWS_KEY_CSV_READ_ONLY_ACCESS=${AWS_KEY_CSV_READ_ONLY_ACCESS}" -e "AWS_SECRET_CSV_READ_ONLY_ACCESS=${AWS_SECRET_CSV_READ_ONLY_ACCESS}" -e "AWS_REGION_CSV=${AWS_REGION_CSV}" ukti/export-wins-data:latest
+```
+
+To stop the container run:
+
+```bash
+docker stop ew-data
+```
+
+### OSX
+
+If you want to run this app and a database in docker, there is a little trick that needs to done. As the network integration for OSX is not as nice as Linux, you will need to create an alias to enable the app container to talk to the database container.
+
+Run this in terminal:
+
+```bash
+'[[ `ifconfig -r lo0 | grep 10.200.10.1 | wc -l` -eq 0 ]] && sudo ifconfig lo0 alias 10.200.10.1/24'
+```
+
+It will check whether the alias exists and if not it will prompt for the sudo password and create it.
+
+There were some issues with the 'django.core.mail.backends.console.EmailBackend' so I setup [maildev](https://github.com/djfarrelly/MailDev) instead.
+```bash
+docker run -d -p 1080:80 -p 1025:25 djfarrelly/maildev
+```
+This allows you to see the emails that are being sent by the system as it acts as a mail server and has a web interface for a fake inbox to show the emails - just set the EMAIL_HOST and EMAIL_PORT to that of maildev.
+
+Ensuring you have the required env variables as mentioned above, start the docker container:
+
+```bash
+docker run --name ew-data -d -p 8000:8000 -e "DEBUG=True" -e "DATA_SECRET=${DATA_SECRET}" -e "API_DEBUG=True" -e "SECRET_KEY=${SECRET_KEY}" -e "ADMIN_SECRET=${ADMIN_SECRET}" -e "UI_SECRET=${UI_SECRET}" -e "MI_SECRET=${MI_SECRET}" -e "DATABASE_URL=postgres://postgres@10.200.10.1:5432/export-wins-data" -e "EMAIL_HOST=${EMAIL_HOST}" -e "EMAIL_PORT=${EMAIL_PORT}" -e "AWS_KEY_CSV_READ_ONLY_ACCESS=${AWS_KEY_CSV_READ_ONLY_ACCESS}" -e "AWS_SECRET_CSV_READ_ONLY_ACCESS=${AWS_SECRET_CSV_READ_ONLY_ACCESS}" -e "AWS_REGION_CSV=${AWS_REGION_CSV}" ukti/export-wins-data:latest
 ```

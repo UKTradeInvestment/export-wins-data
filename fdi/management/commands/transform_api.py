@@ -29,6 +29,8 @@ class Command(BaseCommand):
                 # pick up the latest one
                 live_i = Investments.objects.filter(
                     project_code=project_code).latest('id')
+                # clear UK regions associated with this project
+                InvestmentUKRegion.objects.filter(investment=live_i).delete()
                 updated_rows += 1
             except Investments.DoesNotExist:
                 live_i = Investments(project_code=project_code)
@@ -91,6 +93,7 @@ class Command(BaseCommand):
             except (SectorTeamSector.DoesNotExist, SectorTeamTarget.DoesNotExist):
                 pass
 
+            # add regions
             if pending_i.data["uk_region_locations"] and len(pending_i.data["uk_region_locations"]) > 0:
                 for location in pending_i.data["uk_region_locations"]:
                     try:

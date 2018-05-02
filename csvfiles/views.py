@@ -61,6 +61,14 @@ class CSVBaseView(APIView):
         return FILE_TYPES.for_constant(self.file_type)
 
     @cached_property
+    def last_fy(self):
+        today = now()
+        if today.month < 4:
+            return FinancialYear.objects.get(id=today.year - 2)
+        else:
+            return FinancialYear.objects.get(id=today.year - 1)
+
+    @cached_property
     def current_fy(self):
         today = now()
         if today.month < 4:
@@ -73,7 +81,7 @@ class CSVBaseView(APIView):
             file_type = self.file_type_choice
 
         try:
-            return CSVFile.objects.filter(report_start_date__gte=self.current_fy.start,
+            return CSVFile.objects.filter(report_start_date__gte=self.last_fy.start,
                                           file_type=file_type.value,
                                           is_active=True).latest('created')
         except CSVFile.DoesNotExist:
@@ -83,7 +91,7 @@ class CSVBaseView(APIView):
         if not file_type:
             file_type = self.file_type_choice
 
-        fy_start_date = self.current_fy.start
+        fy_start_date = self.last_fy.start
 
         if file_type.constant == 'EXPORT_WINS':  # get latest file per FY
             try:
@@ -311,8 +319,7 @@ class AllCSVFilesView(CSVBaseView):
         results = {}
 
         if ew_files:
-            current_ew_files = [
-                x for x in ew_files if x.year == self.current_fy.description]
+            current_ew_files = [x for x in ew_files if x.year == self.current_fy.description]
             results['export'] = {}
             if current_ew_files:
                 current_ew = current_ew_files[0]
@@ -325,8 +332,7 @@ class AllCSVFilesView(CSVBaseView):
                     'financial_year': current_ew.year,
                 }
 
-            prev_ew_files = [x for x in ew_files if x.year !=
-                             self.current_fy.description]
+            prev_ew_files = [x for x in ew_files if x.year != self.current_fy.description]
             results['export']['previous'] = [
                 {
                     'id': x.id,
