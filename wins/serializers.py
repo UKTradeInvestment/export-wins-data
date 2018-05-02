@@ -48,6 +48,8 @@ class WinSerializer(ModelSerializer):
             "associated_programme_1",
             "associated_programme_2",
             "associated_programme_3",
+            "associated_programme_4",
+            "associated_programme_5",
             "is_personally_confirmed",
             "is_line_manager_confirmed",
             "lead_officer_name",
@@ -159,6 +161,8 @@ class DetailWinSerializer(ModelSerializer):
     associated_programme_1 = ChoicesSerializerField()
     associated_programme_2 = ChoicesSerializerField()
     associated_programme_3 = ChoicesSerializerField()
+    associated_programme_4 = ChoicesSerializerField()
+    associated_programme_5 = ChoicesSerializerField()
     team_type = ChoicesSerializerField()
     hq_team = ChoicesSerializerField()
     breakdowns = SerializerMethodField()  # prob should be breakdownserializer
@@ -200,6 +204,8 @@ class DetailWinSerializer(ModelSerializer):
             "associated_programme_1",
             "associated_programme_2",
             "associated_programme_3",
+            "associated_programme_4",
+            "associated_programme_5",
             "is_personally_confirmed",
             "is_line_manager_confirmed",
             "lead_officer_name",

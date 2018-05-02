@@ -206,7 +206,8 @@ class CSVView(APIView):
             # if it is a choicefield, do optimized lookup of the display value
             if model_field.choices and value:
                 try:
-                    value = self._choices_dict(model_field.choices)[value]
+                    choices = getattr(model_field.choices, 'superset', model_field.choices)
+                    value = self._choices_dict(choices)[value]
                 except KeyError as e:
                     if model_field.attname == 'hvc':
                         value = value
