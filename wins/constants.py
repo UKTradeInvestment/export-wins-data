@@ -1306,16 +1306,16 @@ STATUS.add_subset('sustainable', ['SMALL', 'MEDIUM'])
 STATUS.add_subset('growth', ['GROWTH'])
 
 MARKETING_SOURCE = (
-    (0, "Business / professional contacts in the private sector"),
-    (1, "Business / professional contacts in the public sector"),
-    (2, "Articles/information I saw or read"),
-    (3, "Advertisements I saw or read about the Exporting is GREAT campaign"),
-    (4, "Great.gov.uk website"),
-    (5, "Searched online"),
-    (6, "Direct call from an international trade advisor"),
-    (7, "The Exporting is GREAT truck"),
-    (8, "UK trade fair"),
-    (9, "Overseas trade fair"),
-    (10, "Don’t know"),
-    (11, "Other (please specify)"),
+    (1, "Business / professional contacts in the private sector"),
+    (2, "Business / professional contacts in the public sector"),
+    (3, "Articles/information I saw or read"),
+    (4, "Advertisements I saw or read about the Exporting is GREAT campaign"),
+    (5, "Great.gov.uk website"),
+    (6, "Searched online"),
+    (7, "Direct call from an international trade advisor"),
+    (8, "The Exporting is GREAT truck"),
+    (9, "UK trade fair"),
+    (10, "Overseas trade fair"),
+    (11, "Don’t know"),
+    (12, "Other (please specify)"),
 )
