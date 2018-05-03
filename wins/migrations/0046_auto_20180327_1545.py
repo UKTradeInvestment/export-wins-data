@@ -55,7 +55,7 @@ class Migration(migrations.Migration):
                                                                    (81, 'Prosperity Fund'),
                                                                    (70, 'Passport to Export (P2E)'),
                                                                    (64, 'Shakespeare Lives'),
-                                                                   (65, 'Stakeholder Engagement'), (82, 'Trade Envoy'),
+                                                                   (65, 'Stakeholder Engagement'), (82, 'PM Trade Envoy'),
                                                                    (69, 'Web-based Exporting Programme')], null=True),
         ),
         migrations.AddField(
@@ -104,7 +104,7 @@ class Migration(migrations.Migration):
                                                                    (81, 'Prosperity Fund'),
                                                                    (70, 'Passport to Export (P2E)'),
                                                                    (64, 'Shakespeare Lives'),
-                                                                   (65, 'Stakeholder Engagement'), (82, 'Trade Envoy'),
+                                                                   (65, 'Stakeholder Engagement'), (82, 'PM Trade Envoy'),
                                                                    (69, 'Web-based Exporting Programme')], null=True),
         ),
         migrations.AlterField(
@@ -707,7 +707,7 @@ class Migration(migrations.Migration):
                                                                    (81, 'Prosperity Fund'),
                                                                    (70, 'Passport to Export (P2E)'),
                                                                    (64, 'Shakespeare Lives'),
-                                                                   (65, 'Stakeholder Engagement'), (82, 'Trade Envoy'),
+                                                                   (65, 'Stakeholder Engagement'), (82, 'PM Trade Envoy'),
                                                                    (69, 'Web-based Exporting Programme')], null=True),
         ),
         migrations.AlterField(
@@ -756,7 +756,7 @@ class Migration(migrations.Migration):
                                                                    (81, 'Prosperity Fund'),
                                                                    (70, 'Passport to Export (P2E)'),
                                                                    (64, 'Shakespeare Lives'),
-                                                                   (65, 'Stakeholder Engagement'), (82, 'Trade Envoy'),
+                                                                   (65, 'Stakeholder Engagement'), (82, 'PM Trade Envoy'),
                                                                    (69, 'Web-based Exporting Programme')], null=True),
         ),
         migrations.AlterField(
@@ -805,7 +805,7 @@ class Migration(migrations.Migration):
                                                                    (81, 'Prosperity Fund'),
                                                                    (70, 'Passport to Export (P2E)'),
                                                                    (64, 'Shakespeare Lives'),
-                                                                   (65, 'Stakeholder Engagement'), (82, 'Trade Envoy'),
+                                                                   (65, 'Stakeholder Engagement'), (82, 'PM Trade Envoy'),
                                                                    (69, 'Web-based Exporting Programme')], null=True),
         ),
         migrations.AlterField(

@@ -267,7 +267,7 @@ PROGRAMMES = TrackedSupersetChoices(
     ('GITC', 79, "GREAT International Trade Campaign"),
     ('MIPIM', 80, "MIPIM 2018"),
     ('PROSP', 81, "Prosperity Fund"),
-    ('TE', 82, "Trade Envoy")
+    ('TE', 82, "PM Trade Envoy")
 )
 
 PROGRAMMES.add_subset('ACTIVE', [
