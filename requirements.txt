@@ -8,7 +8,7 @@ django-crispy-forms==1.7.0
 django-extensions==2.0.6
 django-filter==1.1.0
 djangorestframework==3.7.7
-factory-boy==2.10.0
+factory-boy==2.11.1
 gunicorn==19.7.1
 psycopg2-binary==2.7.4
 python-dateutil==2.7.0
@@ -25,7 +25,7 @@ django-trackstats==0.5.0
 
 # Tests
 Faker==0.8.12
-factory-boy==2.10.0
+factory-boy==2.11.1
 raven==6.6.0
 freezegun==0.3.10
 jmespath==0.9.3
