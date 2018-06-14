@@ -3,6 +3,8 @@ import itertools
 from collections import defaultdict
 from typing import List, MutableMapping
 
+from extended_choices import Choices
+
 
 def filter_key(dict_, key_to_remove):
     return {k: v for k, v in dict_.items() if k != key_to_remove}
@@ -35,3 +37,15 @@ def getitem_or_default(l, idx, default=None):
         return l[idx]
     except IndexError:
         return default
+
+
+class TrackedSupersetChoices(Choices):
+    """
+    Same as a normal Choices object except subsets have access to
+    their superset.
+    """
+
+    def add_subset(self, name, constants):
+        super(TrackedSupersetChoices, self).add_subset(name, constants)
+        subset = getattr(self, name)
+        subset.superset = self

@@ -265,11 +265,15 @@ class Win(SoftDeleteModel):
         choices=constants.TYPES_OF_SUPPORT, blank=True, null=True)
 
     associated_programme_1 = models.PositiveIntegerField(
-        choices=constants.PROGRAMMES, blank=True, null=True)
+        choices=constants.PROGRAMMES.ACTIVE, blank=True, null=True)
     associated_programme_2 = models.PositiveIntegerField(
-        choices=constants.PROGRAMMES, blank=True, null=True)
+        choices=constants.PROGRAMMES.ACTIVE, blank=True, null=True)
     associated_programme_3 = models.PositiveIntegerField(
-        choices=constants.PROGRAMMES, blank=True, null=True)
+        choices=constants.PROGRAMMES.ACTIVE, blank=True, null=True)
+    associated_programme_4 = models.PositiveIntegerField(
+        choices=constants.PROGRAMMES.ACTIVE, blank=True, null=True)
+    associated_programme_5 = models.PositiveIntegerField(
+        choices=constants.PROGRAMMES.ACTIVE, blank=True, null=True)
 
     is_personally_confirmed = models.BooleanField(
         verbose_name="I confirm that this information is complete and accurate"
@@ -554,6 +558,15 @@ class CustomerResponse(SoftDeleteModel):
         blank=True, verbose_name='Other comments or changes to the win details')
     name = models.CharField(max_length=256, verbose_name='Your name')
     created = models.DateTimeField(auto_now_add=True)
+    marketing_source = models.PositiveIntegerField(
+        choices=constants.MARKETING_SOURCE,
+        default=11,
+        verbose_name='How did you first hear about DIT (or its predecessor, UKTI)'
+    )
+    other_marketing_source = models.CharField(
+        max_length=256,
+        verbose_name='Other marketing source',
+        null=True)
 
     def __str__(self):
         return "Customer response to {}".format(self.win)

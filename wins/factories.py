@@ -118,6 +118,7 @@ class CustomerResponseFactory(factory.DjangoModelFactory):
     case_study_willing = False
     name = 'Cakes'
     comments = 'Good work'
+    marketing_source = 1
 
 
 class NotificationFactory(factory.DjangoModelFactory):

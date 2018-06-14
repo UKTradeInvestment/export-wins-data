@@ -9,7 +9,7 @@ django-extensions==2.0.6
 django-filter==1.1.0
 djangorestframework==3.7.7
 factory-boy==2.10.0
-gunicorn==19.7.1
+gunicorn==19.8.1
 psycopg2-binary==2.7.4
 python-dateutil==2.7.0
 whitenoise==3.3.1
@@ -23,15 +23,18 @@ zipstream==1.1.4
 cytoolz==0.9.0.1
 django-trackstats==0.5.0
 
+# Development utilities
+ipython==6.4.0
+
 # Tests
-Faker==0.8.12
+Faker==0.8.15
 factory-boy==2.10.0
 raven==6.6.0
 freezegun==0.3.10
 jmespath==0.9.3
 pytest-cov==2.5.1
 pytest-xdist==1.22.2
-pytest==3.4.2
+pytest==3.6.1
 pytest-django==3.2.1
 coverage-pth==0.0.2
 pytest-sugar==0.9.1

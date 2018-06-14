@@ -48,6 +48,8 @@ class WinSerializer(ModelSerializer):
             "associated_programme_1",
             "associated_programme_2",
             "associated_programme_3",
+            "associated_programme_4",
+            "associated_programme_5",
             "is_personally_confirmed",
             "is_line_manager_confirmed",
             "lead_officer_name",
@@ -107,6 +109,7 @@ class ChoicesSerializerField(SerializerMethodField):
     requires there to be some choices
 
     """
+
     def to_representation(self, value):
         method_name = 'get_{}_display'.format(self.field_name)
         method = getattr(value, method_name)
@@ -159,6 +162,8 @@ class DetailWinSerializer(ModelSerializer):
     associated_programme_1 = ChoicesSerializerField()
     associated_programme_2 = ChoicesSerializerField()
     associated_programme_3 = ChoicesSerializerField()
+    associated_programme_4 = ChoicesSerializerField()
+    associated_programme_5 = ChoicesSerializerField()
     team_type = ChoicesSerializerField()
     hq_team = ChoicesSerializerField()
     breakdowns = SerializerMethodField()  # prob should be breakdownserializer
@@ -200,6 +205,8 @@ class DetailWinSerializer(ModelSerializer):
             "associated_programme_1",
             "associated_programme_2",
             "associated_programme_3",
+            "associated_programme_4",
+            "associated_programme_5",
             "is_personally_confirmed",
             "is_line_manager_confirmed",
             "lead_officer_name",
@@ -319,4 +326,6 @@ class CustomerResponseSerializer(ModelSerializer):
             "has_increased_exports_as_percent_of_turnover",
             "has_enabled_expansion_into_existing_market",
             "case_study_willing",
+            "marketing_source",
+            "other_marketing_source"
         )
