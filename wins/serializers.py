@@ -1,7 +1,7 @@
 from rest_framework.serializers import (
     CharField, ModelSerializer, SerializerMethodField
 )
-from .constants import WITH_OUR_SUPPORT
+from .constants import EXPERIENCE_CATEGORIES, WITH_OUR_SUPPORT
 from .models import Win, Breakdown, Advisor, CustomerResponse
 
 
@@ -16,6 +16,11 @@ class WinSerializer(ModelSerializer):
 
     class Meta(object):
         model = Win
+        extra_kwargs = {
+            'export_experience': {
+                'choices': EXPERIENCE_CATEGORIES.active
+            }
+        }
         fields = (
             "id",
             "user",

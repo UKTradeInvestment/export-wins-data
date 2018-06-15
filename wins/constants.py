@@ -1297,10 +1297,16 @@ EXPERIENCE_CATEGORIES = Choices(
     ('STALE', 2, "Has exported before but not won an export order in the past twelve months"),
     ('NOPLAN', 3, "Has exported in the past twelve months but has not "
                   "won an export order proactively as a result of having an export plan"),
-    ('SMALL', 4, "Is an exporter but exports currently account for less than 10% of its overall turnover"),
+    ('NEW_MARKET', 7, "Is an exporter which did not receive or fulfil any export orders to this "
+                      "market between 1 April 2015 and 31 March 2018"),
+    ('GROWTH', 6, "Is an exporter that we are helping to maintain and grow its exports"),
+    # Inactive
+    ('SMALL', 4,
+     "Is an exporter but exports currently account for less than 10% of its overall turnover"),
     ('MEDIUM', 5, "Is an exporter but has only won export orders in three countries or fewer"),
-    ('GROWTH', 6, "Is an exporter that we are helping to maintain and grow its exports")
 )
+
+EXPERIENCE_CATEGORIES.add_subset('active', ['NEVER', 'STALE', 'NOPLAN', 'NEW_MARKET', 'GROWTH'])
 
 EXPERIENCE_CATEGORIES.add_subset('new_exporter', ['NEVER', 'STALE', 'NOPLAN'])
 EXPERIENCE_CATEGORIES.add_subset('sustainable', ['SMALL', 'MEDIUM'])
