@@ -11,8 +11,7 @@ from mi.models import UKRegionTarget
 from mi.views.team_type_views import TeamTypeListView, TeamTypeDetailView, TeamTypeWinTableView, \
     TeamTypeNonHvcWinsView, TeamTypeMonthsView, TeamTypeCampaignsView
 from mi.utils import percentage_formatted
-from wins.constants import UK_REGIONS_MAP, UK_REGIONS, STATUS as EXPORT_EXPERIENCE, UK_SUPER_REGIONS
-from wins.models import Win
+from wins.constants import UK_REGIONS_MAP, UK_REGIONS, EXPERIENCE_CATEGORIES, UK_SUPER_REGIONS
 
 FLATTENED_REGIONS = {}
 for v in UK_REGIONS_MAP.values():
@@ -95,11 +94,11 @@ class UKRegionMixin(
 
         def classify_experience(win):
             exp_id = win['export_experience']
-            if exp_id in EXPORT_EXPERIENCE.new_exporter:
+            if exp_id in EXPERIENCE_CATEGORIES.new_exporter:
                 return 'new_exporters'
-            elif exp_id in EXPORT_EXPERIENCE.sustainable:
+            elif exp_id in EXPERIENCE_CATEGORIES.sustainable:
                 return 'sustainable'
-            elif exp_id in EXPORT_EXPERIENCE.growth:
+            elif exp_id in EXPERIENCE_CATEGORIES.growth:
                 return 'growth'
             else:
                 return 'unknown'

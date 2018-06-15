@@ -593,7 +593,8 @@ SECTORS = (
     (251, "Software and Computer Services Business to Business (B2B) : Online Retailing"),
     (252, "Software and Computer Services Business to Business (B2B) : Security Related Software"),
     (253, "Software and Computer Services Business to Business (B2B) : Support Services"),
-    (254, "Software and Computer Services Business to Business (B2B) : Support Services : Equipment Maintenance and Repair"),
+    (254, "Software and Computer Services Business to Business (B2B) : Support Services"
+          " : Equipment Maintenance and Repair"),
     (255, "Software and Computer Services Business to Business (B2B) : Support Services : Internet Service Providers"),
     (256, "Textiles, Interior Textiles and Carpets"),
     (257, "Water"),
@@ -1291,7 +1292,7 @@ UK_REGIONS_MAP = {
     }
 }
 
-STATUS = Choices(
+EXPERIENCE_CATEGORIES = Choices(
     ('NEVER', 1, "Has never exported before"),
     ('STALE', 2, "Has exported before but not won an export order in the past twelve months"),
     ('NOPLAN', 3, "Has exported in the past twelve months but has not "
@@ -1301,9 +1302,9 @@ STATUS = Choices(
     ('GROWTH', 6, "Is an exporter that we are helping to maintain and grow its exports")
 )
 
-STATUS.add_subset('new_exporter', ['NEVER', 'STALE', 'NOPLAN'])
-STATUS.add_subset('sustainable', ['SMALL', 'MEDIUM'])
-STATUS.add_subset('growth', ['GROWTH'])
+EXPERIENCE_CATEGORIES.add_subset('new_exporter', ['NEVER', 'STALE', 'NOPLAN'])
+EXPERIENCE_CATEGORIES.add_subset('sustainable', ['SMALL', 'MEDIUM'])
+EXPERIENCE_CATEGORIES.add_subset('growth', ['GROWTH'])
 
 MARKETING_SOURCE = (
     (1, "Business / professional contacts in the private sector"),
