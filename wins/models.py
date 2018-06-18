@@ -305,6 +305,12 @@ class Win(SoftDeleteModel):
         verbose_name="HQ team, Region or Post",
         choices=constants.HQ_TEAM_REGION_OR_POST
     )
+    business_potential = models.PositiveIntegerField(
+        verbose_name="Medium-sized and high potential companies",
+        choices=constants.BUSINESS_POTENTIAL.choices,
+        blank=True,
+        null=True,
+    )
     export_experience = models.PositiveIntegerField(
         choices=constants.EXPERIENCE_CATEGORIES.choices,
         null=True,

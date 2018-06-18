@@ -1292,6 +1292,25 @@ UK_REGIONS_MAP = {
     }
 }
 
+BUSINESS_POTENTIAL = Choices(
+    (
+        'MEDIUM_OR_HIGH',
+        1,
+        "The company is a medium-sized business or an exporter with high potential"
+    ),
+    (
+        'PART_MEDIUM_OR_HIGH',
+        2,
+        "The company exhibits characteristics of a medium-sized business or an exporter with high "
+        "potential but does not meet the formal definition"
+    ),
+    (
+        'NOT_MEDIUM_OR_HIGH',
+        3,
+        "The company is not a medium-sized business or an exporter with high potential"
+    ),
+)
+
 EXPERIENCE_CATEGORIES = Choices(
     ('NEVER', 1, "Has never exported before"),
     ('STALE', 2, "Has exported before but not won an export order in the past twelve months"),
