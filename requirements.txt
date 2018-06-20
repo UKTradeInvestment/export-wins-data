@@ -1,4 +1,4 @@
-boto3==1.7.40
+boto3==1.7.41
 coverage>=4.0,<4.4
 codeclimate-test-reporter==0.2.3
 dj-database-url==0.5.0
