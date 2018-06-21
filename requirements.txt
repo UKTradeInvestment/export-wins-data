@@ -35,6 +35,6 @@ jmespath==0.9.3
 pytest-cov==2.5.1
 pytest-xdist==1.22.2
 pytest==3.6.1
-pytest-django==3.3.0
+pytest-django==3.3.2
 coverage-pth==0.0.2
 pytest-sugar==0.9.1
