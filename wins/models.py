@@ -306,7 +306,7 @@ class Win(SoftDeleteModel):
         choices=constants.HQ_TEAM_REGION_OR_POST
     )
     export_experience = models.PositiveIntegerField(
-        choices=constants.STATUS.choices,
+        choices=constants.EXPERIENCE_CATEGORIES.choices,
         null=True,
     )
     location = models.CharField(max_length=128, blank=True)
@@ -409,12 +409,19 @@ class Win(SoftDeleteModel):
         if not self.export_experience:
             return ''
         customer_map = {
-            1: 'Never exported before',
-            2: 'Not won an export order for twelve months',
-            3: 'Have won an export order in the past twelve months and are working on your export plan',
-            4: 'You wanted to increase exports as a proportion of your overall turnover',
-            5: 'You wanted to increase the number of countries you export to',
-            6: 'You wanted to maintain and grow your exports',
+            constants.EXPERIENCE_CATEGORIES.NEVER: 'Never exported before',
+            constants.EXPERIENCE_CATEGORIES.STALE: 'Not won an export order for twelve months',
+            constants.EXPERIENCE_CATEGORIES.NOPLAN:
+                'Have won an export order in the past twelve months and are working on your '
+                'export plan',
+            constants.EXPERIENCE_CATEGORIES.SMALL:
+                'You wanted to increase exports as a proportion of your overall turnover',
+            constants.EXPERIENCE_CATEGORIES.MEDIUM:
+                'You wanted to increase the number of countries you export to',
+            constants.EXPERIENCE_CATEGORIES.GROWTH:
+                'You wanted to maintain and grow your exports',
+            constants.EXPERIENCE_CATEGORIES.NEW_MARKET:
+                'Not won an export order in this country between 1 April 2015 and 31 March 2018',
         }
         return customer_map[self.export_experience]
 

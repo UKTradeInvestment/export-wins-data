@@ -9,6 +9,7 @@ import fdi.urls
 import mi.urls
 import sso.oauth2_urls
 
+from activity_stream.views import ActivityStreamViewSet
 from users.views import IsLoggedIn, LoginView, UserRetrieveViewSet, LogoutView
 from wins.views import (
     WinViewSet, BreakdownViewSet, AdvisorViewSet, ConfirmationViewSet,
@@ -75,6 +76,11 @@ urlpatterns = [
         UserRetrieveViewSet.as_view({'get': 'retrieve'}), name="user_profile"),
 
     url(r"^auth/logout/", LogoutView.as_view(), name="logout"),
+
+    url(
+        r'^activity-stream/$',
+        ActivityStreamViewSet.as_view({'get': 'list'}),
+        name='activity-stream'),
 
 ]
 

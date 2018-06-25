@@ -17,10 +17,9 @@ from mi.utils import (
     average,
     percentage,
     percentage_formatted,
-    months_between,
     month_iterator,
 )
-from wins.constants import UK_REGIONS, STATUS
+from wins.constants import UK_REGIONS, EXPERIENCE_CATEGORIES
 from wins.models import Notification, Win, _get_open_hvcs, HVC
 
 
@@ -53,7 +52,7 @@ def uk_region_name(win):
 def export_experience(win):
     exp = None
     try:
-        exp = STATUS.for_value(win['export_experience'])
+        exp = EXPERIENCE_CATEGORIES.for_value(win['export_experience'])
     except KeyError:
         pass
 
