@@ -305,6 +305,12 @@ class Win(SoftDeleteModel):
         verbose_name="HQ team, Region or Post",
         choices=constants.HQ_TEAM_REGION_OR_POST
     )
+    business_potential = models.PositiveIntegerField(
+        verbose_name="Medium-sized and high potential companies",
+        choices=constants.BUSINESS_POTENTIAL.choices,
+        blank=True,
+        null=True,
+    )
     export_experience = models.PositiveIntegerField(
         choices=constants.EXPERIENCE_CATEGORIES.choices,
         null=True,
@@ -421,7 +427,8 @@ class Win(SoftDeleteModel):
             constants.EXPERIENCE_CATEGORIES.GROWTH:
                 'You wanted to maintain and grow your exports',
             constants.EXPERIENCE_CATEGORIES.NEW_MARKET:
-                'Not won an export order in this country between 1 April 2015 and 31 March 2018',
+                'Have not won or fulfilled any export orders to this country between 1 April 2015 '
+                'and 31 March 2018',
         }
         return customer_map[self.export_experience]
 
