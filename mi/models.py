@@ -316,6 +316,13 @@ class FinancialYear(models.Model):
         return FinancialYear.get_financial_end_date(self.id)
 
     @property
+    def end_year_to_date(self):
+        if datetime.datetime.today().replace(tzinfo=UTC) < self.end:
+            return datetime.datetime.utcnow().replace(tzinfo=UTC)
+        else:
+            return datetime.datetime.combine(self.end, datetime.datetime.max.time()).replace(tzinfo=UTC)
+
+    @property
     def is_current(self):
         return self.id == FinancialYear.current_fy()
 

@@ -60,10 +60,7 @@ class BaseMIView(GenericAPIView):
         if self.date_end:
             return self.date_end
 
-        if datetime.today().replace(tzinfo=UTC) < self.fin_year.end:
-            return now()
-        else:
-            return datetime.combine(self.fin_year.end, datetime.max.time()).replace(tzinfo=UTC)
+        return self.fin_year.end_year_to_date.replace(tzinfo=UTC)
 
     def _fill_date_ranges(self):
         """
