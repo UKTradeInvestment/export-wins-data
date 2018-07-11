@@ -90,6 +90,18 @@ class _ActivityStreamAuthentication(BaseAuthentication):
         return self._check_hawk_header(request)
 
     def _check_ip(self, request):
+        """Blocks incoming connections based on IP in X-Forwarded-For
+
+        Ideally, this would be done at the network level. However, this is
+        not possible in PaaS. However, they do always add two IPs, with
+        the first one being the IP connection are made from, so we can
+        check the second-from-the-end with some confidence it hasn't been
+        spoofed.
+
+        This wouldn't be able to be trusted in other environments, but we're
+        not running in non-PaaS environments in production.
+        """
+
         if 'HTTP_X_FORWARDED_FOR' not in request.META:
             logger.warning(
                 'Failed authentication: no X-Forwarded-For header passed'
