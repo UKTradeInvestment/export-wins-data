@@ -86,10 +86,10 @@ class _ActivityStreamAuthentication(BaseAuthentication):
         If either of these suggest we cannot authenticate, AuthenticationFailed
         is raised, as required in the DRF authentication flow
         """
-        self._authenticate_by_ip(request)
-        return self._authenticate_by_hawk(request)
+        self._check_ip(request)
+        return self._check_hawk_header(request)
 
-    def _authenticate_by_ip(self, request):
+    def _check_ip(self, request):
         if 'HTTP_X_FORWARDED_FOR' not in request.META:
             logger.warning(
                 'Failed authentication: no X-Forwarded-For header passed'
@@ -115,7 +115,7 @@ class _ActivityStreamAuthentication(BaseAuthentication):
             )
             raise AuthenticationFailed(INCORRECT_CREDENTIALS_MESSAGE)
 
-    def _authenticate_by_hawk(self, request):
+    def _check_hawk_header(self, request):
         if 'HTTP_AUTHORIZATION' not in request.META:
             raise AuthenticationFailed(NO_CREDENTIALS_MESSAGE)
 
