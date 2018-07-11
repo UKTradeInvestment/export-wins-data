@@ -57,7 +57,6 @@ INSTALLED_APPS = [
     # drf
     "rest_framework",
     "rest_framework.authtoken",
-    "crispy_forms",
 ]
 
 MIDDLEWARE = [
