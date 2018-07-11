@@ -17,6 +17,7 @@ c = datetime.combine
 MIN = datetime.min.time()
 MAX = datetime.max.time()
 
+
 def datetime_factory(date, time):
     return c(date, time).replace(tzinfo=UTC)
 
@@ -300,8 +301,8 @@ class GenericWinTableTestMixin:
         for year in self.fin_years:
             with self.subTest(year=year):
                 win_date = getattr(self, f'win_date_{year}')
-                export_exp = FuzzyChoice(constants.STATUS).fuzz()[0]
-                export_exp_constant = constants.STATUS.for_value(export_exp).constant
+                export_exp = FuzzyChoice(constants.EXPERIENCE_CATEGORIES).fuzz()[0]
+                export_exp_constant = constants.EXPERIENCE_CATEGORIES.for_value(export_exp).constant
                 self._create_hvc_win(
                     hvc_code=self.TEST_CAMPAIGN_ID,
                     win_date=win_date,

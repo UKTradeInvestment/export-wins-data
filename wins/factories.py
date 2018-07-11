@@ -11,7 +11,7 @@ from wins.models import (
     Notification,
     Win,
 )
-from wins.constants import SECTORS, WIN_TYPES
+from wins.constants import BUSINESS_POTENTIAL, SECTORS, WIN_TYPES
 from users.factories import UserFactory
 
 
@@ -34,6 +34,8 @@ class WinFactory(factory.DjangoModelFactory):
     type = 1
     date = datetime.datetime(2016, 5, 25)
     country = "CA"
+
+    business_potential = BUSINESS_POTENTIAL.MEDIUM_OR_HIGH.value
 
     total_expected_export_value = 100000
     goods_vs_services = 1

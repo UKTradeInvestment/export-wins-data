@@ -1,7 +1,7 @@
 from rest_framework.serializers import (
     CharField, ModelSerializer, SerializerMethodField
 )
-from .constants import WITH_OUR_SUPPORT
+from .constants import EXPERIENCE_CATEGORIES, WITH_OUR_SUPPORT
 from .models import Win, Breakdown, Advisor, CustomerResponse
 
 
@@ -16,6 +16,11 @@ class WinSerializer(ModelSerializer):
 
     class Meta(object):
         model = Win
+        extra_kwargs = {
+            'export_experience': {
+                'choices': EXPERIENCE_CATEGORIES.active
+            }
+        }
         fields = (
             "id",
             "user",
@@ -58,6 +63,7 @@ class WinSerializer(ModelSerializer):
             "line_manager_name",
             "team_type",
             "hq_team",
+            "business_potential",
             "export_experience",
             "location",
             "created",
@@ -170,6 +176,7 @@ class DetailWinSerializer(ModelSerializer):
     advisors = SerializerMethodField()  # prob should be advisorserializer
     responded = SerializerMethodField()
     sent = SerializerMethodField()
+    business_potential_display = SerializerMethodField()
     export_experience_display = SerializerMethodField()
 
     class Meta(object):
@@ -215,6 +222,8 @@ class DetailWinSerializer(ModelSerializer):
             "line_manager_name",
             "team_type",
             "hq_team",
+            "business_potential",
+            "business_potential_display",
             "export_experience",
             "export_experience_display",
             "location",
@@ -269,6 +278,9 @@ class DetailWinSerializer(ModelSerializer):
 
     def get_export_experience_display(self, win):
         return win.get_export_experience_display()
+
+    def get_business_potential_display(self, win):
+        return win.get_business_potential_display()
 
 
 class BreakdownSerializer(ModelSerializer):

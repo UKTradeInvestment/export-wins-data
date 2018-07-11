@@ -9,7 +9,7 @@ from django_countries.fields import CountryField
 from extended_choices import Choices
 from pytz import UTC
 
-from wins.constants import UK_REGIONS, STATUS as EXPORT_EXPERIENCE
+from wins.constants import UK_REGIONS
 from wins.models import HVC
 
 
