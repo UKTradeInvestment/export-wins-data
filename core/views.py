@@ -54,13 +54,20 @@ class BaseMIView(GenericAPIView):
 
     def _date_range_end(self):
         """
-        If fin_year is not current one, current datetime is returned
-        Else financial year end date, as datetime, is returned
+        Financial year end date, as datetime, is returned
         """
         if self.date_end:
             return self.date_end
 
-        return self.fin_year.end_year_to_date.replace(tzinfo=UTC)
+        return datetime.combine(self.fin_year.end, datetime.max.time()).replace(tzinfo=UTC)
+
+    def _date_range_end_to_date(self):
+        """
+        If fin_year is not current one, current datetime is returned
+        Else financial year end date, as datetime, is returned
+        """
+        return datetime.combine(self.fin_year.end_year_to_date, datetime.max.time()).replace(tzinfo=UTC)
+
 
     def _fill_date_ranges(self):
         """
