@@ -44,6 +44,12 @@ You need a Redis Cluster running
 docker run -d -p 7000-7005:7000-7005 -e CLUSTER_ONLY=true grokzen/redis-cluster:3.2.11
 ```
 
+or on MacOS, you may need to run
+
+```bash
+docker run -d -p 7000-7005:7000-7005 -e CLUSTER_ONLY=true -e IP=0.0.0.0 grokzen/redis-cluster:3.2.11
+```
+
 with your environment setup as it would be in PaaS
 
 ```bash
