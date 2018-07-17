@@ -250,65 +250,36 @@ RAVEN_CONFIG = {
     # 'release': raven.fetch_git_sha(os.path.dirname(__file__)),
 }
 
-
-# Logging for development
-if DEBUG:
-    LOGGING = {
-        'version': 1,
-        'disable_existing_loggers': False,
-        'filters': {
-            'require_debug_false': {
-                '()': 'django.utils.log.RequireDebugFalse'
-            }
-        },
-        'handlers': {
-            'console': {
-                'level': 'DEBUG',
-                'class': 'logging.StreamHandler',
-            },
-        },
-        'loggers': {
-            'django.request': {
-                'handlers': ['console'],
-                'level': 'DEBUG',
-                'propagate': True,
-            },
-            '': {
-                'handlers': ['console'],
-                'level': 'DEBUG',
-                'propagate': False,
-            },
+logger_level, handler_level, handler_options = \
+    ('DEBUG', 'DEBUG', {}) if DEBUG else \
+    ('ERROR', 'INFO', {'stream': sys.stdout})
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse'
         }
-    }
-else:
-    LOGGING = {
-        'version': 1,
-        'disable_existing_loggers': False,
-        'filters': {
-            'require_debug_false': {
-                '()': 'django.utils.log.RequireDebugFalse'
-            }
+    },
+    'handlers': {
+        'console': {**{
+            'level': handler_level,
+            'class': 'logging.StreamHandler',
+        }, **handler_options},
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['console'],
+            'level': logger_level,
+            'propagate': True,
         },
-        'handlers': {
-            'console': {
-                'level': 'INFO',
-                'class': 'logging.StreamHandler',
-                'stream': sys.stdout
-            },
+        '': {
+            'handlers': ['console'],
+            'level': logger_level,
+            'propagate': False,
         },
-        'loggers': {
-            'django.request': {
-                'handlers': ['console'],
-                'level': 'ERROR',
-                'propagate': True,
-            },
-            '': {
-                'handlers': ['console'],
-                'level': 'ERROR',
-                'propagate': False,
-            },
-        }
     }
+}
 
 # only show critical log message when running tests
 if len(sys.argv) > 1 and sys.argv[1] == 'test':
