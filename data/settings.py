@@ -250,9 +250,15 @@ RAVEN_CONFIG = {
     # 'release': raven.fetch_git_sha(os.path.dirname(__file__)),
 }
 
-logger_level, handler_level, handler_options = \
-    ('DEBUG', 'DEBUG', {}) if DEBUG else \
-    ('ERROR', 'INFO', {'stream': sys.stdout})
+if DEBUG:
+    logger_level = 'DEBUG'
+    handler_level = 'DEBUG'
+    handler_options = {}
+else:
+    logger_level = 'ERROR'
+    handler_level = 'INFO'
+    handler_options = {'stream': sys.stdout}
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
