@@ -1,9 +1,11 @@
+import json
 import logging
 import os
 import sys
 import shutil
 
 import dj_database_url
+import rediscluster
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -313,3 +315,39 @@ ACTIVITY_STREAM_IP_WHITELIST = os.getenv('ACTIVITY_STREAM_IP_WHITELIST', default
 ACTIVITY_STREAM_ACCESS_KEY_ID = os.environ['ACTIVITY_STREAM_ACCESS_KEY_ID']
 ACTIVITY_STREAM_SECRET_ACCESS_KEY = os.environ['ACTIVITY_STREAM_SECRET_ACCESS_KEY']
 ACTIVITY_STREAM_NONCE_EXPIRY_SECONDS = 60
+
+vcap_services = json.loads(os.environ['VCAP_SERVICES'])
+redis_credentials = vcap_services['redis'][0]['credentials']
+
+# rediscluster, by default, breaks if using the combination of
+# - rediss:// connection uri
+# - skip_full_coverage_check=True
+# We work around the issues by forcing the uri to start with redis://
+# and setting the connection class to use SSL if necessary
+is_tls_enabled = redis_credentials['uri'].startswith('rediss://')
+if is_tls_enabled:
+    redis_uri = redis_credentials['uri'].replace('rediss://', 'redis://')
+    redis_connection_class = rediscluster.connection.SSLClusterConnection
+else:
+    redis_uri = redis_credentials['uri']
+    redis_connection_class = rediscluster.connection.ClusterConnection
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': redis_uri,
+        'OPTIONS': {
+            'REDIS_CLIENT_CLASS': 'rediscluster.StrictRedisCluster',
+            'REDIS_CLIENT_KWARGS': {
+                'decode_responses': True,
+            },
+            'CONNECTION_POOL_CLASS':  'rediscluster.connection.ClusterConnectionPool',
+            'CONNECTION_POOL_KWARGS': {
+                # AWS ElasticCache disables CONFIG commands
+                'skip_full_coverage_check': True,
+                'connection_class': redis_connection_class,
+            },
+        },
+        'KEY_PREFIX': 'export-wins-data',
+    },
+}
