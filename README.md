@@ -35,21 +35,6 @@ Now set your DATABASE_URL to include the default user `postgres`:
 ```bash
 export DATABASE_URL='postgres://postgres@127.0.0.1:5432/export-wins-data'
 ```
-
-### Cache
-
-You need a Redis Cluster running
-
-```bash
-docker run -d -p 7000-7005:7000-7005 -e CLUSTER_ONLY=true grokzen/redis-cluster:3.2.11
-```
-
-with your environment setup as it would be in PaaS
-
-```bash
-export VCAP_SERVICES='{"redis": [{"credentials": {"uri": "redis://127.0.0.1:7000/"}}]}'
-```
-
 #### Dummy data
 
 Once you have a database you'll need some data.
