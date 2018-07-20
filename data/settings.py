@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import sys
@@ -251,15 +250,9 @@ RAVEN_CONFIG = {
     # 'release': raven.fetch_git_sha(os.path.dirname(__file__)),
 }
 
-if DEBUG:
-    logger_level = 'DEBUG'
-    handler_level = 'DEBUG'
-    handler_options = {}
-else:
-    logger_level = 'ERROR'
-    handler_level = 'INFO'
-    handler_options = {'stream': sys.stdout}
-
+logger_level, handler_level, handler_options = \
+    ('DEBUG', 'DEBUG', {}) if DEBUG else \
+    ('ERROR', 'INFO', {'stream': sys.stdout})
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -314,23 +307,3 @@ ACTIVITY_STREAM_IP_WHITELIST = os.getenv('ACTIVITY_STREAM_IP_WHITELIST', default
 ACTIVITY_STREAM_ACCESS_KEY_ID = os.environ['ACTIVITY_STREAM_ACCESS_KEY_ID']
 ACTIVITY_STREAM_SECRET_ACCESS_KEY = os.environ['ACTIVITY_STREAM_SECRET_ACCESS_KEY']
 ACTIVITY_STREAM_NONCE_EXPIRY_SECONDS = 60
-
-vcap_services = json.loads(os.environ['VCAP_SERVICES'])
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': vcap_services['redis'][0]['credentials']['uri'],
-        'OPTIONS': {
-            'REDIS_CLIENT_CLASS': 'rediscluster.StrictRedisCluster',
-            'REDIS_CLIENT_KWARGS': {
-                'decode_responses': True,
-            },
-            'CONNECTION_POOL_CLASS':  'rediscluster.connection.ClusterConnectionPool',
-            'CONNECTION_POOL_KWARGS': {
-                # AWS ElasticCache disables CONFIG commands
-                'skip_full_coverage_check': True,
-            },
-        },
-        'KEY_PREFIX': 'export-wins-data',
-    },
-}
