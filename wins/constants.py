@@ -259,6 +259,7 @@ PROGRAMMES = TrackedSupersetChoices(
     ('SL', 64, "Shakespeare Lives"),
     ('SS', 85, "Specialist Support"),
     ('SE', 65, "Stakeholder Engagement"),
+    ('TAP', 86, "Tradeshow Access Programme"),
     ('TSB', 66, "Technology Strategy Board (TSB)"),
     ('UKILTH', 67, "UK Israel Tech Hub"),
     ('VC', 68, "Venture Capital"),
@@ -328,6 +329,7 @@ PROGRAMMES.add_subset('ACTIVE', [
     'SL',
     'SE',
     'SS',
+    'TAP',
     'TE',
     'WEBEP',
 ])
