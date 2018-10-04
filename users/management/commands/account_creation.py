@@ -3,13 +3,13 @@ import bz2
 import csv
 import os
 import random
-import textwrap
 import time
 
 from django.conf import settings
 from django.core.mail import send_mail
 from django.core.management.base import BaseCommand, CommandError
 from django.core.validators import validate_email
+from django.template.loader import render_to_string
 
 from ...models import User
 
@@ -97,31 +97,14 @@ class Command(BaseCommand):
     @staticmethod
     def send(email, password):
         subject = "Export Wins Login Credentials"
-        body = """Dear Colleague,
-
-This email contains your login credentials for the new Export Wins service.
-
-This service is being developed with feedback from live user testing. It is delivered in two parts: the first part should be completed online by the Lead Officer in DIT or FCO who has helped the Customer deliver the win. In the second part, the Customer will be sent an email, inviting them to confirm the Export Win.
-
-The service can be accessed by copying and pasting the address below into your internet browser, or by clicking on this link: https://www.exportwins.service.trade.gov.uk/
-
-You should login using these credentials:
-
-Email: {}
-Password: {}
-
-If you experience a problem accessing or completing the form using the link above, please contact us by using the feedback button in the service or by email at:
-
-  Email: exportwins@trade.gsi.gov.uk
-  Subject: Export Wins Feedback
-
-To access top tips for lead officers, a webinar recording, screenshots, guidance and FAQs please click on this link: https://ukticonnect.sharepoint.com/trade/performance/Pages/Business-Wins.aspx
-
-Best Regards,
-
-The DIT Digital Team
-            """.format(email, password)
-        body = textwrap.dedent(body)
+        body = render_to_string(
+            "users/email/password-issued.email",
+            {
+                "email": email,
+                "password": password,
+                "feedback_address": settings.FEEDBACK_ADDRESS,
+            },
+        )
 
         send_mail(
             subject,
