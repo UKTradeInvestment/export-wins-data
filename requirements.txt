@@ -8,7 +8,7 @@ django-extensions==2.1.0
 django-filter==1.1.0
 djangorestframework==3.7.7
 factory-boy==2.10.0
-gunicorn==19.8.1
+gunicorn==19.9.0
 mohawk==0.3.4
 psycopg2-binary==2.7.5
 python-dateutil==2.7.3
