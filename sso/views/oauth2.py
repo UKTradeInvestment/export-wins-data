@@ -54,11 +54,14 @@ def callback(request):
 
         user_model = get_user_model()
         name = ' '.join(filter(bool, [abc_data.get('first_name'), abc_data.get('last_name')]))[:128].strip()
+        sso_user_id = abc_data.get('user_id')
         # 1. log them in if they already exist
         try:
             user = user_model.objects.get(email=abc_data['email'])
             if user.name != name:
                 user.name = name
+            if user.sso_user_id != sso_user_id:
+                user.sso_user_id = sso_user_id
             user.save()
             login(request, user, backend=settings.AUTHENTICATION_BACKENDS[0])
         # or
@@ -66,7 +69,8 @@ def callback(request):
             # 2. create new User object for them and log them in
             new_user = user_model.objects.create(
                 email=abc_data['email'],
-                name=name
+                name=name,
+                sso_user_id=sso_user_id,
             )
             # they won't ever need to login using user/pass
             new_user.set_unusable_password()

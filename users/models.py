@@ -11,6 +11,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     name = models.CharField(max_length=128)
     email = models.EmailField(unique=True)
+    sso_user_id = models.UUIDField(unique=True, null=True)
 
     is_staff = models.BooleanField(
         "Staff status",

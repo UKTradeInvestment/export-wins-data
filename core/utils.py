@@ -1,6 +1,6 @@
-from operator import itemgetter
 import itertools
 from collections import defaultdict
+from operator import itemgetter
 from typing import List, MutableMapping
 
 from extended_choices import Choices

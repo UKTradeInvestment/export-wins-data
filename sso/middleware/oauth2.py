@@ -5,7 +5,6 @@ from django.contrib.auth import logout
 from django.core.exceptions import PermissionDenied
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.timezone import now, make_aware
-
 from requests_oauthlib import OAuth2Session
 
 has_MI_permission = False
@@ -43,7 +42,18 @@ class OAuth2IntrospectToken(MiddlewareMixin):
                 if not response_json['active']:
                     logout(request)
                     raise PermissionDenied()
+
+                self._update_current_user_with_sso_user_id(request, response_json.get('user_id'))
                 request.session['_token_introspected_at'] = now().timestamp()
                 request.session.save()
                 request.mi_permission = True
         return None
+
+    def _update_current_user_with_sso_user_id(self, request, sso_user_id):
+        """Check if sso_user_id needs to be updated and update."""
+        if not request.user.is_authenticated:
+            return
+
+        if sso_user_id is not None and request.user.sso_user_id != sso_user_id:
+            request.user.sso_user_id = sso_user_id
+            request.user.save()
