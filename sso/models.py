@@ -14,7 +14,6 @@ class ADFSUser(AbstractBaseUser):
 
     email = models.EmailField(unique=True)
 
-
 class AuthorizationStateManager(models.Manager):
 
     def _delete_expired(self):

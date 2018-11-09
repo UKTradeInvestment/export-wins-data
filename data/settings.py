@@ -1,8 +1,8 @@
 import json
 import logging
 import os
-import sys
 import shutil
+import sys
 
 import dj_database_url
 import rediscluster
@@ -63,7 +63,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'data.middleware.HttpsSecurityMiddleware',
+    'core.middleware.HttpsSecurityMiddleware',
     'alice.middleware.SignatureRejectionMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -74,6 +74,7 @@ MIDDLEWARE = [
     'sso.middleware.oauth2.OAuth2IntrospectToken',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.RequestLoggerMiddleware',
 ]
 
 ROOT_URLCONF = 'data.urls'
@@ -256,28 +257,48 @@ if DEBUG:
     logger_level = 'DEBUG'
     handler_level = 'DEBUG'
     handler_options = {}
+    django_request_logger_level = 'WARNING'
 else:
-    logger_level = 'ERROR'
+    logger_level = 'INFO'
     handler_level = 'INFO'
     handler_options = {'stream': sys.stdout}
+    django_request_logger_level = 'DEBUG'
 
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'json': {
+            'format': '%(message)s',
+            'class': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+        }
+    },
     'filters': {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse'
         }
     },
     'handlers': {
-        'console': {**{
-            'level': handler_level,
+        'console': {
+            **{
+                'level': handler_level,
+                'class': 'logging.StreamHandler',
+            },
+            **handler_options
+        },
+        'json': {
             'class': 'logging.StreamHandler',
-        }, **handler_options},
+            'formatter': 'json'
+        }
     },
     'loggers': {
         'django.request': {
             'handlers': ['console'],
+            'level': django_request_logger_level,
+            'propagate': True,
+        },
+        'core.middleware': {
+            'handlers': ['json'],
             'level': logger_level,
             'propagate': True,
         },

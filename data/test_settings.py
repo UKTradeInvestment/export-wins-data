@@ -13,6 +13,7 @@ MIDDLEWARE = [
     'sso.middleware.permission_denied.Metadata403',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.RequestLoggerMiddleware',
 ]
 
 PASSWORD_HASHERS = [
