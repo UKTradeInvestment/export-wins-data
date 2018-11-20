@@ -15,6 +15,7 @@ COPY sso /app/sso
 COPY core /app/core
 COPY fdi /app/fdi
 COPY csvfiles /app/csvfiles
+COPY activity_stream /app/activity_stream
 
 COPY requirements.txt /app/requirements.txt
 COPY manage.py /app/manage.py
