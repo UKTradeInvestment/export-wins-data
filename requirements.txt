@@ -30,7 +30,7 @@ django-redis==4.9.0
 python-json-logger==0.1.5
 
 # Development utilities
-ipython==6.5.0
+ipython==7.2.0
 
 # Tests
 Faker==0.8.17
