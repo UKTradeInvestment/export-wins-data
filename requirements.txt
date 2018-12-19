@@ -35,7 +35,7 @@ ipython==7.2.0
 # Tests
 Faker==1.0.0
 factory-boy==2.10.0
-raven==6.9.0
+raven==6.10.0
 freezegun==0.3.11
 jmespath==0.9.3
 pytest-cov==2.5.1
