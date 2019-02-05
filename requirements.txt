@@ -11,7 +11,7 @@ factory-boy==2.10.0
 gunicorn==19.8.1
 mohawk==0.3.4
 psycopg2-binary==2.7.6.1
-python-dateutil==2.7.3
+python-dateutil==2.8.0
 whitenoise==3.3.1
 requests==2.20.1
 six==1.11.0
