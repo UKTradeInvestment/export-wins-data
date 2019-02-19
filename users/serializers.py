@@ -40,13 +40,18 @@ class LoggingAuthTokenSerializer(AuthTokenSerializer):
             raise e
 
 
-class UserSerializer(serializers.ModelSerializer):
+class LoggedInUserSerializer(serializers.ModelSerializer):
 
     name = SerializerMethodField()
+    permitted_applications = SerializerMethodField()
 
     def get_name(self, obj):
         return getattr(obj, 'name', obj.email)
 
+    def get_permitted_applications(self, obj):
+        request = self.context['request']
+        return request.session.get('_abc_permitted_applications', {})
+
     class Meta:
         model = User
-        fields = ('email', 'last_login', 'name')
+        fields = ('email', 'last_login', 'name', 'permitted_applications')
