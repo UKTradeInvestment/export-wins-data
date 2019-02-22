@@ -38,6 +38,14 @@ class LoginView(APIView):
         # create session for the user
         login(request, user)
 
+        print('2'*60)
+        print(Response({
+            'id': user.pk,
+            'email': user.email,
+            'is_staff': user.is_staff,
+        }))
+        print('2'*60)
+
         return Response({
             'id': user.pk,
             'email': user.email,

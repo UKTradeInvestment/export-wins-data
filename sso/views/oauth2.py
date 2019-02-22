@@ -88,6 +88,10 @@ def callback(request):
         request.session['_token_introspected_at'] = now().timestamp()
         request.session.save()
 
+        print('*' * 60)
+        print(request.session)
+        print('*' * 60)
+
         return JsonResponse({'next': AuthorizationState.objects.get_next_url(state)})
     else:
         return HttpResponseForbidden()
