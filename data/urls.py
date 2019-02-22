@@ -10,7 +10,7 @@ import mi.urls
 import sso.oauth2_urls
 
 from activity_stream.views import ActivityStreamViewSet
-from users.views import IsLoggedIn, LoginView, UserRetrieveViewSet, LogoutView
+from users.views import IsLoggedIn, LoginView, LoggedInUserRetrieveViewSet, LogoutView
 from wins.views import (
     WinViewSet, BreakdownViewSet, AdvisorViewSet, ConfirmationViewSet,
     LimitedWinViewSet, CSVView, DetailsWinViewSet, AddUserView,
@@ -73,7 +73,7 @@ urlpatterns = [
 
     url(r"^auth/is-logged-in/$", IsLoggedIn.as_view(), name="is-logged-in"),
     url(r"^user/me/$",
-        UserRetrieveViewSet.as_view({'get': 'retrieve'}), name="user_profile"),
+        LoggedInUserRetrieveViewSet.as_view({'get': 'retrieve'}), name="user_profile"),
 
     url(r"^auth/logout/", LogoutView.as_view(), name="logout"),
 

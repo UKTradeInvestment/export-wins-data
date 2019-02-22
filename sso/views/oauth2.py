@@ -5,6 +5,7 @@ This is not a typical oauth2 implementation, in order to keep saml2 as backup au
 for web-application-flow
 see http://requests-oauthlib.readthedocs.io/en/latest/oauth2_workflow.html
 """
+
 from django.conf import settings
 from django.contrib.auth import get_user_model, login
 from django.http import HttpResponseForbidden, HttpResponse, JsonResponse, HttpResponseBadRequest
@@ -55,6 +56,7 @@ def callback(request):
         user_model = get_user_model()
         name = ' '.join(filter(bool, [abc_data.get('first_name'), abc_data.get('last_name')]))[:128].strip()
         sso_user_id = abc_data.get('user_id')
+        permitted_applications = abc_data.get('permitted_applications', {})
         # 1. log them in if they already exist
         try:
             user = user_model.objects.get(email=abc_data['email'])
@@ -72,6 +74,7 @@ def callback(request):
                 name=name,
                 sso_user_id=sso_user_id,
             )
+
             # they won't ever need to login using user/pass
             new_user.set_unusable_password()
             new_user.save()
@@ -81,6 +84,7 @@ def callback(request):
 
         request.session['_source'] = 'oauth2'
         request.session['_abc_token'] = token
+        request.session['_abc_permitted_applications'] = permitted_applications
         request.session['_token_introspected_at'] = now().timestamp()
         request.session.save()
 

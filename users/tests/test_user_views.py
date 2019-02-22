@@ -6,7 +6,7 @@ from rest_framework import status
 
 from sso.models import ADFSUser
 from test_helpers.base import AliceAPIRequestFactory
-from users.views import UserRetrieveViewSet
+from users.views import LoggedInUserRetrieveViewSet
 
 
 class UserViewsTestCase(TestCase):
@@ -20,19 +20,30 @@ class UserViewsTestCase(TestCase):
         cls.user_login_time = now()
         cls.user = ADFSUser.objects.create(
             email='test@exmaple.com',
-            last_login=cls.user_login_time
+            last_login=cls.user_login_time,
         )
         cls.factory = AliceAPIRequestFactory(user=cls.user)
 
     @property
     def view(self):
-        return UserRetrieveViewSet.as_view({'get': 'retrieve'})
+        return LoggedInUserRetrieveViewSet.as_view({'get': 'retrieve'})
 
     def test_adfs_user_returns_valid_result(self):
         req = self.factory.get(self.url)
         resp = self.view(req)
         self.assertEqual(resp.data['email'], self.user.get_username())
         self.assertEqual(parse_datetime(resp.data['last_login']), self.user_login_time)
+        self.assertEqual(resp.data['permitted_applications'], {})
+
+    def test_return_permitted_applications_from_session(self):
+        req = self.factory.get(self.url)
+        session = req.session
+        session['_abc_permitted_applications'] = {'key': 'athena'}
+        session.save()
+
+        resp = self.view(req)
+
+        self.assertEqual(resp.data['permitted_applications'], {'key': 'athena'})
 
     def test_response_has_max_age(self):
         req = self.factory.get(self.url)

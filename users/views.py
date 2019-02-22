@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from alice.authenticators import IsMIServer, IsMIUser
-from .serializers import LoggingAuthTokenSerializer, UserSerializer
+from .serializers import LoggingAuthTokenSerializer, LoggedInUserSerializer
 
 
 class LoginView(APIView):
@@ -70,9 +70,9 @@ class IsLoggedIn(APIView):
         return HttpResponse(json.dumps(bool(request.user.is_authenticated)))
 
 
-class UserRetrieveViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class LoggedInUserRetrieveViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     permission_classes = (IsMIServer, IsMIUser)
-    serializer_class = UserSerializer
+    serializer_class = LoggedInUserSerializer
     http_method_names = ('get')
 
     def get_object(self):
