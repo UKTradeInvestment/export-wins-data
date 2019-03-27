@@ -427,8 +427,8 @@ class Win(SoftDeleteModel):
             constants.EXPERIENCE_CATEGORIES.GROWTH:
                 'You wanted to maintain and grow your exports',
             constants.EXPERIENCE_CATEGORIES.NEW_MARKET:
-                'Have not won or fulfilled any export orders to this country between 1 April 2015 '
-                'and 31 March 2018',
+                'Did not win or fulfil any export orders to this country in the three UK '
+                'financial years (1 April to 31 March) before this win',
         }
         return customer_map[self.export_experience]
 

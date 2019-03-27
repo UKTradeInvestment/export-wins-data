@@ -1325,7 +1325,7 @@ EXPERIENCE_CATEGORIES = Choices(
     ('NOPLAN', 3, "Has exported in the past twelve months but has not "
                   "won an export order proactively as a result of having an export plan"),
     ('NEW_MARKET', 7, "Is an exporter which did not receive or fulfil any export orders to this "
-                      "market between 1 April 2015 and 31 March 2018"),
+                      "market in the three financial years before this win"),
     ('GROWTH', 6, "Is an exporter that we are helping to maintain and grow its exports"),
     # Inactive
     ('SMALL', 4,
