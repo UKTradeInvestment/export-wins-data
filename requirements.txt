@@ -39,7 +39,7 @@ raven==6.9.0
 freezegun==0.3.11
 jmespath==0.9.3
 pytest-cov==2.5.1
-pytest-xdist==1.22.5
+pytest-xdist==1.28.0
 pytest==3.8.1
 pytest-django==3.4.4
 coverage-pth==0.0.2
