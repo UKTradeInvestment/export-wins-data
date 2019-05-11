@@ -7,7 +7,7 @@ django-countries==5.2
 django-extensions==2.1.4
 django-filter==1.1.0
 djangorestframework==3.7.7
-factory-boy==2.10.0
+factory-boy==2.12.0
 gunicorn==19.8.1
 mohawk==0.3.4
 psycopg2-binary==2.7.6.1
@@ -34,7 +34,7 @@ ipython==7.2.0
 
 # Tests
 Faker==1.0.0
-factory-boy==2.10.0
+factory-boy==2.12.0
 raven==6.9.0
 freezegun==0.3.11
 jmespath==0.9.3
