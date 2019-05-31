@@ -212,6 +212,7 @@ PROGRAMMES = TrackedSupersetChoices(
     ('EMCLA', 22, "Emerging Markets Contract (LA)"),
     ('EMCR', 23, "Emerging Markets Contract (Russia)"),
     ('EA', 24, "Events Alliance"),
+    ('EXBEI', 88, "Expo 2019 Beijing"),
     ('ECR', 25, "Export Communication Review Scheme (ECR)"),
     ('EGS', 26, "Export Growth Service"),
     ('EO', 72, "Export Opportunities"),
@@ -237,6 +238,7 @@ PROGRAMMES = TrackedSupersetChoices(
     ('GFA', 44, "GREAT Funded Activity"),
     ('GW', 45, "GREAT Weeks"),
     ('GIBGBP', 46, "Grown in Britain Global Business Programme"),
+    ('HAIC', 89, "HAIC - Healthcare Artificial Intelligence Catalyst"),
     ('HVOSI', 47, "HVO Specialist [involvement]"),
     ('IIIDTS', 48, "III - Deal Ticket Size"),
     ('IP', 49, "Innovation Programme"),
@@ -275,6 +277,7 @@ PROGRAMMES = TrackedSupersetChoices(
     ('TE', 82, "PM Trade Envoy")
 )
 
+# Note: The programmes appear in the front end in the order they are listed here
 PROGRAMMES.add_subset('ACTIVE', [
     'NA',
     'AFTERBURNER',
@@ -297,6 +300,7 @@ PROGRAMMES.add_subset('ACTIVE', [
     'EMCG',
     'EMCLA',
     'EA',
+    'EXBEI',
     'ECR',
     'EGS',
     'EO',
@@ -314,6 +318,7 @@ PROGRAMMES.add_subset('ACTIVE', [
     'GIBGBP',
     'GFEST',
     'GITC',
+    'HAIC',
     'IP',
     'IFB',
     'JETCO',
