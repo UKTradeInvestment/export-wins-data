@@ -1,25 +1,20 @@
 from unittest.mock import patch, Mock, MagicMock
 
 from rest_framework import status
-from datetime import timedelta, datetime
-from django.conf import settings
-from django.utils.timezone import now
-from freezegun import freeze_time
 
-from django.urls import reverse
-from django.test import TestCase, override_settings, tag
+from django.test import TestCase
 
-from alice.tests.client import AliceClient
-from sso.models import AuthorizationState
 from users.models import User
 from sso.views.oauth2 import callback
 from uuid import uuid4
 
-def _mock_check_state(state):
+
+def _mock_check_state(_):
     """Mocked check_state method."""
     return True
 
-def _mock_get_next_url(state):
+
+def _mock_get_next_url(_):
     """Mocked get_next_url method."""
     return 'https://next'
 
@@ -144,7 +139,6 @@ class CallbackViewTestCase(TestCase):
         assert user.name == f'{user_info["first_name"]} {user_info["last_name"]}'
         assert str(user.sso_user_id) == new_sso_user_id
 
-
     @patch('sso.views.oauth2.AuthorizationState.objects.check_state', _mock_check_state)
     @patch('sso.views.oauth2.AuthorizationState.objects.get_next_url', _mock_get_next_url)
     @patch('sso.views.oauth2.login', _mock_login)
@@ -171,4 +165,3 @@ class CallbackViewTestCase(TestCase):
         user.refresh_from_db()
         assert user.name == f'{user_info["first_name"]} {user_info["last_name"]}'
         assert user.sso_user_id is None
-
