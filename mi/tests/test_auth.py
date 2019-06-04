@@ -3,7 +3,7 @@ from optparse import OptionParser
 from django.urls import reverse
 
 from mi.models import OverseasRegion, SectorTeam, HVCGroup
-from sso.tests import BaseSSOTestCase
+from sso.tests.test_oauth import BaseSSOTestCase
 from wins.factories import HVCFactory
 
 

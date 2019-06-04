@@ -5,7 +5,7 @@ from django.utils.timezone import get_current_timezone
 from factory.fuzzy import FuzzyChoice
 
 from fixturedb.factories.win import create_win_factory
-from sso.tests import BaseSSOTestCase
+from sso.tests.test_oauth import BaseSSOTestCase
 from users.factories import UserFactory
 from wins.factories import HVCFactory
 from wins.models import Win
