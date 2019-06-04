@@ -8,7 +8,8 @@ see http://requests-oauthlib.readthedocs.io/en/latest/oauth2_workflow.html
 
 from django.conf import settings
 from django.contrib.auth import get_user_model, login
-from django.http import HttpResponseForbidden, HttpResponse, JsonResponse, HttpResponseBadRequest
+from django.db import transaction
+from django.http import HttpResponseForbidden, JsonResponse, HttpResponseBadRequest
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.timezone import now
@@ -53,34 +54,13 @@ def callback(request):
         # figure out who user is and
         abc_data = resp.json()
 
-        user_model = get_user_model()
-        name = ' '.join(filter(bool, [abc_data.get('first_name'), abc_data.get('last_name')]))[:128].strip()
-        sso_user_id = abc_data.get('user_id')
         permitted_applications = abc_data.get('permitted_applications', {})
-        # 1. log them in if they already exist
-        try:
-            user = user_model.objects.get(email=abc_data['email'])
-            if user.name != name:
-                user.name = name
-            if user.sso_user_id != sso_user_id:
-                user.sso_user_id = sso_user_id
-            user.save()
-            login(request, user, backend=settings.AUTHENTICATION_BACKENDS[0])
-        # or
-        except user_model.DoesNotExist:
-            # 2. create new User object for them and log them in
-            new_user = user_model.objects.create(
-                email=abc_data['email'],
-                name=name,
-                sso_user_id=sso_user_id,
-            )
 
-            # they won't ever need to login using user/pass
-            new_user.set_unusable_password()
-            new_user.save()
-            login(request, new_user,
-                  backend=settings.AUTHENTICATION_BACKENDS[0])
-            login(request, new_user)
+        # 1. log them in if they already exist
+
+        user = _get_or_create_user(abc_data)
+
+        login(request, user, backend=settings.AUTHENTICATION_BACKENDS[0])
 
         request.session['_source'] = 'oauth2'
         request.session['_abc_token'] = token
@@ -104,3 +84,84 @@ def auth_url(request):
     next_url = request.GET.get('next', None)
     AuthorizationState.objects.create(state=state, next_url=next_url)
     return JsonResponse({'target_url': url})
+
+
+@transaction.atomic
+def _get_or_create_user(abc_data):
+    """
+    This logic is necessarily complex as there is a shared user list for MI (which uses SSO for
+    authentication) and Export Wins (which does not use SSO for authentication).
+
+    The following scenarios need to be handled:
+
+    1. New user (not previously seen by either email or SSO user ID)
+    2. Existing Export Wins-only user (match of existing user by email only)
+    3a. Existing MI user but not Export Wins (match of existing user by SSO user ID only,
+    has unusable password)
+    3b. Existing MI and Export Wins user (match of existing user by SSO user ID only, has usable
+    password)
+    4. Two different existing Export Wins and MI users (two different matches by email and by SSO
+    user ID)
+
+    In the fourth case, the SSO user ID is transferred to the user with the matching email
+    address to avoid altering their Export Wins data.
+    """
+    user_model = get_user_model()
+
+    user_for_email = user_model.objects.filter(
+        email__iexact=abc_data['email'],
+    ).first()
+
+    user_for_sso_user_id = user_model.objects.filter(
+        sso_user_id=abc_data['user_id'],
+    ).first()
+
+    # Scenarios 2 and 4
+    if user_for_email and user_for_sso_user_id != user_for_email:
+        if user_for_sso_user_id:
+            user_for_sso_user_id.sso_user_id = None
+            user_for_sso_user_id.save()
+
+        _update_user(user_for_email, abc_data)
+        return user_for_email
+
+    # Scenarios 3a and 3b
+    if user_for_sso_user_id:
+        _update_user(user_for_sso_user_id, abc_data)
+        return user_for_sso_user_id
+
+    # Scenario 1
+    return _create_user(abc_data)
+
+
+def _update_user(user, abc_data):
+    # For scenario 3b
+    # Don't update the email address if the user has a valid Export Wins login (partly as there
+    # is no guarantee that the new email address is the one they use for receiving email)
+    if not user.has_usable_password():
+        user.email = abc_data['email']
+
+    user.name = _format_name(abc_data)
+    user.sso_user_id = abc_data['user_id']
+    user.save()
+
+
+def _create_user(abc_data):
+    user_model = get_user_model()
+
+    new_user = user_model.objects.create(
+        email=abc_data['email'],
+        name=_format_name(abc_data),
+        sso_user_id=abc_data['user_id'],
+    )
+
+    # As this is an MI-only user, they won't need to login using a password
+    new_user.set_unusable_password()
+    new_user.save()
+    return new_user
+
+
+def _format_name(abc_data):
+    name_parts = (abc_data['first_name'], abc_data['last_name'])
+    name = ' '.join(filter(None, name_parts))
+    return name.strip()[:128]
