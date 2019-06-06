@@ -4,7 +4,7 @@ from uuid import UUID
 from django.utils.datetime_safe import datetime
 from django.utils.timezone import get_current_timezone
 
-from sso.tests import BaseSSOTestCase
+from sso.tests.test_oauth import BaseSSOTestCase
 
 FDIValueMapping = {
     UUID('38e36c77-61ad-4186-a7a8-ac6a1a1104c6'): 'high',
