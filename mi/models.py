@@ -385,6 +385,7 @@ class UKRegionTarget(models.Model):
     new_exporters = ArrayField(models.BigIntegerField(), size=12)
     sustainable = ArrayField(models.BigIntegerField(), size=12)
     growth = ArrayField(models.BigIntegerField(default=0), size=12)
+    unknown = ArrayField(models.BigIntegerField(), size=12)
 
     region = models.PositiveSmallIntegerField(choices=UK_REGIONS.choices)
 
@@ -404,9 +405,21 @@ class UKRegionTarget(models.Model):
         ('MARCH', 11, 'March', {'month': 3})
     )
 
+    def get_total_target_for_month(self, month):
+        targets = (
+            self.new_exporters[month],
+            self.sustainable[month],
+            self.growth[month],
+            self.unknown[month],
+        )
+        return sum(targets)
+
     @property
     def all_categories(self):
-        return [sum([self.new_exporters[x], self.sustainable[x], self.growth[x]]) for x in range(12)]
+        return [
+            self.get_total_target_for_month(month)
+            for month in range(12)
+        ]
 
     def __str__(self):
         return f'{UK_REGIONS.for_value(self.region)[-1]} - {self.financial_year_id}'
@@ -417,6 +430,7 @@ class UKRegionTarget(models.Model):
                 'new_exporters': sum(self.new_exporters),
                 'sustainable': sum(self.sustainable),
                 'growth': sum(self.growth),
+                'unknown': sum(self.unknown),
                 'total': sum(self.all_categories),
                 'type': 'volume'
             },
