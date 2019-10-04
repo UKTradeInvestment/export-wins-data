@@ -323,6 +323,11 @@ class Win(SoftDeleteModel):
 
     objects = WinManager()
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['created', 'id']),
+        ]
+
     def add_audit(self, text):
         """ Add text to audit field with timestamp """
 

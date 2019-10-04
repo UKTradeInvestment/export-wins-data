@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "fixturedb.apps.FixtureDBConfig",
     "fdi.apps.InvestmentConfig",
     "activity_stream.apps.ActivityStreamConfig",
+    "datasets.apps.DatasetConfig",
     "csvfiles",
 
     # drf
@@ -329,13 +330,13 @@ COUNTRIES_OVERRIDE = {
     'CZ': 'Czech Republic',
 }
 
-# Activity Stream
-ACTIVITY_STREAM_IP_WHITELIST = os.getenv('ACTIVITY_STREAM_IP_WHITELIST', default='')
+# Hawk Authentication
+HAWK_IP_WHITELIST = os.getenv('HAWK_IP_WHITELIST', default='')
 # Defaults are not used so we don't accidentally expose the endpoint
 # with default credentials
-ACTIVITY_STREAM_ACCESS_KEY_ID = os.environ['ACTIVITY_STREAM_ACCESS_KEY_ID']
-ACTIVITY_STREAM_SECRET_ACCESS_KEY = os.environ['ACTIVITY_STREAM_SECRET_ACCESS_KEY']
-ACTIVITY_STREAM_NONCE_EXPIRY_SECONDS = 60
+HAWK_ACCESS_KEY_ID = os.environ['HAWK_ACCESS_KEY_ID']
+HAWK_SECRET_ACCESS_KEY = os.environ['HAWK_SECRET_ACCESS_KEY']
+HAWK_NONCE_EXPIRY_SECONDS = 60
 
 vcap_services = json.loads(os.environ['VCAP_SERVICES'])
 redis_credentials = vcap_services['redis'][0]['credentials']
