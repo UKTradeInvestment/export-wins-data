@@ -108,11 +108,11 @@ Some creative coding went into making this work.  Specifically:
 
 ## Activity Stream
 
-The `/activity-stream/` endpoint is protected differently, by two mechanisms:
+The `/activity-stream/` and `/dataset/` endpoints are protected differently, by two mechanisms:
 
-* IP address whitelisting via the `X-Forwarded-For` header, with a comma separated list of whitelisted IPs in the environment variable `ACTIVITY_STREAM_IP_WHITELIST`.
+* IP address whitelisting via the `X-Forwarded-For` header, with a comma separated list of whitelisted IPs in the environment variable `HAWK_IP_WHITELIST`.
 
-* Hawk authentication via the `Authorization` header, with the credentials in the environment variables `ACTIVITY_STREAM_ACCESS_KEY_ID` and `ACTIVITY_STREAM_SECRET_ACCESS_KEY`.
+* Hawk authentication via the `Authorization` header, with the credentials in the environment variables `HAWK_ACCESS_KEY_ID` and `HAWK_SECRET_ACCESS_KEY`.
 
 
 ### IP address whitelisting
