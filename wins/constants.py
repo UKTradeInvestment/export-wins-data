@@ -280,7 +280,8 @@ PROGRAMMES = TrackedSupersetChoices(
     ('MIPIM', 80, "MIPIM 2018"),
     ('PROSP', 81, "Prosperity Fund"),
     ('TE', 82, "PM Trade Envoy"),
-    ('FINTECH', 95, "FinTech")
+    ('FINTECH', 95, "FinTech"),
+    ('GBFS', 96, "Great British Food Showcase 2019"),
 )
 
 # Note: The programmes appear in the front end in the order they are listed here
@@ -319,6 +320,7 @@ PROGRAMMES.add_subset('ACTIVE', [
     'FTAS',
     'GCPRBS',
     'GCPSANTANDER',
+    'GBFS',
     'GCF',
     'GEP',
     'GGP',
