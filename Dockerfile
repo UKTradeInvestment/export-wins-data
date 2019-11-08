@@ -16,6 +16,7 @@ COPY core /app/core
 COPY fdi /app/fdi
 COPY csvfiles /app/csvfiles
 COPY activity_stream /app/activity_stream
+COPY datasets /app/datasets
 
 COPY requirements.txt /app/requirements.txt
 COPY manage.py /app/manage.py
