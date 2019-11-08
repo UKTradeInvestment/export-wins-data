@@ -8,6 +8,7 @@ import csvfiles.urls
 import fdi.urls
 import mi.urls
 import sso.oauth2_urls
+import datasets.urls
 
 from activity_stream.views import ActivityStreamViewSet
 from users.views import IsLoggedIn, LoginView, LoggedInUserRetrieveViewSet, LogoutView
@@ -82,6 +83,9 @@ urlpatterns = [
         ActivityStreamViewSet.as_view({'get': 'list'}),
         name='activity-stream'),
 
+    url(
+        r'^datasets/',
+        include((datasets.urls, 'datasets'), namespace='datasets')),
 ]
 
 if settings.API_DEBUG or WINS_CSV_SECRET_PATH:
