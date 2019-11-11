@@ -122,7 +122,8 @@ class HawkAuthentication(BaseAuthentication):
             )
             raise AuthenticationFailed(
                 'Failed authentication: the X-Forwarded-For header was not '
-                'produced by a whitelisted IP'
+                'produced by a whitelisted IP\n\n'
+                f'REMOTE ADDRESS: {remote_address}\nWHITELIST: {settings.HAWK_IP_WHITELIST}'
             )
 
     def _check_hawk_header(self, request):
