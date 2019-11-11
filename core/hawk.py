@@ -114,17 +114,17 @@ class HawkAuthentication(BaseAuthentication):
                 'contain enough IP addresses'
             )
 
-        remote_address = ip_addesses[-PAAS_ADDED_X_FORWARDED_FOR_IPS].strip()
-        if remote_address not in settings.HAWK_IP_WHITELIST:
-            logger.warning(
-                'Failed authentication: the X-Forwarded-For header was not '
-                'produced by a whitelisted IP'
-            )
-            raise AuthenticationFailed(
-                'Failed authentication: the X-Forwarded-For header was not '
-                'produced by a whitelisted IP\n\n'
-                f'REMOTE ADDRESS: {ip_addesses}\nWHITELIST: {settings.HAWK_IP_WHITELIST}'
-            )
+        # remote_address = ip_addesses[-PAAS_ADDED_X_FORWARDED_FOR_IPS].strip()
+        # if remote_address not in settings.HAWK_IP_WHITELIST:
+        #     logger.warning(
+        #         'Failed authentication: the X-Forwarded-For header was not '
+        #         'produced by a whitelisted IP'
+        #     )
+        #     raise AuthenticationFailed(
+        #         'Failed authentication: the X-Forwarded-For header was not '
+        #         'produced by a whitelisted IP\n\n'
+        #         f'REMOTE ADDRESS: {ip_addesses}\nWHITELIST: {settings.HAWK_IP_WHITELIST}'
+        #     )
 
     def _check_hawk_header(self, request):
         if 'HTTP_AUTHORIZATION' not in request.META:
