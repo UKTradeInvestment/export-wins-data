@@ -99,7 +99,7 @@ class HawkAuthentication(BaseAuthentication):
             logger.warning(
                 'Failed authentication: no X-Forwarded-For header passed'
             )
-            raise AuthenticationFailed(INCORRECT_CREDENTIALS_MESSAGE)
+            raise AuthenticationFailed('Failed authentication: no X-Forwarded-For header passed')
 
         x_forwarded_for = request.META['HTTP_X_FORWARDED_FOR']
         ip_addesses = x_forwarded_for.split(',')
@@ -109,7 +109,10 @@ class HawkAuthentication(BaseAuthentication):
                 'Failed authentication: the X-Forwarded-For header does not '
                 'contain enough IP addresses'
             )
-            raise AuthenticationFailed(INCORRECT_CREDENTIALS_MESSAGE)
+            raise AuthenticationFailed(
+                'Failed authentication: the X-Forwarded-For header does not '
+                'contain enough IP addresses'
+            )
 
         remote_address = ip_addesses[-PAAS_ADDED_X_FORWARDED_FOR_IPS].strip()
         if remote_address not in settings.HAWK_IP_WHITELIST:
@@ -117,7 +120,10 @@ class HawkAuthentication(BaseAuthentication):
                 'Failed authentication: the X-Forwarded-For header was not '
                 'produced by a whitelisted IP'
             )
-            raise AuthenticationFailed(INCORRECT_CREDENTIALS_MESSAGE)
+            raise AuthenticationFailed(
+                'Failed authentication: the X-Forwarded-For header was not '
+                'produced by a whitelisted IP'
+            )
 
     def _check_hawk_header(self, request):
         if 'HTTP_AUTHORIZATION' not in request.META:
@@ -128,7 +134,7 @@ class HawkAuthentication(BaseAuthentication):
         except HawkFail as e:
             logger.warning('THEIR HASH: {}'.format(request.META['HTTP_AUTHORIZATION']))
             logger.warning(f'Failed authentication {e}')
-            raise AuthenticationFailed(INCORRECT_CREDENTIALS_MESSAGE)
+            raise AuthenticationFailed(f'Failed authentication {e}')
 
         return (None, hawk_receiver)
 
