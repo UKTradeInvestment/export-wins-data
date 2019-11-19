@@ -548,6 +548,10 @@ class TestWinsDatasetViewSet:
             ) if confirmation.id else None,
             'confirmation__developed_relationships': confirmation.developed_relationships,
             'confirmation__gained_confidence': confirmation.gained_confidence,
+            'confirmation__has_enabled_expansion_into_existing_market': get_confirmation_attr_or_none(
+                confirmation,
+                'has_enabled_expansion_into_existing_market'
+            ),
             'confirmation__has_enabled_expansion_into_new_market': get_confirmation_attr_or_none(
                 confirmation,
                 'has_enabled_expansion_into_new_market'
@@ -555,6 +559,10 @@ class TestWinsDatasetViewSet:
             'confirmation__has_explicit_export_plans': get_confirmation_attr_or_none(
                 confirmation,
                 'has_explicit_export_plans'
+            ),
+            'confirmation__has_increased_exports_as_percent_of_turnover': get_confirmation_attr_or_none(
+                confirmation,
+                'has_increased_exports_as_percent_of_turnover'
             ),
             'confirmation__improved_profile': confirmation.improved_profile,
             'confirmation__interventions_were_prerequisite': get_confirmation_attr_or_none(
