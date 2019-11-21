@@ -565,6 +565,7 @@ class TestWinsDatasetViewSet:
                 'expected_portion_without_help'
             ),
             'country': str(win.country),
+            'country_name': win.country.name,
             'created': DateTimeField().to_representation(win.created),
             'customer_email_address': win.customer_email_address,
             'customer_email_date': DateTimeField().to_representation(
