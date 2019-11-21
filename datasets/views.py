@@ -8,7 +8,7 @@ from core.hawk import HawkAuthentication, HawkResponseMiddleware
 from alice.middleware import alice_exempt
 from datasets.pagination import WinsDatasetViewCursorPagination, DatasetViewCursorPagination
 
-from wins.models import Win, Notification, CustomerResponse, Advisor, Breakdown
+from wins.models import Win, Notification, CustomerResponse, Advisor, Breakdown, HVC
 
 
 # Taken from data hubs query utils
@@ -81,6 +81,20 @@ class BreakdownsDatasetView(DatasetView):
             'breakdown_type',
             'year',
             'value',
+        )
+
+
+class HVCDatasetView(DatasetView):
+    """
+    API view providing 'GET' action returning HVC data for consumption
+    by data flow.
+    """
+    def get_dataset(self):
+        return HVC.objects.values(
+            'campaign_id',
+            'financial_year',
+            'id',
+            'name',
         )
 
 
