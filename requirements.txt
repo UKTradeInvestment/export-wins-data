@@ -6,7 +6,7 @@ Django==2.0.13
 django-countries==5.2
 django-extensions==2.1.4
 django-filter==1.1.0
-djangorestframework==3.7.7
+djangorestframework==3.10.3
 factory-boy==2.10.0
 gunicorn==19.8.1
 mohawk==0.3.4
