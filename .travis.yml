@@ -10,6 +10,6 @@ addons:
   postgresql: "9.6"
 before_script:
   - export DATABASE_URL=postgres://travis@localhost/travis
-install: pip install -r requirements.txt
+install: pip install -r requirements-test.txt
 script: pytest --cov=. --cov-report xml --cov-report term-missing:skip-covered -n 2
 after_success: codeclimate-test-reporter

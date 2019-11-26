@@ -1,7 +1,4 @@
-import rest_framework
-from rest_framework.decorators import list_route
-from rest_framework.metadata import SimpleMetadata
-from rest_framework.relations import RelatedField
+from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from .authenticators import AlicePermission
@@ -15,7 +12,7 @@ class AliceMixin(object):
 
     permission_classes = (AlicePermission,)
 
-    @list_route(methods=("get",))
+    @action(detail=False, methods=("get",))
     def schema(self, request):
         """ Return metadata about fields of View's serializer """
 
