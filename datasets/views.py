@@ -2,13 +2,14 @@ from django.db.models import (
     Case, CharField, Count, OuterRef, Subquery, Value, When
 )
 from django.utils.decorators import method_decorator, decorator_from_middleware
+from django_countries import countries
 from rest_framework.views import APIView
 
 from core.hawk import HawkAuthentication, HawkResponseMiddleware
 from alice.middleware import alice_exempt
 from datasets.pagination import WinsDatasetViewCursorPagination, DatasetViewCursorPagination
 
-from wins.models import Win, Notification, CustomerResponse, Advisor, Breakdown
+from wins.models import Win, Notification, CustomerResponse, Advisor, Breakdown, HVC
 
 
 # Taken from data hubs query utils
@@ -84,6 +85,20 @@ class BreakdownsDatasetView(DatasetView):
         )
 
 
+class HVCDatasetView(DatasetView):
+    """
+    API view providing 'GET' action returning HVC data for consumption
+    by data flow.
+    """
+    def get_dataset(self):
+        return HVC.objects.values(
+            'campaign_id',
+            'financial_year',
+            'id',
+            'name',
+        )
+
+
 class WinsDatasetView(DatasetView):
     """
     API view providing 'GET' action returning export wins for consumption
@@ -138,6 +153,11 @@ class WinsDatasetView(DatasetView):
                 'expected_portion_without_help',
                 lookup_field='confirmation__expected_portion_without_help'
             ),
+            country_name=Case(
+                *[When(country=k, then=Value(v)) for k, v in countries],
+                default=None,
+                output_field=CharField()
+            ),
             customer_email_date=Subquery(notifications_queryset.values('created')),
             customer_location_display=get_choices_as_case_expression(Win, 'customer_location'),
             export_experience_display=get_choices_as_case_expression(Win, 'export_experience'),
@@ -187,6 +207,7 @@ class WinsDatasetView(DatasetView):
             'confirmation_marketing_source',
             'confirmation_portion_without_help',
             'country',
+            'country_name',
             'created',
             'customer_email_address',
             'customer_email_date',

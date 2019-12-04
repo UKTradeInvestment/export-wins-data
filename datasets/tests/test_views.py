@@ -10,7 +10,7 @@ from rest_framework.test import APIClient
 from fixturedb.factories.win import create_win_factory
 from test_helpers.hawk_utils import hawk_auth_sender
 from users.factories import UserFactory
-from wins.factories import AdvisorFactory, BreakdownFactory
+from wins.factories import AdvisorFactory, BreakdownFactory, HVCFactory
 from wins.models import CustomerResponse
 
 
@@ -27,7 +27,40 @@ def get_confirmation_attr_or_none(confirmation, field):
     return getattr(confirmation, field)
 
 
-class TestAdvisorsDatasetViewSet:
+class BaseDatasetViewSetTest:
+    @pytest.mark.django_db
+    @pytest.mark.parametrize('method', ('delete', 'patch', 'post', 'put'))
+    def test_other_methods_not_allowed(self, api_client, method):
+        """
+        Test that only GET requests are allowed
+        """
+        response = getattr(api_client, method)(
+            self.url,
+            content_type='',
+            HTTP_AUTHORIZATION=hawk_auth_sender(
+                self.url,
+                method=method.upper(),
+            ).request_header,
+            HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
+        )
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+        assert response.json() == {'detail': 'Method "{}" not allowed.'.format(method.upper())}
+
+    @pytest.mark.django_db
+    def test_no_data(self, api_client):
+        """
+        Test request completes successfully when no data is present
+        """
+        response = api_client.get(
+            self.url,
+            content_type='',
+            HTTP_AUTHORIZATION=hawk_auth_sender(self.url).request_header,
+            HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
+        )
+        assert response.status_code == status.HTTP_200_OK
+
+
+class TestAdvisorsDatasetViewSet(BaseDatasetViewSetTest):
     """
     Tests for AdvisorsDatasetView
     """
@@ -47,24 +80,6 @@ class TestAdvisorsDatasetViewSet:
             'team_type_display': advisor.get_team_type_display(),
             'hq_team_display': advisor.get_hq_team_display(),
         }
-
-    @pytest.mark.django_db
-    @pytest.mark.parametrize('method', ('delete', 'patch', 'post', 'put'))
-    def test_other_methods_not_allowed(self, api_client, method):
-        """
-        Test that only GET requests are allowed
-        """
-        response = getattr(api_client, method)(
-            self.url,
-            content_type='',
-            HTTP_AUTHORIZATION=hawk_auth_sender(
-                self.url,
-                method=method.upper(),
-            ).request_header,
-            HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
-        )
-        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
-        assert response.json() == {'detail': 'Method "{}" not allowed.'.format(method.upper())}
 
     @pytest.mark.django_db
     @pytest.mark.parametrize(
@@ -286,19 +301,6 @@ class TestAdvisorsDatasetViewSet:
         assert response.status_code == status.HTTP_200_OK
         assert response.json()['next'] is not None
 
-    @pytest.mark.django_db
-    def test_no_data(self, api_client):
-        """
-        Test request completes successfully when no data is present
-        """
-        response = api_client.get(
-            self.url,
-            content_type='',
-            HTTP_AUTHORIZATION=hawk_auth_sender(self.url).request_header,
-            HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
-        )
-        assert response.status_code == status.HTTP_200_OK
-
 
 class TestBreakdownsDatasetViewSet:
     """
@@ -317,24 +319,6 @@ class TestBreakdownsDatasetViewSet:
             'win__id': str(breakdown.win.id),
             'year': breakdown.year,
         }
-
-    @pytest.mark.django_db
-    @pytest.mark.parametrize('method', ('delete', 'patch', 'post', 'put'))
-    def test_other_methods_not_allowed(self, api_client, method):
-        """
-        Test that only GET requests are allowed
-        """
-        response = getattr(api_client, method)(
-            self.url,
-            content_type='',
-            HTTP_AUTHORIZATION=hawk_auth_sender(
-                self.url,
-                method=method.upper(),
-            ).request_header,
-            HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
-        )
-        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
-        assert response.json() == {'detail': 'Method "{}" not allowed.'.format(method.upper())}
 
     @pytest.mark.django_db
     @pytest.mark.parametrize(
@@ -489,19 +473,6 @@ class TestBreakdownsDatasetViewSet:
         assert response.status_code == status.HTTP_200_OK
         assert response.json()['next'] is not None
 
-    @pytest.mark.django_db
-    def test_no_data(self, api_client):
-        """
-        Test request completes successfully when no data is present
-        """
-        response = api_client.get(
-            self.url,
-            content_type='',
-            HTTP_AUTHORIZATION=hawk_auth_sender(self.url).request_header,
-            HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
-        )
-        assert response.status_code == status.HTTP_200_OK
-
 
 class TestWinsDatasetViewSet:
     """
@@ -594,6 +565,7 @@ class TestWinsDatasetViewSet:
                 'expected_portion_without_help'
             ),
             'country': str(win.country),
+            'country_name': win.country.name,
             'created': DateTimeField().to_representation(win.created),
             'customer_email_address': win.customer_email_address,
             'customer_email_date': DateTimeField().to_representation(
@@ -632,24 +604,6 @@ class TestWinsDatasetViewSet:
             'user__email': win.user.email,
             'user__name': win.user.name,
         }
-
-    @pytest.mark.django_db
-    @pytest.mark.parametrize('method', ('delete', 'patch', 'post', 'put'))
-    def test_other_methods_not_allowed(self, api_client, method):
-        """
-        Test that only GET requests are allowed
-        """
-        response = getattr(api_client, method)(
-            self.url,
-            content_type='',
-            HTTP_AUTHORIZATION=hawk_auth_sender(
-                self.url,
-                method=method.upper(),
-            ).request_header,
-            HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
-        )
-        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
-        assert response.json() == {'detail': 'Method "{}" not allowed.'.format(method.upper())}
 
     # Test no hawk auth
     @pytest.mark.django_db
@@ -861,11 +815,128 @@ class TestWinsDatasetViewSet:
         assert response.status_code == status.HTTP_200_OK
         assert response.json()['next'] is not None
 
+
+class TestHVCDatasetViewSet:
+    """
+    Tests for HVCDatasetView
+    """
+    url = 'http://testserver' + reverse('datasets:hvc-dataset')
+    url_incorrect_domain = 'http://incorrect' + reverse('datasets:hvc-dataset')
+    url_incorrect_path = url + 'incorrect/'
+
+    @staticmethod
+    def _build_hvc_data(hvc):
+        return {
+            'campaign_id': hvc.campaign_id,
+            'financial_year': hvc.financial_year,
+            'id': hvc.id,
+            'name': hvc.name,
+        }
+
     @pytest.mark.django_db
-    def test_no_data(self, api_client):
+    @pytest.mark.parametrize(
+        'get_params,expected_json',
+        (
+            (
+                # If no X-Forwarded-For header
+                {
+                    'HTTP_AUTHORIZATION': hawk_auth_sender(url).request_header,
+                }, {
+                    'detail': 'Incorrect authentication credentials.'
+                },
+            ), (
+                # If second-to-last X-Forwarded-For header isn't whitelisted
+                {
+                    'HTTP_AUTHORIZATION': hawk_auth_sender(url).request_header,
+                    'HTTP_X_FORWARDED_FOR': '9.9.9.9, 123.123.123.123',
+                },
+                {'detail': 'Incorrect authentication credentials.'},
+            ), (
+                # If the only IP address in X-Forwarded-For is whitelisted
+                {
+                    'HTTP_AUTHORIZATION': hawk_auth_sender(url).request_header,
+                    'HTTP_X_FORWARDED_FOR': '1.2.3.4',
+                },
+                {'detail': 'Incorrect authentication credentials.'},
+            ), (
+                # If the only IP address in X-Forwarded-For isn't whitelisted
+                {
+                    'HTTP_AUTHORIZATION': hawk_auth_sender(url).request_header,
+                    'HTTP_X_FORWARDED_FOR': '123.123.123.123',
+                },
+                {'detail': 'Incorrect authentication credentials.'},
+            ), (
+                # If third-to-last IP in X-Forwarded-For header is whitelisted
+                {
+                    'HTTP_AUTHORIZATION': hawk_auth_sender(url).request_header,
+                    'HTTP_X_FORWARDED_FOR': '1.2.3.4, 124.124.124, 123.123.123.123',
+                },
+                {'detail': 'Incorrect authentication credentials.'},
+            ), (
+                # If last of 3 IPs in X-Forwarded-For header is whitelisted
+                {
+                    'HTTP_AUTHORIZATION': hawk_auth_sender(url).request_header,
+                    'HTTP_X_FORWARDED_FOR': '124.124.124, 123.123.123.123, 1.2.3.4',
+                },
+                {'detail': 'Incorrect authentication credentials.'},
+            ), (
+                # If the Authorization header isn't passed
+                {
+                    'HTTP_X_FORWARDED_FOR': '1.2.3.4, 123.123.123.123',
+                },
+                {'detail': 'Authentication credentials were not provided.'},
+            ), (
+                # If the Authorization header generated from an incorrect ID
+                {
+                    'HTTP_AUTHORIZATION': hawk_auth_sender(url, key_id='incorrect').request_header,
+                    'HTTP_X_FORWARDED_FOR': '1.2.3.4, 123.123.123.123',
+                },
+                {'detail': 'Incorrect authentication credentials.'},
+            ), (
+                # If the Authorization header generated from an incorrect secret
+                {
+                    'HTTP_AUTHORIZATION': hawk_auth_sender(
+                        url,
+                        secret_key='incorrect'
+                    ).request_header,
+                    'HTTP_X_FORWARDED_FOR': '1.2.3.4, 123.123.123.123',
+                },
+                {'detail': 'Incorrect authentication credentials.'},
+            ), (
+                # If the Authorization header generated from an incorrect domain
+                {
+                    'HTTP_AUTHORIZATION': hawk_auth_sender(url_incorrect_domain).request_header,
+                    'HTTP_X_FORWARDED_FOR': '1.2.3.4, 123.123.123.123',
+                },
+                {'detail': 'Incorrect authentication credentials.'},
+            ), (
+                # If the Authorization header generated from an incorrect path
+                {
+                    'HTTP_AUTHORIZATION': hawk_auth_sender(url_incorrect_path).request_header,
+                    'HTTP_X_FORWARDED_FOR': '1.2.3.4, 123.123.123.123',
+                },
+                {'detail': 'Incorrect authentication credentials.'},
+            ), (
+                # If the Authorization header generated from incorrect content
+                {
+                    'HTTP_AUTHORIZATION': hawk_auth_sender(url, content='incorrect').request_header,
+                    'HTTP_X_FORWARDED_FOR': '1.2.3.4, 123.123.123.123',
+                },
+                {'detail': 'Incorrect authentication credentials.'},
+            ),
+        ),
+    )
+    def test_authentication(self, api_client, get_params, expected_json):
+        response = api_client.get(self.url, content_type='', **get_params)
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.json() == expected_json
+
+    @pytest.mark.django_db
+    def test_success(self, api_client):
         """
-        Test request completes successfully when no data is present
+        Test that a single breakdown is returned successfully
         """
+        hvc = HVCFactory.create()
         response = api_client.get(
             self.url,
             content_type='',
@@ -873,3 +944,21 @@ class TestWinsDatasetViewSet:
             HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
         )
         assert response.status_code == status.HTTP_200_OK
+        results = response.json()['results']
+        assert len(results) == 1
+        assert self._build_hvc_data(hvc) == results[0]
+
+    @pytest.mark.django_db
+    def test_pagination(self, api_client):
+        """
+        Test that next property is set when number of objects is greater than threshold
+        """
+        HVCFactory.create_batch(101)
+        response = api_client.get(
+            self.url,
+            content_type='',
+            HTTP_AUTHORIZATION=hawk_auth_sender(self.url).request_header,
+            HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
+        )
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()['next'] is not None
