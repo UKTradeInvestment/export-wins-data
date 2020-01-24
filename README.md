@@ -4,6 +4,21 @@ See the corresponding projects export-wins-ui and export-wins-ui-mi and PROJECT_
 
 Note, UI project will need to be rebooted after making changes to models of this project since it gets info on startup from this project
 
+# Running tests in Docker
+
+It's possible to run the tests with no native installs. You do not need to perform any of the
+other setup in this file to achieve this (i.e. no env vars etc).
+
+Ensure you have the the most recent version of Docker installed for your particular host and then:
+
+```
+$ docker-compose --file docker-compose.test.yml build
+$ docker-compose --file docker-compose.test.yml run --rm sut
+```
+
+You only need to perform the `build` step the first time you run this (or if you materially alter the
+`requirements.txt` file)
+
 Environment Variables you probably want to set
 -----------------------------------------------
 
