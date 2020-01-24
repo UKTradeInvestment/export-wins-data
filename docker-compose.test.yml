@@ -1,0 +1,37 @@
+version: "3"
+services:
+  sut:
+    build:
+      context: .
+    command: ["/app/manage.py", "test"]
+    environment:
+      SECRET_KEY: 'data-secret-1'
+      ADMIN_SECRET: 'data-secret-2'
+      UI_SECRET: 'data-secret-3'
+      MI_SECRET: 'data-secret-4'
+      DATA_SECRET: 'data-secret-5'
+      EMAIL_HOST: '127.0.0.1'
+      EMAIL_PORT: '1025'
+      DEBUG: "True"
+      API_DEBUG: "True"
+      DATABASE_URL: 'postgres://postgres@postgres:5432/export-wins-data'
+      VCAP_SERVICES: '{"redis": [{"credentials": {"uri": "redis://somehost:7000/"}}]}'
+
+      HAWK_IP_WHITELIST: '1.2.3.4'
+      HAWK_ACCESS_KEY_ID: 'some-id'
+      HAWK_SECRET_ACCESS_KEY: 'some-secret'
+
+      AWS_KEY_CSV_READ_ONLY_ACCESS: aws-read-key
+      AWS_SECRET_CSV_READ_ONLY_ACCESS: aws-read-secret
+      AWS_REGION_CSV: aws-region
+    volumes:
+      - ".:/app"
+    depends_on:
+      - postgres
+
+  # There appears to be Postgres-specific SQL in the migrations so we need a Postgres instance
+  # for testing rather than sqlite.
+  postgres:
+    image: postgres:10
+    environment:
+      POSTGRES_DB: export-wins-data
