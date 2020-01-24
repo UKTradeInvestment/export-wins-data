@@ -262,12 +262,12 @@ class CSVView(APIView):
                 user__email__in=settings.IGNORE_USERS
             )
 
-        wins_iter = wins.values().iterator()
-
-        win_datas = (self._get_win_data(win) for win in wins_iter)
         stringio = Echo()
         yield stringio.write(u'\ufeff').encode('utf-8')
-        if win_datas:
+
+        if wins.count():
+            wins_iter = wins.values().iterator()
+            win_datas = (self._get_win_data(win) for win in wins_iter)
             first = next(win_datas)
             csv_writer = csv.DictWriter(stringio, first.keys())
             header = dict(zip(csv_writer.fieldnames, csv_writer.fieldnames))
