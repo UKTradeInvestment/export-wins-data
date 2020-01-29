@@ -3,7 +3,6 @@ services:
   sut:
     build:
       context: .
-    command: ["/app/manage.py", "test"]
     env_file: .env
     volumes:
       - ".:/app"
