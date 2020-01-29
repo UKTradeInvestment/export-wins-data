@@ -6,11 +6,13 @@ import sys
 
 import dj_database_url
 import rediscluster
+from dotenv import find_dotenv, load_dotenv
+
+load_dotenv(find_dotenv(), verbose=True)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(PROJECT_ROOT)
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
@@ -30,7 +32,6 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # As app is running behind a host-based router supplied by Heroku or other
 # PaaS, we can open ALLOWED_HOSTS
 ALLOWED_HOSTS = ['*']
-
 
 INSTALLED_APPS = [
     # django
@@ -98,7 +99,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'data.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 # https://devcenter.heroku.com/articles/getting-started-with-python#provision-a-database
@@ -107,7 +107,6 @@ DATABASES = {
         default='sqlite:////{0}'.format(os.path.join(BASE_DIR, 'db.sqlite3'))
     )
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/1.9/ref/settings/#auth-password-validators
@@ -127,7 +126,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
 LANGUAGE_CODE = 'en-us'
@@ -137,18 +135,15 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 STATIC_ROOT = os.path.join(PROJECT_ROOT, 'staticfiles')
 STATIC_URL = '/static/'
 
-
 # User stuffs
 AUTH_USER_MODEL = "users.User"
 LOGIN_URL = "/users/login/"
 LOGIN_REDIRECT_URL = "/"
-
 
 # Application authorisation
 # used in signature middleware to determine if API request is signed by a
@@ -157,8 +152,7 @@ UI_SECRET = os.getenv("UI_SECRET")
 ADMIN_SECRET = os.getenv("ADMIN_SECRET")
 MI_SECRET = os.getenv("MI_SECRET")
 DATA_SECRET = os.getenv("DATA_SECRET")
-assert len(set([UI_SECRET, ADMIN_SECRET, MI_SECRET, DATA_SECRET])) == 4,\
-    "secrets must be different"
+assert len(set([UI_SECRET, ADMIN_SECRET, MI_SECRET, DATA_SECRET])) == 4, "secrets must be different"
 
 # DataHub API
 DH_TOKEN_URL = os.getenv("DH_TOKEN_URL")
@@ -173,7 +167,6 @@ REST_FRAMEWORK = {
         "alice.authentication.NoCSRFSessionAuthentication",
     )
 }
-
 
 # Mail stuffs
 FEEDBACK_ADDRESS = os.getenv("FEEDBACK_ADDRESS")
@@ -190,7 +183,6 @@ EMAIL_SSL_KEYFILE = os.getenv("EMAIL_SSL_KEYFILE")
 EMAIL_SSL_CERTFILE = os.getenv("EMAIL_SSL_CERTFILE")
 EMAIL_BACKEND = os.getenv(
     "EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
-
 
 # ABC OAuth2 settings
 
@@ -220,7 +212,6 @@ AWS_KEY_CSV_UPLOAD_ACCESS = os.getenv(
 AWS_SECRET_CSV_UPLOAD_ACCESS = os.getenv(
     'AWS_SECRET_CSV_UPLOAD_ACCESS')
 
-
 BASEDIR = os.path.dirname(os.path.abspath(__file__))
 
 SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", 'True') == 'True'
@@ -241,10 +232,8 @@ IGNORE_USERS = [
     'emma.jackson@digital.trade.gov.uk',
 ]
 
-
 # allow access to API in browser for dev
 API_DEBUG = bool(os.getenv("API_DEBUG", False))
-
 
 # Sentry
 RAVEN_CONFIG = {
@@ -316,7 +305,7 @@ if len(sys.argv) > 1 and sys.argv[1] == 'test':
     logging.disable(logging.CRITICAL)
 
 FIXTURE_DIRS = (
-   '/fdi/fixtures/',
+    '/fdi/fixtures/',
 )
 
 # django countries only uses ISO countries. Wikipedia says, "XK is a
@@ -363,7 +352,7 @@ CACHES = {
             'REDIS_CLIENT_KWARGS': {
                 'decode_responses': True,
             },
-            'CONNECTION_POOL_CLASS':  'rediscluster.connection.ClusterConnectionPool',
+            'CONNECTION_POOL_CLASS': 'rediscluster.connection.ClusterConnectionPool',
             'CONNECTION_POOL_KWARGS': {
                 # AWS ElasticCache disables CONFIG commands
                 'skip_full_coverage_check': True,
