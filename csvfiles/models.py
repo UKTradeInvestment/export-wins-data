@@ -17,7 +17,7 @@ class File(models.Model):
     report_end_date = models.DateTimeField(null=True)
     created = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
-    metadata = JSONField(encoder=DjangoJSONEncoder, default={})
+    metadata = JSONField(encoder=DjangoJSONEncoder, default=dict)
 
     def save(self, **kwargs):
         if not self.report_start_date:
