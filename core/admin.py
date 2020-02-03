@@ -1,3 +1,4 @@
 from django.contrib import admin
 
-# Register your models here.
+admin.site.site_header = 'Export Wins Admin'
+admin.site.site_title = 'Export Wins Admin'

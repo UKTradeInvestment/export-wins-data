@@ -39,8 +39,10 @@ class SoftDeleteModel(models.Model):
     takes all it's related models with it.
 
     """
+
     class Meta:
         abstract = True
+
     objects = SoftDeleteManager()
     is_active = models.BooleanField(default=True)
 
@@ -65,7 +67,6 @@ class SoftDeleteModel(models.Model):
 
 
 class HVC(models.Model):
-
     class Meta(object):
         ordering = ['name', 'financial_year']
         unique_together = ('campaign_id', 'financial_year',)
@@ -438,6 +439,11 @@ class Win(SoftDeleteModel):
         return customer_map[self.export_experience]
 
 
+class DeletedWin(Win):
+    class Meta:
+        proxy = True
+
+
 class Breakdown(SoftDeleteModel):
     """ Export/non-export value broken down by given year
 
@@ -525,7 +531,8 @@ class CustomerResponse(SoftDeleteModel):
 
     involved_state_enterprise = models.BooleanField(
         verbose_name=(
-            "The win involved a foreign government or state-owned enterprise (eg as an intermediary or facilitator)"),
+            "The win involved a foreign government or state-owned enterprise (eg as an "
+            "intermediary or facilitator)"),
         default=False
     )
     interventions_were_prerequisite = models.BooleanField(
@@ -561,7 +568,8 @@ class CustomerResponse(SoftDeleteModel):
         default=False
     )
     has_explicit_export_plans = models.BooleanField(
-        verbose_name="Apart from this win, you already have specific plans to export in the next 12 months",
+        verbose_name="Apart from this win, you already have specific plans to export in the next "
+                     "12 months",
         default=False
     )
     # temporarily nullable for migration - should ultimately be filled in and
@@ -570,7 +578,8 @@ class CustomerResponse(SoftDeleteModel):
         verbose_name="Please confirm these details are correct",
     )
     case_study_willing = models.BooleanField(
-        verbose_name="Would you be willing for DIT/Exporting is GREAT to feature your success in marketing materials?"
+        verbose_name="Would you be willing for DIT/Exporting is GREAT to feature your success in "
+                     "marketing materials?"
     )
 
     comments = models.TextField(

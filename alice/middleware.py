@@ -1,3 +1,4 @@
+import re
 from functools import wraps
 from hashlib import sha256
 
@@ -7,16 +8,22 @@ from django.utils.crypto import constant_time_compare
 from django.utils.decorators import available_attrs
 from django.utils.deprecation import MiddlewareMixin
 
+ADMIN_PATH = r'newadmin/'
+
+ADMIN_PATH_RE = re.compile(ADMIN_PATH)
+
 
 def alice_exempt(view_func):
     """
     Marks a view function as being exempt from the alice view protection.
     """
+
     # We could just do view_func.alice_exempt = True, but decorators
     # are nicer if they don't have side-effects, so we return a new
     # function.
     def wrapped_view(*args, **kwargs):
         return view_func(*args, **kwargs)
+
     wrapped_view.alice_exempt = True
     return wraps(view_func, assigned=available_attrs(view_func))(wrapped_view)
 
@@ -25,7 +32,7 @@ class SignatureRejectionMiddleware(MiddlewareMixin):
     """ Rejects requests that are not signed by a known server """
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-        if getattr(view_func, 'alice_exempt', False):
+        if getattr(view_func, 'alice_exempt', False) or ADMIN_PATH_RE.search(request.path):
             return None
         if not self._test_signature(request):
             if settings.DEBUG and settings.API_DEBUG:
