@@ -12,8 +12,8 @@ other setup in this file to achieve this (i.e. no env vars etc).
 Ensure you have the the most recent version of Docker installed for your particular host and then:
 
 ```
-$ docker-compose --file docker-compose.test.yml build
-$ docker-compose --file docker-compose.test.yml run --rm sut
+$ docker-compose --file docker-compose.yml --file docker-compose.override.test.yml build
+$ docker-compose --file docker-compose.yml --file docker-compose.override.test.yml run --rm sut
 ```
 
 You only need to perform the `build` step the first time you run this (or if you materially alter the

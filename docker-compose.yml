@@ -1,0 +1,16 @@
+version: "3"
+services:
+  sut:
+    build:
+      context: .
+    env_file: .env
+    volumes:
+      - ".:/app"
+    depends_on:
+      - postgres
+
+  # There appears to be Postgres-specific SQL in the migrations so we need a Postgres instance
+  # for testing rather than sqlite.
+  postgres:
+    image: postgres:10
+    env_file: .env
