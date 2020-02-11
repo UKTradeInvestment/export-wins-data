@@ -1,0 +1,9 @@
+version: "3"
+services:
+  sut:
+    ports:
+      - "8000:8000"
+
+  postgres:
+    ports:
+      - "5432:5432"
