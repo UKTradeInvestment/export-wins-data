@@ -1,4 +1,6 @@
+# @formatter:off
 from .settings import *
+# @formatter:on
 
 DEBUG = False
 
