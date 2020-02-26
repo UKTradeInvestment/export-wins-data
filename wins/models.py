@@ -322,6 +322,8 @@ class Win(SoftDeleteModel):
     complete = models.BooleanField()  # has an email been sent to the customer?
     audit = models.TextField(null=True)
 
+    match_id = models.PositiveIntegerField(null=True, blank=True)
+
     objects = WinManager()
 
     class Meta:
