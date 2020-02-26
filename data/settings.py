@@ -233,6 +233,11 @@ IGNORE_USERS = [
     'emma.jackson@digital.trade.gov.uk',
 ]
 
+# company matching service settings
+COMPANY_MS_URL = os.getenv("COMPANY_MS_URL")
+COMPANY_MS_HAWK_KEY_ID = os.getenv("COMPANY_MS_HAWK_KEY_ID")
+COMPANY_MS_HAWK_KEY_SECRET = os.getenv("COMPANY_MS_HAWK_KEY_SECRET")
+
 # allow access to API in browser for dev
 API_DEBUG = bool(os.getenv("API_DEBUG", False))
 
