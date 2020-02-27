@@ -1,24 +1,23 @@
 import os
 
 from django.conf import settings
-from django.conf.urls import url, include
+from django.conf.urls import include, url
+from django.contrib import admin
 from rest_framework.routers import DefaultRouter
 
 import csvfiles.urls
+import datasets.urls
 import fdi.urls
 import mi.urls
 import sso.oauth2_urls
-import datasets.urls
-
 from activity_stream.views import ActivityStreamViewSet
-from users.views import IsLoggedIn, LoginView, LoggedInUserRetrieveViewSet, LogoutView
-from wins.views import (
-    WinViewSet, BreakdownViewSet, AdvisorViewSet, ConfirmationViewSet,
-    LimitedWinViewSet, CSVView, DetailsWinViewSet, AddUserView,
-    NewPasswordView, SendCustomerEmailView, ChangeCustomerEmailView,
-    SoftDeleteWinView, SendAdminEmailView, CompleteWinsCSVView,
-    CurrentFinancialYearWins
-)
+from alice.middleware import ADMIN_PATH
+from users.views import IsLoggedIn, LoggedInUserRetrieveViewSet, LoginView, LogoutView
+from wins.views import (AddUserView, AdvisorViewSet, BreakdownViewSet, CSVView,
+                        ChangeCustomerEmailView, CompleteWinsCSVView, ConfirmationViewSet,
+                        CurrentFinancialYearWins, DetailsWinViewSet, LimitedWinViewSet,
+                        NewPasswordView, SendAdminEmailView, SendCustomerEmailView,
+                        SoftDeleteWinView, WinViewSet)
 
 WINS_CSV_SECRET_PATH = os.environ.get('WINS_CSV_SECRET_PATH')
 
@@ -38,6 +37,8 @@ urlpatterns = [
     url(r"^csv/$", CSVView.as_view(), name="csv"),
     url(r"^csv/auto/$", CurrentFinancialYearWins.as_view(), name="csv_auto"),
     url(r"^csv/", include((csvfiles.urls, 'csv'), namespace="csv")),
+    url(r'^grappelli/', include('grappelli.urls')),
+    url(ADMIN_PATH, admin.site.urls),
     url(
         r"^admin/add-user/$",
         AddUserView.as_view(),

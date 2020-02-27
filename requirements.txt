@@ -29,6 +29,8 @@ django-redis==4.9.0
 
 python-json-logger==0.1.5
 python-dotenv==0.10.5
+django-grappelli==2.13.3
+
 
 # Development utilities
 ipython==7.2.0

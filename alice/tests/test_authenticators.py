@@ -1,10 +1,11 @@
+from os import path
 from unittest import mock
 
-from django.test import override_settings, RequestFactory, SimpleTestCase
+from django.test import RequestFactory, SimpleTestCase, override_settings
 
-from ..authenticators import AlicePermission
-from ..middleware import SignatureRejectionMiddleware, alice_exempt
 from .client import AliceClient
+from ..authenticators import AlicePermission
+from ..middleware import ADMIN_PATH, SignatureRejectionMiddleware, alice_exempt
 
 
 class BaseSignatureTestCase(SimpleTestCase):
@@ -64,6 +65,11 @@ class SignatureRejectionMiddlewareTestCase(BaseSignatureTestCase):
 
     def test_process_request_not_fail_if_exempt(self):
         response = self.middleware.process_view(self.request, alice_exempt(lambda: True), (), {})
+        self.assertEqual(response, None)
+
+    def test_process_request_admin_path_not_fail(self):
+        response = self.middleware.process_view(RequestFactory().get(path.join('/', ADMIN_PATH)),
+                                                mock.MagicMock(alice_exempt=False), (), {})
         self.assertEqual(response, None)
 
 
