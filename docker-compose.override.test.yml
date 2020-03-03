@@ -1,4 +1,4 @@
 version: "3"
 services:
   sut:
-    command: ["/app/manage.py", "test"]
+    command: ["python", "-W ignore", "/app/manage.py", "test"]
