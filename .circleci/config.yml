@@ -24,6 +24,9 @@ jobs:
           AWS_SECRET_CSV_READ_ONLY_ACCESS: aws-read-secret
           AWS_REGION_CSV: aws-region
           SESSION_COOKIE_SECURE: False
+          COMPANY_MS_URL: https://some.url
+          COMPANY_MS_HAWK_KEY_ID: some-id
+          COMPANY_MS_HAWK_KEY_SECRET: some-secret
       - image: postgres:10
         environment:
           POSTGRES_DB: export-wins-data
