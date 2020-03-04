@@ -152,3 +152,17 @@ class DeletedWinAdmin(WinAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False
+
+
+@admin.register(Advisor)
+class AdvisorAdmin(admin.ModelAdmin):
+    exclude = ['is_active']
+
+    list_display = ('win', 'name', 'team_type', 'hq_team', 'location')
+    search_fields = ('win__id', 'name')
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def delete_model(self, request, obj):
+        obj.delete(for_real=True)
