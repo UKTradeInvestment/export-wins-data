@@ -329,6 +329,7 @@ class Win(SoftDeleteModel):
     class Meta:
         indexes = [
             models.Index(fields=['created', 'id']),
+            models.Index(fields=['match_id']),
         ]
 
     def add_audit(self, text):
