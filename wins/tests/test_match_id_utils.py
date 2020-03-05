@@ -11,7 +11,7 @@ class MatchIDUtilsTestCase(TestCase):
     def test_get_company_house_or_cdms_number(self):
         """Test that get_company_house_or_cdms_number returns a company house number or cdms_number."""
         test_case = [
-            ("00000000", {"company_house": "00000000"}),
+            ("00000000", {"companies_house_id": "00000000"}),
             ("ABCDEFG", {"cdms_ref": "ABCDEFG"}),
             ("1234567", {"cdms_ref": "1234567"}),
             ("1234567A", {"cdms_ref": "1234567A"}),
@@ -55,7 +55,7 @@ class MatchIDUtilsTestCase(TestCase):
                 {
                     "id": str(win_1.id),
                     "company_name": "Django Foundation",
-                    "company_house": "01234567",
+                    "companies_house_id": "01234567",
                     "contact_email": "noname@django.com",
                 },
                 {

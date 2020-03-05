@@ -16,7 +16,7 @@ def get_company_house_or_cdms_number(ref):
                 numbers and are 8 digits long. e.g if a number is 000123 the int will return 123.
             """
             int(ref)
-            return {"company_house": ref}
+            return {"companies_house_id": ref}
         return {"cdms_ref": ref}
     except ValueError:
         return {"cdms_ref": ref}
