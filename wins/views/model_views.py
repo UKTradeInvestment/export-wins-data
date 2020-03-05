@@ -32,7 +32,7 @@ class WinViewSet(AliceMixin, ModelViewSet):
     serializer_class = WinSerializer
     pagination_class = BigPagination
     filter_backends = (DjangoFilterBackend, OrderingFilter)
-    filter_fields = ('id', 'user__id')
+    filter_fields = ('id', 'user__id', 'match_id')
     ordering_fields = ("pk",)
     http_method_names = ("get", "post", "put", "patch")
 
