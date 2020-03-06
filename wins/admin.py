@@ -5,8 +5,6 @@ from django.db.models import Sum
 from wins.constants import BREAKDOWN_TYPES
 from wins.models import Advisor, Breakdown, CustomerResponse, DeletedWin, Win
 
-ALL_WIN_FIELDS = [f.name for f in Win._meta.get_fields() if f.is_relation == False]
-
 BREAKDOWN_TYPE_TO_NAME = {
     'Outward Direct Investment': 'odi',
     'Export': 'export',
@@ -47,17 +45,35 @@ class CustomerResponseInline(BaseStackedInline):
         return False
 
 
+class DateConfirmedFilter(admin.SimpleListFilter):
+    title = 'Win Confirmed/Unconfirmed'
+
+    parameter_name = 'confirmed'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('true', 'Confirmed'),
+            ('false', 'Unconfirmed'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'false':
+            return queryset.filter(confirmation__isnull=True)
+        if self.value() == 'true':
+            return queryset.filter(confirmation__isnull=False)
+
+
 @admin.register(Win)
 class WinAdmin(admin.ModelAdmin):
     actions = ('soft_delete',)
     list_display = (
-        'id', 'user', 'company_name', 'customer_name', 'customer_location', 'country', 'sector',
-        'date', 'created')
+        'id', 'user', 'company_name', 'customer_name', 'lead_officer_name', 'country', 'sector',
+        'date_confirmed', 'created')
     search_fields = ('id', 'company_name', 'customer_name')
     list_editable = ()
     list_filter = (
-        'user', 'company_name', 'customer_name', 'customer_location', 'country', 'sector',
-        'date', 'created')
+        'user', 'company_name', 'customer_name', 'lead_officer_name', 'country', 'sector',
+        DateConfirmedFilter, 'created')
     exclude = ['is_active']
     readonly_fields = (
         'id',
@@ -89,6 +105,12 @@ class WinAdmin(admin.ModelAdmin):
             'associated_programme_5')}),
     )
 
+    def date_confirmed(self, obj):
+        return obj.confirmation.created
+
+    date_confirmed.short_description = 'Date win confirmed'
+    date_confirmed.admin_order_field = 'confirmation__created'
+
     inlines = (BreakdownInline, CustomerResponseInline, AdvisorInline)
 
     @staticmethod
@@ -102,7 +124,8 @@ class WinAdmin(admin.ModelAdmin):
 
     def save_related(self, request, form, formsets, change):
         super(WinAdmin, self).save_related(request, form, formsets, change)
-        self._update_win_totals(formsets[0].queryset[0].win)
+        if formsets[0].queryset:
+            self._update_win_totals(formsets[0].queryset[0].win)
 
     def soft_delete(self, request, queryset):
         for r in queryset.all():
@@ -117,7 +140,6 @@ class WinAdmin(admin.ModelAdmin):
 
 @admin.register(DeletedWin)
 class DeletedWinAdmin(WinAdmin):
-    readonly_fields = ALL_WIN_FIELDS + ['user']
     inlines = tuple()
     actions = ('undelete',)
 
@@ -130,3 +152,17 @@ class DeletedWinAdmin(WinAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False
+
+
+@admin.register(Advisor)
+class AdvisorAdmin(admin.ModelAdmin):
+    exclude = ['is_active']
+
+    list_display = ('win', 'name', 'team_type', 'hq_team', 'location')
+    search_fields = ('win__id', 'name')
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def delete_model(self, request, obj):
+        obj.delete(for_real=True)

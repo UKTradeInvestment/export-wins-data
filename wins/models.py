@@ -594,7 +594,7 @@ class CustomerResponse(SoftDeleteModel):
     other_marketing_source = models.CharField(
         max_length=256,
         verbose_name='Other marketing source',
-        null=True)
+        null=True, blank=True)
 
     def __str__(self):
         return "Customer response to {}".format(self.win)
