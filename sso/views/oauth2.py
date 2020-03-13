@@ -5,7 +5,7 @@ This is not a typical oauth2 implementation, in order to keep saml2 as backup au
 for web-application-flow
 see http://requests-oauthlib.readthedocs.io/en/latest/oauth2_workflow.html
 """
-
+import logging
 from django.conf import settings
 from django.contrib.auth import get_user_model, login
 from django.db import transaction
@@ -18,11 +18,12 @@ from requests_oauthlib import OAuth2Session
 
 from sso.models import AuthorizationState
 
+logger = logging.getLogger(__name__)
 
-def get_oauth_client() -> OAuth2Session:
+
+def get_oauth_client(redirect_uri=settings.OAUTH2_REDIRECT_URI) -> OAuth2Session:
     return OAuth2Session(
-        client_id=settings.OAUTH2_CLIENT_ID,
-        redirect_uri=settings.OAUTH2_REDIRECT_URI,
+        client_id=settings.OAUTH2_CLIENT_ID, redirect_uri=redirect_uri,
     )
 
 
@@ -36,16 +37,28 @@ def callback(request):
     thus assuming any user authenticated by ABC is a valid MI user
     Returns a JSON with front end's follow up URL, if any
     """
-    oauth = get_oauth_client()
+
     code = request.POST['code']
     state = request.POST.get('state', '')[:254]
+
+    logger.debug(f"callback code:{code} state:{state}")
+
+    redirect_uri = request.POST.get("redirect_uri", settings.OAUTH2_REDIRECT_URI)
+    logger.debug(f"redirect_uri: {redirect_uri}")
+
     if not AuthorizationState.objects.check_state(state):
         return HttpResponseBadRequest('bad state')
 
-    token = oauth.fetch_token(token_url=settings.OAUTH2_TOKEN_FETCH_URL,
-                              code=code,
-                              client_id=settings.OAUTH2_CLIENT_ID,
-                              client_secret=settings.OAUTH2_CLIENT_SECRET)
+    oauth = get_oauth_client(redirect_uri=redirect_uri)
+
+    token = oauth.fetch_token(
+        token_url=settings.OAUTH2_TOKEN_FETCH_URL,
+        code=code,
+        client_id=settings.OAUTH2_CLIENT_ID,
+        client_secret=settings.OAUTH2_CLIENT_SECRET,
+    )
+
+    logger.debug(f"fetch_token returns {token}")
 
     # to check validity periodically, refresh_token?
     # obtain user profile /api/v1/user/me/
@@ -57,6 +70,7 @@ def callback(request):
         permitted_applications = abc_data.get('permitted_applications', {})
 
         # 1. log them in if they already exist
+        logger.debug(f"SSO login as:{abc_data['email']} {abc_data['user_id']}")
 
         user = _get_or_create_user(abc_data)
 
@@ -68,7 +82,12 @@ def callback(request):
         request.session['_token_introspected_at'] = now().timestamp()
         request.session.save()
 
-        return JsonResponse({'next': AuthorizationState.objects.get_next_url(state)})
+        return JsonResponse(
+            {
+                'next': AuthorizationState.objects.get_next_url(state),
+                'user': {'id': user.id, 'email': user.email, 'is_staff': user.is_staff},
+            }
+        )
     else:
         return HttpResponseForbidden()
 

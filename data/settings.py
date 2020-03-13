@@ -35,7 +35,7 @@ ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     # django
-    'grappelli',
+    # 'grappelli',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -195,7 +195,9 @@ OAUTH2_REDIRECT_URI = os.getenv("OAUTH2_REDIRECT_URI")
 OAUTH2_CLIENT_SECRET = os.getenv("OAUTH2_CLIENT_SECRET")
 OAUTH2_TOKEN_FETCH_URL = os.getenv("OAUTH2_TOKEN_FETCH_URL")
 OAUTH2_USER_PROFILE_URL = os.getenv("OAUTH2_USER_PROFILE_URL")
+
 OAUTH2_AUTH_URL = os.getenv("OAUTH2_AUTH_URL")
+
 OAUTH2_STATE_TIMEOUT_SECONDS = int(
     os.getenv('OAUTH2_STATE_TIMEOUT_SECONDS', '3600'))
 OAUTH2_INTROSPECT_TOKEN = os.getenv("OAUTH2_INTROSPECT_TOKEN")
@@ -262,7 +264,10 @@ LOGGING = {
         'json': {
             'format': '%(message)s',
             'class': 'pythonjsonlogger.jsonlogger.JsonFormatter',
-        }
+        },
+         'verbose': {
+            'format': '%(asctime)s [%(levelname)s] [%(name)s] %(message)s'
+        },
     },
     'filters': {
         'require_debug_false': {
@@ -274,6 +279,7 @@ LOGGING = {
             **{
                 'level': handler_level,
                 'class': 'logging.StreamHandler',
+                'formatter': 'verbose'
             },
             **handler_options
         },
