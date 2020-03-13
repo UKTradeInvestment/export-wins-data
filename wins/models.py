@@ -321,12 +321,14 @@ class Win(SoftDeleteModel):
     updated = models.DateTimeField(auto_now=True, null=True)
     complete = models.BooleanField()  # has an email been sent to the customer?
     audit = models.TextField(null=True)
+    match_id = models.PositiveIntegerField(null=True, blank=True)
 
     objects = WinManager()
 
     class Meta:
         indexes = [
             models.Index(fields=['created', 'id']),
+            models.Index(fields=['match_id']),
         ]
 
     def add_audit(self, text):
