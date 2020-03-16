@@ -42,3 +42,7 @@ HAWK_RECEIVER_CREDENTIALS = {
         'scopes': (),
     },
 }
+
+COMPANY_MATCHING_SERVICE_BASE_URL = 'http://company.matching/'
+COMPANY_MATCHING_HAWK_ID = 'some-id'
+COMPANY_MATCHING_HAWK_KEY = 'some-secret'
