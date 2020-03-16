@@ -46,3 +46,5 @@ pytest==3.8.1
 pytest-django==3.4.4
 coverage-pth==0.0.2
 pytest-sugar==0.9.1
+requests-mock==1.7.0
+parameterized==0.7.1
