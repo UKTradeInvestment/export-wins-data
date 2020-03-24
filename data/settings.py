@@ -4,9 +4,12 @@ import os
 import shutil
 import sys
 
+from django.core.exceptions import ImproperlyConfigured
 import dj_database_url
 import rediscluster
 from dotenv import find_dotenv, load_dotenv
+
+from core.types import HawkScope
 
 load_dotenv(find_dotenv(), verbose=True)
 
@@ -321,11 +324,46 @@ COUNTRIES_OVERRIDE = {
 }
 
 # Hawk Authentication
+HAWK_RECEIVER_NONCE_EXPIRY_SECONDS = 60
+HAWK_RECEIVER_CREDENTIALS = {}
+
+
+def _add_hawk_credentials(id_env_name, key_env_name, scopes):
+    id_ = os.getenv(id_env_name, default=None)
+
+    if not id_:
+        return
+
+    if id_ in HAWK_RECEIVER_CREDENTIALS:
+        raise ImproperlyConfigured(
+            'Duplicate Hawk access key IDs detected. All access key IDs should be unique.',
+        )
+
+    HAWK_RECEIVER_CREDENTIALS[id_] = {
+        'key': os.getenv(key_env_name),
+        'scopes': scopes,
+    }
+
+
+_add_hawk_credentials(
+    'ACTIVITY_STREAM_ACCESS_KEY_ID',
+    'ACTIVITY_STREAM_SECRET_ACCESS_KEY',
+    (HawkScope.activity_stream, ),
+)
+
+_add_hawk_credentials(
+    'DATA_FLOW_API_ACCESS_KEY_ID',
+    'DATA_FLOW_API_SECRET_ACCESS_KEY',
+    (HawkScope.data_flow_api, ),
+)
+
+_add_hawk_credentials(
+    'HAWK_ACCESS_KEY_ID',
+    'HAWK_SECRET_ACCESS_KEY',
+    (HawkScope.data_flow_api, HawkScope.activity_stream, ),
+)
+
 HAWK_IP_WHITELIST = os.getenv('HAWK_IP_WHITELIST', default='')
-# Defaults are not used so we don't accidentally expose the endpoint
-# with default credentials
-HAWK_ACCESS_KEY_ID = os.environ['HAWK_ACCESS_KEY_ID']
-HAWK_SECRET_ACCESS_KEY = os.environ['HAWK_SECRET_ACCESS_KEY']
 HAWK_NONCE_EXPIRY_SECONDS = 60
 
 vcap_services = json.loads(os.environ['VCAP_SERVICES'])
