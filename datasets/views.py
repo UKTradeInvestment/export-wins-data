@@ -5,7 +5,8 @@ from django.utils.decorators import method_decorator, decorator_from_middleware
 from django_countries import countries
 from rest_framework.views import APIView
 
-from core.hawk import HawkAuthentication, HawkResponseMiddleware
+from core.hawk import HawkAuthentication, HawkResponseMiddleware, HawkScopePermission
+from core.types import HawkScope
 from alice.middleware import alice_exempt
 from datasets.pagination import WinsDatasetViewCursorPagination, DatasetViewCursorPagination
 
@@ -35,8 +36,9 @@ def get_choices_as_case_expression(model, field_name, lookup_field=None):
 @method_decorator(alice_exempt, name='dispatch')
 class DatasetView(APIView):
     authentication_classes = (HawkAuthentication,)
-    permission_classes = ()
+    permission_classes = (HawkScopePermission,)
     pagination_class = DatasetViewCursorPagination
+    required_hawk_scope = HawkScope.data_flow_api
 
     @decorator_from_middleware(HawkResponseMiddleware)
     def get(self, request):

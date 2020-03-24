@@ -8,7 +8,7 @@ from rest_framework.fields import DateTimeField
 from rest_framework.test import APIClient
 
 from fixturedb.factories.win import create_win_factory
-from test_helpers.hawk_utils import hawk_auth_sender
+from test_helpers.hawk_utils import hawk_auth_sender as _hawk_auth_sender
 from users.factories import UserFactory
 from wins.factories import AdvisorFactory, BreakdownFactory, HVCFactory
 from wins.models import CustomerResponse
@@ -17,6 +17,26 @@ from wins.models import CustomerResponse
 @pytest.fixture
 def api_client():
     return APIClient()
+
+
+def hawk_auth_sender(url, **kwargs):
+    """Pass credentials to hawk sender."""
+    extra = {
+        'key_id': 'data-flow-id',
+        'secret_key': 'data-flow-key',
+        **kwargs
+    }
+    return _hawk_auth_sender(url, **extra)
+
+
+def multi_scope_hawk_auth_sender(url, **kwargs):
+    """Pass multi scope hawk id is for backwards compatibilty."""
+    extra = {
+        'key_id': 'mulit-scope-id',
+        'secret_key': 'mulit-scope-key',
+        **kwargs
+    }
+    return _hawk_auth_sender(url, **extra)
 
 
 def get_confirmation_attr_or_none(confirmation, field):
@@ -58,6 +78,25 @@ class BaseDatasetViewSetTest:
             HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
         )
         assert response.status_code == status.HTTP_200_OK
+
+    @pytest.mark.django_db
+    def test_no_scope(self, api_client):
+        """
+        Test request returns a 403 if keys are out of scope
+        """
+        auth_header = hawk_auth_sender(
+            self.url,
+            key_id='no-scope-id',
+            secret_key='no-scope-key'
+        ).request_header
+
+        response = api_client.get(
+            self.url,
+            content_type='',
+            HTTP_AUTHORIZATION=auth_header,
+            HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
+        )
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 class TestAdvisorsDatasetViewSet(BaseDatasetViewSetTest):
@@ -180,7 +219,14 @@ class TestAdvisorsDatasetViewSet(BaseDatasetViewSetTest):
         assert response.json() == expected_json
 
     @pytest.mark.django_db
-    def test_success(self, api_client):
+    @pytest.mark.parametrize(
+        'hawk_auth_sender',
+        (
+            multi_scope_hawk_auth_sender,
+            hawk_auth_sender
+        )
+    )
+    def test_success(self, api_client, hawk_auth_sender):
         """
         Test that a single advisor is returned successfully
         """
@@ -419,7 +465,14 @@ class TestBreakdownsDatasetViewSet:
         assert response.json() == expected_json
 
     @pytest.mark.django_db
-    def test_success(self, api_client):
+    @pytest.mark.parametrize(
+        'hawk_auth_sender',
+        (
+            multi_scope_hawk_auth_sender,
+            hawk_auth_sender
+        )
+    )
+    def test_success(self, api_client, hawk_auth_sender):
         """
         Test that a single breakdown is returned successfully
         """
@@ -715,7 +768,14 @@ class TestWinsDatasetViewSet:
         assert response.json() == expected_json
 
     @pytest.mark.django_db
-    def test_success(self, api_client):
+    @pytest.mark.parametrize(
+        'hawk_auth_sender',
+        (
+            multi_scope_hawk_auth_sender,
+            hawk_auth_sender
+        )
+    )
+    def test_success(self, api_client, hawk_auth_sender):
         """
         Test that a single win is returned successfully
         """
@@ -932,7 +992,14 @@ class TestHVCDatasetViewSet:
         assert response.json() == expected_json
 
     @pytest.mark.django_db
-    def test_success(self, api_client):
+    @pytest.mark.parametrize(
+        'hawk_auth_sender',
+        (
+            multi_scope_hawk_auth_sender,
+            hawk_auth_sender
+        )
+    )
+    def test_success(self, api_client, hawk_auth_sender):
         """
         Test that a single breakdown is returned successfully
         """
