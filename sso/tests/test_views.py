@@ -35,7 +35,7 @@ def _mock_login(*args, **kwargs):
 
 def _mock_get_oauth_client(user_info):
 
-    def mock_get_oauth_client():
+    def mock_get_oauth_client(redirect_uri):
         """Get mocked get_oauth_client."""
         oauth_client = Mock()
 

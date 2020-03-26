@@ -69,9 +69,6 @@ def callback(request):
 
         permitted_applications = abc_data.get('permitted_applications', {})
 
-        # 1. log them in if they already exist
-        logger.debug(f"SSO login as:{abc_data['email']} {abc_data['user_id']}")
-
         user = _get_or_create_user(abc_data)
 
         login(request, user, backend=settings.AUTHENTICATION_BACKENDS[0])
@@ -80,14 +77,14 @@ def callback(request):
         request.session['_abc_token'] = token
         request.session['_abc_permitted_applications'] = permitted_applications
         request.session['_token_introspected_at'] = now().timestamp()
+
         request.session.save()
 
-        return JsonResponse(
-            {
-                'next': AuthorizationState.objects.get_next_url(state),
-                'user': {'id': user.id, 'email': user.email, 'is_staff': user.is_staff},
-            }
-        )
+        json_response = {
+            'next': AuthorizationState.objects.get_next_url(state)
+        }
+
+        return JsonResponse(json_response)
     else:
         return HttpResponseForbidden()
 
@@ -99,7 +96,10 @@ def auth_url(request):
     save and pass follow up url to the front end via callback
     """
 
-    url, state = get_oauth_client().authorization_url(settings.OAUTH2_AUTH_URL)
+    redirect_uri = request.GET.get("redirect_uri", settings.OAUTH2_REDIRECT_URI)
+    logger.debug(f"redirect_uri: {redirect_uri}")
+
+    url, state = get_oauth_client(redirect_uri).authorization_url(settings.OAUTH2_AUTH_URL)
     next_url = request.GET.get('next', None)
     AuthorizationState.objects.create(state=state, next_url=next_url)
     return JsonResponse({'target_url': url})
@@ -125,18 +125,23 @@ def _get_or_create_user(abc_data):
     In the fourth case, the SSO user ID is transferred to the user with the matching email
     address to avoid altering their Export Wins data.
     """
+    logger.debug('_get_or_create_user')
+
     user_model = get_user_model()
 
+    logger.debug(f"looking for  {abc_data['email']} in users table")
     user_for_email = user_model.objects.filter(
         email__iexact=abc_data['email'],
     ).first()
 
+    logger.debug(f"looking for  {abc_data['user_id']} in users table")
     user_for_sso_user_id = user_model.objects.filter(
         sso_user_id=abc_data['user_id'],
     ).first()
 
     # Scenarios 2 and 4
     if user_for_email and user_for_sso_user_id != user_for_email:
+        logger.debug("2 and 4")
         if user_for_sso_user_id:
             user_for_sso_user_id.sso_user_id = None
             user_for_sso_user_id.save()
@@ -146,10 +151,12 @@ def _get_or_create_user(abc_data):
 
     # Scenarios 3a and 3b
     if user_for_sso_user_id:
+        logger.debug("3a 3b")
         _update_user(user_for_sso_user_id, abc_data)
         return user_for_sso_user_id
 
     # Scenario 1
+    logger.debug("scenario 1")
     return _create_user(abc_data)
 
 
@@ -157,6 +164,8 @@ def _update_user(user, abc_data):
     # For scenario 3b
     # Don't update the email address if the user has a valid Export Wins login (partly as there
     # is no guarantee that the new email address is the one they use for receiving email)
+    logger.debug("_update_user")
+
     if not user.has_usable_password():
         user.email = abc_data['email']
 
@@ -166,6 +175,7 @@ def _update_user(user, abc_data):
 
 
 def _create_user(abc_data):
+    logger.debug(f"_create_user email:{abc_data['email']} sso_user_id: {abc_data['user_id']}")
     user_model = get_user_model()
 
     new_user = user_model.objects.create(
