@@ -23,3 +23,22 @@ PASSWORD_HASHERS = [
 ]
 
 CACHES = {'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
+
+HAWK_RECEIVER_CREDENTIALS = {
+    'activity-stream-id': {
+        'key': 'activity-stream-key',
+        'scopes': (HawkScope.activity_stream, ),
+    },
+    'data-flow-id': {
+        'key': 'data-flow-key',
+        'scopes': (HawkScope.data_flow_api, ),
+    },
+    'mulit-scope-id': {
+        'key': 'mulit-scope-key',
+        'scopes': (HawkScope.activity_stream, HawkScope.data_flow_api, ),
+    },
+    'no-scope-id': {
+        'key': 'no-scope-key',
+        'scopes': (),
+    },
+}
