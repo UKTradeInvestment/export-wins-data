@@ -401,3 +401,7 @@ CACHES = {
         'KEY_PREFIX': 'export-wins-data',
     },
 }
+
+COMPANY_MATCHING_SERVICE_BASE_URL = os.getenv('COMPANY_MATCHING_SERVICE_BASE_URL', default=None)
+COMPANY_MATCHING_HAWK_ID = os.getenv('COMPANY_MATCHING_HAWK_ID', default=None)
+COMPANY_MATCHING_HAWK_KEY = os.getenv('COMPANY_MATCHING_HAWK_KEY', default=None)
