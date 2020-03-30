@@ -35,11 +35,15 @@ HAWK_RECEIVER_CREDENTIALS = {
     },
     'mulit-scope-id': {
         'key': 'mulit-scope-key',
-        'scopes': (HawkScope.activity_stream, HawkScope.data_flow_api, ),
+        'scopes': list(HawkScope.__members__.values()),
     },
     'no-scope-id': {
         'key': 'no-scope-key',
         'scopes': (),
+    },
+    'single-scope-id': {
+        'key': 'single-scope-key',
+        'scopes': (next(iter(HawkScope.__members__.values())), ),
     },
 }
 
