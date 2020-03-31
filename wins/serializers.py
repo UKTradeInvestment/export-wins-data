@@ -379,6 +379,7 @@ class DataHubWinSerializer(ModelSerializer):
     Win Serializer that will be consumed be used to display export wins in DataHub
     This is deisgned for datahub to proxy the api and should not need any more processing or transformation.
     """
+    title = CharField(source='name_of_export', read_only=True)
     customer = CharField(source='company_name', read_only=True)
     hvc = SerializerMethodField(read_only=True)
     response = DataHubCustomerResponseSerializer(read_only=True, source='confirmation')
@@ -388,17 +389,22 @@ class DataHubWinSerializer(ModelSerializer):
     value = SerializerMethodField(read_only=True)
 
     def get_value(self, win):
+        """
+        Return breakdown vaules in a value nested dict.
+        Use only breakdown type EXPORT
+        """
         breakdown_type = BREAKDOWN_TYPES[0]
         breakdowns_exports = win.breakdowns.filter(type=breakdown_type[0])
         breakdowns = DataHubBreakdownSerializer(breakdowns_exports, many=True)
         return {
             'export': {
-                'value': win.total_expected_export_value,
+                'total': win.total_expected_export_value,
                 'breakdowns': breakdowns.data
             }
         }
 
     def get_officer(self, win):
+        """Return lead officer in a officer nested dict."""
         return {
             'name': win.lead_officer_name,
             'email': win.lead_officer_email_address,
@@ -409,12 +415,14 @@ class DataHubWinSerializer(ModelSerializer):
         }
 
     def get_hvc(self, win):
+        """Return hvc data in a hvc nested dict."""
         return {
             'code': win.hvc,
             'name': win.hvo_programme,
         }
 
     def get_contact(self, win):
+        """Return contact information in a contact nested dict."""
         return {
             'name': win.customer_name,
             'email': win.customer_email_address,
@@ -425,6 +433,7 @@ class DataHubWinSerializer(ModelSerializer):
         model = Win
         fields = (
             'id',
+            'title',
             'date',
             'created',
             'country',

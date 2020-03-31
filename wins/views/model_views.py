@@ -171,13 +171,14 @@ class WinDataHubView(ListAPIView):
         Read only export wins view for on datahub
     """
     serializer_class = DataHubWinSerializer
-
+    pagination_class = BigPagination
     authentication_classes = (HawkAuthentication,)
     permission_classes = (HawkScopePermission,)
     required_hawk_scope = HawkScope.data_hub
 
     @decorator_from_middleware(HawkResponseMiddleware)
     def get(self, request, *args, **kwargs):
+        """Add HawkResponseMiddleware for get request"""
         return super().get(request, *args, **kwargs)
 
     def get_queryset(self):

@@ -98,7 +98,12 @@ class TestWinDataHubView:
             HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
         )
         assert response.status_code == status.HTTP_200_OK
-        assert response.json() == []
+        assert response.json() == {
+            'count': 0,
+            'next': None,
+            'previous': None,
+            'results': []
+        }
 
     def test_match_win_view(self, win, api_client):
         """Test export wins are returned in the expected format"""
@@ -112,48 +117,54 @@ class TestWinDataHubView:
         )
         assert response.status_code == status.HTTP_200_OK
 
-        assert response.json() == [
-            {
-                'id': str(win.id),
-                'date': format_date_or_datetime(win.date.date()),
-                'created': format_date_or_datetime(win.created),
-                'country': win.country,
-                'sector': win.sector,
-                'business_potential': win.business_potential,
-                'business_type': win.business_type,
-                'name_of_export': win.name_of_export,
-                'officer': {
-                    'name': win.lead_officer_name,
-                    'email': win.lead_officer_email_address,
-                    'team': {
-                        'type': win.team_type,
-                        'sub_type': win.hq_team
+        assert response.json() == {
+            'count': 1,
+            'next': None,
+            'previous': None,
+            'results': [
+                {
+                    'id': str(win.id),
+                    'title': win.name_of_export,
+                    'date': format_date_or_datetime(win.date.date()),
+                    'created': format_date_or_datetime(win.created),
+                    'country': win.country,
+                    'sector': win.sector,
+                    'business_potential': win.business_potential,
+                    'business_type': win.business_type,
+                    'name_of_export': win.name_of_export,
+                    'officer': {
+                        'name': win.lead_officer_name,
+                        'email': win.lead_officer_email_address,
+                        'team': {
+                            'type': win.team_type,
+                            'sub_type': win.hq_team
+                        }
+                    },
+                    'contact': {
+                        'name': win.customer_name,
+                        'email': win.customer_email_address,
+                        'job_title': win.customer_job_title,
+                    },
+                    'value': {
+                        'export': {
+                            'total': win.total_expected_export_value,
+                            'breakdowns': [
+                                {
+                                    'year': breakdown.year,
+                                    'value': breakdown.value
+                                } for breakdown in win.breakdowns.all()
+                            ]
+                        }
+                    },
+                    'customer': win.company_name,
+                    'response': {
+                        'confirmed': win.confirmation.agree_with_win,
+                        'date': format_date_or_datetime(win.confirmation.created)
+                    },
+                    'hvc': {
+                        'code': win.hvc,
+                        'name': win.hvo_programme,
                     }
-                },
-                'contact': {
-                    'name': win.customer_name,
-                    'email': win.customer_email_address,
-                    'job_title': win.customer_job_title,
-                },
-                'value': {
-                    'export': {
-                        'value': win.total_expected_export_value,
-                        'breakdowns': [
-                            {
-                                'year': breakdown.year,
-                                'value': breakdown.value
-                            } for breakdown in win.breakdowns.all()
-                        ]
-                    }
-                },
-                'customer': win.company_name,
-                'response': {
-                    'confirmed': win.confirmation.agree_with_win,
-                    'date': format_date_or_datetime(win.confirmation.created)
-                },
-                'hvc': {
-                    'code': win.hvc,
-                    'name': win.hvo_programme,
                 }
-            }
-        ]
+            ]
+        }
