@@ -178,6 +178,7 @@ class WinDataHubView(ListAPIView):
 
     @decorator_from_middleware(HawkResponseMiddleware)
     def get(self, request, *args, **kwargs):
+        """Add HawkResponseMiddleware for get request"""
         return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
