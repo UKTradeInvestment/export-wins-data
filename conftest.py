@@ -1,7 +1,9 @@
 import os
 import django
+
 from django.conf import settings
 from django.core.cache import CacheHandler
+
 import pytest
 
 # We manually designate which settings we will be using in an environment variable
