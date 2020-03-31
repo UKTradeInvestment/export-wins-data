@@ -31,3 +31,10 @@ def local_memory_cache(monkeypatch):
     yield
 
     cache_handler['default'].clear()
+
+
+@pytest.fixture
+def api_client():
+    """Django REST framework ApiClient instance."""
+    from rest_framework.test import APIClient
+    yield APIClient()
