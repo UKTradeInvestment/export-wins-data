@@ -5,7 +5,6 @@ This is not a typical oauth2 implementation, in order to keep saml2 as backup au
 for web-application-flow
 see http://requests-oauthlib.readthedocs.io/en/latest/oauth2_workflow.html
 """
-import logging
 from django.conf import settings
 from django.contrib.auth import get_user_model, login
 from django.db import transaction
@@ -17,8 +16,6 @@ from django.utils.timezone import now
 from requests_oauthlib import OAuth2Session
 
 from sso.models import AuthorizationState
-
-logger = logging.getLogger(__name__)
 
 
 def get_oauth_client(redirect_uri=settings.OAUTH2_REDIRECT_URI) -> OAuth2Session:
@@ -41,13 +38,10 @@ def callback(request):
     code = request.POST['code']
     state = request.POST.get('state', '')[:254]
 
-    logger.debug(f"callback code:{code} state:{state}")
-
-    redirect_uri = request.POST.get("redirect_uri", settings.OAUTH2_REDIRECT_URI)
-    logger.debug(f"redirect_uri: {redirect_uri}")
-
     if not AuthorizationState.objects.check_state(state):
         return HttpResponseBadRequest('bad state')
+
+    redirect_uri = request.POST.get("redirect_uri", settings.OAUTH2_REDIRECT_URI)
 
     oauth = get_oauth_client(redirect_uri=redirect_uri)
 
@@ -57,8 +51,6 @@ def callback(request):
         client_id=settings.OAUTH2_CLIENT_ID,
         client_secret=settings.OAUTH2_CLIENT_SECRET,
     )
-
-    logger.debug(f"fetch_token returns {token}")
 
     # to check validity periodically, refresh_token?
     # obtain user profile /api/v1/user/me/
@@ -97,7 +89,6 @@ def auth_url(request):
     """
 
     redirect_uri = request.GET.get("redirect_uri", settings.OAUTH2_REDIRECT_URI)
-    logger.debug(f"redirect_uri: {redirect_uri}")
 
     url, state = get_oauth_client(redirect_uri).authorization_url(settings.OAUTH2_AUTH_URL)
     next_url = request.GET.get('next', None)
@@ -125,23 +116,18 @@ def _get_or_create_user(abc_data):
     In the fourth case, the SSO user ID is transferred to the user with the matching email
     address to avoid altering their Export Wins data.
     """
-    logger.debug('_get_or_create_user')
-
     user_model = get_user_model()
 
-    logger.debug(f"looking for  {abc_data['email']} in users table")
     user_for_email = user_model.objects.filter(
         email__iexact=abc_data['email'],
     ).first()
 
-    logger.debug(f"looking for  {abc_data['user_id']} in users table")
     user_for_sso_user_id = user_model.objects.filter(
         sso_user_id=abc_data['user_id'],
     ).first()
 
     # Scenarios 2 and 4
     if user_for_email and user_for_sso_user_id != user_for_email:
-        logger.debug("2 and 4")
         if user_for_sso_user_id:
             user_for_sso_user_id.sso_user_id = None
             user_for_sso_user_id.save()
@@ -151,12 +137,10 @@ def _get_or_create_user(abc_data):
 
     # Scenarios 3a and 3b
     if user_for_sso_user_id:
-        logger.debug("3a 3b")
         _update_user(user_for_sso_user_id, abc_data)
         return user_for_sso_user_id
 
     # Scenario 1
-    logger.debug("scenario 1")
     return _create_user(abc_data)
 
 
@@ -164,8 +148,6 @@ def _update_user(user, abc_data):
     # For scenario 3b
     # Don't update the email address if the user has a valid Export Wins login (partly as there
     # is no guarantee that the new email address is the one they use for receiving email)
-    logger.debug("_update_user")
-
     if not user.has_usable_password():
         user.email = abc_data['email']
 
@@ -175,7 +157,6 @@ def _update_user(user, abc_data):
 
 
 def _create_user(abc_data):
-    logger.debug(f"_create_user email:{abc_data['email']} sso_user_id: {abc_data['user_id']}")
     user_model = get_user_model()
 
     new_user = user_model.objects.create(
