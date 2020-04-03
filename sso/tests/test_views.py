@@ -66,6 +66,11 @@ class CallbackViewTestCase(TestCase):
         request.session.save.return_value = None
         return request
 
+    def validate_oauth_response(self, actual_response, user):
+        expected_content = f'{{"next": "https://next", "user": {{"id": {user.id}, "email": "{user.email}", "is_staff": false}}}}'
+        expected_response = bytearray(expected_content, 'utf-8')
+        assert expected_response == actual_response
+
     @patch('sso.views.oauth2.AuthorizationState.objects.check_state', _mock_check_state)
     @patch('sso.views.oauth2.AuthorizationState.objects.get_next_url', _mock_get_next_url)
     @patch('sso.views.oauth2.login', _mock_login)
@@ -84,12 +89,15 @@ class CallbackViewTestCase(TestCase):
             response = callback(request)
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.content == b'{"next": "https://next"}'
-
+        
         user = User.objects.filter(email=user_info['email']).first()
         assert user is not None
         assert user.name == f'{user_info["first_name"]} {user_info["last_name"]}'
         assert str(user.sso_user_id) == user_info['user_id']
+
+        self.validate_oauth_response(response.content, user)
+        expected_content = f'{{"next": "https://next", "user": {{"id": {user.id}, "email": "{user.email}", "is_staff": false}}}}'
+        assert response.content == bytearray(expected_content, 'utf-8')     
 
     @patch('sso.views.oauth2.AuthorizationState.objects.check_state', _mock_check_state)
     @patch('sso.views.oauth2.AuthorizationState.objects.get_next_url', _mock_get_next_url)
@@ -113,7 +121,7 @@ class CallbackViewTestCase(TestCase):
             response = callback(request)
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.content == b'{"next": "https://next"}'
+        self.validate_oauth_response(response.content, user)
 
         user.refresh_from_db()
         assert user.name == f'{user_info["first_name"]} {user_info["last_name"]}'
@@ -143,9 +151,9 @@ class CallbackViewTestCase(TestCase):
             response = callback(request)
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.content == b'{"next": "https://next"}'
 
         user.refresh_from_db()
+        self.validate_oauth_response(response.content, user)                
         assert user.name == f'{user_info["first_name"]} {user_info["last_name"]}'
         assert user.email == 'new@email'
 
@@ -173,7 +181,7 @@ class CallbackViewTestCase(TestCase):
             response = callback(request)
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.content == b'{"next": "https://next"}'
+        self.validate_oauth_response(response.content, user)
 
         user.refresh_from_db()
         assert user.name == f'{user_info["first_name"]} {user_info["last_name"]}'
@@ -213,12 +221,15 @@ class CallbackViewTestCase(TestCase):
             response = callback(request)
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.content == b'{"next": "https://next"}'
+        
+        self.validate_oauth_response(response.content, user_with_matching_email)
 
         user_with_matching_sso_user_id.refresh_from_db()
         assert user_with_matching_sso_user_id.sso_user_id is None
 
         user_with_matching_email.refresh_from_db()
+
+
         assert str(user_with_matching_email.sso_user_id) == existing_sso_user_id
         assert user_with_matching_email.name == (
             f'{user_info["first_name"]} {user_info["last_name"]}'

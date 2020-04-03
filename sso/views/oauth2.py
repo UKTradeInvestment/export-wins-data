@@ -73,7 +73,8 @@ def callback(request):
         request.session.save()
 
         json_response = {
-            'next': AuthorizationState.objects.get_next_url(state)
+            'next': AuthorizationState.objects.get_next_url(state),
+            'user': {'id': user.id, 'email': user.email, 'is_staff': user.is_staff},            
         }
 
         return JsonResponse(json_response)
