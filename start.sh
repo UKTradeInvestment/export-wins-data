@@ -10,7 +10,5 @@ python manage.py migrate --noinput
 echo "Creating HVCs"
 python manage.py create_missing_hvcs
 
-# echo "Starting Gunicorn"
-# gunicorn -c gunicorn/conf.py data.wsgi --log-file - --access-logfile - --workers=$(nproc --all) --bind=0.0.0.0 --timeout=55 --log-level=debug --capture-output
-echo "Starting django dev server"
-python manage.py runserver 0.0.0.0:8000
+echo "Starting Gunicorn"
+gunicorn -c gunicorn/conf.py data.wsgi --log-file - --access-logfile - --workers=$(nproc --all) --bind=0.0.0.0 --timeout=55 --log-level=debug --capture-output
