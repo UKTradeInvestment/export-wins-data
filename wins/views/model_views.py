@@ -171,7 +171,7 @@ class WinDataHubView(ListAPIView):
         Read only export wins view for on datahub
     """
     serializer_class = DataHubWinSerializer
-
+    pagination_class = BigPagination
     authentication_classes = (HawkAuthentication,)
     permission_classes = (HawkScopePermission,)
     required_hawk_scope = HawkScope.data_hub

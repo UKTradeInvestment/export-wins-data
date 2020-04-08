@@ -379,6 +379,7 @@ class DataHubWinSerializer(ModelSerializer):
     Win Serializer that will be consumed be used to display export wins in DataHub
     This is deisgned for datahub to proxy the api and should not need any more processing or transformation.
     """
+    title = CharField(source='name_of_export', read_only=True)
     customer = CharField(source='company_name', read_only=True)
     hvc = SerializerMethodField(read_only=True)
     response = DataHubCustomerResponseSerializer(read_only=True, source='confirmation')
@@ -397,7 +398,7 @@ class DataHubWinSerializer(ModelSerializer):
         breakdowns = DataHubBreakdownSerializer(breakdowns_exports, many=True)
         return {
             'export': {
-                'value': win.total_expected_export_value,
+                'total': win.total_expected_export_value,
                 'breakdowns': breakdowns.data
             }
         }
@@ -432,6 +433,7 @@ class DataHubWinSerializer(ModelSerializer):
         model = Win
         fields = (
             'id',
+            'title',
             'date',
             'created',
             'country',
