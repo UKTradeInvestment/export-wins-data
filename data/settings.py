@@ -346,6 +346,12 @@ def _add_hawk_credentials(id_env_name, key_env_name, scopes):
 
 
 _add_hawk_credentials(
+    'DATA_HUB_ACCESS_KEY_ID',
+    'DATA_HUB_SECRET_ACCESS_KEY',
+    (HawkScope.data_hub, ),
+)
+
+_add_hawk_credentials(
     'ACTIVITY_STREAM_ACCESS_KEY_ID',
     'ACTIVITY_STREAM_SECRET_ACCESS_KEY',
     (HawkScope.activity_stream, ),
