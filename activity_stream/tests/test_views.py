@@ -3,6 +3,7 @@ import datetime
 import mohawk
 import pytest
 from django.conf import settings
+from django.core.cache import CacheHandler
 from freezegun import freeze_time
 from rest_framework import status
 from rest_framework.reverse import reverse
@@ -34,6 +35,16 @@ def multi_scope_hawk_auth_sender(url, **kwargs):
 @pytest.fixture
 def api_client():
     return APIClient()
+
+
+@pytest.fixture
+def local_memory_cache(monkeypatch):
+    monkeypatch.setitem(
+        settings.CACHES,
+        'default',
+        {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'},
+    )
+    monkeypatch.setattr('django.core.cache.caches', CacheHandler())
 
 
 def _url():

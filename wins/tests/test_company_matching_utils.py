@@ -21,7 +21,7 @@ from wins.company_matching_utils import (
 )
 from wins.factories import WinFactory
 from wins.models import Win
-from test_helpers.hawk_utils import HawkMockJSONResponse
+from wins.tests.utils import HawkMockJSONResponse
 
 
 class TestCompanyMatchingApi(TestCase):
