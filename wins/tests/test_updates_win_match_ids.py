@@ -14,7 +14,7 @@ from rest_framework import status
 
 from wins.factories import WinFactory
 from wins.models import Win
-from wins.tests.utils import HawkMockJSONResponse
+from test_helpers.hawk_utils import HawkMockJSONResponse
 
 
 @pytest.fixture
