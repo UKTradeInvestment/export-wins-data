@@ -43,6 +43,11 @@ def hawk_auth_sender(url, **kwargs):
     return _hawk_auth_sender(url, **extra)
 
 
+@pytest.fixture
+def api_client():
+    yield APIClient()
+
+
 @pytest.mark.django_db
 @pytest.mark.urls('core.tests.urls')
 class TestHawkAuthentication:

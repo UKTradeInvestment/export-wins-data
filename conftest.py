@@ -1,9 +1,7 @@
 import os
 import django
-
 from django.conf import settings
 from django.core.cache import CacheHandler
-
 import pytest
 
 # We manually designate which settings we will be using in an environment variable
@@ -25,10 +23,3 @@ def local_memory_cache(monkeypatch):
         {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'},
     )
     monkeypatch.setattr('django.core.cache.caches', CacheHandler())
-
-
-@pytest.fixture
-def api_client():
-    """Django REST framework ApiClient instance."""
-    from rest_framework.test import APIClient
-    yield APIClient()

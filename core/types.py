@@ -9,4 +9,3 @@ class HawkScope(Enum):
     """Scopes used for Hawk views."""
     activity_stream = auto()
     data_flow_api = auto()
-    data_hub = auto()

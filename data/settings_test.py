@@ -33,10 +33,6 @@ HAWK_RECEIVER_CREDENTIALS = {
         'key': 'data-flow-key',
         'scopes': (HawkScope.data_flow_api, ),
     },
-    'data-hub-id': {
-        'key': 'data-hub-key',
-        'scopes': (HawkScope.data_hub, ),
-    },
     'mulit-scope-id': {
         'key': 'mulit-scope-key',
         'scopes': list(HawkScope.__members__.values()),
