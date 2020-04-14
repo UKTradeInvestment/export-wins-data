@@ -17,4 +17,5 @@ from .model_views import (
     BreakdownViewSet,
     AdvisorViewSet,
     DetailsWinViewSet,
+    WinDataHubView,
 )

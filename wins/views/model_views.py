@@ -1,5 +1,7 @@
+from django.utils.decorators import method_decorator, decorator_from_middleware
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
+from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.viewsets import ModelViewSet
@@ -8,10 +10,13 @@ from .. import notifications
 from ..filters import CustomerResponseFilterSet
 from ..models import Win, Breakdown, Advisor, CustomerResponse, Notification
 from ..serializers import (
-    WinSerializer, LimitedWinSerializer, BreakdownSerializer,
+    WinSerializer, DataHubWinSerializer, LimitedWinSerializer, BreakdownSerializer,
     AdvisorSerializer, CustomerResponseSerializer, DetailWinSerializer
 )
+from alice.middleware import alice_exempt
 from alice.views import AliceMixin
+from core.hawk import HawkAuthentication, HawkResponseMiddleware, HawkScopePermission
+from core.types import HawkScope
 
 
 class StandardPagination(PageNumberPagination):
@@ -154,3 +159,29 @@ class AdvisorViewSet(AliceMixin, ModelViewSet):
         # which requires overriding the standard method to give the
         # `for_real` flag
         instance.delete(for_real=True)
+
+
+@method_decorator(alice_exempt, name='dispatch')
+class WinDataHubView(ListAPIView):
+    """
+        This endpoint is used to expose win inside datahub
+        To match companies it uses the match id since there in
+        no one to one record with datahub. In the future DNB number
+        may be used.
+        Read only export wins view for on datahub
+    """
+    serializer_class = DataHubWinSerializer
+    pagination_class = BigPagination
+    authentication_classes = (HawkAuthentication,)
+    permission_classes = (HawkScopePermission,)
+    required_hawk_scope = HawkScope.data_hub
+
+    @decorator_from_middleware(HawkResponseMiddleware)
+    def get(self, request, *args, **kwargs):
+        """Add HawkResponseMiddleware for get request"""
+        return super().get(request, *args, **kwargs)
+
+    def get_queryset(self):
+        """Get wins by match id a empty list if not matches are found"""
+        match_id = self.kwargs['match_id']
+        return Win.objects.filter(match_id=match_id)
