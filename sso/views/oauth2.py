@@ -136,7 +136,6 @@ def _get_or_create_user(abc_data):
             email=abc_data['contact_email']
         ).first()
 
-        # is there an edge case here if abc_data['contact_email'] is blank???
         if user_matched_by_contact_email:
             logger.debug(f"user {user_matched_by_contact_email.id} match on SSO contact_email")
             return _safe_update_user(user_matched_by_contact_email, abc_data)
