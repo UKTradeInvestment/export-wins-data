@@ -5,6 +5,7 @@ This is not a typical oauth2 implementation, in order to keep saml2 as backup au
 for web-application-flow
 see http://requests-oauthlib.readthedocs.io/en/latest/oauth2_workflow.html
 """
+import logging
 from django.conf import settings
 from django.contrib.auth import get_user_model, login
 from django.db import transaction
@@ -17,6 +18,7 @@ from requests_oauthlib import OAuth2Session
 
 from sso.models import AuthorizationState
 
+logger = logging.getLogger(__name__)
 
 def get_oauth_client(redirect_uri=settings.OAUTH2_REDIRECT_URI) -> OAuth2Session:
     return OAuth2Session(
@@ -74,7 +76,7 @@ def callback(request):
 
         json_response = {
             'next': AuthorizationState.objects.get_next_url(state),
-            'user': {'id': user.id, 'email': user.email, 'is_staff': user.is_staff},            
+            'user': {'id': user.id, 'email': user.email, 'is_staff': user.is_staff},
         }
 
         return JsonResponse(json_response)
@@ -116,58 +118,95 @@ def _get_or_create_user(abc_data):
 
     In the fourth case, the SSO user ID is transferred to the user with the matching email
     address to avoid altering their Export Wins data.
+
+    Login is only via SSO
+    1. New user - same
+    2. No longer applicable
+
     """
     user_model = get_user_model()
 
-    user_for_email = user_model.objects.filter(
-        email__iexact=abc_data['email'],
-    ).first()
-
-    user_for_sso_user_id = user_model.objects.filter(
+    user = user_model.objects.filter(
         sso_user_id=abc_data['user_id'],
     ).first()
 
-    # Scenarios 2 and 4
-    if user_for_email and user_for_sso_user_id != user_for_email:
-        if user_for_sso_user_id:
-            user_for_sso_user_id.sso_user_id = None
-            user_for_sso_user_id.save()
+    # 1 a straight match on SSO - update that user details and archive any others
+    if user:
+        logger.debug(f"user {user.id} match on sso_user_id")
+        return _safe_update_user(user, abc_data)
 
-        _update_user(user_for_email, abc_data)
-        return user_for_email
+    user_matched_by_email = user_model.objects.filter(
+        email=abc_data['email']
+    ).first()
 
-    # Scenarios 3a and 3b
-    if user_for_sso_user_id:
-        _update_user(user_for_sso_user_id, abc_data)
-        return user_for_sso_user_id
+    # 2 there was no SSO match try to find a email only login and update it
+    if user_matched_by_email:
+        logger.debug(f"user {user_matched_by_email.id} match on SSO email")
+        return _safe_update_user(user_matched_by_email, abc_data)
 
-    # Scenario 1
+    # 3 no SSO match try to match against the SSO contact_email address
+    user_matched_by_contact_email = user_model.objects.filter(
+        email=abc_data['contact_email']
+    ).first()
+
+    # is there an edge case here if abc_data['contact_email'] is blank???
+    if user_matched_by_contact_email:
+        logger.debug(f"user {user_matched_by_contact_email.id} match on SSO contact_email")
+        return _safe_update_user(user_matched_by_contact_email, abc_data)
+
+    # 4 Brand new user
+    logger.debug(f"create user {abc_data['email']}")
     return _create_user(abc_data)
 
 
-def _update_user(user, abc_data):
-    # For scenario 3b
-    # Don't update the email address if the user has a valid Export Wins login (partly as there
-    # is no guarantee that the new email address is the one they use for receiving email)
-    if not user.has_usable_password():
-        user.email = abc_data['email']
 
+def _get_email_from_abc_data(abc_data):
+    if abc_data['contact_email']:
+        return abc_data['contact_email']
+
+    return abc_data['email']
+
+def _archive_existing_user_by_email(email, sso_id):
+    user_model = get_user_model()
+
+    existing_user = user_model.objects.filter(
+        email=email,
+    ).first()
+
+    if not existing_user:
+        return
+
+    if existing_user.sso_user_id == sso_id:
+        return
+
+    existing_user.email = "_" + existing_user.email
+    existing_user.save()
+
+
+def _safe_update_user(user, abc_data):
+
+    email = _get_email_from_abc_data(abc_data)
+
+    _archive_existing_user_by_email(email, user.sso_user_id)
+
+    user.email =email
     user.name = _format_name(abc_data)
     user.sso_user_id = abc_data['user_id']
     user.save()
+    return user
 
 
 def _create_user(abc_data):
     user_model = get_user_model()
 
+    email = _get_email_from_abc_data(abc_data)
+
     new_user = user_model.objects.create(
-        email=abc_data['email'],
+        email=email,
         name=_format_name(abc_data),
         sso_user_id=abc_data['user_id'],
     )
 
-    # As this is an MI-only user, they won't need to login using a password
-    new_user.set_unusable_password()
     new_user.save()
     return new_user
 
