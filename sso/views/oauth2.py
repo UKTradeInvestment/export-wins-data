@@ -145,14 +145,15 @@ def _get_or_create_user(abc_data):
         return _safe_update_user(user_matched_by_email, abc_data)
 
     # 3 no SSO match try to match against the SSO contact_email address
-    user_matched_by_contact_email = user_model.objects.filter(
-        email=abc_data['contact_email']
-    ).first()
+    if 'contact_email' in abc_data:
+        user_matched_by_contact_email = user_model.objects.filter(
+            email=abc_data['contact_email']
+    )   .first()
 
-    # is there an edge case here if abc_data['contact_email'] is blank???
-    if user_matched_by_contact_email:
-        logger.debug(f"user {user_matched_by_contact_email.id} match on SSO contact_email")
-        return _safe_update_user(user_matched_by_contact_email, abc_data)
+        # is there an edge case here if abc_data['contact_email'] is blank???
+        if user_matched_by_contact_email:
+            logger.debug(f"user {user_matched_by_contact_email.id} match on SSO contact_email")
+            return _safe_update_user(user_matched_by_contact_email, abc_data)
 
     # 4 Brand new user
     logger.debug(f"create user {abc_data['email']}")
@@ -161,7 +162,7 @@ def _get_or_create_user(abc_data):
 
 
 def _get_email_from_abc_data(abc_data):
-    if abc_data['contact_email']:
+    if 'contact_email' in abc_data:
         return abc_data['contact_email']
 
     return abc_data['email']
@@ -176,7 +177,7 @@ def _archive_existing_user_by_email(email, sso_id):
     if not existing_user:
         return
 
-    if existing_user.sso_user_id == sso_id:
+    if sso_id and existing_user.sso_user_id == sso_id:
         return
 
     existing_user.email = "_" + existing_user.email
