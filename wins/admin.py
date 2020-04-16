@@ -167,10 +167,5 @@ class AdvisorAdmin(admin.ModelAdmin):
     def delete_model(self, request, obj):
         obj.delete(for_real=True)
 
-@admin.register(CustomerResponse)
-class CustomerResponseAdmin(admin.ModelAdmin):
-
-    list_display = ('name','comments')
-
 
 
