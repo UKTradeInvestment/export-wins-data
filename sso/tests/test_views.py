@@ -121,6 +121,7 @@ class CallbackViewTestCase(TestCase):
         collision_user.refresh_from_db()
         assert collision_user.email != contact_email
         assert collision_user.email == "_" + contact_email
+        assert collision_user.is_active == False
 
     @patch('sso.views.oauth2.AuthorizationState.objects.check_state', _mock_check_state)
     @patch('sso.views.oauth2.AuthorizationState.objects.get_next_url', _mock_get_next_url)
@@ -176,6 +177,8 @@ class CallbackViewTestCase(TestCase):
         assert collision_user.sso_user_id is None
         assert collision_user.email == "_" + new_contact_email
 
+        assert collision_user.is_active == False
+
     @patch('sso.views.oauth2.AuthorizationState.objects.check_state', _mock_check_state)
     @patch('sso.views.oauth2.AuthorizationState.objects.get_next_url', _mock_get_next_url)
     @patch('sso.views.oauth2.login', _mock_login)
@@ -198,3 +201,25 @@ class CallbackViewTestCase(TestCase):
         existing_user.refresh_from_db()
         assert existing_user.sso_user_id == user_info['user_id']
         assert existing_user.email == contact_email
+
+    @patch('sso.views.oauth2.AuthorizationState.objects.check_state', _mock_check_state)
+    @patch('sso.views.oauth2.AuthorizationState.objects.get_next_url', _mock_get_next_url)
+    @patch('sso.views.oauth2.login', _mock_login)
+    def test_when_user_doesnt_exist(self):
+        sso_email = 'sso@export.wins'
+        contact_email = 'contact@export.wins'
+
+        user_info = _get_user_info(sso_email, uuid4())
+        user_info['contact_email'] = contact_email
+
+        mock_oauth_client = _mock_get_oauth_client(user_info)
+
+        request = self._get_request()
+
+        with patch('sso.views.oauth2.get_oauth_client', mock_oauth_client):
+            response = callback(request)
+
+        user = User.objects.get(email=contact_email)
+
+        assert user.sso_user_id == user_info['user_id']
+        assert user.name == f"{user_info['first_name']} {user_info['last_name']}"

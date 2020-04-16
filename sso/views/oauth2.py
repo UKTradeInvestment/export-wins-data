@@ -20,6 +20,7 @@ from sso.models import AuthorizationState
 
 logger = logging.getLogger(__name__)
 
+
 def get_oauth_client(redirect_uri=settings.OAUTH2_REDIRECT_URI) -> OAuth2Session:
     return OAuth2Session(
         client_id=settings.OAUTH2_CLIENT_ID, redirect_uri=redirect_uri,
@@ -102,26 +103,11 @@ def auth_url(request):
 @transaction.atomic
 def _get_or_create_user(abc_data):
     """
-    This logic is necessarily complex as there is a shared user list for MI (which uses SSO for
-    authentication) and Export Wins (which does not use SSO for authentication).
-
-    The following scenarios need to be handled:
-
-    1. New user (not previously seen by either email or SSO user ID)
-    2. Existing Export Wins-only user (match of existing user by email only)
-    3a. Existing MI user but not Export Wins (match of existing user by SSO user ID only,
-    has unusable password)
-    3b. Existing MI and Export Wins user (match of existing user by SSO user ID only, has usable
-    password)
-    4. Two different existing Export Wins and MI users (two different matches by email and by SSO
-    user ID)
-
-    In the fourth case, the SSO user ID is transferred to the user with the matching email
-    address to avoid altering their Export Wins data.
-
     Login is only via SSO
-    1. New user - same
-    2. No longer applicable
+    1. Matching SSO user_id - just update the user's email
+    2. Match on SSO email - update the user.sso_user_id to user_id and update the email
+    3. Match on SSO contact_email - update the user.sso_user_id and email
+    4. Create a new user
 
     """
     user_model = get_user_model()
@@ -148,7 +134,7 @@ def _get_or_create_user(abc_data):
     if 'contact_email' in abc_data:
         user_matched_by_contact_email = user_model.objects.filter(
             email=abc_data['contact_email']
-    )   .first()
+        ).first()
 
         # is there an edge case here if abc_data['contact_email'] is blank???
         if user_matched_by_contact_email:
@@ -160,37 +146,48 @@ def _get_or_create_user(abc_data):
     return _create_user(abc_data)
 
 
-
-def _get_email_from_abc_data(abc_data):
-    if 'contact_email' in abc_data:
-        return abc_data['contact_email']
-
-    return abc_data['email']
-
 def _archive_existing_user_by_email(email, sso_id):
+    # we want to update the email address for a user
+    # so we need to check for collisions i.e. if the email address is associated with a different user
+    # if this happens we just prefix the username and deactivate it
     user_model = get_user_model()
 
     existing_user = user_model.objects.filter(
         email=email,
     ).first()
 
+    # No collisions - do nothing
     if not existing_user:
         return
 
+    # this is the same user!
     if sso_id and existing_user.sso_user_id == sso_id:
         return
 
     existing_user.email = "_" + existing_user.email
+    existing_user.is_active = False
+
     existing_user.save()
 
 
-def _safe_update_user(user, abc_data):
+def _get_contact_email_fallback_to_email(abc_data):
+    # We default to SSO email field unless there is a value for contact_email
+    # (email is mandatory in SSO)
+    if 'contact_email' in abc_data:
+        return abc_data['contact_email']
 
-    email = _get_email_from_abc_data(abc_data)
+    return abc_data['email']
+
+
+def _safe_update_user(user, abc_data):
+    email = _get_contact_email_fallback_to_email(abc_data)
+
+    if user.email == email and user.sso_user_id == abc_data['user_id']:
+        return user
 
     _archive_existing_user_by_email(email, user.sso_user_id)
 
-    user.email =email
+    user.email = email
     user.name = _format_name(abc_data)
     user.sso_user_id = abc_data['user_id']
     user.save()
@@ -200,7 +197,7 @@ def _safe_update_user(user, abc_data):
 def _create_user(abc_data):
     user_model = get_user_model()
 
-    email = _get_email_from_abc_data(abc_data)
+    email = _get_contact_email_fallback_to_email(abc_data)
 
     new_user = user_model.objects.create(
         email=email,
