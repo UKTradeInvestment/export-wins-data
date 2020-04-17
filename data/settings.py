@@ -3,10 +3,10 @@ import logging
 import os
 import shutil
 import sys
+from urllib.parse import urlencode
 
 from django.core.exceptions import ImproperlyConfigured
 import dj_database_url
-import rediscluster
 from dotenv import find_dotenv, load_dotenv
 
 from core.types import HawkScope
@@ -400,26 +400,21 @@ redis_credentials = get_redis_instance()
 is_tls_enabled = redis_credentials['uri'].startswith('rediss://')
 if is_tls_enabled:
     redis_uri = redis_credentials['uri'].replace('rediss://', 'redis://')
-    redis_connection_class = rediscluster.connection.SSLClusterConnection
 else:
     redis_uri = redis_credentials['uri']
-    redis_connection_class = rediscluster.connection.ClusterConnection
+
+
+def _build_redis_url(base_url, db_number=0, **query_args):
+    encoded_query_args = urlencode(query_args)
+    return f'{base_url}/{db_number}?{encoded_query_args}'
+
 
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': redis_uri,
+        'LOCATION': _build_redis_url(redis_uri, 0),
         'OPTIONS': {
-            'REDIS_CLIENT_CLASS': 'rediscluster.StrictRedisCluster',
-            'REDIS_CLIENT_KWARGS': {
-                'decode_responses': True,
-            },
-            'CONNECTION_POOL_CLASS': 'rediscluster.connection.ClusterConnectionPool',
-            'CONNECTION_POOL_KWARGS': {
-                # AWS ElasticCache disables CONFIG commands
-                'skip_full_coverage_check': True,
-                'connection_class': redis_connection_class,
-            },
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         },
         'KEY_PREFIX': 'export-wins-data',
     },
