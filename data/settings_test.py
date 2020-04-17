@@ -23,3 +23,34 @@ PASSWORD_HASHERS = [
 ]
 
 CACHES = {'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
+
+HAWK_RECEIVER_CREDENTIALS = {
+    'activity-stream-id': {
+        'key': 'activity-stream-key',
+        'scopes': (HawkScope.activity_stream, ),
+    },
+    'data-flow-id': {
+        'key': 'data-flow-key',
+        'scopes': (HawkScope.data_flow_api, ),
+    },
+    'data-hub-id': {
+        'key': 'data-hub-key',
+        'scopes': (HawkScope.data_hub, ),
+    },
+    'mulit-scope-id': {
+        'key': 'mulit-scope-key',
+        'scopes': list(HawkScope.__members__.values()),
+    },
+    'no-scope-id': {
+        'key': 'no-scope-key',
+        'scopes': (),
+    },
+    'single-scope-id': {
+        'key': 'single-scope-key',
+        'scopes': (next(iter(HawkScope.__members__.values())), ),
+    },
+}
+
+COMPANY_MATCHING_SERVICE_BASE_URL = 'http://company.matching/'
+COMPANY_MATCHING_HAWK_ID = 'some-id'
+COMPANY_MATCHING_HAWK_KEY = 'some-secret'
