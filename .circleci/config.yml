@@ -20,6 +20,10 @@ jobs:
           HAWK_IP_WHITELIST: 1.2.3.4
           HAWK_ACCESS_KEY_ID: some-id
           HAWK_SECRET_ACCESS_KEY: some-secret
+          ACTIVITY_STREAM_ACCESS_KEY_ID: activity-stream-id
+          ACTIVITY_STREAM_SECRET_ACCESS_KEY: activity-stream-key
+          DATA_FLOW_API_ACCESS_KEY_ID: data-flow-api-id
+          DATA_FLOW_API_SECRET_ACCESS_KEY: data-flow-api-key
           AWS_KEY_CSV_READ_ONLY_ACCESS: aws-read-key
           AWS_SECRET_CSV_READ_ONLY_ACCESS: aws-read-secret
           AWS_REGION_CSV: aws-region
@@ -45,7 +49,7 @@ jobs:
             - ~/cache/pip
       - run:
           name: Run tests
-          command: python -W ignore manage.py test
+          command: pytest
 
 workflows:
   version: 2

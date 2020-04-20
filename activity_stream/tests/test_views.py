@@ -3,28 +3,37 @@ import datetime
 import mohawk
 import pytest
 from django.conf import settings
-from django.core.cache import CacheHandler
 from freezegun import freeze_time
 from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
 
-from test_helpers.hawk_utils import hawk_auth_sender
+from test_helpers.hawk_utils import hawk_auth_sender as _hawk_auth_sender
+
+
+def hawk_auth_sender(url, **kwargs):
+    """Pass credentials to hawk sender."""
+    extra = {
+        'key_id': 'activity-stream-id',
+        'secret_key': 'activity-stream-key',
+        **kwargs
+    }
+    return _hawk_auth_sender(url, **extra)
+
+
+def multi_scope_hawk_auth_sender(url, **kwargs):
+    """Pass multi scope hawk id is for backwards compatibilty."""
+    extra = {
+        'key_id': 'mulit-scope-id',
+        'secret_key': 'mulit-scope-key',
+        **kwargs
+    }
+    return _hawk_auth_sender(url, **extra)
 
 
 @pytest.fixture
 def api_client():
     return APIClient()
-
-
-@pytest.fixture
-def local_memory_cache(monkeypatch):
-    monkeypatch.setitem(
-        settings.CACHES,
-        'default',
-        {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'},
-    )
-    monkeypatch.setattr('django.core.cache.caches', CacheHandler())
 
 
 def _url():
@@ -203,7 +212,14 @@ def test_401_returned(api_client, get_kwargs, expected_json):
 
 
 @pytest.mark.django_db
-def test_if_61_seconds_in_past_401_returned(api_client):
+@pytest.mark.parametrize(
+    'hawk_auth_sender',
+    (
+        multi_scope_hawk_auth_sender,
+        hawk_auth_sender
+    )
+)
+def test_if_61_seconds_in_past_401_returned(api_client, hawk_auth_sender):
     """If the Authorization header is generated 61 seconds in the past, then a
     401 is returned
     """
@@ -224,7 +240,14 @@ def test_if_61_seconds_in_past_401_returned(api_client):
 
 @pytest.mark.usefixtures('local_memory_cache')
 @pytest.mark.django_db
-def test_if_authentication_reused_401_returned(api_client):
+@pytest.mark.parametrize(
+    'hawk_auth_sender',
+    (
+        multi_scope_hawk_auth_sender,
+        hawk_auth_sender
+    )
+)
+def test_if_authentication_reused_401_returned(api_client, hawk_auth_sender):
     """If the Authorization header is reused, then a 401 is returned"""
     auth = hawk_auth_sender(_url()).request_header
 
@@ -248,7 +271,14 @@ def test_if_authentication_reused_401_returned(api_client):
 
 
 @pytest.mark.django_db
-def test_empty_object_returned_with_authentication_3_ips(api_client):
+@pytest.mark.parametrize(
+    'hawk_auth_sender',
+    (
+        multi_scope_hawk_auth_sender,
+        hawk_auth_sender
+    )
+)
+def test_empty_object_returned_with_authentication_3_ips(api_client, hawk_auth_sender):
     """If the Authorization and X-Forwarded-For headers are correct,
     with an extra IP address prepended to the X-Forwarded-For then
     the correct, and authentic, data is returned
@@ -267,7 +297,14 @@ def test_empty_object_returned_with_authentication_3_ips(api_client):
 
 
 @pytest.mark.django_db
-def test_empty_object_returned_with_authentication(api_client):
+@pytest.mark.parametrize(
+    'hawk_auth_sender',
+    (
+        multi_scope_hawk_auth_sender,
+        hawk_auth_sender
+    )
+)
+def test_empty_object_returned_with_authentication(api_client, hawk_auth_sender):
     """If the Authorization and X-Forwarded-For headers are correct, then
     the correct, and authentic, data is returned
     """
@@ -309,3 +346,23 @@ def test_empty_object_returned_with_authentication(api_client):
             content=response.content,
             content_type='incorrect',
         )
+
+
+@pytest.mark.django_db
+def test_no_scope(api_client):
+    """
+    Test request returns a 403 if keys are out of scope
+    """
+    auth_header = hawk_auth_sender(
+        _url(),
+        key_id='no-scope-id',
+        secret_key='no-scope-key'
+    ).request_header
+
+    response = api_client.get(
+        _url(),
+        content_type='',
+        HTTP_AUTHORIZATION=auth_header,
+        HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN

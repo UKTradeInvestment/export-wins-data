@@ -5,6 +5,7 @@ from django.core.cache import cache
 from django.utils.crypto import constant_time_compare
 
 from rest_framework.authentication import BaseAuthentication
+from rest_framework.permissions import BasePermission
 from rest_framework.exceptions import AuthenticationFailed
 
 from mohawk import Receiver
@@ -18,16 +19,16 @@ PAAS_ADDED_X_FORWARDED_FOR_IPS = 2
 
 
 def _lookup_credentials(access_key_id):
-    """Raises a HawkFail if the passed ID is not equal to
-    settings.HAWK_ACCESS_KEY_ID
-    """
-    if not constant_time_compare(access_key_id, settings.HAWK_ACCESS_KEY_ID):
-        raise HawkFail(f'No Hawk ID of {access_key_id}')
+    """Raises HawkFail if the access key ID cannot be found."""
+    try:
+        credentials = settings.HAWK_RECEIVER_CREDENTIALS[access_key_id]
+    except KeyError as exc:
+        raise HawkFail(f'No Hawk ID of {access_key_id}') from exc
 
     return {
-        'id': settings.HAWK_ACCESS_KEY_ID,
-        'key': settings.HAWK_SECRET_ACCESS_KEY,
+        'id': access_key_id,
         'algorithm': 'sha256',
+        **credentials,
     }
 
 
@@ -147,3 +148,23 @@ class HawkResponseMiddleware:
             content_type=response['Content-Type'],
         )
         return response
+
+
+class HawkScopePermission(BasePermission):
+    """
+    Permission class to authorise Hawk requests using the allowed scope of the client.
+
+    If the request was not authenticated using Hawk, access is denied.
+    """
+
+    def has_permission(self, request, view):
+        """Checks if the client has the scope required by the view."""
+        required_hawk_scope = getattr(view, 'required_hawk_scope', None)
+
+        if required_hawk_scope is None:
+            raise ValueError('required_hawk_scope was not set on the view')
+
+        if not isinstance(request.successful_authenticator, HawkAuthentication):
+            return False
+
+        return required_hawk_scope in request.auth.resource.credentials['scopes']
