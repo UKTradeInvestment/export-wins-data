@@ -10,7 +10,7 @@ from wins.company_matching_utils import (
     CompanyMatchingServiceConnectionError,
     CompanyMatchingServiceHTTPError,
     CompanyMatchingServiceTimeoutError,
-    update_match_ids,
+    get_match_ids,
 )
 from wins.models import Win
 
@@ -32,7 +32,7 @@ class Command(BaseCommand):
         Raises a CommandError is the call the the company matching service fails
         """
         try:
-            response = update_match_ids(wins)
+            response = get_match_ids(wins)
             return response.json()
         except (
             CompanyMatchingServiceConnectionError,
