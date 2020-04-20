@@ -433,21 +433,20 @@ class DataHubWinSerializer(ModelSerializer):
 
     def get_hvc(self, win):
         """Return hvc data in a hvc nested dict."""
-        if not win.hvc:
-            return None
-        # win hvc is formed of hvc code + two digits of financial year
-        hvc = win.hvc[:-2]
-        fy = win.hvc[-2:]
-        current_hvc = HVC.objects.filter(
-            campaign_id=hvc,
-            financial_year=fy,
-        ).first()
-        if not current_hvc:
-            return None
-        return {
-            'code': current_hvc.campaign_id,
-            'name': current_hvc.name,
-        }
+        if win.hvc:
+            # win hvc is formed of hvc code + two digits of financial year
+            hvc = win.hvc[:-2]
+            fy = win.hvc[-2:]
+            current_hvc = HVC.objects.filter(
+                campaign_id=hvc,
+                financial_year=fy,
+            ).first()
+            if current_hvc:
+                return {
+                    'code': current_hvc.campaign_id,
+                    'name': current_hvc.name,
+                }
+        return None
 
     def get_contact(self, win):
         """Return contact information in a contact nested dict."""
@@ -461,24 +460,24 @@ class DataHubWinSerializer(ModelSerializer):
         """Return country name for the code."""
         if win.country:
             dc = DjangoCountry(win.country)
-            return dc.name
-        else:
-            return None
+            if dc.name:
+                return dc.name
+        return None
 
     def get_sector(self, win):
         """Return sector name for the code."""
         if win.sector:
             sector = Sector.objects.get(id=win.sector)
             return sector.name
-        else:
-            return None
+        return None
 
     def get_business_potential(self, win):
         """Return human readable name for business type."""
         business_potential_dict = dict(BUSINESS_POTENTIAL)
-        if not win.business_potential:
-            return None
-        return business_potential_dict[win.business_potential]
+        if win.business_potential:
+            return business_potential_dict[win.business_potential]
+
+        return None
 
     class Meta(object):
         model = Win

@@ -9,37 +9,6 @@ from wins.tests.utils import format_date_or_datetime
 from test_helpers.hawk_utils import hawk_auth_sender as _hawk_auth_sender
 
 
-@pytest.fixture
-def hvc_win():
-    """Set up datbase records for testing hvc win in data hub."""
-    hvc = HVCFactory.create(
-        campaign_id='E083',
-        name='E083 - Consumer Goods & Retail',
-        financial_year=16,
-    )
-    win = create_win_factory(UserFactory.create())(
-        hvc_code='E083',
-        sector_id=88,
-        confirm=True,
-    )
-    BreakdownFactory.create(year=2020, win=win)
-    BreakdownFactory.create(year=2021, win=win)
-    return hvc, win
-
-
-@pytest.fixture
-def non_hvc_win():
-    """Set up datbase records for testing non_hvc win in data hub."""
-    win = create_win_factory(UserFactory.create())(
-        hvc_code=None,
-        sector_id=88,
-        confirm=True,
-    )
-    BreakdownFactory.create(year=2020, win=win)
-    BreakdownFactory.create(year=2021, win=win)
-    return win
-
-
 def _url(match_id):
     path = reverse('wins-by-match-id', kwargs={'match_id': match_id})
     return 'http://testserver' + path
@@ -122,9 +91,20 @@ class TestWinDataHubView:
             'results': [],
         }
 
-    def test_match_hvc_win_view(self, hvc_win, api_client):
+    def test_match_hvc_win_view(self, api_client):
         """Test export wins are returned in the expected format."""
-        hvc, win = hvc_win
+        hvc = HVCFactory.create(
+            campaign_id='E083',
+            name='E083 - Consumer Goods & Retail',
+            financial_year=16,
+        )
+        win = create_win_factory(UserFactory.create())(
+            hvc_code='E083',
+            sector_id=88,
+            confirm=True,
+        )
+        BreakdownFactory.create(year=2020, win=win)
+        BreakdownFactory.create(year=2021, win=win)
         business_potential_dict = dict(BUSINESS_POTENTIAL)
         teams_dict = dict(TEAMS)
         hq_dict = dict(HQ_TEAM_REGION_OR_POST)
@@ -190,9 +170,15 @@ class TestWinDataHubView:
             ],
         }
 
-    def test_match_non_hvc_win_view(self, non_hvc_win, api_client):
+    def test_match_hvc_win_view_no_hvc(self, api_client):
         """Test export wins are returned in the expected format."""
-        win = non_hvc_win
+        win = create_win_factory(UserFactory.create())(
+            hvc_code='E083',
+            sector_id=88,
+            confirm=True,
+        )
+        BreakdownFactory.create(year=2020, win=win)
+        BreakdownFactory.create(year=2021, win=win)
         business_potential_dict = dict(BUSINESS_POTENTIAL)
         teams_dict = dict(TEAMS)
         hq_dict = dict(HQ_TEAM_REGION_OR_POST)
@@ -251,6 +237,240 @@ class TestWinDataHubView:
                         'date': format_date_or_datetime(win.confirmation.created),
                     },
                     'hvc': None,
+                },
+            ],
+        }
+
+    def test_match_non_hvc_win_view(self, api_client):
+        """Test export wins are returned in the expected format."""
+        win = create_win_factory(UserFactory.create())(
+            hvc_code=None,
+            sector_id=88,
+            confirm=True,
+        )
+        BreakdownFactory.create(year=2020, win=win)
+        BreakdownFactory.create(year=2021, win=win)
+        business_potential_dict = dict(BUSINESS_POTENTIAL)
+        teams_dict = dict(TEAMS)
+        hq_dict = dict(HQ_TEAM_REGION_OR_POST)
+        url = _url(1)
+        auth = hawk_auth_sender(url).request_header
+        response = api_client.get(
+            url,
+            content_type='',
+            HTTP_AUTHORIZATION=auth,
+            HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
+        )
+        assert response.status_code == status.HTTP_200_OK
+
+        assert response.json() == {
+            'count': 1,
+            'next': None,
+            'previous': None,
+            'results': [
+                {
+                    'id': str(win.id),
+                    'title': win.name_of_export,
+                    'date': format_date_or_datetime(win.date.date()),
+                    'created': format_date_or_datetime(win.created),
+                    'country': 'Canada',
+                    'sector': 'Construction',
+                    'business_potential': business_potential_dict[win.business_potential],
+                    'business_type': win.business_type,
+                    'name_of_export': win.name_of_export,
+                    'officer': {
+                        'name': win.lead_officer_name,
+                        'email': win.lead_officer_email_address,
+                        'team': {
+                            'type': teams_dict[win.team_type],
+                            'sub_type': hq_dict[win.hq_team],
+                        },
+                    },
+                    'contact': {
+                        'name': win.customer_name,
+                        'email': win.customer_email_address,
+                        'job_title': win.customer_job_title,
+                    },
+                    'value': {
+                        'export': {
+                            'total': win.total_expected_export_value,
+                            'breakdowns': [
+                                {
+                                    'year': breakdown.year,
+                                    'value': breakdown.value,
+                                } for breakdown in win.breakdowns.all()
+                            ],
+                        },
+                    },
+                    'customer': win.company_name,
+                    'response': {
+                        'confirmed': win.confirmation.agree_with_win,
+                        'date': format_date_or_datetime(win.confirmation.created),
+                    },
+                    'hvc': None,
+                },
+            ],
+        }
+
+    def test_match_hvc_win_view_non_existent_country(self, api_client):
+        """Test export wins are returned in the expected format."""
+        hvc = HVCFactory.create(
+            campaign_id='E083',
+            name='E083 - Consumer Goods & Retail',
+            financial_year=16,
+        )
+        win = create_win_factory(UserFactory.create())(
+            hvc_code='E083',
+            sector_id=88,
+            confirm=True,
+            country='XY',
+        )
+        BreakdownFactory.create(year=2020, win=win)
+        BreakdownFactory.create(year=2021, win=win)
+        business_potential_dict = dict(BUSINESS_POTENTIAL)
+        teams_dict = dict(TEAMS)
+        hq_dict = dict(HQ_TEAM_REGION_OR_POST)
+        url = _url(1)
+        auth = hawk_auth_sender(url).request_header
+        response = api_client.get(
+            url,
+            content_type='',
+            HTTP_AUTHORIZATION=auth,
+            HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
+        )
+        assert response.status_code == status.HTTP_200_OK
+
+        assert response.json() == {
+            'count': 1,
+            'next': None,
+            'previous': None,
+            'results': [
+                {
+                    'id': str(win.id),
+                    'title': win.name_of_export,
+                    'date': format_date_or_datetime(win.date.date()),
+                    'created': format_date_or_datetime(win.created),
+                    'country': None,
+                    'sector': 'Construction',
+                    'business_potential': business_potential_dict[win.business_potential],
+                    'business_type': win.business_type,
+                    'name_of_export': win.name_of_export,
+                    'officer': {
+                        'name': win.lead_officer_name,
+                        'email': win.lead_officer_email_address,
+                        'team': {
+                            'type': teams_dict[win.team_type],
+                            'sub_type': hq_dict[win.hq_team],
+                        },
+                    },
+                    'contact': {
+                        'name': win.customer_name,
+                        'email': win.customer_email_address,
+                        'job_title': win.customer_job_title,
+                    },
+                    'value': {
+                        'export': {
+                            'total': win.total_expected_export_value,
+                            'breakdowns': [
+                                {
+                                    'year': breakdown.year,
+                                    'value': breakdown.value,
+                                } for breakdown in win.breakdowns.all()
+                            ],
+                        },
+                    },
+                    'customer': win.company_name,
+                    'response': {
+                        'confirmed': win.confirmation.agree_with_win,
+                        'date': format_date_or_datetime(win.confirmation.created),
+                    },
+                    'hvc': {
+                        'code': hvc.campaign_id,
+                        'name': hvc.name,
+                    },
+                },
+            ],
+        }
+
+    def test_match_hvc_win_view_null_business_potential(self, api_client):
+        """Test export wins are returned in the expected format."""
+        hvc = HVCFactory.create(
+            campaign_id='E083',
+            name='E083 - Consumer Goods & Retail',
+            financial_year=16,
+        )
+        win = create_win_factory(UserFactory.create())(
+            hvc_code='E083',
+            sector_id=88,
+            confirm=True,
+            country='XY',
+        )
+        win.business_potential = None
+        win.save()
+
+        BreakdownFactory.create(year=2020, win=win)
+        BreakdownFactory.create(year=2021, win=win)
+
+        teams_dict = dict(TEAMS)
+        hq_dict = dict(HQ_TEAM_REGION_OR_POST)
+        url = _url(1)
+        auth = hawk_auth_sender(url).request_header
+        response = api_client.get(
+            url,
+            content_type='',
+            HTTP_AUTHORIZATION=auth,
+            HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
+        )
+        assert response.status_code == status.HTTP_200_OK
+
+        assert response.json() == {
+            'count': 1,
+            'next': None,
+            'previous': None,
+            'results': [
+                {
+                    'id': str(win.id),
+                    'title': win.name_of_export,
+                    'date': format_date_or_datetime(win.date.date()),
+                    'created': format_date_or_datetime(win.created),
+                    'country': None,
+                    'sector': 'Construction',
+                    'business_potential': None,
+                    'business_type': win.business_type,
+                    'name_of_export': win.name_of_export,
+                    'officer': {
+                        'name': win.lead_officer_name,
+                        'email': win.lead_officer_email_address,
+                        'team': {
+                            'type': teams_dict[win.team_type],
+                            'sub_type': hq_dict[win.hq_team],
+                        },
+                    },
+                    'contact': {
+                        'name': win.customer_name,
+                        'email': win.customer_email_address,
+                        'job_title': win.customer_job_title,
+                    },
+                    'value': {
+                        'export': {
+                            'total': win.total_expected_export_value,
+                            'breakdowns': [
+                                {
+                                    'year': breakdown.year,
+                                    'value': breakdown.value,
+                                } for breakdown in win.breakdowns.all()
+                            ],
+                        },
+                    },
+                    'customer': win.company_name,
+                    'response': {
+                        'confirmed': win.confirmation.agree_with_win,
+                        'date': format_date_or_datetime(win.confirmation.created),
+                    },
+                    'hvc': {
+                        'code': hvc.campaign_id,
+                        'name': hvc.name,
+                    },
                 },
             ],
         }
