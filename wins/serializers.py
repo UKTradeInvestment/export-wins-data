@@ -1,3 +1,5 @@
+from django_countries.fields import Country as DjangoCountry
+
 from rest_framework.serializers import (
     BooleanField,
     DateField,
@@ -6,8 +8,16 @@ from rest_framework.serializers import (
     ModelSerializer,
     SerializerMethodField
 )
-from .constants import EXPERIENCE_CATEGORIES, WITH_OUR_SUPPORT, BREAKDOWN_TYPES
-from .models import Win, Breakdown, Advisor, CustomerResponse
+
+from mi.models import Sector
+
+from wins.constants import (
+    BREAKDOWN_TYPES,
+    BUSINESS_POTENTIAL,
+    EXPERIENCE_CATEGORIES,
+    WITH_OUR_SUPPORT,
+)
+from wins.models import Advisor, Breakdown, CustomerResponse, HVC, Win
 
 
 class WinSerializer(ModelSerializer):
@@ -379,14 +389,17 @@ class DataHubWinSerializer(ModelSerializer):
     Win Serializer that will be consumed be used to display export wins in DataHub
     This is deisgned for datahub to proxy the api and should not need any more processing or transformation.
     """
+    response = DataHubCustomerResponseSerializer(read_only=True, source='confirmation')
+
     title = CharField(source='name_of_export', read_only=True)
     customer = CharField(source='company_name', read_only=True)
     hvc = SerializerMethodField(read_only=True)
-    response = DataHubCustomerResponseSerializer(read_only=True, source='confirmation')
     officer = SerializerMethodField(read_only=True)
-
+    country = SerializerMethodField(read_only=True)
+    sector = SerializerMethodField(read_only=True)
     contact = SerializerMethodField(read_only=True)
     value = SerializerMethodField(read_only=True)
+    business_potential = SerializerMethodField(read_only=True)
 
     def get_value(self, win):
         """
@@ -399,8 +412,8 @@ class DataHubWinSerializer(ModelSerializer):
         return {
             'export': {
                 'total': win.total_expected_export_value,
-                'breakdowns': breakdowns.data
-            }
+                'breakdowns': breakdowns.data,
+            },
         }
 
     def get_officer(self, win):
@@ -410,15 +423,26 @@ class DataHubWinSerializer(ModelSerializer):
             'email': win.lead_officer_email_address,
             'team': {
                 'type': win.team_type,
-                'sub_type': win.hq_team
-            }
+                'sub_type': win.hq_team,
+            },
         }
 
     def get_hvc(self, win):
         """Return hvc data in a hvc nested dict."""
+        if not win.hvc:
+            return None
+        # win hvc is formed of hvc code + two digits of financial year
+        hvc = win.hvc[:-2]
+        fy = win.hvc[-2:]
+        current_hvc = HVC.objects.filter(
+            campaign_id=hvc,
+            financial_year=fy,
+        ).first()
+        if not current_hvc:
+            return None
         return {
-            'code': win.hvc,
-            'name': win.hvo_programme,
+            'code': current_hvc.campaign_id,
+            'name': current_hvc.name,
         }
 
     def get_contact(self, win):
@@ -428,6 +452,29 @@ class DataHubWinSerializer(ModelSerializer):
             'email': win.customer_email_address,
             'job_title': win.customer_job_title,
         }
+
+    def get_country(self, win):
+        """Return country name for the code."""
+        if win.country:
+            dc = DjangoCountry(win.country)
+            return dc.name
+        else:
+            return None
+
+    def get_sector(self, win):
+        """Return sector name for the code."""
+        if win.sector:
+            sector = Sector.objects.get(id=win.sector)
+            return sector.name
+        else:
+            return None
+
+    def get_business_potential(self, win):
+        """Return human readable name for business type."""
+        business_potential_dict = dict(BUSINESS_POTENTIAL)
+        if not win.business_potential:
+            return None
+        return business_potential_dict[win.business_potential]
 
     class Meta(object):
         model = Win
