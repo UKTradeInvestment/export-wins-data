@@ -12,6 +12,14 @@ services:
     depends_on:
       - postgres
 
+  celery:
+    build:
+      context: .
+    env_file: .env  
+    volumes:
+      - ".:/app"
+    command: celery worker -A data -l info -Q celery
+
   # There appears to be Postgres-specific SQL in the migrations so we need a Postgres instance
   # for testing rather than sqlite.
   postgres:
