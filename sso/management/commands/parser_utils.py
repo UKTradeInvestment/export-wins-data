@@ -1,7 +1,8 @@
 from os import path
 import csv
 
-from django.core.management.base import  CommandError
+from django.core.management.base import CommandError
+
 
 class MigrationUser:
 
@@ -22,7 +23,10 @@ class MigrationUser:
 
 
 def format_user_state(user):
-    return f"\"{user.id}\",\"{user.email}\",\"{user.is_active}\",\"{user.sso_user_id}\""
+    # yes.. i know this will be slow
+    win_count = user.wins.count()
+    return f"\"{user.id}\",\"{user.email}\",\"{user.is_active}\",\"{user.sso_user_id}\",\"{user.last_login}\", \"{win_count}\""
+
 
 def parse_csv(filename):
     full_path = path.abspath(filename)
