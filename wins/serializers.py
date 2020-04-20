@@ -15,6 +15,8 @@ from wins.constants import (
     BREAKDOWN_TYPES,
     BUSINESS_POTENTIAL,
     EXPERIENCE_CATEGORIES,
+    HQ_TEAM_REGION_OR_POST,
+    TEAMS,
     WITH_OUR_SUPPORT,
 )
 from wins.models import Advisor, Breakdown, CustomerResponse, HVC, Win
@@ -418,12 +420,14 @@ class DataHubWinSerializer(ModelSerializer):
 
     def get_officer(self, win):
         """Return lead officer in a officer nested dict."""
+        teams_dict = dict(TEAMS)
+        hq_dict = dict(HQ_TEAM_REGION_OR_POST)
         return {
             'name': win.lead_officer_name,
             'email': win.lead_officer_email_address,
             'team': {
-                'type': win.team_type,
-                'sub_type': win.hq_team,
+                'type': teams_dict[win.team_type],
+                'sub_type': hq_dict[win.hq_team],
             },
         }
 

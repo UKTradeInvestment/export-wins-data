@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from fixturedb.factories.win import create_win_factory
-from wins.constants import BUSINESS_POTENTIAL
+from wins.constants import BUSINESS_POTENTIAL, HQ_TEAM_REGION_OR_POST, TEAMS
 from wins.factories import BreakdownFactory, CustomerResponseFactory, HVCFactory, UserFactory, WinFactory
 from wins.tests.utils import format_date_or_datetime
 from test_helpers.hawk_utils import hawk_auth_sender as _hawk_auth_sender
@@ -126,6 +126,8 @@ class TestWinDataHubView:
         """Test export wins are returned in the expected format."""
         hvc, win = hvc_win
         business_potential_dict = dict(BUSINESS_POTENTIAL)
+        teams_dict = dict(TEAMS)
+        hq_dict = dict(HQ_TEAM_REGION_OR_POST)
         url = _url(1)
         auth = hawk_auth_sender(url).request_header
         response = api_client.get(
@@ -155,8 +157,8 @@ class TestWinDataHubView:
                         'name': win.lead_officer_name,
                         'email': win.lead_officer_email_address,
                         'team': {
-                            'type': win.team_type,
-                            'sub_type': win.hq_team,
+                            'type': teams_dict[win.team_type],
+                            'sub_type': hq_dict[win.hq_team],
                         },
                     },
                     'contact': {
@@ -192,6 +194,8 @@ class TestWinDataHubView:
         """Test export wins are returned in the expected format."""
         win = non_hvc_win
         business_potential_dict = dict(BUSINESS_POTENTIAL)
+        teams_dict = dict(TEAMS)
+        hq_dict = dict(HQ_TEAM_REGION_OR_POST)
         url = _url(1)
         auth = hawk_auth_sender(url).request_header
         response = api_client.get(
@@ -221,8 +225,8 @@ class TestWinDataHubView:
                         'name': win.lead_officer_name,
                         'email': win.lead_officer_email_address,
                         'team': {
-                            'type': win.team_type,
-                            'sub_type': win.hq_team,
+                            'type': teams_dict[win.team_type],
+                            'sub_type': hq_dict[win.hq_team],
                         },
                     },
                     'contact': {
