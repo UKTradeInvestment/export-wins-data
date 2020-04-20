@@ -86,3 +86,4 @@ mi/.DS_Store
 /.tmontmp/
 /.pytest_cache/
 /.testmondata
+postgres-data
