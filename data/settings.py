@@ -426,4 +426,9 @@ COMPANY_MATCHING_SERVICE_BASE_URL = os.getenv('COMPANY_MATCHING_SERVICE_BASE_URL
 COMPANY_MATCHING_HAWK_ID = os.getenv('COMPANY_MATCHING_HAWK_ID', default=None)
 COMPANY_MATCHING_HAWK_KEY = os.getenv('COMPANY_MATCHING_HAWK_KEY', default=None)
 
-CELERY_BROKER_URL = _build_redis_url(redis_uri, 1),
+
+is_rediss = redis_uri.startswith('rediss://')
+url_args = {'ssl_cert_reqs': 'CERT_REQUIRED'} if is_rediss else {}
+celery_redis_url = _build_redis_url(redis_uri, 1, **url_args)
+CELERY_RESULT_BACKEND = celery_redis_url
+CELERY_BROKER_URL = celery_redis_url

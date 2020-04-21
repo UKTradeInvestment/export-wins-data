@@ -21,6 +21,7 @@ class TestMatchIdTask:
 
     @mute_signals(post_save)
     def test_update_match_id_task(self, requests_mock):
+        """Test task updates match id."""
         win = WinFactory(
             id='00000000-0000-0000-0000-000000000001',
             company_name='Name 2',
@@ -48,7 +49,7 @@ class TestMatchIdTask:
             status_code=HTTP_200_OK,
             text=dynamic_response,
         )
-        update_match_id(win.pk)
+        update_match_id.delay(win.pk)
         win.refresh_from_db()
         assert win.match_id == 1
 
@@ -60,7 +61,8 @@ class TestMatchIdTask:
             ReadTimeout,
         ),
     )
-    def test_http_error_retry(self, requests_mock, exception, monkeypatch):
+    def test_error_retry(self, requests_mock, exception, monkeypatch):
+        """Test task updates match id."""
         win = WinFactory(
             id='00000000-0000-0000-0000-000000000001',
             company_name='Name 2',
