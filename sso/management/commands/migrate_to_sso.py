@@ -1,15 +1,12 @@
+from django.core.management.base import BaseCommand
+from django.contrib.auth import get_user_model
+from sso.management.commands.parser_utils import parse_csv, format_user_state, MigrationUser
+
 import datetime
 import pytz
 from django.db import IntegrityError
 
-from wins.models import Win
-
 utc = pytz.UTC
-
-from django.core.management.base import BaseCommand, CommandError
-from django.contrib.auth import get_user_model
-
-from sso.management.commands.parser_utils import parse_csv, format_user_state, MigrationUser
 
 
 class BadFutureEmailException(BaseException):

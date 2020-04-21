@@ -25,7 +25,8 @@ class MigrationUser:
 def format_user_state(user):
     # yes.. i know this will be slow
     win_count = user.wins.count()
-    return f"\"{user.id}\",\"{user.email}\",\"{user.is_active}\",\"{user.sso_user_id}\",\"{user.last_login}\", \"{win_count}\""
+    return f"\"{user.id}\",\"{user.email}\",\"{user.is_active}\"," \
+           f"\"{user.sso_user_id}\",\"{user.last_login}\", \"{win_count}\""
 
 
 def parse_csv(filename):
