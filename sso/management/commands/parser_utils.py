@@ -22,11 +22,33 @@ class MigrationUser:
         return f"{self.id} {self.current_email}->{self.future_email} {self.current_active}->{self.future_active}"
 
 
+def get_obfuscated_email_address(user):
+    if user.email.startswith("!!"):
+        # this user has already been migrated... ignore it?
+        return user.email
+
+    return f"!!{user.id}_{user.email.lower()}"
+
+
+def get_users_hashed_by_sso_id(migration_users, filter_sso_user_id):
+    users_hashed_by_sso_id = {}
+    users_with_sso_ids = list(filter(lambda u: u.sso_user_id, migration_users))
+    for migrated_user in users_with_sso_ids:
+        if filter_sso_user_id and migrated_user.sso_user_id != filter_sso_user_id:
+            continue
+
+        if migrated_user.sso_user_id not in users_hashed_by_sso_id:
+            users_hashed_by_sso_id[migrated_user.sso_user_id] = []
+
+        users_hashed_by_sso_id[migrated_user.sso_user_id].append(migrated_user)
+
+    return users_hashed_by_sso_id
+
+
 def format_user_state(user):
     # yes.. i know this will be slow
     win_count = user.wins.count()
-    return f"\"{user.id}\",\"{user.email}\",\"{user.is_active}\"," \
-           f"\"{user.sso_user_id}\",\"{user.last_login}\", \"{win_count}\""
+    return f"{user.id},{user.email},{user.is_active},{user.sso_user_id or ''},{user.last_login or ''},{win_count}"
 
 
 def parse_csv(filename):

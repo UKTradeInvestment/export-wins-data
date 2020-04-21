@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
-from sso.management.commands.parser_utils import parse_csv, format_user_state, MigrationUser
+from sso.management.commands.parser_utils import parse_csv, format_user_state, MigrationUser, \
+    get_obfuscated_email_address, get_users_hashed_by_sso_id
 
 import datetime
 import pytz
@@ -10,6 +11,10 @@ utc = pytz.UTC
 
 
 class BadFutureEmailException(BaseException):
+    pass
+
+
+class BadFutureSSOIdException(BaseException):
     pass
 
 
@@ -39,32 +44,42 @@ def merge_users(migration_users: MigrationUser, commit_changes=False):
     target_email = migration_users[0].future_email
     target_sso_id = migration_users[0].sso_user_id
 
-    # both future emails need to be the same or we cant easily handle this
+    target_is_active = False
+
+    users = []
+
     for single_user in migration_users:
+        # both future emails need to be the same or we cant easily handle this
         if target_email != single_user.future_email:
             raise BadFutureEmailException(f"target emails do not match {target_email}")
 
         if target_sso_id != single_user.sso_user_id:
             raise BadFutureSSOIdException(f"target SSO ids do not match {target_sso_id}")
 
-    users = []
-    # Check that we can find users for each id - any exceptions just bounce to the caller..
-    for single_user in migration_users:
+        # Check that we can find users for each id - any exceptions just bounce to the caller..
         user = user_model.objects.get(pk=single_user.id)
         users.append(user)
+
+        # only mark the target user as active based on the incoming data
+        if single_user.future_active:
+            target_is_active = True
 
     # we are merging down to the user with the most recent login
     min_date = utc.localize(datetime.datetime(datetime.MINYEAR, 1, 1))
     ordered_users = sorted(users, reverse=True, key=lambda u: u.last_login or min_date)
+
     # so the target user is the first in the list
     target_user = ordered_users[0]
 
-    target_user.email = f"{user.id}{target_email}"
+    target_user.email = f"{target_email}"
     target_user.sso_user_id = target_sso_id
-    target_user.is_active = True
+    target_user.is_active = target_is_active
 
-    for other_user in users[1:]:
-        other_user.email = ">" + other_user.email.lower()
+    for other_user in users:
+        if other_user.id == target_user.id:
+            continue
+
+        other_user.email = get_obfuscated_email_address(other_user)
         other_user.sso_user_id = None
         other_user.is_active = False
 
@@ -110,28 +125,15 @@ class Command(BaseCommand):
         migration_users = parse_csv(filename)
         self.stderr.write(f"{len(migration_users):>5}: total users")
 
-        # Group the users by SSO id
-        users_hashed_by_sso_id = {}
-        users_with_sso_ids = list(filter(lambda u: u.sso_user_id, migration_users))
-        self.stderr.write(f"{len(users_with_sso_ids):>5}: users with SSO_USER_ID")
+        users_hashed_by_sso_id = get_users_hashed_by_sso_id(migration_users, filter_sso_user_id)
 
         merge_count = 0
         single_user_count = 0
-
-        for migrated_user in users_with_sso_ids:
-
-            if filter_sso_user_id and migrated_user.sso_user_id != filter_sso_user_id:
-                continue
-
-            if migrated_user.sso_user_id not in users_hashed_by_sso_id:
-                users_hashed_by_sso_id[migrated_user.sso_user_id] = []
-
-            users_hashed_by_sso_id[migrated_user.sso_user_id].append(migrated_user)
+        error_count = 0
 
         for key in users_hashed_by_sso_id:
-
             if not key:
-                self.stderr.write(self.style.ERROR(f"blank key {users_hashed_by_sso_id[key]}"))
+                self.stderr.write(self.style.ERROR(f"found a blank key {users_hashed_by_sso_id[key]}"))
                 continue
 
             should_merge = len(users_hashed_by_sso_id[key]) > 1
@@ -143,19 +145,31 @@ class Command(BaseCommand):
                     for target_user in target_users:
                         self.stdout.write(format_user_state(target_user))
                 except BadFutureEmailException as e:
-                    self.stdout.write(self.style.ERROR(f"can't handle future emails {e}"))
+                    self.stderr.write(self.style.ERROR(f"can't handle future emails {e}"))
+                    error_count += 1
+                except IntegrityError as e:
+
+                    self.stderr.write(self.style.ERROR(f"merge update failed for {key} {e}"))
+                    error_count += 1
+
                 continue
 
             # Not merged just update the user
             single_user_count += 1
             single_user = users_hashed_by_sso_id[key][0]
-            updated_user = update_single_user(users_hashed_by_sso_id[key][0], commit_changes)
+
+            try:
+                updated_user = update_single_user(users_hashed_by_sso_id[key][0], commit_changes)
+            except IntegrityError as e:
+                error_count += 1
+                self.stderr.write(self.style.WARNING(f"single update failed for {key} {e}"))
 
             if updated_user:
                 self.stdout.write(format_user_state(updated_user))
             else:
-                self.stdout.write(
+                self.stderr.write(
                     self.style.ERROR(f' {single_user.id} {single_user.current_email} not found in database'))
 
         self.stderr.write(f"{merge_count:>5}: users merged")
         self.stderr.write(f"{single_user_count:>5}: users updated")
+        self.stderr.write(f"{error_count:>5}: errors")
