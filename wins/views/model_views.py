@@ -187,4 +187,4 @@ class WinDataHubView(ListAPIView):
     def get_queryset(self):
         """Get wins by match id a empty list if not matches are found."""
         match_id = self.kwargs['match_id']
-        return Win.objects.filter(match_id=match_id)
+        return Win.objects.filter(match_id=match_id).order_by('-date')
