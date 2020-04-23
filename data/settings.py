@@ -372,8 +372,25 @@ _add_hawk_credentials(
 HAWK_IP_WHITELIST = os.getenv('HAWK_IP_WHITELIST', default='')
 HAWK_NONCE_EXPIRY_SECONDS = 60
 
-vcap_services = json.loads(os.environ['VCAP_SERVICES'])
-redis_credentials = vcap_services['redis'][0]['credentials']
+
+def get_redis_instance():
+    """
+    Helper to switch redis instance with enviroment varible.
+    We need this because export-wins-data is runing in cluster mode 
+    to help switch with minimum down time we use enviroment varibles.
+    """
+    vcap_services = json.loads(os.environ['VCAP_SERVICES'])
+    if len(vcap_services['redis']) == 1:
+        return vcap_services['redis'][0]['credentials']
+
+    REDIS_SERVICE_NAME = os.getenv('REDIS_SERVICE_NAME')
+    if not REDIS_SERVICE_NAME:
+        raise ImproperlyConfigured('REDIS_SERVICE_NAME must be set if there are multiple instances of redis.')
+    redis_service = [r for r in vcap_services['redis'] if r['name'] == REDIS_SERVICE_NAME][0]
+    return redis_service['credentials']
+
+
+redis_credentials = get_redis_instance()
 
 # rediscluster, by default, breaks if using the combination of
 # - rediss:// connection uri
