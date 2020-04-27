@@ -22,6 +22,10 @@ class BadFutureSSOIdException(BaseException):
     pass
 
 
+class UserNotFoundException(BaseException):
+    pass
+
+
 def update_single_user(migration_user: MigrationUser, commit_changes=False):
     user_model = get_user_model()
 
@@ -56,9 +60,11 @@ def merge_users(migration_users: MigrationUser, commit_changes=False):
         if target_sso_id != single_user.sso_user_id:
             raise BadFutureSSOIdException(f"target SSO ids do not match {target_sso_id}")
 
-        # Check that we can find users for each id - any exceptions just bounce to the caller..
-        user = user_model.objects.get(pk=single_user.id)
-        users.append(user)
+        try:
+            user = user_model.objects.get(pk=single_user.id)
+            users.append(user)
+        except user_model.DoesNotExist as e:
+            raise UserNotFoundException(f"user not found with id {single_user.id} {single_user.future_email}")
 
         # only mark the target user as active based on the incoming data
         if single_user.future_active:
@@ -114,6 +120,7 @@ class Command(BaseCommand):
         parser.add_argument("-f", "--filter_sso_id", help="only run against a specific SSO_USER_ID")
 
     def handle(self, *args, **options):
+        user_model = get_user_model()
         commit_changes = options["commit_changes"]
         filter_sso_user_id = options['filter_sso_id']
 
@@ -148,8 +155,10 @@ class Command(BaseCommand):
                     self.stderr.write(self.style.ERROR(f"can't handle future emails {e}"))
                     error_count += 1
                 except IntegrityError as e:
-
                     self.stderr.write(self.style.ERROR(f"merge update failed for {key} {e}"))
+                    error_count += 1
+                except UserNotFoundException as e:
+                    self.stderr.write(self.style.ERROR(str(e)))
                     error_count += 1
 
                 continue
