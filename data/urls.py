@@ -2,6 +2,7 @@ import os
 
 from django.conf import settings
 from django.conf.urls import include, url
+from django.urls import path
 from django.contrib import admin
 from rest_framework.routers import DefaultRouter
 
@@ -17,7 +18,7 @@ from wins.views import (AddUserView, AdvisorViewSet, BreakdownViewSet, CSVView,
                         ChangeCustomerEmailView, CompleteWinsCSVView, ConfirmationViewSet,
                         CurrentFinancialYearWins, DetailsWinViewSet, LimitedWinViewSet,
                         NewPasswordView, SendAdminEmailView, SendCustomerEmailView,
-                        SoftDeleteWinView, WinViewSet)
+                        SoftDeleteWinView, WinViewSet, WinDataHubView)
 
 WINS_CSV_SECRET_PATH = os.environ.get('WINS_CSV_SECRET_PATH')
 
@@ -87,6 +88,11 @@ urlpatterns = [
     url(
         r'^datasets/',
         include((datasets.urls, 'datasets'), namespace='datasets')),
+    path(
+        'wins/match/<int:match_id>/',
+        WinDataHubView.as_view(),
+        name='wins-by-match-id',
+    ),
 ]
 
 if settings.API_DEBUG or WINS_CSV_SECRET_PATH:

@@ -16,14 +16,19 @@ jobs:
           DEBUG: True
           API_DEBUG: True
           DATABASE_URL: 'postgres://postgres@127.0.0.1:5432/export-wins-data'
-          VCAP_SERVICES: '{"redis": [{"credentials": {"uri": "redis://127.0.0.1:7000/"}}]}'
+          VCAP_SERVICES: '{"redis": [{"credentials": {"uri": "redis://127.0.0.1:7000/", "name": "redis"}}]}'
           HAWK_IP_WHITELIST: 1.2.3.4
           HAWK_ACCESS_KEY_ID: some-id
           HAWK_SECRET_ACCESS_KEY: some-secret
+          ACTIVITY_STREAM_ACCESS_KEY_ID: activity-stream-id
+          ACTIVITY_STREAM_SECRET_ACCESS_KEY: activity-stream-key
+          DATA_FLOW_API_ACCESS_KEY_ID: data-flow-api-id
+          DATA_FLOW_API_SECRET_ACCESS_KEY: data-flow-api-key
           AWS_KEY_CSV_READ_ONLY_ACCESS: aws-read-key
           AWS_SECRET_CSV_READ_ONLY_ACCESS: aws-read-secret
           AWS_REGION_CSV: aws-region
           SESSION_COOKIE_SECURE: False
+          REDIS_SERVICE_NAME: 'redis'
       - image: postgres:10
         environment:
           POSTGRES_DB: export-wins-data
@@ -45,7 +50,7 @@ jobs:
             - ~/cache/pip
       - run:
           name: Run tests
-          command: python -W ignore manage.py test
+          command: pytest
 
 workflows:
   version: 2

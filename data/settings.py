@@ -4,9 +4,12 @@ import os
 import shutil
 import sys
 
+from django.core.exceptions import ImproperlyConfigured
 import dj_database_url
 import rediscluster
 from dotenv import find_dotenv, load_dotenv
+
+from core.types import HawkScope
 
 load_dotenv(find_dotenv(), verbose=True)
 
@@ -321,15 +324,73 @@ COUNTRIES_OVERRIDE = {
 }
 
 # Hawk Authentication
+HAWK_RECEIVER_NONCE_EXPIRY_SECONDS = 60
+HAWK_RECEIVER_CREDENTIALS = {}
+
+
+def _add_hawk_credentials(id_env_name, key_env_name, scopes):
+    id_ = os.getenv(id_env_name, default=None)
+
+    if not id_:
+        return
+
+    if id_ in HAWK_RECEIVER_CREDENTIALS:
+        raise ImproperlyConfigured(
+            'Duplicate Hawk access key IDs detected. All access key IDs should be unique.',
+        )
+
+    HAWK_RECEIVER_CREDENTIALS[id_] = {
+        'key': os.getenv(key_env_name),
+        'scopes': scopes,
+    }
+
+
+_add_hawk_credentials(
+    'DATA_HUB_ACCESS_KEY_ID',
+    'DATA_HUB_SECRET_ACCESS_KEY',
+    (HawkScope.data_hub, ),
+)
+
+_add_hawk_credentials(
+    'ACTIVITY_STREAM_ACCESS_KEY_ID',
+    'ACTIVITY_STREAM_SECRET_ACCESS_KEY',
+    (HawkScope.activity_stream, ),
+)
+
+_add_hawk_credentials(
+    'DATA_FLOW_API_ACCESS_KEY_ID',
+    'DATA_FLOW_API_SECRET_ACCESS_KEY',
+    (HawkScope.data_flow_api, ),
+)
+
+_add_hawk_credentials(
+    'HAWK_ACCESS_KEY_ID',
+    'HAWK_SECRET_ACCESS_KEY',
+    (HawkScope.data_flow_api, HawkScope.activity_stream, ),
+)
+
 HAWK_IP_WHITELIST = os.getenv('HAWK_IP_WHITELIST', default='')
-# Defaults are not used so we don't accidentally expose the endpoint
-# with default credentials
-HAWK_ACCESS_KEY_ID = os.environ['HAWK_ACCESS_KEY_ID']
-HAWK_SECRET_ACCESS_KEY = os.environ['HAWK_SECRET_ACCESS_KEY']
 HAWK_NONCE_EXPIRY_SECONDS = 60
 
-vcap_services = json.loads(os.environ['VCAP_SERVICES'])
-redis_credentials = vcap_services['redis'][0]['credentials']
+
+def get_redis_instance():
+    """
+    Helper to switch redis instance with enviroment varible.
+    We need this because export-wins-data is runing in cluster mode 
+    to help switch with minimum down time we use enviroment varibles.
+    """
+    vcap_services = json.loads(os.environ['VCAP_SERVICES'])
+    if len(vcap_services['redis']) == 1:
+        return vcap_services['redis'][0]['credentials']
+
+    REDIS_SERVICE_NAME = os.getenv('REDIS_SERVICE_NAME')
+    if not REDIS_SERVICE_NAME:
+        raise ImproperlyConfigured('REDIS_SERVICE_NAME must be set if there are multiple instances of redis.')
+    redis_service = [r for r in vcap_services['redis'] if r['name'] == REDIS_SERVICE_NAME][0]
+    return redis_service['credentials']
+
+
+redis_credentials = get_redis_instance()
 
 # rediscluster, by default, breaks if using the combination of
 # - rediss:// connection uri
@@ -363,3 +424,9 @@ CACHES = {
         'KEY_PREFIX': 'export-wins-data',
     },
 }
+
+IMPORT_MATCH_ID_TO_WIN_BATCH_SIZE = int(os.getenv('IMPORT_MATCH_ID_TO_WIN_BATCH_SIZE', 500))
+
+COMPANY_MATCHING_SERVICE_BASE_URL = os.getenv('COMPANY_MATCHING_SERVICE_BASE_URL', default=None)
+COMPANY_MATCHING_HAWK_ID = os.getenv('COMPANY_MATCHING_HAWK_ID', default=None)
+COMPANY_MATCHING_HAWK_KEY = os.getenv('COMPANY_MATCHING_HAWK_KEY', default=None)

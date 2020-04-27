@@ -61,6 +61,7 @@ def create_win_factory(user, sector_choices=None, default_date=None, default_tea
         if export_experience:
             win.export_experience = export_experience
 
+        win.match_id = 1
         win.save()
 
         if confirm:
