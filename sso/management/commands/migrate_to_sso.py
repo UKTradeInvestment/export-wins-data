@@ -64,7 +64,9 @@ def merge_users(migration_users: MigrationUser, commit_changes=False):
             user = user_model.objects.get(pk=single_user.id)
             users.append(user)
         except user_model.DoesNotExist as e:
-            raise UserNotFoundException(f"user not found with id {single_user.id} {single_user.future_email}")
+            raise UserNotFoundException(
+                f"merge_users {single_user.id} {single_user.future_email} not found"
+            )
 
         # only mark the target user as active based on the incoming data
         if single_user.future_active:
@@ -177,7 +179,8 @@ class Command(BaseCommand):
                 self.stdout.write(format_user_state(updated_user))
             else:
                 self.stderr.write(
-                    self.style.ERROR(f' {single_user.id} {single_user.current_email} not found in database'))
+                    self.style.ERROR(
+                        f'single_user_update {single_user.id} {single_user.current_email} not found'))
 
         self.stderr.write(f"{merge_count:>5}: users merged")
         self.stderr.write(f"{single_user_count:>5}: users updated")
