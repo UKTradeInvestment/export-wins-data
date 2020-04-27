@@ -172,7 +172,9 @@ def _archive_existing_user_by_email(email, sso_id):
 def _get_contact_email_fallback_to_email(abc_data):
     # We default to SSO email field unless there is a value for contact_email
     # (email is mandatory in SSO)
-    if 'contact_email' in abc_data:
+    contact_email_key = 'contact_email'
+
+    if contact_email_key in abc_data and abc_data[contact_email_key]:
         return abc_data['contact_email']
 
     return abc_data['email']
