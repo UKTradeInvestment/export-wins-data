@@ -54,6 +54,41 @@ class TestMatchIdTask:
         assert win.match_id == 1
 
     @mute_signals(post_save)
+    def test_update_match_id_to_none_task(self, requests_mock):
+        """Test task updates match id."""
+        win = WinFactory(
+            id='00000000-0000-0000-0000-000000000001',
+            company_name='Name 2',
+            cdms_reference='cdms00000000',
+            customer_email_address='test@example.com',
+            match_id=1
+        )
+
+        mock_reponse = {
+            'matches': [
+                {
+                    'id': '00000000-0000-0000-0000-000000000001',
+                    'match_id': None,
+                    'similarity': '000000'
+                },
+            ]
+        }
+
+        dynamic_response = HawkMockJSONResponse(
+            api_id=settings.COMPANY_MATCHING_HAWK_ID,
+            api_key=settings.COMPANY_MATCHING_HAWK_KEY,
+            response=mock_reponse,
+        )
+        requests_mock.post(
+            '/api/v1/company/match/',
+            status_code=HTTP_200_OK,
+            text=dynamic_response,
+        )
+        update_match_id.delay(win.pk)
+        win.refresh_from_db()
+        assert win.match_id is None
+
+    @mute_signals(post_save)
     @pytest.mark.parametrize(
         'exception',
         (

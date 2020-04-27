@@ -41,7 +41,6 @@ def update_match_id(self, win_id):
     try:
         response = get_match_ids([win])
         match_id = _extract_match_id(response.json())
-        win = Win.objects.get(pk=win_id)
         win.match_id = match_id
         message = (
             f'Saved match_id {match_id} to win:{win_id}' if match_id

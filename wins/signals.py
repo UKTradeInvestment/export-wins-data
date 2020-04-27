@@ -13,9 +13,7 @@ logger = logging.getLogger(__name__)
 @receiver(post_save, sender=Win, dispatch_uid='win_post_save_dispatch')
 def save_match_id(sender, instance, **kwargs):
     """Save match id on a post save signal."""
-    update_fields = kwargs['update_fields']
-    if update_fields is None:
-        update_fields = []
+    update_fields = kwargs.get('update_fields', [])
     """
     Ignore fixture update of if the match_id has been passed in
     update_fields e.g Win.save(update_fields=['match_id'])
