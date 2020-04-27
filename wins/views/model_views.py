@@ -154,22 +154,25 @@ class AdvisorViewSet(AliceMixin, ModelViewSet):
     http_method_names = ("get", "post", "patch", "put", "delete")
 
     def perform_destroy(self, instance):
-        # when Win is deleted, it's advisors get soft-deleted
-        # but when a user deletes the advisor, want to delete it for real
-        # which requires overriding the standard method to give the
-        # `for_real` flag
+        """
+        when Win is deleted, it's advisors get soft-deleted
+        but when a user deletes the advisor, want to delete it for real
+        which requires overriding the standard method to give the
+        `for_real` flag
+        """
         instance.delete(for_real=True)
 
 
 @method_decorator(alice_exempt, name='dispatch')
 class WinDataHubView(ListAPIView):
     """
-        This endpoint is used to expose win inside datahub
-        To match companies it uses the match id since there in
-        no one to one record with datahub. In the future DNB number
-        may be used.
-        Read only export wins view for on datahub
+    This endpoint is used to expose win inside datahub
+    To match companies it uses the match id since there in
+    no one to one record with datahub. In the future DNB number
+    may be used.
+    Read only export wins view for on datahub
     """
+
     serializer_class = DataHubWinSerializer
     pagination_class = BigPagination
     authentication_classes = (HawkAuthentication,)
@@ -178,10 +181,10 @@ class WinDataHubView(ListAPIView):
 
     @decorator_from_middleware(HawkResponseMiddleware)
     def get(self, request, *args, **kwargs):
-        """Add HawkResponseMiddleware for get request"""
+        """Add HawkResponseMiddleware for get request."""
         return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
-        """Get wins by match id a empty list if not matches are found"""
+        """Get wins by match id a empty list if not matches are found."""
         match_id = self.kwargs['match_id']
-        return Win.objects.filter(match_id=match_id)
+        return Win.objects.filter(match_id=match_id).order_by('-date')

@@ -68,7 +68,7 @@ docker run -d -p 7000-7005:7000-7005 -e CLUSTER_ONLY=true -e IP=0.0.0.0 grokzen/
 with your environment setup as it would be in PaaS
 
 ```bash
-export VCAP_SERVICES='{"redis": [{"credentials": {"uri": "redis://127.0.0.1:7000/"}}]}'
+export VCAP_SERVICES='{"redis": [{"credentials": {"uri": "redis://127.0.0.1:7000/", name: "redis"}}]}'
 ```
 
 #### Dummy data
