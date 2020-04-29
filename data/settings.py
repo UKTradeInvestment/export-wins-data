@@ -392,16 +392,8 @@ def get_redis_instance():
 
 redis_credentials = get_redis_instance()
 
-# rediscluster, by default, breaks if using the combination of
-# - rediss:// connection uri
-# - skip_full_coverage_check=True
-# We work around the issues by forcing the uri to start with redis://
-# and setting the connection class to use SSL if necessary
-is_tls_enabled = redis_credentials['uri'].startswith('rediss://')
-if is_tls_enabled:
-    redis_uri = redis_credentials['uri'].replace('rediss://', 'redis://')
-else:
-    redis_uri = redis_credentials['uri']
+
+redis_uri = redis_credentials['uri']
 
 
 def _build_redis_url(base_url, db_number=0, **query_args):
