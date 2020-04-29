@@ -6,3 +6,4 @@ class WinsConfig(AppConfig):
 
     def ready(self):
         from . import checks
+        import wins.signals # noqa

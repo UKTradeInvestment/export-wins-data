@@ -17,7 +17,7 @@ from wins.company_matching_utils import (
     CompanyMatchingServiceConnectionError,
     CompanyMatchingServiceHTTPError,
     CompanyMatchingServiceTimeoutError,
-    update_match_ids,
+    get_match_ids,
 )
 from wins.factories import WinFactory
 from wins.models import Win
@@ -61,7 +61,7 @@ class TestCompanyMatchingApi(TestCase):
             status_code=status.HTTP_200_OK,
             text=dynamic_response,
         )
-        update_match_ids(
+        get_match_ids(
             Win.objects.filter(customer_email_address='test@example.com')
         )
         assert matcher.called_once
@@ -89,7 +89,7 @@ class TestCompanyMatchingApi(TestCase):
         """
         WinFactory()
         with self.assertRaises(ImproperlyConfigured):
-            update_match_ids(Win.objects.all())
+            get_match_ids(Win.objects.all())
 
     @parameterized.expand(
         [
@@ -128,7 +128,7 @@ class TestCompanyMatchingApi(TestCase):
         )
         WinFactory()
         with self.assertRaises(expected_exception):
-            update_match_ids(Win.objects.all())
+            get_match_ids(Win.objects.all())
 
     @parameterized.expand(
         [
@@ -156,4 +156,4 @@ class TestCompanyMatchingApi(TestCase):
             CompanyMatchingServiceHTTPError,
             msg=f'The Company matching service returned an error status: {response_status}',
         ):
-            update_match_ids(Win.objects.all())
+            get_match_ids(Win.objects.all())

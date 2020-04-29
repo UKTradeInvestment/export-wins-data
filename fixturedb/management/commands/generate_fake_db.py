@@ -2,6 +2,8 @@ from typing import List
 import random
 
 from django.core.management.base import BaseCommand, CommandError
+from django.db.models.signals import post_save
+from factory.django import mute_signals
 from factory.fuzzy import FuzzyChoice
 
 from faker import Factory as FakeFactory
@@ -38,22 +40,23 @@ class Command(BaseCommand):
                             help="add some additional advisors (random)")
 
     def make_win(self, win_factory, has_customer_response, agree_with_win, is_hvc):
-        w = win_factory(
-            self.hvc_choices.fuzz() if is_hvc else None,
-            confirm=has_customer_response,
-            team_type=self.team_type_choices.fuzz()
-        )
-        if has_customer_response and w.confirmation.agree_with_win != agree_with_win:
-            w.confirmation.agree_with_win = agree_with_win
-            w.save()
-
-        self.stdout.write(
-            self.style.SUCCESS(
-                f'Created {"non-" if not is_hvc else ""}HVC Win {w.id}. Confirmed={bool_to_tick(w.confirmed)}. '
-                f'Team={w.hq_team} '
+        with mute_signals(post_save):
+            w = win_factory(
+                self.hvc_choices.fuzz() if is_hvc else None,
+                confirm=has_customer_response,
+                team_type=self.team_type_choices.fuzz()
             )
-        )
-        return w
+            if has_customer_response and w.confirmation.agree_with_win != agree_with_win:
+                w.confirmation.agree_with_win = agree_with_win
+                w.save()
+
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f'Created {"non-" if not is_hvc else ""}HVC Win {w.id}. Confirmed={bool_to_tick(w.confirmed)}. '
+                    f'Team={w.hq_team} '
+                )
+            )
+            return w
 
     def handle(self, *args, **options):
         win_factory = create_win_factory(User.objects.last())
