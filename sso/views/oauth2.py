@@ -169,26 +169,36 @@ def _archive_existing_user_by_email(email, sso_id):
     existing_user.save()
 
 
+def _get_contact_email(abc_data):
+    contact_email_key = 'contact_email'
+    if contact_email_key in abc_data and abc_data[contact_email_key]:
+        return abc_data['contact_email']
+
+    return None
+
+
 def _get_contact_email_fallback_to_email(abc_data):
     # We default to SSO email field unless there is a value for contact_email
     # (email is mandatory in SSO)
-    contact_email_key = 'contact_email'
+    contact_email = _get_contact_email(abc_data)
 
-    if contact_email_key in abc_data and abc_data[contact_email_key]:
-        return abc_data['contact_email']
+    if contact_email:
+        return contact_email
 
     return abc_data['email']
 
 
 def _safe_update_user(user, abc_data):
-    email = _get_contact_email_fallback_to_email(abc_data)
+    contact_email = _get_contact_email(abc_data)
 
-    if user.email == email and user.sso_user_id == abc_data['user_id']:
+    if user.email == contact_email and user.sso_user_id == abc_data['user_id']:
         return user
 
-    _archive_existing_user_by_email(email, user.sso_user_id)
+    _archive_existing_user_by_email(contact_email, user.sso_user_id)
 
-    user.email = email
+    if contact_email: # only update email if it has been changed - so ignore the case when it is removed
+        user.email = contact_email
+
     user.name = _format_name(abc_data)
     user.sso_user_id = abc_data['user_id']
     user.save()

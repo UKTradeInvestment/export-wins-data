@@ -75,7 +75,7 @@ class CallbackViewTestCase(TestCase):
     @patch('sso.views.oauth2.AuthorizationState.objects.check_state', _mock_check_state)
     @patch('sso.views.oauth2.AuthorizationState.objects.get_next_url', _mock_get_next_url)
     @patch('sso.views.oauth2.login', _mock_login)
-    def test_when_user_exists_with_sso_match(self):
+    def test_when_user_exists_with_sso_match_and_contact_email_has_value(self):
         existing_user = User(email='existing_sso_user@export.wins', sso_user_id=uuid4())
         existing_user.save()
 
@@ -92,6 +92,28 @@ class CallbackViewTestCase(TestCase):
 
         existing_user.refresh_from_db()
         assert existing_user.email == user_info['contact_email']
+
+    @patch('sso.views.oauth2.AuthorizationState.objects.check_state', _mock_check_state)
+    @patch('sso.views.oauth2.AuthorizationState.objects.get_next_url', _mock_get_next_url)
+    @patch('sso.views.oauth2.login', _mock_login)
+    def test_when_user_exists_with_sso_match_and_contact_email_is_blank(self):
+        expected_email = 'existing_sso_user@export.wins'
+        existing_user = User(email=expected_email, sso_user_id=uuid4())
+        existing_user.save()
+
+        user_info = _get_user_info('sso_email_address@export.wins', existing_user.sso_user_id)
+        user_info['contact_email'] = ''
+        mock_oauth_client = _mock_get_oauth_client(user_info)
+
+        request = self._get_request()
+
+        with patch('sso.views.oauth2.get_oauth_client', mock_oauth_client):
+            response = callback(request)
+
+        assert response.status_code == status.HTTP_200_OK
+
+        existing_user.refresh_from_db()
+        assert existing_user.email == expected_email
 
     @patch('sso.views.oauth2.AuthorizationState.objects.check_state', _mock_check_state)
     @patch('sso.views.oauth2.AuthorizationState.objects.get_next_url', _mock_get_next_url)
@@ -205,7 +227,7 @@ class CallbackViewTestCase(TestCase):
     @patch('sso.views.oauth2.AuthorizationState.objects.check_state', _mock_check_state)
     @patch('sso.views.oauth2.AuthorizationState.objects.get_next_url', _mock_get_next_url)
     @patch('sso.views.oauth2.login', _mock_login)
-    def test_when_user_doesnt_exist(self):
+    def test_when_user_doesnt_exist_and_contact_email_has_value(self):
         sso_email = 'sso@export.wins'
         contact_email = 'contact@export.wins'
 
@@ -221,5 +243,27 @@ class CallbackViewTestCase(TestCase):
 
         user = User.objects.get(email=contact_email)
 
+        assert user.sso_user_id == user_info['user_id']
+        assert user.name == f"{user_info['first_name']} {user_info['last_name']}"
+
+    @patch('sso.views.oauth2.AuthorizationState.objects.check_state', _mock_check_state)
+    @patch('sso.views.oauth2.AuthorizationState.objects.get_next_url', _mock_get_next_url)
+    @patch('sso.views.oauth2.login', _mock_login)
+    def test_when_user_doesnt_exist_and_contact_email_is_blank(self):
+        sso_email = 'sso@export.wins'
+        contact_email = ''
+
+        user_info = _get_user_info(sso_email, uuid4())
+        user_info['contact_email'] = contact_email
+
+        mock_oauth_client = _mock_get_oauth_client(user_info)
+
+        request = self._get_request()
+
+        with patch('sso.views.oauth2.get_oauth_client', mock_oauth_client):
+            response = callback(request)
+
+        # the user should be created using the email property from SSO
+        user = User.objects.get(email=sso_email)
         assert user.sso_user_id == user_info['user_id']
         assert user.name == f"{user_info['first_name']} {user_info['last_name']}"
