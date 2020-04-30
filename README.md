@@ -36,48 +36,50 @@ SENDING_ADDRESS='noreply@example.com'
 FEEDBACK_ADDRESS='feedback@example.com'
 ```
 
-## Dependencies
+Dependencies:
+-   Python 3.8.x
+-   PostgreSQL 10
+-   redis 3.2
 
-### Database
-You need a Postgres database to connect to, to run Postgres in a docker container run:
 
-```bash
-docker run -d -p 5432:5432 -e POSTGRES_DB=export-wins-data postgres:9
-```
 
-Now set your DATABASE_URL to include the default user `postgres`:
+### Installation with Docker
 
-```bash
-export DATABASE_URL='postgres://postgres@127.0.0.1:5432/export-wins-data'
-```
+1.  Clone the repository:
 
-### Cache
+    ```shell
+    git clone https://github.com/uktrade/export-win-data
+    cd export-win-data
+    ```
 
-You need a Redis Cluster running
+2.  Create a `.env` file from `.env.template`
 
-```bash
-docker run -d -p 7000-7005:7000-7005 -e CLUSTER_ONLY=true grokzen/redis-cluster:3.2.11
-```
+    ```shell
+    cp .env.template .env
+    ```
 
-or on MacOS, you may need to run
+3.  Build and run the necessary containers for the required environment:
 
-```bash
-docker run -d -p 7000-7005:7000-7005 -e CLUSTER_ONLY=true -e IP=0.0.0.0 grokzen/redis-cluster:3.2.11
-```
+    ```shell
+    docker-compose up
+    ```
 
-with your environment setup as it would be in PaaS
+You can run commands in the docker container
 
-```bash
-export VCAP_SERVICES='{"redis": [{"credentials": {"uri": "redis://127.0.0.1:7000/", name: "redis"}}]}'
-```
+ ```bash
+    docker-compose run --rm sut bash
+ ```
 
+ 
 #### Dummy data
 
 Once you have a database you'll need some data.
 
+
 ##### Start with the migrate command to set-up your tables:
 
 ```bash
+
 $ ./manage.py migrate
 ```
 

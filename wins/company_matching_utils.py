@@ -14,9 +14,9 @@ class CompanyMatchingServiceException(Exception):
     """
 
 
-class CompanyMatchingServiceHTTPError(Exception):
+class CompanyMatchingServiceHTTPError(CompanyMatchingServiceException):
     """
-    Base exception class for Company matching service related errors.
+    Exception for when a HTTP error is encountered when connecting to Company matching service.
     """
 
 
@@ -135,7 +135,7 @@ def _format_company_for_post(wins):
     }
 
 
-def update_match_ids(wins):
+def get_match_ids(wins):
     """
     Get companies match from a Win queryset and updates the match_id fields from the company matching service.
     Raises exception an requests.exceptions.HTTPError for status, timeout and a connection error.

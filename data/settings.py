@@ -3,10 +3,10 @@ import logging
 import os
 import shutil
 import sys
+from urllib.parse import urlencode
 
 from django.core.exceptions import ImproperlyConfigured
 import dj_database_url
-import rediscluster
 from dotenv import find_dotenv, load_dotenv
 
 from core.types import HawkScope
@@ -392,34 +392,21 @@ def get_redis_instance():
 
 redis_credentials = get_redis_instance()
 
-# rediscluster, by default, breaks if using the combination of
-# - rediss:// connection uri
-# - skip_full_coverage_check=True
-# We work around the issues by forcing the uri to start with redis://
-# and setting the connection class to use SSL if necessary
-is_tls_enabled = redis_credentials['uri'].startswith('rediss://')
-if is_tls_enabled:
-    redis_uri = redis_credentials['uri'].replace('rediss://', 'redis://')
-    redis_connection_class = rediscluster.connection.SSLClusterConnection
-else:
-    redis_uri = redis_credentials['uri']
-    redis_connection_class = rediscluster.connection.ClusterConnection
+
+redis_uri = redis_credentials['uri']
+
+
+def _build_redis_url(base_url, db_number=0, **query_args):
+    encoded_query_args = urlencode(query_args)
+    return f'{base_url}/{db_number}?{encoded_query_args}'
+
 
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': redis_uri,
+        'LOCATION': _build_redis_url(redis_uri, 0),
         'OPTIONS': {
-            'REDIS_CLIENT_CLASS': 'rediscluster.StrictRedisCluster',
-            'REDIS_CLIENT_KWARGS': {
-                'decode_responses': True,
-            },
-            'CONNECTION_POOL_CLASS': 'rediscluster.connection.ClusterConnectionPool',
-            'CONNECTION_POOL_KWARGS': {
-                # AWS ElasticCache disables CONFIG commands
-                'skip_full_coverage_check': True,
-                'connection_class': redis_connection_class,
-            },
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         },
         'KEY_PREFIX': 'export-wins-data',
     },
@@ -430,3 +417,10 @@ IMPORT_MATCH_ID_TO_WIN_BATCH_SIZE = int(os.getenv('IMPORT_MATCH_ID_TO_WIN_BATCH_
 COMPANY_MATCHING_SERVICE_BASE_URL = os.getenv('COMPANY_MATCHING_SERVICE_BASE_URL', default=None)
 COMPANY_MATCHING_HAWK_ID = os.getenv('COMPANY_MATCHING_HAWK_ID', default=None)
 COMPANY_MATCHING_HAWK_KEY = os.getenv('COMPANY_MATCHING_HAWK_KEY', default=None)
+
+
+is_rediss = redis_uri.startswith('rediss://')
+url_args = {'ssl_cert_reqs': 'CERT_REQUIRED'} if is_rediss else {}
+celery_redis_url = _build_redis_url(redis_uri, 1, **url_args)
+CELERY_RESULT_BACKEND = celery_redis_url
+CELERY_BROKER_URL = celery_redis_url
