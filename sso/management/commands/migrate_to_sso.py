@@ -18,10 +18,6 @@ class BadFutureSSOIdException(BaseException):
     pass
 
 
-class BadFutureSSOIdException(BaseException):
-    pass
-
-
 class UserNotFoundException(BaseException):
     pass
 
@@ -95,8 +91,6 @@ def merge_users(migration_users: MigrationUser, commit_changes=False):
             try:
                 other_user.save()
             except IntegrityError as e:
-                print(users)
-                print(target_user)
                 raise
 
         # Move wins to target user
