@@ -346,7 +346,7 @@ class AlicePermissionTestCase(TestCase):
 
         # if not complete, no mail (when you create a win, it is not complete)
         self._test_post_pass(self.wins_list, self.WINS_POST_SAMPLE)
-        self.assertEquals(len(mail.outbox), 0)
+        self.assertEqual(len(mail.outbox), 0)
 
         # if complete it should send customer mail, but not send any officer
         # mails, since no extra officer email addresses were added to the win
@@ -357,7 +357,7 @@ class AlicePermissionTestCase(TestCase):
 
         win = Win.objects.all()[0]
         self.assertTrue(win.complete)
-        self.assertEquals(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox), 1)
         self.assertTrue(
             mail.outbox[0].subject.startswith('Please confirm '),
         )
@@ -369,7 +369,7 @@ class AlicePermissionTestCase(TestCase):
 
         # if re-submit the complete patch, no additional mail should be sent
         self._test_patch_pass(win_url, json_data)
-        self.assertEquals(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox), 1)
 
     @override_settings(UI_SECRET=AliceClient.SECRET)
     @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
@@ -385,7 +385,7 @@ class AlicePermissionTestCase(TestCase):
         json_data = json.dumps({'complete': True})
         self._test_patch_pass(win_url, json_data)
 
-        self.assertEquals(len(mail.outbox), 2)
+        self.assertEqual(len(mail.outbox), 2)
 
         # customer email
         self.assertTrue(
@@ -426,8 +426,8 @@ class AlicePermissionTestCase(TestCase):
             self.customerresponses_list,
             self.CUSTOMER_RESPONSES_POST_SAMPLE,
         )
-        self.assertEquals(len(mail.outbox), 1)
-        self.assertEquals(
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
             mail.outbox[0].subject,
             'Customer response to Export Win',
         )
@@ -698,8 +698,8 @@ class AlicePermissionTestCase(TestCase):
             },
         )
         self.assertEqual(response.status_code, 201)
-        self.assertEquals(len(mail.outbox), 1)
-        self.assertEquals(
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
             mail.outbox[0].subject,
             'Export Wins Login Credentials',
         )
@@ -738,8 +738,8 @@ class AlicePermissionTestCase(TestCase):
             {'email': 'bilbo.vader@example.com'},
         )
         self.assertEqual(response.status_code, 201)
-        self.assertEquals(len(mail.outbox), 1)
-        self.assertEquals(
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
             mail.outbox[0].subject,
             'Export Wins Login Credentials',
         )
@@ -780,7 +780,7 @@ class AlicePermissionTestCase(TestCase):
             {'win_id': str(win.id)},
         )
         self.assertEqual(response.status_code, 201)
-        self.assertEquals(len(mail.outbox), 2)
+        self.assertEqual(len(mail.outbox), 2)
         self.assertIn(
             'helped with your success',
             mail.outbox[0].subject,
@@ -840,7 +840,7 @@ class AlicePermissionTestCase(TestCase):
         self.assertEqual(response.status_code, 201)
         win = Win.objects.get(id=win.id)
         self.assertEqual(win.customer_email_address, 'new-email@example.com')
-        self.assertEquals(len(mail.outbox), 2)
+        self.assertEqual(len(mail.outbox), 2)
         self.assertIn(
             'helped with your success',
             mail.outbox[0].subject,
