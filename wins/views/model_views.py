@@ -33,14 +33,14 @@ class StandardPagination(PageNumberPagination):
     """Standard pagination."""
 
     page_size = 25
-    page_size_query_param = "page-size"
+    page_size_query_param = 'page-size'
 
 
 class BigPagination(PageNumberPagination):
     """Big pagination."""
 
     page_size = 1000
-    page_size_query_param = "page-size"
+    page_size_query_param = 'page-size'
 
 
 class WinViewSet(AliceMixin, ModelViewSet):
@@ -52,12 +52,11 @@ class WinViewSet(AliceMixin, ModelViewSet):
     pagination_class = BigPagination
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filter_fields = ('id', 'user__id')
-    ordering_fields = ("pk",)
-    http_method_names = ("get", "post", "put", "patch")
+    ordering_fields = ('pk',)
+    http_method_names = ('get', 'post', 'put', 'patch')
 
     def _notify_if_complete(self, instance):
-        """ If the form is marked 'complete', email customer for response """
-
+        """If the form is marked 'complete', email customer for response."""
         if not instance.complete:
             return
 
@@ -89,31 +88,31 @@ class WinViewSet(AliceMixin, ModelViewSet):
 
 
 class LimitedWinViewSet(WinViewSet):
-    """ Limited view for customer response """
+    """Limited view for customer response."""
 
     serializer_class = LimitedWinSerializer
     permission_classes = (AllowAny,)
-    http_method_names = ("get",)
+    http_method_names = ('get',)
 
     def get_queryset(self):
-
+        """Allow for specific wins to be queried here."""
         # We only allow for specific wins to be queried here
-        if "pk" not in self.kwargs:
+        if 'pk' not in self.kwargs:
             return WinViewSet.get_queryset(self).none()
 
         # Limit records to wins that have not already been confirmed
         return WinViewSet.get_queryset(self).filter(
-            pk=self.kwargs["pk"],
-            confirmation__isnull=True
+            pk=self.kwargs['pk'],
+            confirmation__isnull=True,
         )
 
 
 class DetailsWinViewSet(WinViewSet):
-    """ Provides additional Win data for details view """
+    """Provides additional Win data for details view."""
 
     serializer_class = DetailWinSerializer
     permission_classes = (AllowAny,)
-    http_method_names = ("get",)
+    http_method_names = ('get',)
 
 
 class ConfirmationViewSet(AliceMixin, ModelViewSet):
@@ -125,12 +124,11 @@ class ConfirmationViewSet(AliceMixin, ModelViewSet):
     permission_classes = (AllowAny,)
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filter_class = CustomerResponseFilterSet
-    ordering_fields = ("pk",)
-    http_method_names = ("get", "post")
+    ordering_fields = ('pk',)
+    http_method_names = ('get', 'post')
 
     def perform_create(self, serializer):
-        """ Send officer notification when customer responds """
-
+        """Send officer notification when customer responds."""
         instance = serializer.save()
         notifications.send_officer_notification_of_customer_response(instance)
 
@@ -152,8 +150,8 @@ class BreakdownViewSet(AliceMixin, ModelViewSet):
     pagination_class = StandardPagination
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filter_fields = ('win__id',)
-    ordering_fields = ("pk",)
-    http_method_names = ("get", "post", "patch", "put", "delete")
+    ordering_fields = ('pk',)
+    http_method_names = ('get', 'post', 'patch', 'put', 'delete')
 
 
 class AdvisorViewSet(AliceMixin, ModelViewSet):
@@ -164,13 +162,14 @@ class AdvisorViewSet(AliceMixin, ModelViewSet):
     pagination_class = StandardPagination
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filter_fields = ('win__id',)
-    ordering_fields = ("pk",)
-    http_method_names = ("get", "post", "patch", "put", "delete")
+    ordering_fields = ('pk',)
+    http_method_names = ('get', 'post', 'patch', 'put', 'delete')
 
     def perform_destroy(self, instance):
         """
-        when Win is deleted, it's advisors get soft-deleted
-        but when a user deletes the advisor, want to delete it for real
+        When Win is deleted, it's advisors get soft-deleted.
+
+        But when a user deletes the advisor, want to delete it for real
         which requires overriding the standard method to give the
         `for_real` flag
         """
