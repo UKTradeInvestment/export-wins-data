@@ -180,7 +180,8 @@ class AdvisorViewSet(AliceMixin, ModelViewSet):
 @method_decorator(alice_exempt, name='dispatch')
 class WinDataHubView(ListAPIView):
     """
-    This endpoint is used to expose win inside datahub
+    This endpoint is used to expose win inside datahub.
+
     To match companies it uses the match id since there in
     no one to one record with datahub. In the future DNB number
     may be used.
@@ -196,14 +197,25 @@ class WinDataHubView(ListAPIView):
 
     @decorator_from_middleware(HawkResponseMiddleware)
     def get(self, request, *args, **kwargs):
-        """Add HawkResponseMiddleware for get request."""
+        """
+        Add HawkResponseMiddleware for get request.
+
+        Make sure match id query param is provided at all times.
+        And each item within it is an integer.
+        """
+        match_ids = self.request.query_params.get('match_id', None)
+        if match_ids is None:
+            raise ValidationError('Missing mandatory parameter, match_id')
+
+        values = match_ids.split(',')
+        if not all(item.isdigit() for item in values):
+            raise ValidationError(f'All values in {values} must be integers')
+
         return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
-        """Get wins by match id a empty list if not matches are found."""
-        match_ids = self.request.query_params.get('match_id', None)
-        if not match_ids:
-            raise ValidationError('Missing mandatory filter, match_id')
+        """Get wins by all match ids provided."""
+        match_id = self.request.query_params.get('match_id')
+        match_ids = match_id.split(',')
 
-        values = match_ids.split(',')
-        return Win.objects.filter(match_id__in=values).order_by('-date')
+        return Win.objects.filter(match_id__in=match_ids).order_by('-date')

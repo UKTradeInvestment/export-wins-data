@@ -14,8 +14,9 @@ from wins.factories import BreakdownFactory, HVCFactory, UserFactory
 from wins.tests.utils import format_date_or_datetime
 
 
-def _url(match_id):
-    path = u'%s?%s' % (reverse('wins-by-match-id'), urlencode({'match_id': match_id}))
+def _url(match_ids):
+    encoded_params = urlencode({'match_id': ','.join(list(map(str, match_ids)))})
+    path = f"{reverse('wins-by-match-id')}?{encoded_params}"
     return 'http://testserver' + path
 
 
@@ -36,7 +37,7 @@ class TestWinDataHubView:
     @pytest.mark.parametrize('verb', ('post', 'patch', 'delete'))
     def test_verbs_not_allowed(self, api_client, verb):
         """Test only get is supported."""
-        url = _url(3)
+        url = _url([3])
         auth = hawk_auth_sender(url, method=verb).request_header
         response = getattr(api_client, verb)(
             url,
@@ -47,8 +48,7 @@ class TestWinDataHubView:
 
     def test_wrong_scope(self, api_client):
         """Test view returns 403 if not in scope."""
-        match_id = 3
-        url = _url(match_id)
+        url = _url([3])
         auth = hawk_auth_sender(
             url,
             key_id='no-scope-id',
@@ -60,14 +60,12 @@ class TestWinDataHubView:
             content_type='',
             HTTP_AUTHORIZATION=auth,
             HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
-            data={'match_id': match_id},
         )
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_invalid_key(self, api_client):
         """Test view returns 401 if the key is invalid."""
-        match_id = 3
-        url = _url(match_id)
+        url = _url([3])
         auth = hawk_auth_sender(
             url,
             key_id='invalid',
@@ -78,21 +76,54 @@ class TestWinDataHubView:
             content_type='',
             HTTP_AUTHORIZATION=auth,
             HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
-            data={'match_id': match_id},
         )
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_match_win_view_returns_an_empty_list(self, api_client):
-        """Test export wins returns an empty list if no match is found."""
-        match_id = 3
-        url = _url(match_id)
+    def test_400_when_match_id_query_param_missing(self, api_client):
+        """Test that 400 is returned when match id query param is missing."""
+        url = 'http://testserver' + reverse('wins-by-match-id')
         auth = hawk_auth_sender(url).request_header
         response = api_client.get(
             url,
             content_type='',
             HTTP_AUTHORIZATION=auth,
             HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
-            data={'match_id': match_id},
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_400_when_the_match_id_is_not_integer(self, api_client):
+        """Test that 400 is returned when match id is not an integer."""
+        url = _url(['a'])
+        auth = hawk_auth_sender(url).request_header
+        response = api_client.get(
+            url,
+            content_type='',
+            HTTP_AUTHORIZATION=auth,
+            HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_400_when_one_of_the_match_ids_is_not_integer(self, api_client):
+        """Test that 400 is returned when one of the match ids is not an integer."""
+        url = _url([1, 'a'])
+        auth = hawk_auth_sender(url).request_header
+        response = api_client.get(
+            url,
+            content_type='',
+            HTTP_AUTHORIZATION=auth,
+            HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_match_win_view_returns_an_empty_list(self, api_client):
+        """Test export wins returns an empty list if no match is found."""
+        url = _url([3])
+        auth = hawk_auth_sender(url).request_header
+        response = api_client.get(
+            url,
+            content_type='',
+            HTTP_AUTHORIZATION=auth,
+            HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
         )
         assert response.status_code == status.HTTP_200_OK
         assert response.json() == {
@@ -119,15 +150,13 @@ class TestWinDataHubView:
         business_potential_dict = dict(BUSINESS_POTENTIAL)
         teams_dict = dict(TEAMS)
         hq_dict = dict(HQ_TEAM_REGION_OR_POST)
-        match_id = 1
-        url = _url(match_id)
+        url = _url([1])
         auth = hawk_auth_sender(url).request_header
         response = api_client.get(
             url,
             content_type='',
             HTTP_AUTHORIZATION=auth,
             HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
-            data={'match_id': match_id},
         )
         assert response.status_code == status.HTTP_200_OK
 
@@ -195,15 +224,13 @@ class TestWinDataHubView:
         business_potential_dict = dict(BUSINESS_POTENTIAL)
         teams_dict = dict(TEAMS)
         hq_dict = dict(HQ_TEAM_REGION_OR_POST)
-        match_id = 1
-        url = _url(match_id)
+        url = _url([1])
         auth = hawk_auth_sender(url).request_header
         response = api_client.get(
             url,
             content_type='',
             HTTP_AUTHORIZATION=auth,
             HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
-            data={'match_id': match_id},
         )
         assert response.status_code == status.HTTP_200_OK
 
@@ -268,15 +295,13 @@ class TestWinDataHubView:
         business_potential_dict = dict(BUSINESS_POTENTIAL)
         teams_dict = dict(TEAMS)
         hq_dict = dict(HQ_TEAM_REGION_OR_POST)
-        match_id = 1
-        url = _url(match_id)
+        url = _url([1])
         auth = hawk_auth_sender(url).request_header
         response = api_client.get(
             url,
             content_type='',
             HTTP_AUTHORIZATION=auth,
             HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
-            data={'match_id': match_id},
         )
         assert response.status_code == status.HTTP_200_OK
 
@@ -347,15 +372,13 @@ class TestWinDataHubView:
         business_potential_dict = dict(BUSINESS_POTENTIAL)
         teams_dict = dict(TEAMS)
         hq_dict = dict(HQ_TEAM_REGION_OR_POST)
-        match_id = 1
-        url = _url(match_id)
+        url = _url([1])
         auth = hawk_auth_sender(url).request_header
         response = api_client.get(
             url,
             content_type='',
             HTTP_AUTHORIZATION=auth,
             HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
-            data={'match_id': match_id},
         )
         assert response.status_code == status.HTTP_200_OK
 
@@ -432,15 +455,13 @@ class TestWinDataHubView:
 
         teams_dict = dict(TEAMS)
         hq_dict = dict(HQ_TEAM_REGION_OR_POST)
-        match_id = 1
-        url = _url(match_id)
+        url = _url([1])
         auth = hawk_auth_sender(url).request_header
         response = api_client.get(
             url,
             content_type='',
             HTTP_AUTHORIZATION=auth,
             HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
-            data={'match_id': match_id},
         )
         assert response.status_code == status.HTTP_200_OK
 
@@ -495,3 +516,40 @@ class TestWinDataHubView:
                 },
             ],
         }
+
+    def test_multiple_match_ids(self, api_client):
+        """Test export wins are returned in the expected format."""
+        HVCFactory.create(
+            campaign_id='E083',
+            name='E083 - Consumer Goods & Retail',
+            financial_year=16,
+        )
+        hvc_win = create_win_factory(UserFactory.create())(
+            hvc_code='E083',
+            sector_id=88,
+            confirm=True,
+        )
+        BreakdownFactory.create(year=2020, win=hvc_win)
+        BreakdownFactory.create(year=2021, win=hvc_win)
+
+        non_hvc_win = create_win_factory(UserFactory.create())(
+            hvc_code=None,
+            sector_id=88,
+            confirm=True,
+            match_id=2,
+        )
+        BreakdownFactory.create(year=2020, win=non_hvc_win)
+        BreakdownFactory.create(year=2021, win=non_hvc_win)
+
+        url = _url([1, 2])
+        auth = hawk_auth_sender(url).request_header
+        response = api_client.get(
+            url,
+            content_type='',
+            HTTP_AUTHORIZATION=auth,
+            HTTP_X_FORWARDED_FOR='1.2.3.4, 123.123.123.123',
+        )
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()['count'] == 2
+        assert response.json()['results'][0]['id'] == hvc_win.id
+        assert response.json()['results'][1]['id'] == non_hvc_win.id
