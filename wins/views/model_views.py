@@ -1,36 +1,50 @@
-from django.utils.decorators import method_decorator, decorator_from_middleware
+from alice.middleware import alice_exempt
+from alice.views import AliceMixin
+
+from core.hawk import HawkAuthentication, HawkResponseMiddleware, HawkScopePermission
+from core.types import HawkScope
+
+from django.utils.decorators import decorator_from_middleware, method_decorator
+
 from django_filters.rest_framework import DjangoFilterBackend
+
 from rest_framework.filters import OrderingFilter
 from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
+from rest_framework.serializers import ValidationError
 from rest_framework.viewsets import ModelViewSet
 
 from .. import notifications
 from ..filters import CustomerResponseFilterSet
-from ..models import Win, Breakdown, Advisor, CustomerResponse, Notification
+from ..models import Advisor, Breakdown, CustomerResponse, Notification, Win
 from ..serializers import (
-    WinSerializer, DataHubWinSerializer, LimitedWinSerializer, BreakdownSerializer,
-    AdvisorSerializer, CustomerResponseSerializer, DetailWinSerializer
+    AdvisorSerializer,
+    BreakdownSerializer,
+    CustomerResponseSerializer,
+    DataHubWinSerializer,
+    DetailWinSerializer,
+    LimitedWinSerializer,
+    WinSerializer,
 )
-from alice.middleware import alice_exempt
-from alice.views import AliceMixin
-from core.hawk import HawkAuthentication, HawkResponseMiddleware, HawkScopePermission
-from core.types import HawkScope
 
 
 class StandardPagination(PageNumberPagination):
+    """Standard pagination."""
+
     page_size = 25
     page_size_query_param = "page-size"
 
 
 class BigPagination(PageNumberPagination):
+    """Big pagination."""
+
     page_size = 1000
     page_size_query_param = "page-size"
 
 
 class WinViewSet(AliceMixin, ModelViewSet):
-    """ For querying Wins and adding/editing """
+    """For querying Wins and adding/editing."""
 
     model = Win
     queryset = Win.objects.all()
@@ -178,6 +192,7 @@ class WinDataHubView(ListAPIView):
     authentication_classes = (HawkAuthentication,)
     permission_classes = (HawkScopePermission,)
     required_hawk_scope = HawkScope.data_hub
+    http_method_names = ('get')
 
     @decorator_from_middleware(HawkResponseMiddleware)
     def get(self, request, *args, **kwargs):
@@ -186,5 +201,9 @@ class WinDataHubView(ListAPIView):
 
     def get_queryset(self):
         """Get wins by match id a empty list if not matches are found."""
-        match_id = self.kwargs['match_id']
-        return Win.objects.filter(match_id=match_id).order_by('-date')
+        match_ids = self.request.query_params.get('match_id', None)
+        if not match_ids:
+            raise ValidationError('Missing mandatory filter, match_id')
+
+        values = match_ids.split(',')
+        return Win.objects.filter(match_id__in=values).order_by('-date')
