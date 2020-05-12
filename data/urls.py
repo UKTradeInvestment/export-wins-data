@@ -89,7 +89,7 @@ urlpatterns = [
         r'^datasets/',
         include((datasets.urls, 'datasets'), namespace='datasets')),
     path(
-        'wins/match/<int:match_id>/',
+        'wins/match',
         WinDataHubView.as_view(),
         name='wins-by-match-id',
     ),
