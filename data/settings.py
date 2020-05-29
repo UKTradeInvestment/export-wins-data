@@ -424,3 +424,14 @@ url_args = {'ssl_cert_reqs': 'CERT_REQUIRED'} if is_rediss else {}
 celery_redis_url = _build_redis_url(redis_uri, 1, **url_args)
 CELERY_RESULT_BACKEND = celery_redis_url
 CELERY_BROKER_URL = celery_redis_url
+
+CHAR_FIELD_MAX_LENGTH = 255
+
+DOCUMENT_BUCKETS = {
+    'default': {
+        'bucket': os.getenv('METADATA_BUCKET', default=''),
+        'aws_access_key_id': os.getenv('METADATA_AWS_ACCESS_KEY_ID', default=''),
+        'aws_secret_access_key': os.getenv('METADATA_AWS_SECRET_ACCESS_KEY', default=''),
+        'aws_region': os.getenv('METADATA_AWS_DEFAULT_REGION', default=''),
+    },
+}
