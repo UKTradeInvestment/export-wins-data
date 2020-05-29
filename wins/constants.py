@@ -625,6 +625,8 @@ SECTORS = (
     (257, "Water"),
 )
 
+SECTORS = sorted(SECTORS, key=lambda data: data[1])
+
 TEAMS = (
     ("team", "Trade (TD or ST)"),
     ("investment", "Investment (ITFG or IG)"),
