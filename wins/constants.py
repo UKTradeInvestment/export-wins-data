@@ -731,7 +731,6 @@ _SECTORS = (
     (342, "Agriculture, horticulture, fisheries and pets : Arable crops : Seeds and plant "
           "varieties"),
     (343, "Agriculture, horticulture, fisheries and pets : Arable crops : Soil management systems"),
-    (344, "Agriculture, horticulture, fisheries and pets : Engineering and precision farming"),
     (345, "Agriculture, horticulture, fisheries and pets : Engineering and precision farming : "
           "Machinery"),
     (346, "Agriculture, horticulture, fisheries and pets : Engineering and precision farming : "
@@ -755,7 +754,6 @@ _SECTORS = (
           "chain storage and transport"),
     (358, "Agriculture, horticulture, fisheries and pets : Infrastructure : Water storage, "
           "management and distribution"),
-    (359, "Agriculture, horticulture, fisheries and pets : Livestock, pets and horses"),
     (360, "Agriculture, horticulture, fisheries and pets : Livestock, pets and horses : Breeding "
           "stock and genetics"),
     (361, "Agriculture, horticulture, fisheries and pets : Livestock, pets and horses : Health, "
@@ -772,7 +770,6 @@ _SECTORS = (
     (370, "Medical devices and equipment : Implantable devices"),
     (371, "Medical devices and equipment : In vitro diagnostic devices"),
     (372, "Pharmaceuticals and biotechnology : Digital and data"),
-    (373, "Pharmaceuticals and biotechnology : Research and development"),
     (374, "Energy : Renewable energy : Electrical networks"),
     (375, "Energy : Renewable energy : Energy storage"),
     (376, "Energy : Renewable energy : Hydrogen"),
@@ -825,8 +822,6 @@ _SECTORS = (
     (423, "Space : Services : Ground based"),
     (424, "Space : Services : Launch"),
     (425, "Space : Services : Satellite operation"),
-    (426, "Technology and smart cities"),
-
     (427, "Technology and smart cities : Communications : Internet service providers"),
     (428, "Technology and smart cities : Communications : Wireless internet of things"),
     (429, "Technology and smart cities : Software : Software as a service"),
