@@ -872,7 +872,7 @@ HQ_TEAM_REGION_OR_POST = tuple([
     ("team:12", "TD - Events - Advanced Engineering"),
     ("team:13", "TD - Events - Agrifood"),
     ("team:14", "TD - Events - Consumer Goods"),
-    ("team:15", "TD - Events - Maritime"),
+    ("team:15", "TD - Events - Marine"),
     ("team:16", "TD - Events - Advanced Manufacturing - Support"),
     ("team:17", "TD - Events - Planning and Procurement"),
     ("team:18", "TD - Finance & Performance"),
