@@ -299,6 +299,8 @@ SECTORS = (
     (257, "Water"),
 )
 
+non_cdms = [6, 225]
+
 
 def do_thing__0005(apps, schema_editor):
     OverseasRegion = apps.get_model('mi', 'OverseasRegion')
@@ -323,13 +325,12 @@ def do_thing__0007(apps, schema_editor):
     SectorTeam = apps.get_model('mi', 'SectorTeam')
 
     sector_to_sector_team = {1: 'Advanced Manufacturing', 2: 'Aerospace', 3: 'Aerospace', 4: 'Aerospace', 5: 'Aerospace', 7: 'Aerospace', 8: 'Aerospace', 9: 'Aerospace', 10: 'Aerospace', 11: 'Aerospace', 12: 'Aerospace', 13: 'Bio-economy', 14: 'Infrastructure', 15: 'Automotive', 16: 'Automotive', 17: 'Automotive', 18: 'Automotive', 19: 'Automotive', 20: 'Automotive', 21: 'Automotive', 22: 'Automotive', 23: 'Automotive', 24: 'Automotive', 25: 'Automotive', 26: 'Automotive', 27: 'Automotive', 28: 'Automotive', 29: 'Automotive', 30: 'Automotive', 31: 'Automotive', 32: 'Automotive', 33: 'Automotive', 34: 'Automotive', 35: 'Automotive', 36: 'Life Sciences', 37: 'Life Sciences', 38: 'Life Sciences', 39: 'Life Sciences', 40: 'Life Sciences', 41: 'Life Sciences', 42: 'Life Sciences', 43: 'Life Sciences', 44: 'Life Sciences', 45: 'Life Sciences', 46: 'Life Sciences', 47: 'Life Sciences', 48: 'Life Sciences', 49: 'Life Sciences', 50: 'Life Sciences', 51: 'Life Sciences', 52: 'Life Sciences', 53: 'Life Sciences', 54: 'Life Sciences', 55: 'Life Sciences', 56: 'Life Sciences', 57: 'Life Sciences', 58: 'Financial & Professional Services', 59: 'Financial & Professional Services', 60: 'Financial & Professional Services', 61: 'Financial & Professional Services', 62: 'Financial & Professional Services', 63: 'Financial & Professional Services', 64: 'Financial & Professional Services', 65: 'Bio-economy', 66: 'Bio-economy', 67: 'Bio-economy', 68: 'Bio-economy', 69: 'Bio-economy', 70: 'Bio-economy', 71: 'Bio-economy', 72: 'Consumer & Creative', 73: 'Consumer & Creative', 74: 'Consumer & Creative', 75: 'Consumer & Creative', 76: 'Technology', 77: 'Technology', 78: 'Technology', 79: 'Technology', 80: 'Technology', 81: 'Technology', 82: 'Technology', 83: 'Technology', 84: 'Technology', 85: 'Technology', 86: 'Technology', 87: 'Technology', 88: 'Infrastructure', 89: 'Consumer & Creative', 90: 'Consumer & Creative', 91: 'Consumer & Creative', 92: 'Consumer & Creative', 93: 'Consumer & Creative', 94: 'Consumer & Creative', 95: 'Consumer & Creative', 96: 'Consumer & Creative', 97: 'Consumer & Creative', 98: 'Consumer & Creative', 99: 'Consumer & Creative', 100: 'Consumer & Creative', 101: 'Consumer & Creative', 102: 'Consumer & Creative', 103: 'Consumer & Creative', 104: 'Consumer & Creative', 105: 'Consumer & Creative', 106: 'Consumer & Creative', 107: 'Consumer & Creative', 108: 'Consumer & Creative', 109: 'Consumer & Creative', 110: 'Consumer & Creative', 111: 'Consumer & Creative', 112: 'Consumer & Creative', 113: 'Consumer & Creative', 114: 'Consumer & Creative', 115: 'Consumer & Creative', 116: 'Consumer & Creative', 117: 'Consumer & Creative', 118: 'Consumer & Creative', 119: 'Consumer & Creative', 120: 'Consumer & Creative', 121: 'Defence & Security', 122: 'Defence & Security', 123: 'Education', 124: 'Technology', 125: 'Technology', 126: 'Technology', 127: 'Technology', 128: 'Technology', 129: 'Technology', 130: 'Technology', 131: 'Technology', 132: 'Technology', 133: 'Energy', 134: 'Infrastructure', 135: 'Infrastructure', 136: 'Infrastructure', 137: 'Infrastructure', 138: 'Infrastructure', 139: 'Infrastructure', 140: 'Infrastructure', 141: 'Infrastructure', 142: 'Infrastructure', 143: 'Infrastructure', 144: 'Infrastructure', 145: 'Infrastructure', 146: 'Infrastructure', 147: 'Financial & Professional Services', 148: 'Financial & Professional Services', 149: 'Financial & Professional Services', 150: 'Financial & Professional Services', 151: 'Financial & Professional Services', 152: 'Financial & Professional Services', 153: 'Financial & Professional Services', 154: 'Financial & Professional Services', 155: 'Financial & Professional Services', 156: 'Financial & Professional Services', 157: 'Financial & Professional Services', 158: 'Financial & Professional Services', 159: 'Financial & Professional Services', 160: 'Financial & Professional Services', 161: 'Financial & Professional Services', 162: 'Financial & Professional Services', 163: 'Financial & Professional Services', 164: 'Financial & Professional Services', 165: 'Financial & Professional Services', 166: 'Financial & Professional Services', 167: 'Financial & Professional Services', 168: 'Financial & Professional Services', 169: 'Financial & Professional Services', 170: 'Food & Drink', 171: 'Food & Drink', 172: 'Food & Drink', 173: 'Food & Drink', 174: 'Food & Drink', 175: 'Food & Drink', 176: 'Food & Drink', 177: 'Food & Drink', 178: 'Food & Drink', 179: 'Food & Drink', 180: 'Food & Drink', 181: 'Food & Drink', 182: 'Food & Drink', 183: 'Consumer & Creative', 184: 'Consumer & Creative', 185: 'Consumer & Creative', 186: 'Healthcare', 187: 'Healthcare', 188: 'Healthcare', 189: 'Healthcare', 190: 'Healthcare', 191: 'Healthcare', 192: 'Healthcare', 193: 'Healthcare', 194: 'Healthcare', 195: 'Healthcare', 196: 'Healthcare', 197: 'Healthcare', 198: 'Healthcare', 199: 'Healthcare', 200: 'Healthcare', 201: 'Healthcare', 202: 'Healthcare', 203: 'Healthcare', 204: 'Healthcare', 205: 'Consumer & Creative', 206: 'Technology', 207: 'Consumer & Creative', 208: 'Consumer & Creative', 209: 'Consumer & Creative', 210: 'Consumer & Creative', 211: 'Consumer & Creative', 212: 'Life Sciences', 213: 'Advanced Manufacturing', 214: 'Infrastructure', 215: 'Advanced Manufacturing', 216: 'Advanced Manufacturing', 217: 'Infrastructure', 218: 'Infrastructure', 219: 'Infrastructure', 220: 'Infrastructure', 221: 'Infrastructure', 222: 'Infrastructure', 223: 'Infrastructure', 224: 'Infrastructure', 226: 'Energy', 227: 'Infrastructure', 228: 'Energy', 229: 'Energy', 230: 'Energy', 231: 'Infrastructure', 232: 'Energy', 233: 'Energy', 234: 'Energy', 235: 'Energy', 236: 'Energy', 237: 'Energy', 238: 'Energy', 239: 'Energy', 240: 'Energy', 241: 'Energy', 242: 'Consumer & Creative', 243: 'Defence & Security', 244: 'Defence & Security', 245: 'Technology', 246: 'Technology', 247: 'Technology', 248: 'Technology', 249: 'Technology', 250: 'Technology', 251: 'Technology', 252: 'Technology', 253: 'Technology', 254: 'Technology', 255: 'Technology', 256: 'Consumer & Creative', 257: 'Infrastructure'}
-    non_cdms = [6, 225]
 
     for sector_id, sector in SECTORS:
         if sector_id in non_cdms:
             continue
         team = sector_to_sector_team[sector_id]
-        sector_team=SectorTeam.objects.get(name=team)
+        sector_team = SectorTeam.objects.get(name=team)
         Sector(id=sector_id, name=sector, sector_team=sector_team).save()
 
 
@@ -351,46 +352,6 @@ def do_thing__0011(apps, schema_editor):
     for code, region in code_to_region.items():
         overseas_region = OverseasRegion.objects.get(name=region)
         Country(country=code, overseas_region=overseas_region).save()
-
-
-def add_parent_sectors__0015(apps, schema_editor):
-    ParentSector = apps.get_model('mi', 'ParentSector')
-    SectorTeam = apps.get_model('mi', 'SectorTeam')
-
-    parent_sectors = {1: 'Advanced Engineering', 2: 'Advanced Manufacturing', 3: 'Aerospace', 4: 'Agriculture, Horticulture and Fisheries', 5: 'Agritech', 6: 'Aid Funded Business', 7: 'Airports', 8: 'Automotive', 9: 'Biotechnology and Pharmaceuticals', 10: 'Business (and Consumer) Services', 11: 'Chemicals', 12: 'Clothing, Footwear and Fashion', 13: 'Communications', 14: 'Construction', 15: 'Consumer Goods & Retail', 16: 'Creative and Media', 17: 'Creative Industries', 18: 'Defence', 19: 'Defence and Security', 20: 'Digital Economy', 21: 'Education', 22: 'Education and Training', 23: 'Electronics and IT Hardware', 24: 'Energy', 25: 'Environment', 26: 'Environment and Water', 27: 'Financial Services', 28: 'Financial Services (including Professional Services)', 29: 'Food and Drink', 30: 'Giftware, Jewellery and Tableware', 31: 'Global Sports Projects', 32: 'Healthcare', 33: 'Healthcare and Medical', 34: 'Household Goods, Furniture and Furnishings', 35: 'ICT', 36: 'Leisure and Tourism', 37: 'Life Sciences', 38: 'Marine', 39: 'Mass Transport', 40: 'Mechanical Electrical and Process Engineering', 41: 'Metallurgical Process Plant', 42: 'Metals, Minerals and Materials', 43: 'Mining', 44: 'Nuclear', 45: 'Oil and Gas', 46: 'Ports and Logistics', 47: 'Power', 48: 'Professional Business Services', 49: 'Railways', 50: 'Renewable Energy', 51: 'Retail', 52: 'Security', 53: 'Software and Computer Services Business to Business (B2B)', 54: 'Sports Economy', 55: 'Textiles, Interior Textiles and Carpets', 56: 'Water'}
-    parent_sector_to_sector_team = {'Education and Training': 'Education', 'Giftware, Jewellery and Tableware': 'Consumer & Creative', 'Healthcare': 'Healthcare', 'Financial Services (including Professional Services)': 'Financial & Professional Services', 'Sports Economy': 'Consumer & Creative', 'Power': 'Energy', 'Textiles, Interior Textiles and Carpets': 'Consumer & Creative', 'Energy': 'Energy', 'Household Goods, Furniture and Furnishings': 'Consumer & Creative', 'Mass Transport': 'Infrastructure', 'Chemicals': 'Bio-economy', 'Environment and Water': 'Infrastructure', 'Agritech': 'Bio-economy', 'Ports and Logistics': 'Infrastructure', 'Renewable Energy': 'Energy', 'Airports': 'Infrastructure', 'Aerospace': 'Aerospace', 'Leisure and Tourism': 'Consumer & Creative', 'Defence': 'Defence & Security', 'Marine': 'Advanced Manufacturing', 'Financial Services': 'Financial & Professional Services', 'Water': 'Infrastructure', 'Oil and Gas': 'Energy', 'Creative Industries': 'Consumer & Creative', 'Automotive': 'Automotive', 'Agriculture, Horticulture and Fisheries': 'Bio-economy', 'Consumer Goods & Retail': 'Consumer & Creative', 'Food and Drink': 'Food & Drink', 'Clothing, Footwear and Fashion': 'Consumer & Creative', 'Mechanical Electrical and Process Engineering': 'Advanced Manufacturing', 'Mining': 'Infrastructure', 'Retail': 'Consumer & Creative', 'Creative and Media': 'Consumer & Creative', 'Digital Economy': 'Technology', 'Life Sciences': 'Life Sciences', 'Aid Funded Business': 'Infrastructure', 'Advanced Manufacturing': 'Advanced Manufacturing', 'Global Sports Projects': 'Consumer & Creative', 'Environment': 'Infrastructure', 'Biotechnology and Pharmaceuticals': 'Life Sciences', 'Metals, Minerals and Materials': 'Infrastructure', 'Advanced Engineering': 'Advanced Manufacturing', 'Electronics and IT Hardware': 'Technology', 'Metallurgical Process Plant': 'Advanced Manufacturing', 'Nuclear': 'Energy', 'Professional Business Services': 'Financial & Professional Services', 'Business (and Consumer) Services': 'Financial & Professional Services', 'Defence and Security': 'Defence & Security', 'Railways': 'Infrastructure', 'Construction': 'Infrastructure', 'Software and Computer Services Business to Business (B2B)': 'Technology', 'Communications': 'Technology', 'ICT': 'Technology', 'Education': 'Education', 'Security': 'Defence & Security', 'Healthcare and Medical': 'Healthcare'}
-
-    for parent_id, parent_name in parent_sectors.items():
-        team = parent_sector_to_sector_team[parent_name]
-        sector_team=SectorTeam.objects.get(name=team)
-        ParentSector(id=parent_id, name=parent_name, sector_team=sector_team).save()
-
-
-def update_sectors__0016(apps, schema_editor):
-    Sector = apps.get_model('mi', 'Sector')
-    ParentSector = apps.get_model('mi', 'ParentSector')
-
-    sector_to_parent_sector = {1: 'Advanced Engineering', 2: 'Aerospace', 3: 'Aerospace', 4: 'Aerospace', 5: 'Aerospace', 7: 'Aerospace', 8: 'Aerospace', 9: 'Aerospace', 10: 'Aerospace', 11: 'Aerospace', 12: 'Aerospace', 13: 'Agriculture, Horticulture and Fisheries', 14: 'Airports', 15: 'Automotive', 16: 'Automotive', 17: 'Automotive', 18: 'Automotive', 19: 'Automotive', 20: 'Automotive', 21: 'Automotive', 22: 'Automotive', 23: 'Automotive', 24: 'Automotive', 25: 'Automotive', 26: 'Automotive', 27: 'Automotive', 28: 'Automotive', 29: 'Automotive', 30: 'Automotive', 31: 'Automotive', 32: 'Automotive', 33: 'Automotive', 34: 'Automotive', 35: 'Automotive', 36: 'Biotechnology and Pharmaceuticals', 37: 'Biotechnology and Pharmaceuticals', 38: 'Biotechnology and Pharmaceuticals', 39: 'Biotechnology and Pharmaceuticals', 40: 'Biotechnology and Pharmaceuticals', 41: 'Biotechnology and Pharmaceuticals', 42: 'Biotechnology and Pharmaceuticals', 43: 'Biotechnology and Pharmaceuticals', 44: 'Biotechnology and Pharmaceuticals', 45: 'Biotechnology and Pharmaceuticals', 46: 'Biotechnology and Pharmaceuticals', 47: 'Biotechnology and Pharmaceuticals', 48: 'Biotechnology and Pharmaceuticals', 49: 'Biotechnology and Pharmaceuticals', 50: 'Biotechnology and Pharmaceuticals', 51: 'Biotechnology and Pharmaceuticals', 52: 'Biotechnology and Pharmaceuticals', 53: 'Biotechnology and Pharmaceuticals', 54: 'Biotechnology and Pharmaceuticals', 55: 'Biotechnology and Pharmaceuticals', 56: 'Biotechnology and Pharmaceuticals', 57: 'Biotechnology and Pharmaceuticals', 58: 'Business (and Consumer) Services', 59: 'Business (and Consumer) Services', 60: 'Business (and Consumer) Services', 61: 'Business (and Consumer) Services', 62: 'Business (and Consumer) Services', 63: 'Business (and Consumer) Services', 64: 'Business (and Consumer) Services', 65: 'Chemicals', 66: 'Chemicals', 67: 'Chemicals', 68: 'Chemicals', 69: 'Chemicals', 70: 'Chemicals', 71: 'Chemicals', 72: 'Clothing, Footwear and Fashion', 73: 'Clothing, Footwear and Fashion', 74: 'Clothing, Footwear and Fashion', 75: 'Clothing, Footwear and Fashion', 76: 'Communications', 77: 'Communications', 78: 'Communications', 79: 'Communications', 80: 'Communications', 81: 'Communications', 82: 'Communications', 83: 'Communications', 84: 'Communications', 85: 'Communications', 86: 'Communications', 87: 'Communications', 88: 'Construction', 89: 'Creative and Media', 90: 'Creative and Media', 91: 'Creative and Media', 92: 'Creative and Media', 93: 'Creative and Media', 94: 'Creative and Media', 95: 'Creative and Media', 96: 'Creative and Media', 97: 'Creative and Media', 98: 'Creative and Media', 99: 'Creative and Media', 100: 'Creative and Media', 101: 'Creative and Media', 102: 'Creative and Media', 103: 'Creative and Media', 104: 'Creative and Media', 105: 'Creative and Media', 106: 'Creative and Media', 107: 'Creative and Media', 108: 'Creative and Media', 109: 'Creative and Media', 110: 'Creative and Media', 111: 'Creative and Media', 112: 'Creative and Media', 113: 'Creative and Media', 114: 'Creative and Media', 115: 'Creative and Media', 116: 'Creative and Media', 117: 'Creative and Media', 118: 'Creative and Media', 119: 'Creative and Media', 120: 'Creative and Media', 121: 'Defence', 122: 'Defence and Security', 123: 'Education and Training', 124: 'Electronics and IT Hardware', 125: 'Electronics and IT Hardware', 126: 'Electronics and IT Hardware', 127: 'Electronics and IT Hardware', 128: 'Electronics and IT Hardware', 129: 'Electronics and IT Hardware', 130: 'Electronics and IT Hardware', 131: 'Electronics and IT Hardware', 132: 'Electronics and IT Hardware', 133: 'Energy', 134: 'Environment', 135: 'Environment', 136: 'Environment', 137: 'Environment', 138: 'Environment', 139: 'Environment', 140: 'Environment', 141: 'Environment', 142: 'Environment', 143: 'Environment', 144: 'Environment', 145: 'Environment', 146: 'Environment and Water', 147: 'Financial Services (including Professional Services)', 148: 'Financial Services (including Professional Services)', 149: 'Financial Services (including Professional Services)', 150: 'Financial Services (including Professional Services)', 151: 'Financial Services (including Professional Services)', 152: 'Financial Services (including Professional Services)', 153: 'Financial Services (including Professional Services)', 154: 'Financial Services (including Professional Services)', 155: 'Financial Services (including Professional Services)', 156: 'Financial Services (including Professional Services)', 157: 'Financial Services (including Professional Services)', 158: 'Financial Services (including Professional Services)', 159: 'Financial Services (including Professional Services)', 160: 'Financial Services (including Professional Services)', 161: 'Financial Services (including Professional Services)', 162: 'Financial Services (including Professional Services)', 163: 'Financial Services (including Professional Services)', 164: 'Financial Services (including Professional Services)', 165: 'Financial Services (including Professional Services)', 166: 'Financial Services (including Professional Services)', 167: 'Financial Services (including Professional Services)', 168: 'Financial Services (including Professional Services)', 169: 'Financial Services (including Professional Services)', 170: 'Food and Drink', 171: 'Food and Drink', 172: 'Food and Drink', 173: 'Food and Drink', 174: 'Food and Drink', 175: 'Food and Drink', 176: 'Food and Drink', 177: 'Food and Drink', 178: 'Food and Drink', 179: 'Food and Drink', 180: 'Food and Drink', 181: 'Food and Drink', 182: 'Food and Drink', 183: 'Giftware, Jewellery and Tableware', 184: 'Global Sports Projects', 185: 'Global Sports Projects', 186: 'Healthcare and Medical', 187: 'Healthcare and Medical', 188: 'Healthcare and Medical', 189: 'Healthcare and Medical', 190: 'Healthcare and Medical', 191: 'Healthcare and Medical', 192: 'Healthcare and Medical', 193: 'Healthcare and Medical', 194: 'Healthcare and Medical', 195: 'Healthcare and Medical', 196: 'Healthcare and Medical', 197: 'Healthcare and Medical', 198: 'Healthcare and Medical', 199: 'Healthcare and Medical', 200: 'Healthcare and Medical', 201: 'Healthcare and Medical', 202: 'Healthcare and Medical', 203: 'Healthcare and Medical', 204: 'Healthcare and Medical', 205: 'Household Goods, Furniture and Furnishings', 206: 'ICT', 207: 'Leisure and Tourism', 208: 'Leisure and Tourism', 209: 'Leisure and Tourism', 210: 'Leisure and Tourism', 211: 'Leisure and Tourism', 212: 'Life Sciences', 213: 'Marine', 214: 'Mass Transport', 215: 'Mechanical Electrical and Process Engineering', 216: 'Metallurgical Process Plant', 217: 'Metals, Minerals and Materials', 218: 'Metals, Minerals and Materials', 219: 'Metals, Minerals and Materials', 220: 'Metals, Minerals and Materials', 221: 'Metals, Minerals and Materials', 222: 'Metals, Minerals and Materials', 223: 'Metals, Minerals and Materials', 224: 'Mining', 225: '', 226: 'Oil and Gas', 227: 'Ports and Logistics', 228: 'Power', 229: 'Power', 230: 'Power', 231: 'Railways', 232: 'Renewable Energy', 233: 'Renewable Energy', 234: 'Renewable Energy', 235: 'Renewable Energy', 236: 'Renewable Energy', 237: 'Renewable Energy', 238: 'Renewable Energy', 239: 'Renewable Energy', 240: 'Renewable Energy', 241: 'Renewable Energy', 242: 'Retail', 243: 'Security', 244: 'Security', 245: 'Software and Computer Services Business to Business (B2B)', 246: 'Software and Computer Services Business to Business (B2B)', 247: 'Software and Computer Services Business to Business (B2B)', 248: 'Software and Computer Services Business to Business (B2B)', 249: 'Software and Computer Services Business to Business (B2B)', 250: 'Software and Computer Services Business to Business (B2B)', 251: 'Software and Computer Services Business to Business (B2B)', 252: 'Software and Computer Services Business to Business (B2B)', 253: 'Software and Computer Services Business to Business (B2B)', 254: 'Software and Computer Services Business to Business (B2B)', 256: 'Textiles, Interior Textiles and Carpets', 257: 'Water'}
-    non_cdms = [6, 225]
-
-    for sector_id, parent in sector_to_parent_sector.items():
-        if sector_id in non_cdms:
-            continue
-        sector = Sector.objects.get(id=sector_id)
-        parent_sector = ParentSector.objects.get(name=parent)
-        sector.parent_sector = parent_sector
-        sector.save()
-
-
-def update_targets__0017(apps, schema_editor):
-    Target = apps.get_model('mi', 'Target')
-    ParentSector = apps.get_model('mi', 'ParentSector')
-
-    hvc_parent_sector_map = {'E150': 'Defence and Security', 'E076': 'Life Sciences', 'E164': 'Digital Economy', 'E021': 'Defence and Security', 'E147': 'Railways', 'E041': 'Construction', 'E142': 'Airports', 'E025': 'Consumer Goods & Retail', 'E079': 'Defence and Security', 'E143': 'Water', 'E148': 'Marine', 'E063': 'Automotive', 'E145': 'Defence and Security', 'E014': 'Oil and Gas', 'E004': 'Consumer Goods & Retail', 'E058': 'Creative Industries', 'E134': 'Education', 'E098': 'Mining', 'E080': 'Aerospace', 'E060': 'Airports', 'E160': 'Financial Services', 'E139': 'Aerospace', 'E178': 'Airports', 'E187': 'Creative Industries', 'E095': 'Financial Services', 'E209': 'Defence and Security', 'E044': 'Defence and Security', 'E131': 'Aerospace', 'E140': 'Defence and Security', 'E009': 'Defence and Security', 'E002': 'Defence and Security', 'E068': 'Defence and Security', 'E126': 'Construction', 'E108': 'Defence and Security', 'E179': 'Construction', 'E054': 'Food and Drink', 'E166': 'Nuclear', 'E144': 'Aerospace', 'E102': 'Aerospace', 'E097': 'Healthcare', 'E110': 'Airports', 'E119': 'Renewable Energy', 'E195': 'Defence and Security', 'E003': 'Food and Drink', 'E181': 'Life Sciences', 'E022': 'Marine', 'E006': 'Financial Services', 'E075': 'Construction', 'E064': 'Agritech', 'E184': 'Automotive', 'E091': 'Oil and Gas', 'E149': 'Consumer Goods & Retail', 'E109': 'Digital Economy', 'E066': 'Consumer Goods & Retail', 'E056': 'Mining', 'E194': 'Life Sciences', 'E154': 'Railways', 'E180': 'Water', 'E023': 'Aerospace', 'E125': 'Digital Economy', 'E115': 'Professional Business Services', 'E116': 'Railways', 'E052': 'Defence and Security', 'E117': 'Oil and Gas', 'E043': 'Renewable Energy', 'E217': 'Mining', 'E033': 'Healthcare', 'E078': 'Aerospace', 'E018': 'Defence and Security', 'E072': 'Financial Services', 'E156': 'Consumer Goods & Retail', 'E093': 'Healthcare', 'E129': 'Defence and Security', 'E130': 'Sports Economy', 'E112': 'Nuclear', 'E190': 'Oil and Gas', 'E173': 'Consumer Goods & Retail', 'E163': 'Defence and Security', 'E138': 'Water', 'E215': 'Defence and Security', 'E065': 'Chemicals', 'E106': 'Life Sciences', 'E011': 'Defence and Security', 'E020': 'Nuclear', 'E124': 'Aid Funded Business', 'E103': 'Defence and Security', 'E121': 'Oil and Gas', 'E047': 'Nuclear', 'E034': 'Airports', 'E159': 'Defence and Security', 'E015': 'Defence and Security', 'E137': 'Railways', 'E027': 'Digital Economy', 'E210': 'Mining', 'E045': 'Aerospace', 'E031': 'Financial Services', 'E019': 'Financial Services', 'E055': 'Life Sciences', 'E081': 'Oil and Gas', 'E037': 'Railways', 'E061': 'Railways', 'E029': 'Nuclear', 'E059': 'Education', 'E213': 'Aerospace', 'E192': 'Construction', 'E133': 'Defence and Security', 'E039': 'Sports Economy', 'E010': 'Aid Funded Business', 'E016': 'Railways', 'E094': 'Education', 'E012': 'Marine', 'E099': 'Oil and Gas', 'E062': 'Aerospace', 'E053': 'Nuclear', 'E157': 'Chemicals', 'E092': 'Defence and Security', 'E174': 'Creative Industries', 'E177': 'Healthcare', 'E104': 'Digital Economy', 'E013': 'Defence and Security', 'E211': 'Mining', 'E136': 'Healthcare', 'E153': 'Agritech', 'E087': 'Nuclear', 'E073': 'Food and Drink', 'E168': 'Healthcare', 'E175': 'Defence and Security', 'E128': 'Financial Services', 'E122': 'Defence and Security', 'E071': 'Renewable Energy', 'E089': 'Life Sciences', 'E051': 'Consumer Goods & Retail', 'E120': 'Defence and Security', 'E005': 'Digital Economy', 'E008': 'Defence and Security', 'E067': 'Creative Industries', 'E069': 'Digital Economy', 'E214': 'Advanced Manufacturing', 'E096': 'Food and Drink', 'E024': 'Automotive', 'E170': 'Aerospace', 'E101': 'Water', 'E049': 'Automotive', 'E189': 'Digital Economy', 'E135': 'Oil and Gas', 'E085': 'Defence and Security', 'E032': 'Food and Drink', 'E146': 'Education', 'E028': 'Education', 'E001': 'Automotive', 'E158': 'Consumer Goods & Retail', 'E183': 'Aid Funded Business', 'E182': 'Aerospace', 'E046': 'Defence and Security', 'E111': 'Education', 'E165': 'Defence and Security', 'E176': 'Food and Drink', 'E171': 'Agritech', 'E155': 'Chemicals', 'E070': 'Oil and Gas', 'E169': 'Airports', 'E035': 'Construction', 'E118': 'Food and Drink', 'E152': 'Life Sciences', 'E040': 'Defence and Security', 'E007': 'Oil and Gas', 'E141': 'Digital Economy', 'E086': 'Digital Economy', 'E151': 'Digital Economy', 'E090': 'Sports Economy', 'E083': 'Consumer Goods & Retail', 'E162': 'Aerospace', 'E074': 'Healthcare', 'E123': 'Oil and Gas', 'E077': 'Sports Economy', 'E082': 'Water', 'E105': 'Defence and Security', 'E127': 'Digital Economy', 'E188': 'Defence and Security', 'E114': 'Construction', 'E212': 'Renewable Energy', 'E050': 'Chemicals', 'E048': 'Food and Drink', 'E084': 'Aerospace', 'E167': 'Financial Services', 'E161': 'Aid Funded Business', 'E100': 'Railways', 'E038': 'Life Sciences', 'E042': 'Oil and Gas', 'E132': 'Consumer Goods & Retail', 'E185': 'Chemicals', 'E191': 'Financial Services', 'E186': 'Consumer Goods & Retail', 'E030': 'Renewable Energy', 'E172': 'Aerospace', 'E107': 'Automotive', 'E026': 'Creative Industries', 'E088': 'Food and Drink', 'E017': 'Automotive'}
-    for hvc, parent in hvc_parent_sector_map.items():
-        target = Target.objects.get(campaign_id=hvc)
-        target.parent_sector = ParentSector.objects.get(name=parent)
-        target.save()
 
 
 def add_hvc_group__0018(apps, schema_editor):
@@ -480,7 +441,6 @@ def update_targets__0019(apps, schema_editor):
         "E009": "Defence",
         "E010": "Infrastructure - Aid Funded Business",
         "E011": "Defence",
-        "E012": "Advanced Manufacturing",
         "E013": "Defence",
         "E014": "Energy - Oil & Gas",
         "E015": "Defence",
@@ -490,7 +450,6 @@ def update_targets__0019(apps, schema_editor):
         "E019": "Financial Services",
         "E020": "Energy - Nuclear",
         "E021": "Defence",
-        "E022": "Advanced Manufacturing",
         "E023": "Aerospace",
         "E024": "Automotive",
         "E025": "Consumer Goods & Retail",
@@ -613,7 +572,6 @@ def update_targets__0019(apps, schema_editor):
         "E145": "Defence",
         "E146": "Education",
         "E147": "Infrastructure - Rail",
-        "E148": "Advanced Manufacturing",
         "E149": "Consumer Goods & Retail",
         "E150": "Defence",
         "E151": "Digital Economy",
@@ -667,25 +625,15 @@ def update_targets__0019(apps, schema_editor):
         "E213": "Aerospace",
         "E214": "Advanced Manufacturing",
         "E215": "Defence",
-        "E217": "Infrastructure - Mining"
+        "E217": "Infrastructure - Mining",
+        "E012": "Advanced Manufacturing - Marine",
+        "E022": "Advanced Manufacturing - Marine",
+        "E148": "Advanced Manufacturing - Marine",
     }
     for hvc, group in hvc_group_to_hvc.items():
         target = Target.objects.get(campaign_id=hvc)
         target.hvc_group = HVCGroup.objects.get(name=group)
         target.save()
-
-
-def clear_sector_parents__0021(apps, schema_editor):
-    Sector = apps.get_model('mi', 'Sector')
-    sectors = Sector.objects.all()
-    for sector in sectors:
-        sector.parent_sector = None
-        sector.save()
-
-
-def delete_parent_sectors__0022(apps, schema_editor):
-    ParentSector = apps.get_model('mi', 'ParentSector')
-    ParentSector.objects.all().delete()
 
 
 def add_parent_sectors__0022(apps, schema_editor):
@@ -1052,7 +1000,6 @@ def update_sectors__0024(apps, schema_editor):
         256: "Textiles, Interior Textiles and Carpets",
         257: "Water"
     }
-    non_cdms = [6, 225]
 
     for sector_id, parent in sector_to_parent_sector.items():
         if sector_id in non_cdms:
@@ -1061,23 +1008,6 @@ def update_sectors__0024(apps, schema_editor):
         parent_sector = ParentSector.objects.get(name=parent)
         sector.parent_sector = parent_sector
         sector.save()
-
-
-def correct_targets__0025(apps, schema_editor):
-    """
-    Targets - HVC Groups mapping was incorrect for Marine, this corrects them
-    """
-    Target = apps.get_model('mi', 'Target')
-    HVCGroup = apps.get_model('mi', 'HVCGroup')
-    hvc_groups_corrections = {
-        "E012": "Advanced Manufacturing - Marine",
-        "E022": "Advanced Manufacturing - Marine",
-        "E148": "Advanced Manufacturing - Marine",
-    }
-    for hvc, group in hvc_groups_corrections.items():
-        target = Target.objects.get(campaign_id=hvc)
-        target.hvc_group = HVCGroup.objects.get(name=group)
-        target.save()
 
 
 def add_financial_years__0031(apps, schema_editor):
@@ -1099,7 +1029,6 @@ def do_thing__0034(apps, schema_editor):
     SectorTeam = apps.get_model('mi', 'SectorTeam')
 
     sector_to_sector_team = {1: 'Advanced Manufacturing', 2: 'Aerospace', 3: 'Aerospace', 4: 'Aerospace', 5: 'Aerospace', 7: 'Aerospace', 8: 'Aerospace', 9: 'Aerospace', 10: 'Aerospace', 11: 'Aerospace', 12: 'Aerospace', 13: 'Bio-economy', 14: 'Infrastructure', 15: 'Automotive', 16: 'Automotive', 17: 'Automotive', 18: 'Automotive', 19: 'Automotive', 20: 'Automotive', 21: 'Automotive', 22: 'Automotive', 23: 'Automotive', 24: 'Automotive', 25: 'Automotive', 26: 'Automotive', 27: 'Automotive', 28: 'Automotive', 29: 'Automotive', 30: 'Automotive', 31: 'Automotive', 32: 'Automotive', 33: 'Automotive', 34: 'Automotive', 35: 'Automotive', 36: 'Life Sciences', 37: 'Life Sciences', 38: 'Life Sciences', 39: 'Life Sciences', 40: 'Life Sciences', 41: 'Life Sciences', 42: 'Life Sciences', 43: 'Life Sciences', 44: 'Life Sciences', 45: 'Life Sciences', 46: 'Life Sciences', 47: 'Life Sciences', 48: 'Life Sciences', 49: 'Life Sciences', 50: 'Life Sciences', 51: 'Life Sciences', 52: 'Life Sciences', 53: 'Life Sciences', 54: 'Life Sciences', 55: 'Life Sciences', 56: 'Life Sciences', 57: 'Life Sciences', 58: 'Financial & Professional Services', 59: 'Financial & Professional Services', 60: 'Financial & Professional Services', 61: 'Financial & Professional Services', 62: 'Financial & Professional Services', 63: 'Financial & Professional Services', 64: 'Financial & Professional Services', 65: 'Bio-economy', 66: 'Bio-economy', 67: 'Bio-economy', 68: 'Bio-economy', 69: 'Bio-economy', 70: 'Bio-economy', 71: 'Bio-economy', 72: 'Consumer & Creative', 73: 'Consumer & Creative', 74: 'Consumer & Creative', 75: 'Consumer & Creative', 76: 'Technology', 77: 'Technology', 78: 'Technology', 79: 'Technology', 80: 'Technology', 81: 'Technology', 82: 'Technology', 83: 'Technology', 84: 'Technology', 85: 'Technology', 86: 'Technology', 87: 'Technology', 88: 'Infrastructure', 89: 'Consumer & Creative', 90: 'Consumer & Creative', 91: 'Consumer & Creative', 92: 'Consumer & Creative', 93: 'Consumer & Creative', 94: 'Consumer & Creative', 95: 'Consumer & Creative', 96: 'Consumer & Creative', 97: 'Consumer & Creative', 98: 'Consumer & Creative', 99: 'Consumer & Creative', 100: 'Consumer & Creative', 101: 'Consumer & Creative', 102: 'Consumer & Creative', 103: 'Consumer & Creative', 104: 'Consumer & Creative', 105: 'Consumer & Creative', 106: 'Consumer & Creative', 107: 'Consumer & Creative', 108: 'Consumer & Creative', 109: 'Consumer & Creative', 110: 'Consumer & Creative', 111: 'Consumer & Creative', 112: 'Consumer & Creative', 113: 'Consumer & Creative', 114: 'Consumer & Creative', 115: 'Consumer & Creative', 116: 'Consumer & Creative', 117: 'Consumer & Creative', 118: 'Consumer & Creative', 119: 'Consumer & Creative', 120: 'Consumer & Creative', 121: 'Defence & Security', 122: 'Defence & Security', 123: 'Education', 124: 'Technology', 125: 'Technology', 126: 'Technology', 127: 'Technology', 128: 'Technology', 129: 'Technology', 130: 'Technology', 131: 'Technology', 132: 'Technology', 133: 'Energy', 134: 'Infrastructure', 135: 'Infrastructure', 136: 'Infrastructure', 137: 'Infrastructure', 138: 'Infrastructure', 139: 'Infrastructure', 140: 'Infrastructure', 141: 'Infrastructure', 142: 'Infrastructure', 143: 'Infrastructure', 144: 'Infrastructure', 145: 'Infrastructure', 146: 'Infrastructure', 147: 'Financial & Professional Services', 148: 'Financial & Professional Services', 149: 'Financial & Professional Services', 150: 'Financial & Professional Services', 151: 'Financial & Professional Services', 152: 'Financial & Professional Services', 153: 'Financial & Professional Services', 154: 'Financial & Professional Services', 155: 'Financial & Professional Services', 156: 'Financial & Professional Services', 157: 'Financial & Professional Services', 158: 'Financial & Professional Services', 159: 'Financial & Professional Services', 160: 'Financial & Professional Services', 161: 'Financial & Professional Services', 162: 'Financial & Professional Services', 163: 'Financial & Professional Services', 164: 'Financial & Professional Services', 165: 'Financial & Professional Services', 166: 'Financial & Professional Services', 167: 'Financial & Professional Services', 168: 'Financial & Professional Services', 169: 'Financial & Professional Services', 170: 'Food & Drink', 171: 'Food & Drink', 172: 'Food & Drink', 173: 'Food & Drink', 174: 'Food & Drink', 175: 'Food & Drink', 176: 'Food & Drink', 177: 'Food & Drink', 178: 'Food & Drink', 179: 'Food & Drink', 180: 'Food & Drink', 181: 'Food & Drink', 182: 'Food & Drink', 183: 'Consumer & Creative', 184: 'Consumer & Creative', 185: 'Consumer & Creative', 186: 'Healthcare', 187: 'Healthcare', 188: 'Healthcare', 189: 'Healthcare', 190: 'Healthcare', 191: 'Healthcare', 192: 'Healthcare', 193: 'Healthcare', 194: 'Healthcare', 195: 'Healthcare', 196: 'Healthcare', 197: 'Healthcare', 198: 'Healthcare', 199: 'Healthcare', 200: 'Healthcare', 201: 'Healthcare', 202: 'Healthcare', 203: 'Healthcare', 204: 'Healthcare', 205: 'Consumer & Creative', 206: 'Technology', 207: 'Consumer & Creative', 208: 'Consumer & Creative', 209: 'Consumer & Creative', 210: 'Consumer & Creative', 211: 'Consumer & Creative', 212: 'Life Sciences', 213: 'Advanced Manufacturing', 214: 'Infrastructure', 215: 'Advanced Manufacturing', 216: 'Advanced Manufacturing', 217: 'Infrastructure', 218: 'Infrastructure', 219: 'Infrastructure', 220: 'Infrastructure', 221: 'Infrastructure', 222: 'Infrastructure', 223: 'Infrastructure', 224: 'Infrastructure', 226: 'Energy', 227: 'Infrastructure', 228: 'Energy', 229: 'Energy', 230: 'Energy', 231: 'Infrastructure', 232: 'Energy', 233: 'Energy', 234: 'Energy', 235: 'Energy', 236: 'Energy', 237: 'Energy', 238: 'Energy', 239: 'Energy', 240: 'Energy', 241: 'Energy', 242: 'Consumer & Creative', 243: 'Defence & Security', 244: 'Defence & Security', 245: 'Technology', 246: 'Technology', 247: 'Technology', 248: 'Technology', 249: 'Technology', 250: 'Technology', 251: 'Technology', 252: 'Technology', 253: 'Technology', 254: 'Technology', 255: 'Technology', 256: 'Consumer & Creative', 257: 'Infrastructure'}
-    non_cdms = [6, 225]
 
     for sector_id, sector in SECTORS:
         if sector_id in non_cdms:
@@ -1418,7 +1347,6 @@ def forwards__0040(apps, schema_editor):
             )
 
     OverseasRegionGroupYear.objects.bulk_create(to_create)
-
 
 
 def add_2016_hvc_countries__0037(apps, schema_editor):
@@ -2211,38 +2139,19 @@ class Migration(migrations.Migration):
                 ('sector_team', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='parent_sectors', to='mi.SectorTeam')),
             ],
         ),
-        migrations.RunPython(
-            code=add_parent_sectors__0015,
-        ),
         migrations.AddField(
             model_name='sector',
             name='parent_sector',
             field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, related_name='sectors', to='mi.ParentSector'),
             preserve_default=False,
         ),
-        migrations.AddField(
-            model_name='target',
-            name='parent_sector',
-            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, related_name='targets', to='mi.ParentSector'),
-            preserve_default=False,
-        ),
-        migrations.RunPython(
-            code=update_sectors__0016,
-        ),
-        migrations.RunPython(
-            code=update_targets__0017,
-        ),
         migrations.CreateModel(
-            name='HvcGroup',
+            name='HVCGroup',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=128)),
                 ('sector_team', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='hvc_groups', to='mi.SectorTeam')),
             ],
-        ),
-        migrations.RemoveField(
-            model_name='target',
-            name='parent_sector',
         ),
         migrations.RunPython(
             code=add_hvc_group__0018,
@@ -2262,13 +2171,13 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='sectors', to='mi.ParentSector'),
         ),
         migrations.RunPython(
-            code=clear_sector_parents__0021,
-        ),
-        migrations.RunPython(
-            code=delete_parent_sectors__0022,
-        ),
-        migrations.RunPython(
             code=add_parent_sectors__0022,
+        ),
+        migrations.AlterField(
+            model_name='target',
+            name='hvc_group',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT,
+                                    related_name='targets', to='mi.HVCGroup'),
         ),
         migrations.AlterField(
             model_name='sector',
@@ -2278,19 +2187,6 @@ class Migration(migrations.Migration):
         ),
         migrations.RunPython(
             code=update_sectors__0024,
-        ),
-        migrations.RunPython(
-            code=correct_targets__0025,
-        ),
-        migrations.AlterField(
-            model_name='target',
-            name='hvc_group',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='targets', to='mi.HVCGroup'),
-        ),
-        migrations.AlterField(
-            model_name='target',
-            name='hvc_group',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='targets', to='mi.HVCGroup'),
         ),
         migrations.AlterField(
             model_name='target',
@@ -2303,11 +2199,6 @@ class Migration(migrations.Migration):
                 ('id', models.IntegerField(primary_key=True, serialize=False)),
                 ('description', models.CharField(max_length=128)),
             ],
-        ),
-        migrations.AlterField(
-            model_name='target',
-            name='hvc_group',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='targets', to='mi.HVCGroup'),
         ),
         migrations.AddField(
             model_name='target',
@@ -2324,11 +2215,6 @@ class Migration(migrations.Migration):
             model_name='target',
             name='financial_year',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='targets', to='mi.FinancialYear'),
-        ),
-        migrations.AlterField(
-            model_name='target',
-            name='hvc_group',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='targets', to='mi.HVCGroup'),
         ),
         migrations.RemoveField(
             model_name='sector',
@@ -2381,11 +2267,6 @@ class Migration(migrations.Migration):
             name='country',
             field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='targets', to='mi.Country'),
         ),
-        migrations.AlterField(
-            model_name='target',
-            name='hvc_group',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='targets', to='mi.HVCGroup'),
-        ),
         migrations.AddField(
             model_name='country',
             name='overseas_region_new',
@@ -2413,19 +2294,9 @@ class Migration(migrations.Migration):
             name='overseas_regions',
             field=models.ManyToManyField(related_name='countries', through='mi.OverseasRegionYear', to='mi.OverseasRegion'),
         ),
-        migrations.AlterField(
-            model_name='target',
-            name='hvc_group',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='targets', to='mi.HVCGroup'),
-        ),
         migrations.RemoveField(
             model_name='overseasregion',
             name='group',
-        ),
-        migrations.AlterField(
-            model_name='target',
-            name='hvc_group',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='targets', to='mi.HVCGroup'),
         ),
         migrations.CreateModel(
             name='OverseasRegionGroupYear',
@@ -2464,11 +2335,6 @@ class Migration(migrations.Migration):
             code=add_2017_hvc_global__0043,
             reverse_code=django.db.migrations.operations.special.RunPython.noop,
         ),
-        migrations.AlterField(
-            model_name='target',
-            name='hvc_group',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='targets', to='mi.HVCGroup'),
-        ),
         migrations.CreateModel(
             name='UKRegionTarget',
             fields=[
@@ -2482,11 +2348,6 @@ class Migration(migrations.Migration):
             options={
                 'unique_together': {('financial_year', 'region')},
             },
-        ),
-        migrations.AlterField(
-            model_name='target',
-            name='hvc_group',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='targets', to='mi.HVCGroup'),
         ),
         migrations.SeparateDatabaseAndState(
             state_operations=[
@@ -2578,11 +2439,6 @@ class Migration(migrations.Migration):
             model_name='target',
             name='financial_year',
             field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='targets', to='mi.FinancialYear'),
-        ),
-        migrations.AlterField(
-            model_name='target',
-            name='hvc_group',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='targets', to='mi.HVCGroup'),
         ),
         migrations.AlterField(
             model_name='targetcountry',
