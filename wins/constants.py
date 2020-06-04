@@ -588,7 +588,7 @@ _SECTORS = (
     # (212, "Life Sciences"),
     (213, "Maritime"),
     # (214, "Mass Transport"),
-    (215, "Advanced engineering : Mechanical electrical and process engineering"),
+    (215, "Advanced engineering : Mechanical, electrical and process engineering"),
     (216, "Advanced engineering : Metallurgical process plant"),
     (217, "Advanced engineering : Metals, minerals and materials"),
     (218, "Advanced engineering : Metals, minerals and materials : Ceramics"),
