@@ -2143,7 +2143,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='sector',
             name='parent_sector',
-            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, related_name='sectors', to='mi.ParentSector'),
+            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.PROTECT,
+                                    related_name='sectors', to='mi.ParentSector'),
             preserve_default=False,
         ),
         migrations.CreateModel(
@@ -2166,11 +2167,6 @@ class Migration(migrations.Migration):
         migrations.RunPython(
             code=update_targets__0019,
         ),
-        migrations.AlterField(
-            model_name='sector',
-            name='parent_sector',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='sectors', to='mi.ParentSector'),
-        ),
         migrations.RunPython(
             code=add_parent_sectors__0022,
         ),
@@ -2183,7 +2179,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='sector',
             name='parent_sector',
-            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, related_name='sectors', to='mi.ParentSector'),
+            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.PROTECT,
+                                    related_name='sectors', to='mi.ParentSector'),
             preserve_default=False,
         ),
         migrations.RunPython(
@@ -2273,11 +2270,6 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='targets', to='mi.Country'),
         ),
         migrations.AddField(
-            model_name='country',
-            name='overseas_region_new',
-            field=models.ManyToManyField(related_name='countries_new', through='mi.OverseasRegionYear', to='mi.OverseasRegion'),
-        ),
-        migrations.AddField(
             model_name='overseasregion',
             name='group',
             field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='regions', to='mi.OverseasRegionGroup'),
@@ -2289,10 +2281,6 @@ class Migration(migrations.Migration):
         migrations.RemoveField(
             model_name='country',
             name='overseas_region',
-        ),
-        migrations.RemoveField(
-            model_name='country',
-            name='overseas_region_new',
         ),
         migrations.AddField(
             model_name='country',
@@ -2399,20 +2387,8 @@ class Migration(migrations.Migration):
         migrations.RunPython(
             code=add_contributing_countries__0048,
         ),
-        migrations.CreateModel(
-            name='CSVFile',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('s3_path', models.CharField(max_length=255, unique=True)),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
-            ],
-        ),
         migrations.RunPython(
             code=add_mid_year_changes_2017_18__0050,
-        ),
-        migrations.DeleteModel(
-            name='CSVFile',
         ),
         migrations.AddField(
             model_name='ukregiontarget',
