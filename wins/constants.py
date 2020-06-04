@@ -430,8 +430,7 @@ _SECTORS = (
     (61, "Financial and professional services : Business and consumer services : HR services"),
     (62, "Financial and professional services : Business and consumer services : Marketing "
          "services"),
-    (63, "Financial and professional services : Business and consumer services : Marketing : "
-         "Market research"),
+    (63, "Financial and professional services : Business and consumer services : Market research"),
     (64, "Financial and professional services : Business and consumer services : Shared service "
          "centres"),
     (65, "Chemicals"),
