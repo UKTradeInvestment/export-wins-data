@@ -42,7 +42,7 @@ class WinFactory(factory.DjangoModelFactory):
     total_expected_non_export_value = 2300
     total_expected_odi_value = 6400
 
-    sector = FuzzyChoice(dict(SECTORS).keys())
+    sector = factory.Faker('random_element', elements=[2, 14, 15, 33, 34, 35, 115])
     is_prosperity_fund_related = True
     hvo_programme = "AER-01"
     has_hvo_specialist_involvement = True
