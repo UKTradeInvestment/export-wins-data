@@ -2136,7 +2136,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=128)),
-                ('sector_team', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='parent_sectors', to='mi.SectorTeam')),
+                ('sector_team', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT,
+                                                  related_name='parent_sectors', to='mi.SectorTeam')),
             ],
         ),
         migrations.AddField(
@@ -2214,7 +2215,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='target',
             name='financial_year',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='targets', to='mi.FinancialYear'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT,
+                                    related_name='targets', to='mi.FinancialYear'),
         ),
         migrations.RemoveField(
             model_name='sector',
@@ -2254,9 +2256,12 @@ class Migration(migrations.Migration):
             name='OverseasRegionYear',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('country', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='mi.Country')),
-                ('financial_year', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='mi.FinancialYear')),
-                ('overseas_region', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='mi.OverseasRegion')),
+                ('country', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT,
+                                              to='mi.Country')),
+                ('financial_year', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT,
+                                                     to='mi.FinancialYear')),
+                ('overseas_region', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT,
+                                                      to='mi.OverseasRegion')),
             ],
             options={
                 'unique_together': {('financial_year', 'country')},
@@ -2302,9 +2307,12 @@ class Migration(migrations.Migration):
             name='OverseasRegionGroupYear',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('financial_year', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='mi.FinancialYear')),
-                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='mi.OverseasRegionGroup')),
-                ('region', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='mi.OverseasRegion')),
+                ('financial_year', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT,
+                                                     to='mi.FinancialYear')),
+                ('group', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT,
+                                            to='mi.OverseasRegionGroup')),
+                ('region', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT,
+                                             to='mi.OverseasRegion')),
             ],
         ),
         migrations.AddField(
@@ -2343,7 +2351,8 @@ class Migration(migrations.Migration):
                 ('sustainable', django.contrib.postgres.fields.ArrayField(base_field=models.BigIntegerField(), size=12)),
                 ('growth', django.contrib.postgres.fields.ArrayField(base_field=models.BigIntegerField(default=0), size=12)),
                 ('region', models.PositiveSmallIntegerField(choices=[(1, 'East Midlands'), (2, 'East of England'), (3, 'London'), (4, 'North East'), (5, 'North West'), (6, 'Northern Ireland'), (7, 'Scotland'), (8, 'South East'), (9, 'South West'), (10, 'Wales'), (11, 'West Midlands'), (12, 'Yorkshire and The Humber')])),
-                ('financial_year', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='volume_targets', to='mi.FinancialYear')),
+                ('financial_year', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT,
+                                                     related_name='volume_targets', to='mi.FinancialYear')),
             ],
             options={
                 'unique_together': {('financial_year', 'region')},
@@ -2355,7 +2364,8 @@ class Migration(migrations.Migration):
                     name='TargetCountry',
                     fields=[
                         ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                        ('country', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='mi.Country')),
+                        ('country', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT,
+                                                      to='mi.Country')),
                     ],
                     options={
                         'db_table': 'mi_target_country',
@@ -2369,7 +2379,8 @@ class Migration(migrations.Migration):
                 migrations.AddField(
                     model_name='targetcountry',
                     name='target',
-                    field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='mi.Target'),
+                    field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT,
+                                            to='mi.Target'),
                 ),
                 migrations.AlterUniqueTogether(
                     name='targetcountry',
@@ -2399,61 +2410,6 @@ class Migration(migrations.Migration):
         ),
         migrations.RunPython(
             code=add_mid_year_changes_2017_18__0050,
-        ),
-        migrations.AlterField(
-            model_name='overseasregiongroupyear',
-            name='financial_year',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='mi.FinancialYear'),
-        ),
-        migrations.AlterField(
-            model_name='overseasregiongroupyear',
-            name='group',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='mi.OverseasRegionGroup'),
-        ),
-        migrations.AlterField(
-            model_name='overseasregiongroupyear',
-            name='region',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='mi.OverseasRegion'),
-        ),
-        migrations.AlterField(
-            model_name='overseasregionyear',
-            name='country',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='mi.Country'),
-        ),
-        migrations.AlterField(
-            model_name='overseasregionyear',
-            name='financial_year',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='mi.FinancialYear'),
-        ),
-        migrations.AlterField(
-            model_name='overseasregionyear',
-            name='overseas_region',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='mi.OverseasRegion'),
-        ),
-        migrations.AlterField(
-            model_name='parentsector',
-            name='sector_team',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='parent_sectors', to='mi.SectorTeam'),
-        ),
-        migrations.AlterField(
-            model_name='target',
-            name='financial_year',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='targets', to='mi.FinancialYear'),
-        ),
-        migrations.AlterField(
-            model_name='targetcountry',
-            name='country',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='mi.Country'),
-        ),
-        migrations.AlterField(
-            model_name='targetcountry',
-            name='target',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='mi.Target'),
-        ),
-        migrations.AlterField(
-            model_name='ukregiontarget',
-            name='financial_year',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='volume_targets', to='mi.FinancialYear'),
         ),
         migrations.DeleteModel(
             name='CSVFile',
