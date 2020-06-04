@@ -442,9 +442,9 @@ _SECTORS = (
     (70, "Chemicals : Paint, coating and adhesive products"),
     (71, "Chemicals : Synthetic materials"),
     (72, "Consumer and retail : Clothing, footwear and fashion"),
-    #(73, "Consumer and retail : Clothing, Footwear and Fashion : Clothing"),
-    #(74, "Consumer and retail : Clothing, Footwear and Fashion : Clothing : Workwear"),
-    #(75, "Consumer and retail : Clothing, Footwear and Fashion : Footwear"),
+    # (73, "Consumer and retail : Clothing, Footwear and Fashion : Clothing"),
+    # (74, "Consumer and retail : Clothing, Footwear and Fashion : Clothing : Workwear"),
+    # (75, "Consumer and retail : Clothing, Footwear and Fashion : Footwear"),
     (76, "Technology and smart cities : Communications"),
     # (77, "Technology and smart cities : Communications : Broadband"),
     # (78, "Technology and smart cities : Communications : Communications Wholesale"),
@@ -512,7 +512,7 @@ _SECTORS = (
     (135, "Environment : Air pollution and noise control"),
     (136, "Environment : Environmental monitoring"),
     # (137, "Environment : Fuel Cells"),
-    (138, "Environment : Maritime pollution control"),
+    (138, "Environment : Marine pollution control"),
     (139, "Environment : Sanitation and remediation"),
     (140, "Environment : Waste management and recycling"),
     # (141, "Environment : Waste management and recycling : Hazardous Waste Management"),
@@ -631,7 +631,7 @@ _SECTORS = (
     # (253, "Technology and smart cities : Software : Support Services"),
     # (254, "Technology and smart cities : Software : Support Services : Equipment Maintenance
     # and Repair"),
-    #(255, "Technology and smart cities : Software : Support Services : Internet Service
+    # (255, "Technology and smart cities : Software : Support Services : Internet Service
     # Providers"),
     (256, "Consumer and retail : Textiles, interior textiles and carpets"),
     (257, "Water"),
@@ -684,7 +684,7 @@ _SECTORS = (
     (301, "Education and training : Educational technology"),
     (302, "Education and training : English language training"),
     (303, "Education and training : Higher education"),
-    (304, "Education and training : Higher education : Curriculum, qualifications, assessment "
+    (304, "Education and training : Higher education : Curriculum, qualifications, assessment, "
           "inspection and quality assurance"),
     (305, "Education and training : Higher education : Professional"),
     (306, "Education and training : Higher education : Teacher training"),
