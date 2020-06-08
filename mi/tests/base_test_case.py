@@ -14,7 +14,11 @@ from mi.models import Sector, SectorTeam
 
 def get_sectors_for_team(team_id):
     return list(
-        Sector.objects.filter(sector_team=team_id).order_by('name').values_list('pk', flat=True)
+        Sector.objects.filter(
+            sector_team=team_id
+        ).exclude(
+            disabled_on__isnull=False,
+        ).order_by('name').values_list('pk', flat=True)
     )
 
 
