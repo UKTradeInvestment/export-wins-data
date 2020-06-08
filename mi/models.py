@@ -262,10 +262,10 @@ class Sector(models.Model):
     # note, primary key matches ids of Win sector field (from constants)
     # note, there are 2 sectors in constants not in this
 
-    name = models.CharField(max_length=128)
+    name = models.CharField(max_length=256)
     sector_team = models.ManyToManyField(SectorTeam, related_name="sectors")
-    parent_sector = models.ManyToManyField(
-        ParentSector, related_name="sectors")
+    parent_sector = models.ManyToManyField(ParentSector, related_name="sectors")
+    disabled_on = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return 'Sector: {} ({})'.format(self.name, self.parent_sector)
