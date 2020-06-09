@@ -1,3 +1,8 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 class SyncSectors:
 
     def __init__(self, sector_model, sectors, disable_on=None, simulate=False):
@@ -6,10 +11,13 @@ class SyncSectors:
         self.disable_on = disable_on
         self.simulate = simulate
 
-    def log(self, msg):
-        print(msg)
+    def log(self, msg, level=logging.INFO):
+        logger.log(level, msg)
 
     def __call__(self, *args, **kwargs):
+        self.process()
+
+    def process(self):
         self.add_new_sectors()
         self.update_existing_sectors()
         if self.disable_on:
@@ -23,7 +31,7 @@ class SyncSectors:
 
     def _update_sector_name(self, sector, sector_name):
         if sector.name != sector_name:
-            self.log(f'Updating Sector {sector.id}: [{sector.name}]')
+            self.log(f'Updating Sector {sector.id}: [{sector.name} to {sector_name}]')
         if self.simulate:
             return
         sector.name = sector_name

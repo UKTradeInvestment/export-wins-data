@@ -13,8 +13,12 @@ logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
 
+    def add_arguments(self, parser):
+        parser.add_argument("--simulate", type=bool, default=False)
+        parser.add_argument("--disable_on", type=datetime.fromisoformat, default=datetime.now())
+
     def handle(self, *args, **options):
         sync_sectors = SyncSectors(
-            SectorModel, SECTORS, disable_on=datetime.now(), simulate=False
+            SectorModel, SECTORS, disable_on=options['disable_on'], simulate=options['simulate']
         )
         sync_sectors()
