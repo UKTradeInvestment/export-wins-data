@@ -1,25 +1,27 @@
 import factory
+import faker
 from factory.fuzzy import FuzzyChoice
+from django.db.models import Model
 
-from .models import HVCGroup, OverseasRegion, SectorTeam, Target
+from .models import HVCGroup, OverseasRegion, Sector, SectorTeam, Target
 
 
 class OverseasRegionFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = OverseasRegion
 
     team_name = 'WestEastNorth Eurasia-Pacific'
 
 
 class SectorTeamFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = SectorTeam
 
     name = 'AgriInfraTechSpace & FinEnergy'
 
 
 class TargetFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = Target
 
     campaign_id = 'E001'
@@ -29,8 +31,22 @@ class TargetFactory(factory.DjangoModelFactory):
 
 
 class HVCGroupFactory(factory.DjangoModelFactory):
-    class Meta(object):
+    class Meta:
         model = HVCGroup
 
     name = 'FinBio-economy - Agritech'
     sector_team = factory.SubFactory(SectorTeamFactory)
+
+
+class SectorFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = Sector
+    name = factory.Faker('sentence', nb_words=3, variable_nb_words=True)
+
+    @factory.lazy_attribute
+    def id(self):
+        last = Sector.objects.order_by('id').last()
+        if last:
+            return int(last.pk) + 1
+        else:
+            return 1
