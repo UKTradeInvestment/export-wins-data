@@ -56,3 +56,12 @@ COMPANY_MATCHING_HAWK_ID = 'some-id'
 COMPANY_MATCHING_HAWK_KEY = 'some-secret'
 
 CELERY_TASK_ALWAYS_EAGER = True
+
+DOCUMENT_BUCKETS = {
+    'default': {
+        'bucket': 'foo',
+        'aws_access_key_id': 'bar',
+        'aws_secret_access_key': 'baz',
+        'aws_region': 'eu-west-2',
+    },
+}

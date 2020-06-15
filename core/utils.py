@@ -118,12 +118,12 @@ def parse_int(value):
 
 def parse_uuid_list(value):
     """Parses a comma-separated list of UUIDs from a string."""
-    if not value or value.lower().strip() == 'null':
-        return []
+    return _parse_list(value, UUIDField())
 
-    field = UUIDField()
 
-    return [field.to_internal_value(item) for item in value.split(',')]
+def parse_int_list(value):
+    """Parses a comma-separated list of Integers from a string."""
+    return _parse_list(value, IntegerField())
 
 
 def parse_choice(value, choices, blank_value=''):
@@ -142,3 +142,11 @@ def _parse_value(value, field, blank_value=None):
 
     field.run_validation(value)
     return field.to_internal_value(value)
+
+
+def _parse_list(value, field):
+    """Parses a comma-separated list of UUIDs from a string."""
+    if not value or value.lower().strip() == 'null':
+        return []
+
+    return [field.to_internal_value(item) for item in value.split(',')]
