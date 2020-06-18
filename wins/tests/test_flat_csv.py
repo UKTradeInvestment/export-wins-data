@@ -191,7 +191,7 @@ Johnny Fakeman,jfakeman@example.com,{self.DATE_JOINED},True\r'''.split('\n')
                 value = getattr(self.win1, field_name)
                 if field_name in comma_fields:
                     value = "£{:,}".format(value)
-                self.assertEquals(
+                self.assertEqual(
                     win_dict[csv_name],
                     CSVView()._val_to_str(value),
                 )
@@ -200,18 +200,18 @@ Johnny Fakeman,jfakeman@example.com,{self.DATE_JOINED},True\r'''.split('\n')
                     display_fn = getattr(
                         self.win1, "get_{0}_display".format(field_name)
                     )
-                    self.assertEquals(
+                    self.assertEqual(
                         win_dict[csv_name],
                         CSVView()._val_to_str(display_fn()),
                     )
                 except (AttributeError, AssertionError):
                     if field_name == 'date':
-                        self.assertEquals(
+                        self.assertEqual(
                             win_dict[csv_name],
                             str(getattr(self.win1, field_name))[:10],
                         )
                     elif field_name == 'created':
-                        self.assertEquals(
+                        self.assertEqual(
                             win_dict[csv_name],
                             str(getattr(self.win1, field_name))[:10],
                         )

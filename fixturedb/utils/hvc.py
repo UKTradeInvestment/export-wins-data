@@ -18,11 +18,9 @@ def get_all_hvcs_referenced_by_targets(financial_years=None):
     :type financial_years: List[int]
     :returns a list of hvc (campaign_id, financial year) tuples that don't already exist: List[HVCStruct]
     """
-    hvc_ids_expected_by_targets = Target.objects.all().values_list(
-        'campaign_id', flat=True).distinct()
+    hvc_ids_expected_by_targets = Target.objects.all().values_list('campaign_id', flat=True).distinct()
     if not financial_years:
-        financial_years = Target.objects.all().values_list(
-            'financial_year', flat=True).distinct()
+        financial_years = Target.objects.all().values_list('financial_year', flat=True).distinct()
 
     to_create = [
         HVCStruct(campaign_id=campaign_id,
@@ -40,7 +38,6 @@ def get_all_hvcs_referenced_by_targets(financial_years=None):
         HVCStruct(**data) for data in HVC.objects.filter(filter_q).values('campaign_id', 'financial_year')
     ]
 
-    to_create_without_already_existing = set(
-        to_create) - set(already_existing)
+    to_create_without_already_existing = set(to_create) - set(already_existing)
 
     return to_create_without_already_existing

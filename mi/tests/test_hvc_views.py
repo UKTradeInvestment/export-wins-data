@@ -405,8 +405,6 @@ class HVCTopHvcForMarketAndSectorTestCase(HVCBaseViewTestCase):
     campaign_url_2016_only = reverse('mi:hvc_top_wins', kwargs={"campaign_id": "E177"})
     campaign_url_2017_only = reverse('mi:hvc_top_wins', kwargs={"campaign_id": "E218"})
     expected_response = {}
-    SECTOR_58 = 58
-    SECTOR_59 = 59
     SECTORS_DICT = dict(SECTORS)
 
     @classmethod
@@ -496,7 +494,7 @@ class HVCTopHvcForMarketAndSectorTestCase(HVCBaseViewTestCase):
             self._create_hvc_win(
                 hvc_code='E017',
                 export_value=100000,
-                sector_id=self.SECTOR_58,
+                sector_id=self.FIRST_TEAM_1_SECTOR,
                 country="HU",
                 confirm=True,
                 win_date=self.win_date_2017,
@@ -552,7 +550,7 @@ class HVCTopHvcForMarketAndSectorTestCase(HVCBaseViewTestCase):
                 hvc_code='E017',
                 export_value=100000,
                 country=code,
-                sector_id=self.SECTOR_58,
+                sector_id=self.FIRST_TEAM_1_SECTOR,
                 confirm=True,
                 win_date=self.win_date_2017,
             )
@@ -569,7 +567,7 @@ class HVCTopHvcForMarketAndSectorTestCase(HVCBaseViewTestCase):
                 hvc_code='E017',
                 export_value=100000,
                 country="HU",
-                sector_id=self.SECTOR_58,
+                sector_id=self.FIRST_TEAM_1_SECTOR,
                 confirm=True,
                 win_date=self.win_date_2017,
             )
@@ -580,7 +578,7 @@ class HVCTopHvcForMarketAndSectorTestCase(HVCBaseViewTestCase):
 
     def test_values_top_hvc_top_win_with_confirmed_hvc_wins(self):
         """ Check top win is what is expected and its value, percentages are correct """
-        expected_top_team = self.SECTOR_58
+        expected_top_team = self.FIRST_TEAM_1_SECTOR
         for _ in range(0, 5):
             self._create_hvc_win(
                 hvc_code='E017',
@@ -590,28 +588,29 @@ class HVCTopHvcForMarketAndSectorTestCase(HVCBaseViewTestCase):
                 confirm=True,
                 win_date=self.win_date_2017,
             )
-        for _ in range(1, 10):
+        for sector_id in self.SECTORS_NOT_IN_EITHER_TEAM:
             self._create_hvc_win(
                 hvc_code='E017',
                 export_value=100000,
                 country="HU",
                 confirm=True,
+                sector_id=sector_id,
                 win_date=self.win_date_2017,
             )
 
         self.url = self.get_url_for_year(2017)
         api_response = self._api_response_data
-        self.assertTrue(len(api_response) > 5)
+        self.assertEqual(len(api_response), 7)
         top_item = api_response[0]
-        self.assertEqual(top_item["sector"], self.SECTORS_DICT[expected_top_team])
-        self.assertEqual(top_item["totalValue"], 100000 * 5)
+        self.assertEqual(top_item["sector"], self.SECTORS_DICT[expected_top_team], msg=top_item)
+        self.assertEqual(top_item["totalValue"], 100000 * 5, msg=top_item)
         self.assertEqual(top_item["averageWinValue"], 100000)
         self.assertEqual(top_item["percentComplete"], 100)
 
     def test_top_hvc_compare_second_top_win_with_top(self):
         """ Check second top win with top, its value, percentages are correct """
-        expected_top_team = self.SECTOR_58
-        expected_second_team = self.SECTOR_59
+        expected_top_team = self.FIRST_TEAM_1_SECTOR
+        expected_second_team = self.SECOND_TEAM_1_SECTOR
         for _ in range(0, 5):
             self._create_hvc_win(
                 hvc_code='E017',
@@ -630,18 +629,19 @@ class HVCTopHvcForMarketAndSectorTestCase(HVCBaseViewTestCase):
                 country="HU",
                 win_date=self.win_date_2017,
             )
-        for _ in range(1, 10):
+        for sector_id in self.SECTORS_NOT_IN_EITHER_TEAM:
             self._create_hvc_win(
                 hvc_code='E017',
                 export_value=100000,
                 confirm=True,
                 country="HU",
+                sector_id=sector_id,
                 win_date=self.win_date_2017,
             )
 
         self.url = self.get_url_for_year(2017)
         api_response = self._api_response_data
-        self.assertTrue(len(api_response) >= 5)
+        self.assertEqual(len(api_response), 8, msg=api_response)
         second_top_item = api_response[1]
         percent_complete = int((100000 * 4 * 100) / (100000 * 5))
         self.assertEqual(second_top_item["sector"], self.SECTORS_DICT[expected_second_team])
@@ -889,22 +889,27 @@ class TestGlobalHVCList(MiApiViewsBaseTestCase):
 
     def create_global_hvc(self):
         fy2017 = FinancialYear.objects.get(id=2017)
+        campaign_id = 'E%03d' % self.FIRST_TEAM_1_SECTOR
         sector_team = SectorTeamFactory.create()
         hvc_group = FuzzyChoice(HVCGroup.objects.all())
-
-        target = TargetFactory.create(campaign_id='E225', financial_year=fy2017, hvc_group=hvc_group, sector_team=sector_team)
+        target = TargetFactory.create(
+            campaign_id=campaign_id,
+            financial_year=fy2017,
+            hvc_group=hvc_group,
+            sector_team=sector_team
+        )
         TargetCountry(target=target, country=Country.objects.get(country='XG')).save()
         return target
 
     def test_2017_returns_1_hvcs(self):
-        self.create_global_hvc()
+        target = self.create_global_hvc()
         data = self._api_response_data
 
         self.assertEqual(
             data,
             [{
-                "code": "E225",
-                "name": "HVC: E225"
+                "code": target.campaign_id,
+                "name": f"HVC: {target.campaign_id}"
             }]
         )
 
