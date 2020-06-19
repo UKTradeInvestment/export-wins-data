@@ -37,7 +37,7 @@ class Command(CSVBaseCommand):
             self.stdout.write(f'No update required for win {win_id}')
 
     def handle(self, *args, **options):
-        total_records = Win.objects.count()
+        total_records = Win.objects.including_inactive().count()
         start = time.perf_counter()
         super().handle(*args, **options)
         end = time.perf_counter()
@@ -57,7 +57,7 @@ class Command(CSVBaseCommand):
         return Sector.objects.get(pk=sector_id)
 
     def get_win(self, win_id):
-        return Win.objects.get(pk=win_id)
+        return Win.objects.including_inactive().get(pk=win_id)
 
     def update_win(self, win, sector, simulate):
         if not simulate:
