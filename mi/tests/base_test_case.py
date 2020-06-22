@@ -9,6 +9,18 @@ from sso.tests.test_oauth import BaseSSOTestCase
 from users.factories import UserFactory
 from wins.factories import HVCFactory
 from wins.models import Win
+from mi.models import Sector, SectorTeam
+
+
+def get_sectors_for_team(team_id):
+    return list(
+        Sector.objects.filter(sector_team=team_id).order_by('name').values_list('pk', flat=True)
+    )
+
+
+def get_hvcs_for_team(team_id):
+    team = SectorTeam.objects.get(pk=team_id)
+    return list(team.targets.values_list('campaign_id', flat=True))
 
 
 class MiApiViewsBaseTestCase(BaseSSOTestCase):
@@ -18,16 +30,9 @@ class MiApiViewsBaseTestCase(BaseSSOTestCase):
     fin_end_date = datetime(2017, 3, 31, tzinfo=get_current_timezone())
     frozen_date_17 = datetime(2017, 5, 1, tzinfo=get_current_timezone())
 
-    TEAM_1_HVCS = ['E006', 'E019', 'E031', 'E072', 'E095', 'E115', 'E128', 'E160', 'E167', 'E191']
-    TEAM_15_HVCS = ['E025', 'E026', 'E051', 'E058', 'E066', 'E067', 'E083', 'E132', 'E149',
-                    'E156', 'E158', 'E174', 'E186', 'E187', 'E219', 'E229']
-    TEAM_1_SECTORS = [60, 61, 62, 63, 64, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159,
-                      160, 161, 162, 163, 164, 165, 166, 167, 168, 169]
-    TEAM_15_SECTORS = [72, 73, 74, 75, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104,
-                        105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 183,
-                        184, 185, 205, 207, 208, 209, 210, 211, 242, 256]
     SAMPLE_COUNTRIES = ['CA', 'BS', 'GQ', 'VA', 'AQ', 'SA', 'EG', 'LU', 'ER', 'GA', 'MP']
     CAMPAIGN_TARGET = 10000000
+    SECTORS_NOT_IN_EITHER_TEAM = [135, 136, 138, 139, 140, 145]
 
     @classmethod
     def setUpClass(cls):
@@ -37,11 +42,19 @@ class MiApiViewsBaseTestCase(BaseSSOTestCase):
         cls.user.save()
         # needed to get names of HVCs, have to do again because factory
         # remembers other tests, even if flushed from DB
-        for i in range(255):
+        sector_ids = list(Sector.objects.values_list('pk', flat=True).order_by('id'))
+        sector_ids.append(6)
+        for sector_id in sector_ids:
             HVCFactory.create(
-                campaign_id='E%03d' % (i + 1),
+                campaign_id='E%03d' % sector_id,
                 financial_year=16,
             )
+        cls.TEAM_1_HVCS = get_hvcs_for_team(1)[:10]
+        cls.TEAM_15_HVCS = get_hvcs_for_team(15)
+        cls.TEAM_1_SECTORS = get_sectors_for_team(1)
+        cls.TEAM_15_SECTORS = get_sectors_for_team(15)
+        cls.FIRST_TEAM_1_SECTOR = cls.TEAM_1_SECTORS[0]
+        cls.SECOND_TEAM_1_SECTOR = cls.TEAM_1_SECTORS[1]
 
     def _get_api_response_value(self, url):
         resp = self._get_api_response(url)

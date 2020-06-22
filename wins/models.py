@@ -164,15 +164,15 @@ class WinQuerySet(models.QuerySet):
         base_filter = Q(hvc__isnull=False) & ~Q(hvc='')
         if not fin_year:
             return self.filter(base_filter)
-        return self.filter(base_filter).filter(self._get_open_hvcs_filter(fin_year=fin_year))
+        open_hvcs_filter = self._get_open_hvcs_filter(fin_year=fin_year)
+        return self.filter(base_filter).filter(open_hvcs_filter)
 
     def non_hvc(self, fin_year=None):
         base_filter = Q(Q(hvc__isnull=True) | Q(hvc=''))
         if not fin_year:
             return self.filter(base_filter)
-        qs = self.filter(
-            base_filter | ~self._get_open_hvcs_filter(fin_year=fin_year))
-        return qs
+        open_hvcs_filter = self._get_open_hvcs_filter(fin_year=fin_year)
+        return self.filter(base_filter | ~open_hvcs_filter)
 
 
 WinManager = SoftDeleteManager.from_queryset(WinQuerySet)

@@ -17,8 +17,7 @@ from mi.tests.base_test_case import MiApiViewsBaseTestCase, MiApiViewsWithWinsBa
 from mi.tests.utils import GenericTopNonHvcWinsTestMixin, GenericWinTableTestMixin
 from mi.utils import sort_campaigns_by
 from wins.constants import SECTORS
-from wins.factories import NotificationFactory
-from wins.models import HVC, Notification
+from wins.models import HVC
 
 
 class SectorTeamBaseTestCase(MiApiViewsWithWinsBaseTestCase):
@@ -940,8 +939,6 @@ class SectorTeamTopNonHvcTestCase(SectorTeamBaseTestCase, GenericTopNonHvcWinsTe
     url = view_base_url + "?year=2016"
     win_date_2016 = datetime.datetime(2016, 4, 23)
 
-    SECTOR_58 = 58
-    SECTOR_59 = 59
     TEST_COUNTRY_CODE = 'CI'
 
     SECTORS_DICT = dict(SECTORS)
@@ -982,7 +979,11 @@ class SectorTeamTopNonHvcTestCase(SectorTeamBaseTestCase, GenericTopNonHvcWinsTe
     def test_top_non_hvc_with_confirmed_non_hvc_wins_one_sector_country(self):
         """ Number of Top non-hvc wins will be 1 when there are confirmed non-hvc wins of one country/sector """
         for _ in range(1, 10):
-            self._create_non_hvc_win(export_value=100000, sector_id=self.SECTOR_58, country="CA", confirm=True)
+            self._create_non_hvc_win(
+                export_value=100000,
+                sector_id=self.FIRST_TEAM_1_SECTOR,
+                country="CA", confirm=True
+            )
 
         api_response = self._get_api_response(self.url)
         response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
@@ -1003,7 +1004,11 @@ class SectorTeamTopNonHvcTestCase(SectorTeamBaseTestCase, GenericTopNonHvcWinsTe
     def test_top_non_hvc_with_confirmed_non_hvc_wins_one_sector(self):
         """ Number of Top non-hvc wins will be 1 when there are confirmed non-hvc wins of diff country one sector """
         for _ in range(1, 10):
-            self._create_non_hvc_win(export_value=100000, sector_id=self.SECTOR_58, confirm=True)
+            self._create_non_hvc_win(
+                export_value=100000,
+                sector_id=self.FIRST_TEAM_1_SECTOR,
+                confirm=True
+            )
 
         api_response = self._get_api_response(self.url)
         response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
@@ -1011,39 +1016,39 @@ class SectorTeamTopNonHvcTestCase(SectorTeamBaseTestCase, GenericTopNonHvcWinsTe
 
     def test_top_non_hvc_top_win_with_confirmed_non_hvc_wins(self):
         """ Check top win is what is expected and its value, percentages are correct """
-        expected_top_team = self.SECTOR_58
+        expected_top_team = self.FIRST_TEAM_1_SECTOR
         for _ in range(0, 5):
             self._create_non_hvc_win(export_value=100000, sector_id=expected_top_team, confirm=True)
-        for _ in range(1, 10):
-            self._create_non_hvc_win(export_value=100000, confirm=True)
+        for sector_id in self.SECTORS_NOT_IN_EITHER_TEAM:
+            self._create_non_hvc_win(export_value=100000, confirm=True, sector_id=sector_id)
 
         api_response = self._get_api_response(self.url)
         response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
-        self.assertEqual(len(response_decoded), 5)
+        self.assertEqual(len(response_decoded), 1)
         top_item = response_decoded[0]
-        self.assertEqual(top_item["sector"], self.SECTORS_DICT[expected_top_team])
-        self.assertEqual(top_item["totalValue"], 100000 * 5)
+        self.assertEqual(top_item["sector"], self.SECTORS_DICT[expected_top_team], msg=top_item)
+        self.assertEqual(top_item["totalValue"], 100000 * 5, msg=top_item)
         self.assertEqual(top_item["averageWinValue"], 100000)
         self.assertEqual(top_item["percentComplete"], 100)
 
     def test_top_non_hvc_compare_second_top_win_with_top(self):
         """ Check second top win with top, its value, percentages are correct """
-        expected_top_team = self.SECTOR_58
-        expected_second_team = self.SECTOR_59
+        expected_top_team = self.FIRST_TEAM_1_SECTOR
+        expected_second_team = self.SECOND_TEAM_1_SECTOR
         for _ in range(0, 5):
             self._create_non_hvc_win(export_value=100000, sector_id=expected_top_team, confirm=True)
         for _ in range(0, 4):
             self._create_non_hvc_win(export_value=100000, sector_id=expected_second_team, confirm=True)
-        for _ in range(1, 10):
-            self._create_non_hvc_win(export_value=100000, confirm=True)
+        for sector_id in self.SECTORS_NOT_IN_EITHER_TEAM:
+            self._create_non_hvc_win(export_value=100000, confirm=True, sector_id=sector_id)
 
         api_response = self._get_api_response(self.url)
         response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
-        self.assertEqual(len(response_decoded), 5)
+        self.assertEqual(len(response_decoded), 2)
         second_top_item = response_decoded[1]
         percent_complete = int((100000 * 4 * 100) / (100000 * 5))
-        self.assertEqual(second_top_item["sector"], self.SECTORS_DICT[expected_second_team])
-        self.assertEqual(second_top_item["totalValue"], 100000 * 4)
+        self.assertEqual(second_top_item["sector"], self.SECTORS_DICT[expected_second_team], msg=second_top_item)
+        self.assertEqual(second_top_item["totalValue"], 100000 * 4, msg=second_top_item)
         self.assertEqual(second_top_item["averageWinValue"], 100000)
         self.assertEqual(second_top_item["percentComplete"], percent_complete)
 

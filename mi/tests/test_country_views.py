@@ -24,12 +24,9 @@ from mi.tests.utils import GenericTopNonHvcWinsTestMixin, GenericWinTableTestMix
 @freeze_time(MiApiViewsBaseTestCase.frozen_date_17)
 class CountryBaseViewTestCase(MiApiViewsWithWinsBaseTestCase):
     export_value = 100000
-    win_date_2017 = datetime.datetime(
-        2017, 4, 25, tzinfo=get_current_timezone())
-    win_date_2016 = datetime.datetime(
-        2016, 5, 25, tzinfo=get_current_timezone())
-    fy_2016_last_date = datetime.datetime(
-        2017, 3, 31, tzinfo=get_current_timezone())
+    win_date_2017 = datetime.datetime(2017, 4, 25, tzinfo=get_current_timezone())
+    win_date_2016 = datetime.datetime(2016, 5, 25, tzinfo=get_current_timezone())
+    fy_2016_last_date = datetime.datetime(2017, 3, 31, tzinfo=get_current_timezone())
 
     @classmethod
     def setUpClass(cls):
@@ -51,8 +48,7 @@ class CountryDetailTestCase(CountryBaseViewTestCase):
 
     def setUp(self):
         super().setUp()
-        self._win_factory_function = create_win_factory(
-            self.user, sector_choices=self.TEAM_1_SECTORS)
+        self._win_factory_function = create_win_factory(self.user, sector_choices=self.TEAM_1_SECTORS)
         self.view_base_url = self.country_detail_url
 
     def test_2017_detail_in_2016_404(self):
