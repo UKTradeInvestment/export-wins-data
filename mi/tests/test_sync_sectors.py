@@ -1,3 +1,4 @@
+import logging
 from unittest import mock
 from datetime import datetime
 
@@ -56,13 +57,14 @@ def test_process(mock_add_new, mock_update, mock_disable, disable_on):
     ),
 )
 def test_add_new_sectors(sectors, expected_log, simulate, caplog):
-    sync_sectors = SyncSectors(
-        Sector, sectors, simulate=simulate,
-    )
-    sync_sectors.add_new_sectors()
-    exists = not simulate
-    assert_sectors(sectors, exists)
-    assert expected_log in caplog.text
+    with caplog.at_level(logging.DEBUG):
+        sync_sectors = SyncSectors(
+            Sector, sectors, simulate=simulate,
+        )
+        sync_sectors.add_new_sectors()
+        exists = not simulate
+        assert_sectors(sectors, exists)
+        assert expected_log in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -77,14 +79,15 @@ def test_add_new_sectors(sectors, expected_log, simulate, caplog):
     ),
 )
 def test_update_existing_sector(sectors, expected_log, simulate, caplog):
-    assert_sectors(sectors, True, ignore_name=True)
-    sync_sectors = SyncSectors(
-        Sector, sectors, simulate=simulate,
-    )
-    sync_sectors.update_existing_sectors()
-    exists = not simulate
-    assert_sectors(sectors, exists)
-    assert expected_log in caplog.text
+    with caplog.at_level(logging.DEBUG):
+        assert_sectors(sectors, True, ignore_name=True)
+        sync_sectors = SyncSectors(
+            Sector, sectors, simulate=simulate,
+        )
+        sync_sectors.update_existing_sectors()
+        exists = not simulate
+        assert_sectors(sectors, exists)
+        assert expected_log in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -100,21 +103,22 @@ def test_update_existing_sector(sectors, expected_log, simulate, caplog):
 )
 @freeze_time('2020-01-01 12:00:00')
 def test_disable_sectors(sectors, expected_log, simulate, caplog):
-    assert_sectors(sectors, True)
-    sync_sectors = SyncSectors(
-        Sector, sectors, simulate=simulate, disable_on=datetime.now()
-    )
-    sync_sectors.disable_sectors()
-    assert expected_log not in caplog.text
-    assert_sectors(sectors, True, extra_filters={'disabled_on__isnull': True})
-    if not simulate:
-        assert_sectors(
-            [EXISTING_SECTOR_2], True, extra_filters={'disabled_on': datetime.now()}
+    with caplog.at_level(logging.DEBUG):
+        assert_sectors(sectors, True)
+        sync_sectors = SyncSectors(
+            Sector, sectors, simulate=simulate, disable_on=datetime.now()
         )
-    else:
-        assert_sectors(
-            [EXISTING_SECTOR_2], True, extra_filters={'disabled_on__isnull': True}
-        )
+        sync_sectors.disable_sectors()
+        assert expected_log not in caplog.text
+        assert_sectors(sectors, True, extra_filters={'disabled_on__isnull': True})
+        if not simulate:
+            assert_sectors(
+                [EXISTING_SECTOR_2], True, extra_filters={'disabled_on': datetime.now()}
+            )
+        else:
+            assert_sectors(
+                [EXISTING_SECTOR_2], True, extra_filters={'disabled_on__isnull': True}
+            )
 
 
 def assert_sectors(sectors, exists, extra_filters=None, ignore_name=False):

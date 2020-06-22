@@ -887,7 +887,6 @@ class SectorTeamCampaignViewsTestCase(SectorTeamBaseTestCase):
 @freeze_time(SectorTeamBaseTestCase.frozen_date_17)
 class SectorOverviewTestCase(SectorTeamBaseTestCase):
     url = reverse('mi:sector_teams_overview') + "?year=2017"
-    TEST_CAMPAIGN_ID = 'E006'
 
     @classmethod
     def setUpClass(cls):
@@ -895,10 +894,10 @@ class SectorOverviewTestCase(SectorTeamBaseTestCase):
         call_command('create_missing_hvcs', verbose=False)
 
     def test_overview_closed_hvc_is_treated_as_non_hvc(self):
-        hvc = HVC.objects.get(campaign_id=self.TEST_CAMPAIGN_ID, financial_year=17)
+        hvc = HVC.objects.get(campaign_id='E006', financial_year=17)
 
         w1 = self._create_hvc_win(
-            hvc_code=self.TEST_CAMPAIGN_ID,
+            hvc_code=hvc.campaign_id,
             export_value=100000,
             response_date=self.frozen_date_17 + relativedelta(weeks=-1),
             win_date=self.frozen_date_17 + relativedelta(months=-9),
@@ -919,6 +918,8 @@ class SectorOverviewTestCase(SectorTeamBaseTestCase):
         )
 
         hvc.delete()
+        w1.hvc_code = ''
+        w1.save()
         data = self._api_response_data
         self.assertEqual(
             s("[?name == 'Financial & Professional Services'].values.hvc.current.confirmed | [0]", data),
@@ -956,7 +957,7 @@ class SectorTeamTopNonHvcTestCase(SectorTeamBaseTestCase, GenericTopNonHvcWinsTe
 
         api_response = self._get_api_response(self.url)
         response_decoded = json.loads(api_response.content.decode("utf-8"))["results"]
-        self.assertEqual(len(response_decoded), 0)
+        self.assertEqual(len(response_decoded), 0, msg=response_decoded)
 
     def test_top_non_hvc_with_unconformed_hvc_wins(self):
         """ Top non-hvc wins will be empty when there are only unconfirmed hvc wins """

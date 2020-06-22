@@ -452,7 +452,7 @@ class SectorTeamDetailViewsTestCase(SectorTeamBaseTestCase):
 
     def test_sector_team_detail_1_nonhvc_unconfirmed(self):
         """ SectorTeam Details with unconfirmed non-HVC wins, all wins on same day """
-        self._create_non_hvc_win(sector_id=58)
+        self._create_non_hvc_win(sector_id=self.FIRST_TEAM_1_SECTOR)
 
         self.expected_response['wins']['export']['non_hvc']['value']['unconfirmed'] = 100000
         self.expected_response['wins']['export']['non_hvc']['value']['total'] = 100000
@@ -468,9 +468,13 @@ class SectorTeamDetailViewsTestCase(SectorTeamBaseTestCase):
 
     def test_sector_team_detail_1_nonhvc_confirmed(self):
         """ SectorTeam Details with confirmed non-HVC wins, all wins on same day """
-        self._create_non_hvc_win(confirm=True, sector_id=58, win_date=datetime.datetime(2016, 5, 1),
-                                 notify_date=datetime.datetime(2016, 5, 1),
-                                 response_date=datetime.datetime(2016, 5, 1))
+        self._create_non_hvc_win(
+            confirm=True,
+            sector_id=self.FIRST_TEAM_1_SECTOR,
+            win_date=datetime.datetime(2016, 5, 1),
+            notify_date=datetime.datetime(2016, 5, 1),
+            response_date=datetime.datetime(2016, 5, 1)
+        )
 
         self.expected_response['wins']['export']['non_hvc']['value']['confirmed'] = 100000
         self.expected_response['wins']['export']['non_hvc']['value']['total'] = 100000

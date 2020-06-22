@@ -1,0 +1,3623 @@
+- model: mi.sector
+  pk: 1
+  fields:
+    name: Advanced engineering
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 2
+  fields:
+    name: Aerospace
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 3
+  fields:
+    name: 'Aerospace : Aircraft design'
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 4
+  fields:
+    name: 'Aerospace : Component manufacturing'
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 5
+  fields:
+    name: 'Aerospace : Component manufacturing : Engines'
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 7
+  fields:
+    name: 'Aerospace : Maintenance'
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 8
+  fields:
+    name: 'Aerospace : Manufacturing and assembly'
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 9
+  fields:
+    name: 'Aerospace : Manufacturing and assembly : Aircraft'
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 10
+  fields:
+    name: 'Aerospace : Manufacturing and assembly : Helicopters'
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 11
+  fields:
+    name: 'Space : Component manufacturing : Space technology'
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 12
+  fields:
+    name: 'Aerospace : Manufacturing and assembly : Unmanned aerial vehicles'
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 13
+  fields:
+    name: Agriculture, horticulture, fisheries and pets
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 14
+  fields:
+    name: Airports
+    disabled_on: null
+    sector_team:
+    - 6
+    parent_sector: []
+- model: mi.sector
+  pk: 15
+  fields:
+    name: Automotive
+    disabled_on: null
+    sector_team:
+    - 11
+    parent_sector: []
+- model: mi.sector
+  pk: 16
+  fields:
+    name: 'Automotive : Maintenance'
+    disabled_on: null
+    sector_team:
+    - 11
+    parent_sector: []
+- model: mi.sector
+  pk: 17
+  fields:
+    name: 'Automotive : Retail'
+    disabled_on: null
+    sector_team:
+    - 11
+    parent_sector: []
+- model: mi.sector
+  pk: 18
+  fields:
+    name: 'Automotive : Component manufacturing'
+    disabled_on: null
+    sector_team:
+    - 11
+    parent_sector: []
+- model: mi.sector
+  pk: 19
+  fields:
+    name: 'Automotive : Component manufacturing : Bodies and coachwork'
+    disabled_on: null
+    sector_team:
+    - 11
+    parent_sector: []
+- model: mi.sector
+  pk: 20
+  fields:
+    name: 'Automotive : Component manufacturing : Electronic components'
+    disabled_on: null
+    sector_team:
+    - 11
+    parent_sector: []
+- model: mi.sector
+  pk: 21
+  fields:
+    name: 'Automotive : Component manufacturing : Engines and transmission'
+    disabled_on: null
+    sector_team:
+    - 11
+    parent_sector: []
+- model: mi.sector
+  pk: 22
+  fields:
+    name: 'Automotive : Component manufacturing : Tyres'
+    disabled_on: null
+    sector_team:
+    - 11
+    parent_sector: []
+- model: mi.sector
+  pk: 23
+  fields:
+    name: 'Automotive : Design engineering'
+    disabled_on: null
+    sector_team:
+    - 11
+    parent_sector: []
+- model: mi.sector
+  pk: 24
+  fields:
+    name: 'Automotive : Manufacturing and assembly'
+    disabled_on: null
+    sector_team:
+    - 11
+    parent_sector: []
+- model: mi.sector
+  pk: 25
+  fields:
+    name: 'Automotive : Manufacturing and assembly : Agricultural machinery'
+    disabled_on: null
+    sector_team:
+    - 11
+    parent_sector: []
+- model: mi.sector
+  pk: 26
+  fields:
+    name: 'Automotive : Manufacturing and assembly : Bicycles'
+    disabled_on: null
+    sector_team:
+    - 11
+    parent_sector: []
+- model: mi.sector
+  pk: 27
+  fields:
+    name: 'Automotive : Manufacturing and assembly : Caravans'
+    disabled_on: null
+    sector_team:
+    - 11
+    parent_sector: []
+- model: mi.sector
+  pk: 28
+  fields:
+    name: 'Automotive : Manufacturing and assembly : Cars'
+    disabled_on: null
+    sector_team:
+    - 11
+    parent_sector: []
+- model: mi.sector
+  pk: 29
+  fields:
+    name: 'Automotive : Manufacturing and assembly : Containers'
+    disabled_on: null
+    sector_team:
+    - 11
+    parent_sector: []
+- model: mi.sector
+  pk: 30
+  fields:
+    name: 'Automotive : Manufacturing and assembly : Invalid carriages'
+    disabled_on: null
+    sector_team:
+    - 11
+    parent_sector: []
+- model: mi.sector
+  pk: 31
+  fields:
+    name: 'Automotive : Manufacturing and assembly : Lorries'
+    disabled_on: null
+    sector_team:
+    - 11
+    parent_sector: []
+- model: mi.sector
+  pk: 32
+  fields:
+    name: 'Automotive : Manufacturing and assembly : Motorcycles'
+    disabled_on: null
+    sector_team:
+    - 11
+    parent_sector: []
+- model: mi.sector
+  pk: 33
+  fields:
+    name: 'Automotive : Manufacturing and assembly : Trailers'
+    disabled_on: null
+    sector_team:
+    - 11
+    parent_sector: []
+- model: mi.sector
+  pk: 34
+  fields:
+    name: 'Automotive : Manufacturing and assembly : Vans'
+    disabled_on: null
+    sector_team:
+    - 11
+    parent_sector: []
+- model: mi.sector
+  pk: 35
+  fields:
+    name: 'Automotive : Motorsport'
+    disabled_on: null
+    sector_team:
+    - 11
+    parent_sector: []
+- model: mi.sector
+  pk: 36
+  fields:
+    name: Pharmaceuticals and biotechnology
+    disabled_on: null
+    sector_team:
+    - 8
+    parent_sector: []
+- model: mi.sector
+  pk: 37
+  fields:
+    name: 'Pharmaceuticals and biotechnology : Marketing and sales'
+    disabled_on: null
+    sector_team:
+    - 8
+    parent_sector: []
+- model: mi.sector
+  pk: 38
+  fields:
+    name: 'Biotechnology and Pharmaceuticals : Bio and Pharma Marketing and Sales
+      : Bio and Pharma Retail'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 39
+  fields:
+    name: 'Biotechnology and Pharmaceuticals : Bio and Pharma Marketing and Sales
+      : Bio and Pharma Wholesale'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 40
+  fields:
+    name: 'Biotechnology and Pharmaceuticals : Biotechnology'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 41
+  fields:
+    name: 'Biotechnology and Pharmaceuticals : Biotechnology : Agribio'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 42
+  fields:
+    name: 'Biotechnology and Pharmaceuticals : Biotechnology : Biodiagnostics'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 43
+  fields:
+    name: 'Biotechnology and Pharmaceuticals : Biotechnology : Biomanufacturing'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 44
+  fields:
+    name: 'Biotechnology and Pharmaceuticals : Biotechnology : Bioremediation'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 45
+  fields:
+    name: 'Biotechnology and Pharmaceuticals : Biotechnology : Biotherapeutics'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 46
+  fields:
+    name: 'Biotechnology and Pharmaceuticals : Biotechnology : Industrialbio'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 47
+  fields:
+    name: 'Biotechnology and Pharmaceuticals : Biotechnology : Platform Technologies'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 48
+  fields:
+    name: 'Biotechnology and Pharmaceuticals : Clinical Trials'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 49
+  fields:
+    name: 'Pharmaceuticals and biotechnology : Professional services'
+    disabled_on: null
+    sector_team:
+    - 8
+    parent_sector: []
+- model: mi.sector
+  pk: 50
+  fields:
+    name: 'Biotechnology and Pharmaceuticals : Lab Services : Contract Research'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 51
+  fields:
+    name: 'Biotechnology and Pharmaceuticals : Lab Services : Reagents, Consumables
+      and Instruments'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 52
+  fields:
+    name: 'Biotechnology and Pharmaceuticals : Pharmaceuticals'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 53
+  fields:
+    name: 'Biotechnology and Pharmaceuticals : Pharmaceuticals : Basic Pharmaceutical
+      Products'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 54
+  fields:
+    name: 'Biotechnology and Pharmaceuticals : Pharmaceuticals : Drug Discovery'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 55
+  fields:
+    name: 'Biotechnology and Pharmaceuticals : Pharmaceuticals : Drug Manufacture'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 56
+  fields:
+    name: 'Biotechnology and Pharmaceuticals : Pharmaceuticals : Neutraceuticals'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 57
+  fields:
+    name: 'Biotechnology and Pharmaceuticals : Vaccines'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 58
+  fields:
+    name: Business (and Consumer) Services
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 59
+  fields:
+    name: 'Financial and professional services : Business and consumer services :
+      Commercial real estate services'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 60
+  fields:
+    name: 'Financial and professional services : Business and consumer services :
+      Contact centres'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 61
+  fields:
+    name: 'Financial and professional services : Business and consumer services :
+      HR services'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 62
+  fields:
+    name: 'Financial and professional services : Business and consumer services :
+      Marketing services'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 63
+  fields:
+    name: 'Financial and professional services : Business and consumer services :
+      Market research'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 64
+  fields:
+    name: 'Financial and professional services : Business and consumer services :
+      Shared service centres'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 65
+  fields:
+    name: Chemicals
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 66
+  fields:
+    name: 'Chemicals : Agricultural chemicals'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 67
+  fields:
+    name: 'Chemicals : Basic chemicals'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 68
+  fields:
+    name: 'Chemicals : Cleaning preparations'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 69
+  fields:
+    name: 'Chemicals : Miscellaneous chemicals'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 70
+  fields:
+    name: 'Chemicals : Paint, coating and adhesive products'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 71
+  fields:
+    name: 'Chemicals : Synthetic materials'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 72
+  fields:
+    name: Clothing, Footwear and Fashion
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 73
+  fields:
+    name: 'Clothing, Footwear and Fashion : Clothing'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 74
+  fields:
+    name: 'Clothing, Footwear and Fashion : Clothing : Workwear'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 75
+  fields:
+    name: 'Clothing, Footwear and Fashion : Footwear'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 76
+  fields:
+    name: Communications
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 77
+  fields:
+    name: 'Communications : Broadband'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 78
+  fields:
+    name: 'Communications : Communications Wholesale'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 79
+  fields:
+    name: 'Technology and smart cities : Communications : Convergent'
+    disabled_on: null
+    sector_team:
+    - 3
+    parent_sector: []
+- model: mi.sector
+  pk: 80
+  fields:
+    name: 'Technology and smart cities : Communications : Fixed line'
+    disabled_on: null
+    sector_team:
+    - 3
+    parent_sector: []
+- model: mi.sector
+  pk: 81
+  fields:
+    name: 'Communications : Mobile'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 82
+  fields:
+    name: 'Communications : Mobile : 3G Services'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 83
+  fields:
+    name: 'Communications : Mobile : GSM'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 84
+  fields:
+    name: 'Communications : Retail'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 85
+  fields:
+    name: 'Communications : Wireless'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 86
+  fields:
+    name: 'Communications : Wireless : Wi-Fi'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 87
+  fields:
+    name: 'Communications : Wireless : Wi-Max'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 88
+  fields:
+    name: Construction
+    disabled_on: null
+    sector_team:
+    - 6
+    parent_sector: []
+- model: mi.sector
+  pk: 89
+  fields:
+    name: Creative industries
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 90
+  fields:
+    name: 'Creative and Media : Architecture'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 91
+  fields:
+    name: 'Creative industries : Art'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 92
+  fields:
+    name: 'Creative and Media : Art, Design and Creativity : Artistic and Literary
+      Creation'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 93
+  fields:
+    name: 'Creative and Media : Art, Design and Creativity : Arts Facilities Operation'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 94
+  fields:
+    name: 'Creative industries : Design'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 95
+  fields:
+    name: 'Creative and Media : Art, Design and Creativity : Fashion'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 96
+  fields:
+    name: 'Creative industries : Performing arts'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 97
+  fields:
+    name: 'Creative and Media : Creative and Media Distribution'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 98
+  fields:
+    name: 'Creative industries : Film and tv : Sales and distribution'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 99
+  fields:
+    name: 'Creative industries : Equipment'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 100
+  fields:
+    name: 'Creative industries : Equipment : Musical instruments'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 101
+  fields:
+    name: 'Creative industries : Equipment : Photo and cinema'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 102
+  fields:
+    name: 'Creative and Media : Creative and Media Retail'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 103
+  fields:
+    name: 'Creative industries : Antiques and antiquities'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 104
+  fields:
+    name: 'Creative and Media : Creative and Media Retail : Art'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 105
+  fields:
+    name: 'Creative industries : Books, printed media and stationery'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 106
+  fields:
+    name: 'Creative and Media : Creative and Media Wholesaling'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 107
+  fields:
+    name: 'Creative industries : Multimedia sales'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 108
+  fields:
+    name: 'Creative and Media : Creative and Media Wholesaling : Musical Instruments'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 109
+  fields:
+    name: 'Creative and Media : Creative and Media Wholesaling : Photographic Goods'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 110
+  fields:
+    name: 'Creative industries : Experience economy'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 111
+  fields:
+    name: 'Creative and Media : Media'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 112
+  fields:
+    name: 'Creative industries : Advertising'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 113
+  fields:
+    name: 'Creative industries : Animation'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 114
+  fields:
+    name: 'Creative industries : Music'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 115
+  fields:
+    name: 'Creative industries : Publishing'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 116
+  fields:
+    name: 'Creative industries : Film and tv'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 117
+  fields:
+    name: 'Creative industries : Games'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 118
+  fields:
+    name: 'Creative and Media : Media Reproduction'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 119
+  fields:
+    name: 'Creative and Media : Media Reproduction : Printing'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 120
+  fields:
+    name: 'Creative and Media : Media Reproduction : Reproduction'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 121
+  fields:
+    name: Defence
+    disabled_on: null
+    sector_team:
+    - 14
+    parent_sector: []
+- model: mi.sector
+  pk: 122
+  fields:
+    name: Defence and Security
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 123
+  fields:
+    name: Education and training
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 124
+  fields:
+    name: Electronics and IT Hardware
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 125
+  fields:
+    name: 'Electronics and IT Hardware : Electronic Instruments'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 126
+  fields:
+    name: 'Electronics and IT Hardware : Electronics and IT Technologies'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 127
+  fields:
+    name: 'Electronics and IT Hardware : Electronics and IT Technologies : Broadcasting'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 128
+  fields:
+    name: 'Electronics and IT Hardware : Electronics and IT Technologies : Component
+      Technologies'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 129
+  fields:
+    name: 'Electronics and IT Hardware : Electronics and IT Technologies : Computing'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 130
+  fields:
+    name: 'Electronics and IT Hardware : Electronics and IT Technologies : Display
+      Technologies'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 131
+  fields:
+    name: 'Electronics and IT Hardware : Electronics and IT Technologies : Network
+      Technologies'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 132
+  fields:
+    name: 'Electronics and IT Hardware : Electronics and IT Technologies : Security
+      Technologies'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 133
+  fields:
+    name: Energy
+    disabled_on: null
+    sector_team:
+    - 7
+    parent_sector: []
+- model: mi.sector
+  pk: 134
+  fields:
+    name: Environment
+    disabled_on: null
+    sector_team:
+    - 7
+    parent_sector: []
+- model: mi.sector
+  pk: 135
+  fields:
+    name: 'Environment : Air pollution and noise control'
+    disabled_on: null
+    sector_team:
+    - 7
+    parent_sector: []
+- model: mi.sector
+  pk: 136
+  fields:
+    name: 'Environment : Environmental monitoring'
+    disabled_on: null
+    sector_team:
+    - 7
+    parent_sector: []
+- model: mi.sector
+  pk: 137
+  fields:
+    name: 'Environment : Fuel Cells'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 138
+  fields:
+    name: 'Environment : Marine pollution control'
+    disabled_on: null
+    sector_team:
+    - 7
+    parent_sector: []
+- model: mi.sector
+  pk: 139
+  fields:
+    name: 'Environment : Sanitation and remediation'
+    disabled_on: null
+    sector_team:
+    - 7
+    parent_sector: []
+- model: mi.sector
+  pk: 140
+  fields:
+    name: 'Environment : Waste management and recycling'
+    disabled_on: null
+    sector_team:
+    - 7
+    parent_sector: []
+- model: mi.sector
+  pk: 141
+  fields:
+    name: 'Environment : Waste Management : Hazardous Waste Management'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 142
+  fields:
+    name: 'Environment : Waste Management : Non-Metal Waste and Scrap Recycling'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 143
+  fields:
+    name: 'Environment : Waste Management : Sewage Collection and Treatment'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 144
+  fields:
+    name: 'Environment : Waste to Energy'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 145
+  fields:
+    name: 'Water : Water management'
+    disabled_on: null
+    sector_team:
+    - 6
+    parent_sector: []
+- model: mi.sector
+  pk: 146
+  fields:
+    name: Environment and Water
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 147
+  fields:
+    name: Financial and professional services
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 148
+  fields:
+    name: 'Financial and professional services : Asset management'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 149
+  fields:
+    name: 'Financial and professional services : Banking'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 150
+  fields:
+    name: 'Financial and professional services : Banking : Commercial banking'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 151
+  fields:
+    name: 'Financial and professional services : Banking : Investment banking'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 152
+  fields:
+    name: 'Financial and professional services : Banking : Private banking'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 153
+  fields:
+    name: 'Financial and professional services : Banking : Retail banking'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 154
+  fields:
+    name: 'Financial and professional services : Capital markets'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 155
+  fields:
+    name: 'Financial and professional services : Capital markets : Hedge funds'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 156
+  fields:
+    name: 'Financial and professional services : Capital markets : Private equity'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 157
+  fields:
+    name: 'Financial and professional services : Capital markets : Venture capital'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 158
+  fields:
+    name: 'Financial and professional services : Foreign exchange'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 159
+  fields:
+    name: 'Financial and professional services : Insurance'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 160
+  fields:
+    name: 'Financial and professional services : Insurance : Commercial insurance'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 161
+  fields:
+    name: 'Financial and professional services : Insurance : Home insurance'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 162
+  fields:
+    name: 'Financial and professional services : Insurance : Life insurance'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 163
+  fields:
+    name: 'Financial and professional services : Insurance : Motor insurance'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 164
+  fields:
+    name: 'Financial and professional services : Insurance : Travel insurance'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 165
+  fields:
+    name: 'Financial and professional services : Listings'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 166
+  fields:
+    name: 'Financial Services (including Professional Services) : Professional Services'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 167
+  fields:
+    name: 'Financial and professional services : Accountancy services'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 168
+  fields:
+    name: 'Financial and professional services : Legal services'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 169
+  fields:
+    name: 'Financial and professional services : Management consultancy'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 170
+  fields:
+    name: Food and drink
+    disabled_on: null
+    sector_team:
+    - 4
+    parent_sector: []
+- model: mi.sector
+  pk: 171
+  fields:
+    name: 'Food and drink : Bakery products'
+    disabled_on: null
+    sector_team:
+    - 4
+    parent_sector: []
+- model: mi.sector
+  pk: 172
+  fields:
+    name: 'Food and drink : Alcoholic drinks'
+    disabled_on: null
+    sector_team:
+    - 4
+    parent_sector: []
+- model: mi.sector
+  pk: 173
+  fields:
+    name: 'Food and drink : Brewing'
+    disabled_on: null
+    sector_team:
+    - 4
+    parent_sector: []
+- model: mi.sector
+  pk: 174
+  fields:
+    name: 'Food and drink : Dairy products'
+    disabled_on: null
+    sector_team:
+    - 4
+    parent_sector: []
+- model: mi.sector
+  pk: 175
+  fields:
+    name: 'Food and drink : Food and drink manufacturing'
+    disabled_on: null
+    sector_team:
+    - 4
+    parent_sector: []
+- model: mi.sector
+  pk: 176
+  fields:
+    name: 'Food and drink : Frozen and chilled foods'
+    disabled_on: null
+    sector_team:
+    - 4
+    parent_sector: []
+- model: mi.sector
+  pk: 177
+  fields:
+    name: 'Food and drink : Fruit and vegetables'
+    disabled_on: null
+    sector_team:
+    - 4
+    parent_sector: []
+- model: mi.sector
+  pk: 178
+  fields:
+    name: 'Food and drink : Meat products'
+    disabled_on: null
+    sector_team:
+    - 4
+    parent_sector: []
+- model: mi.sector
+  pk: 179
+  fields:
+    name: 'Food and drink : Pet food'
+    disabled_on: null
+    sector_team:
+    - 4
+    parent_sector: []
+- model: mi.sector
+  pk: 180
+  fields:
+    name: 'Food and drink : Ready meals'
+    disabled_on: null
+    sector_team:
+    - 4
+    parent_sector: []
+- model: mi.sector
+  pk: 181
+  fields:
+    name: 'Food and drink : Secondary food processing'
+    disabled_on: null
+    sector_team:
+    - 4
+    parent_sector: []
+- model: mi.sector
+  pk: 182
+  fields:
+    name: 'Food and Drink : Tobacco Products'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 183
+  fields:
+    name: Giftware, Jewellery and Tableware
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 184
+  fields:
+    name: Sports economy
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 185
+  fields:
+    name: 'Sports economy : Major sports events'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 186
+  fields:
+    name: Healthcare and Medical
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 187
+  fields:
+    name: 'Healthcare and Medical : Healthcare Marketing and Sales'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 188
+  fields:
+    name: 'Healthcare and Medical : Healthcare Marketing and Sales : Healthcare Retail'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 189
+  fields:
+    name: 'Healthcare and Medical : Healthcare Marketing and Sales : Healthcare Wholesale'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 190
+  fields:
+    name: 'Healthcare and Medical : Healthcare Services'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 191
+  fields:
+    name: 'Healthcare and Medical : Healthcare Services : Dentists'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 192
+  fields:
+    name: 'Healthcare and Medical : Healthcare Services : Medical Practice'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 193
+  fields:
+    name: 'Healthcare and Medical : Healthcare Services : Nursing Homes'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 194
+  fields:
+    name: 'Healthcare and Medical : Healthcare Services : Private Sector'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 195
+  fields:
+    name: 'Healthcare and Medical : Healthcare Services : Public Sector'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 196
+  fields:
+    name: 'Healthcare and Medical : Healthcare Services : Vets'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 197
+  fields:
+    name: 'Medical devices and equipment : Consumables and equipment'
+    disabled_on: null
+    sector_team:
+    - 8
+    parent_sector: []
+- model: mi.sector
+  pk: 198
+  fields:
+    name: 'Healthcare and Medical : Medical Devices and Systems'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 199
+  fields:
+    name: 'Healthcare and Medical : Medical Devices and Systems : Optical Precision
+      Instruments'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 200
+  fields:
+    name: 'Healthcare and Medical : Medical Equipment'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 201
+  fields:
+    name: 'Healthcare and Medical : Medical Equipment : Dental Aesthetics'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 202
+  fields:
+    name: 'Healthcare and Medical : Medical Equipment : Glass'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 203
+  fields:
+    name: 'Healthcare and Medical : Medical Equipment : Spectacles and Unmounted Lenses'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 204
+  fields:
+    name: 'Healthcare services : Lab services'
+    disabled_on: null
+    sector_team:
+    - 12
+    parent_sector: []
+- model: mi.sector
+  pk: 205
+  fields:
+    name: Household Goods, Furniture and Furnishings
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 206
+  fields:
+    name: ICT
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 207
+  fields:
+    name: Leisure and Tourism
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 208
+  fields:
+    name: 'Leisure and Tourism : Gaming'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 209
+  fields:
+    name: 'Leisure and Tourism : Gaming : Casino Gambling'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 210
+  fields:
+    name: 'Leisure and Tourism : Gaming : Mass-Market Gambling'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 211
+  fields:
+    name: 'Sports economy : Sports infrastructure'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 212
+  fields:
+    name: Life Sciences
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 213
+  fields:
+    name: Maritime
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 214
+  fields:
+    name: Mass Transport
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 215
+  fields:
+    name: Mechanical Electrical and Process Engineering
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 216
+  fields:
+    name: Metallurgical Process Plant
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 217
+  fields:
+    name: Metals, Minerals and Materials
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 218
+  fields:
+    name: 'Advanced engineering : Metals, minerals and materials : Ceramics'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 219
+  fields:
+    name: 'Advanced engineering : Metals, minerals and materials : Composite materials'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 220
+  fields:
+    name: 'Advanced engineering : Metals, minerals and materials : Elastomers and
+      rubbers'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 221
+  fields:
+    name: 'Advanced engineering : Metals, minerals and materials : Metals'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 222
+  fields:
+    name: 'Advanced engineering : Metals, minerals and materials : Minerals'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 223
+  fields:
+    name: 'Advanced engineering : Metals, minerals and materials : Plastics'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 224
+  fields:
+    name: Mining
+    disabled_on: null
+    sector_team:
+    - 6
+    parent_sector: []
+- model: mi.sector
+  pk: 226
+  fields:
+    name: Oil and Gas
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 227
+  fields:
+    name: Ports and Logistics
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 228
+  fields:
+    name: Power
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 229
+  fields:
+    name: 'Energy : Civil nuclear'
+    disabled_on: null
+    sector_team:
+    - 7
+    parent_sector: []
+- model: mi.sector
+  pk: 230
+  fields:
+    name: 'Energy : Civil nuclear decommissioning'
+    disabled_on: null
+    sector_team:
+    - 7
+    parent_sector: []
+- model: mi.sector
+  pk: 231
+  fields:
+    name: Railways
+    disabled_on: null
+    sector_team:
+    - 6
+    parent_sector: []
+- model: mi.sector
+  pk: 232
+  fields:
+    name: Renewable Energy
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 233
+  fields:
+    name: 'Energy : Renewable energy : Biomass'
+    disabled_on: null
+    sector_team:
+    - 7
+    parent_sector: []
+- model: mi.sector
+  pk: 234
+  fields:
+    name: 'Energy : Renewable energy : Geothermal'
+    disabled_on: null
+    sector_team:
+    - 7
+    parent_sector: []
+- model: mi.sector
+  pk: 235
+  fields:
+    name: 'Energy : Renewable energy : Hydro'
+    disabled_on: null
+    sector_team:
+    - 7
+    parent_sector: []
+- model: mi.sector
+  pk: 236
+  fields:
+    name: 'Energy : Renewable energy : Solar'
+    disabled_on: null
+    sector_team:
+    - 7
+    parent_sector: []
+- model: mi.sector
+  pk: 237
+  fields:
+    name: 'Energy : Renewable energy : Marine and tidal'
+    disabled_on: null
+    sector_team:
+    - 7
+    parent_sector: []
+- model: mi.sector
+  pk: 238
+  fields:
+    name: 'Energy : Renewable energy : Wave'
+    disabled_on: null
+    sector_team:
+    - 7
+    parent_sector: []
+- model: mi.sector
+  pk: 239
+  fields:
+    name: 'Renewable Energy : Wind'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 240
+  fields:
+    name: 'Renewable Energy : Wind : Renewable energy: Wind: Offshore'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 241
+  fields:
+    name: 'Energy : Renewable energy : Onshore wind'
+    disabled_on: null
+    sector_team:
+    - 7
+    parent_sector: []
+- model: mi.sector
+  pk: 242
+  fields:
+    name: Consumer and retail
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 243
+  fields:
+    name: Security
+    disabled_on: null
+    sector_team:
+    - 14
+    parent_sector: []
+- model: mi.sector
+  pk: 244
+  fields:
+    name: 'Security : Cyber Security'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 245
+  fields:
+    name: Software and Computer Services Business to Business (B2B)
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 246
+  fields:
+    name: 'Software and Computer Services Business to Business (B2B) : Biometrics'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 247
+  fields:
+    name: 'Software and Computer Services Business to Business (B2B) : E-Procurement'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 248
+  fields:
+    name: 'Software and Computer Services Business to Business (B2B) : Financial Applications'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 249
+  fields:
+    name: 'Software and Computer Services Business to Business (B2B) : Healthcare
+      Applications'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 250
+  fields:
+    name: 'Software and Computer Services Business to Business (B2B) : Industry Applications'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 251
+  fields:
+    name: 'Software and Computer Services Business to Business (B2B) : Online Retailing'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 252
+  fields:
+    name: 'Software and Computer Services Business to Business (B2B) : Security Related
+      Software'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 253
+  fields:
+    name: 'Software and Computer Services Business to Business (B2B) : Support Services'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 254
+  fields:
+    name: 'Software and Computer Services Business to Business (B2B) : Support Services
+      : Equipment Maintenance and Repair'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 255
+  fields:
+    name: 'Software and Computer Services Business to Business (B2B) : Support Services
+      : Internet Service Providers'
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 256
+  fields:
+    name: Textiles, Interior Textiles and Carpets
+    disabled_on: 2020-06-01 00:00:00+00:00
+    sector_team: []
+    parent_sector: []
+- model: mi.sector
+  pk: 257
+  fields:
+    name: Water
+    disabled_on: null
+    sector_team:
+    - 6
+    parent_sector: []
+- model: mi.sector
+  pk: 258
+  fields:
+    name: 'Advanced engineering : Mechanical, electrical and process engineering'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 259
+  fields:
+    name: 'Advanced engineering : Metallurgical process plant'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 260
+  fields:
+    name: 'Advanced engineering : Metals, minerals and materials'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 261
+  fields:
+    name: 'Aerospace : Component manufacturing : Aerostructures'
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 262
+  fields:
+    name: 'Aerospace : Component manufacturing : Systems'
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 263
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Advisory services'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 264
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Arable crops'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 265
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Arable crops : Fertilisers
+      and pesticides'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 266
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Arable crops : Harvest
+      and early stage processing'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 267
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Arable crops : Seeds and
+      plant varieties'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 268
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Arable crops : Soil management
+      systems'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 269
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Engineering and precision
+      farming'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 270
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Engineering and precision
+      farming : Machinery'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 271
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Engineering and precision
+      farming : Technology'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 272
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Fisheries and aquaculture'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 273
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Fisheries and aquaculture
+      : Broodstock and genetics'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 274
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Fisheries and aquaculture
+      : Cages and farming systems'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 275
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Fisheries and aquaculture
+      : Nutrition and husbandry'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 276
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Forestry and logging'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 277
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Horticulture'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 278
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Horticulture : Fruit and
+      vegetable production'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 279
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Horticulture : Ornamental
+      plants and flowers'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 280
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Infrastructure'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 281
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Infrastructure : Buildings'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 282
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Infrastructure : On-farm
+      and cold chain storage and transport'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 283
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Infrastructure : Water
+      storage, management and distribution'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 284
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Livestock, pets and horses'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 285
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Livestock, pets and horses
+      : Breeding stock and genetics'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 286
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Livestock, pets and horses
+      : Health, welfare and veterinary services'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 287
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Livestock, pets and horses
+      : Livestock feed and nutrition'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 288
+  fields:
+    name: 'Agriculture, horticulture, fisheries and pets : Livestock, pets and horses
+      : Tagging and traceability'
+    disabled_on: null
+    sector_team:
+    - 13
+    parent_sector: []
+- model: mi.sector
+  pk: 289
+  fields:
+    name: 'Consumer and retail : Clothing, footwear and fashion'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 290
+  fields:
+    name: 'Consumer and retail : Clothing, footwear and fashion : Accessories, bags
+      and luggage'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 291
+  fields:
+    name: 'Consumer and retail : Clothing, footwear and fashion : Children''s apparel'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 292
+  fields:
+    name: 'Consumer and retail : Clothing, footwear and fashion : Children''s footwear'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 293
+  fields:
+    name: 'Consumer and retail : Clothing, footwear and fashion : Men''s apparel'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 294
+  fields:
+    name: 'Consumer and retail : Clothing, footwear and fashion : Men''s footwear'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 295
+  fields:
+    name: 'Consumer and retail : Clothing, footwear and fashion : Sports and leisurewear'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 296
+  fields:
+    name: 'Consumer and retail : Clothing, footwear and fashion : Women''s apparel'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 297
+  fields:
+    name: 'Consumer and retail : Clothing, footwear and fashion : Women''s footwear'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 298
+  fields:
+    name: 'Consumer and retail : Cosmetics and beauty'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 299
+  fields:
+    name: 'Consumer and retail : Electronic consumer products'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 300
+  fields:
+    name: 'Consumer and retail : Furniture and furnishings'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 301
+  fields:
+    name: 'Consumer and retail : Giftware'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 302
+  fields:
+    name: 'Consumer and retail : Household goods'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 303
+  fields:
+    name: 'Consumer and retail : Jewellery'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 304
+  fields:
+    name: 'Consumer and retail : Leisure and tourism'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 305
+  fields:
+    name: 'Consumer and retail : Leisure and tourism : Casual dining'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 306
+  fields:
+    name: 'Consumer and retail : Leisure and tourism : Hotels and hospitality'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 307
+  fields:
+    name: 'Consumer and retail : Leisure and tourism : Travel'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 308
+  fields:
+    name: 'Consumer and retail : Luxury'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 309
+  fields:
+    name: 'Consumer and retail : Supermarkets'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 310
+  fields:
+    name: 'Consumer and retail : Tableware'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 311
+  fields:
+    name: 'Consumer and retail : Textiles, interior textiles and carpets'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 312
+  fields:
+    name: 'Creative industries : Design : Industrial design'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 313
+  fields:
+    name: 'Creative industries : Design : Interior design'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 314
+  fields:
+    name: 'Creative industries : Digital media'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 315
+  fields:
+    name: 'Creative industries : Experience economy : Art'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 316
+  fields:
+    name: 'Creative industries : Experience economy : Attractions'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 317
+  fields:
+    name: 'Creative industries : Experience economy : Museums'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 318
+  fields:
+    name: 'Creative industries : Film and tv : Broadcasting'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 319
+  fields:
+    name: 'Creative industries : Film and tv : Post production'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 320
+  fields:
+    name: 'Creative industries : Film and tv : Production and finance'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 321
+  fields:
+    name: 'Creative industries : Games : Development'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 322
+  fields:
+    name: 'Creative industries : Games : Esports'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 323
+  fields:
+    name: 'Creative industries : Games : Publishing'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 324
+  fields:
+    name: 'Creative industries : Immersive technology'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 325
+  fields:
+    name: 'Creative industries : Media services'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 326
+  fields:
+    name: 'Creative industries : Music : Distribution'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 327
+  fields:
+    name: 'Creative industries : Music : Live performances'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 328
+  fields:
+    name: 'Creative industries : Music : Management'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 329
+  fields:
+    name: 'Creative industries : Music : Publishing'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 330
+  fields:
+    name: 'Creative industries : Music : Recorded music'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 331
+  fields:
+    name: 'Education and training : Curriculum, qualifications, assessment, inspection
+      and quality assurance'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 332
+  fields:
+    name: 'Education and training : Early years'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 333
+  fields:
+    name: 'Education and training : Educational technology'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 334
+  fields:
+    name: 'Education and training : English language training'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 335
+  fields:
+    name: 'Education and training : Higher education'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 336
+  fields:
+    name: 'Education and training : Higher education : Curriculum, qualifications,
+      assessment, inspection and quality assurance'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 337
+  fields:
+    name: 'Education and training : Higher education : Professional'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 338
+  fields:
+    name: 'Education and training : Higher education : Teacher training'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 339
+  fields:
+    name: 'Education and training : Higher education : Universities'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 340
+  fields:
+    name: 'Education and training : Schools'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 341
+  fields:
+    name: 'Education and training : Special educational needs and disabilities'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 342
+  fields:
+    name: 'Education and training : Special educational needs and disabilities : Consultancy'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 343
+  fields:
+    name: 'Education and training : Special educational needs and disabilities : Curriculum,
+      qualifications, assessment, inspection and quality assurance'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 344
+  fields:
+    name: 'Education and training : Special educational needs and disabilities : Early
+      years and schools'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 345
+  fields:
+    name: 'Education and training : Special educational needs and disabilities : Educational
+      technology equipment and supplies'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 346
+  fields:
+    name: 'Education and training : Special educational needs and disabilities : Higher
+      education and technical and vocational education and training'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 347
+  fields:
+    name: 'Education and training : Special educational needs and disabilities : Teacher
+      training'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 348
+  fields:
+    name: 'Education and training : Support services'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 349
+  fields:
+    name: 'Education and training : Support services : Construction'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 350
+  fields:
+    name: 'Education and training : Support services : Consultancy and professional
+      services'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 351
+  fields:
+    name: 'Education and training : Support services : Equipment and supplies'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 352
+  fields:
+    name: 'Education and training : Support services : Facilities management'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 353
+  fields:
+    name: 'Education and training : Technical and vocational education and training'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 354
+  fields:
+    name: 'Education and training : Technical and vocational education and training
+      : Colleges and further education'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 355
+  fields:
+    name: 'Education and training : Technical and vocational education and training
+      : Consultancy'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 356
+  fields:
+    name: 'Education and training : Technical and vocational education and training
+      : Curriculum, qualifications, assessment, inspection and quality assurance'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 357
+  fields:
+    name: 'Education and training : Technical and vocational education and training
+      : Oil and gas and mining'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 358
+  fields:
+    name: 'Education and training : Technical and vocational education and training
+      : Training'
+    disabled_on: null
+    sector_team:
+    - 2
+    parent_sector: []
+- model: mi.sector
+  pk: 359
+  fields:
+    name: 'Energy : Oil and gas'
+    disabled_on: null
+    sector_team:
+    - 7
+    parent_sector: []
+- model: mi.sector
+  pk: 360
+  fields:
+    name: 'Energy : Renewable energy'
+    disabled_on: null
+    sector_team:
+    - 7
+    parent_sector: []
+- model: mi.sector
+  pk: 361
+  fields:
+    name: 'Energy : Renewable energy : Electrical networks'
+    disabled_on: null
+    sector_team:
+    - 7
+    parent_sector: []
+- model: mi.sector
+  pk: 362
+  fields:
+    name: 'Energy : Renewable energy : Energy storage'
+    disabled_on: null
+    sector_team:
+    - 7
+    parent_sector: []
+- model: mi.sector
+  pk: 363
+  fields:
+    name: 'Energy : Renewable energy : Hydrogen'
+    disabled_on: null
+    sector_team:
+    - 7
+    parent_sector: []
+- model: mi.sector
+  pk: 364
+  fields:
+    name: 'Energy : Renewable energy : Industrial decarbonisation'
+    disabled_on: null
+    sector_team:
+    - 7
+    parent_sector: []
+- model: mi.sector
+  pk: 365
+  fields:
+    name: 'Energy : Renewable energy : Offshore wind'
+    disabled_on: null
+    sector_team:
+    - 7
+    parent_sector: []
+- model: mi.sector
+  pk: 366
+  fields:
+    name: 'Energy : Renewable energy : Waste to value'
+    disabled_on: null
+    sector_team:
+    - 7
+    parent_sector: []
+- model: mi.sector
+  pk: 367
+  fields:
+    name: 'Environment : Clean growth services'
+    disabled_on: null
+    sector_team:
+    - 7
+    parent_sector: []
+- model: mi.sector
+  pk: 368
+  fields:
+    name: 'Financial and professional services : Accountancy services : Commercial
+      accounting'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 369
+  fields:
+    name: 'Financial and professional services : Accountancy services : Retail accounting'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 370
+  fields:
+    name: 'Financial and professional services : Business and consumer services'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 371
+  fields:
+    name: 'Financial and professional services : Financial technology'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 372
+  fields:
+    name: 'Financial and professional services : Legal services : Commercial legal
+      services'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 373
+  fields:
+    name: 'Financial and professional services : Legal services : Retail legal services'
+    disabled_on: null
+    sector_team:
+    - 1
+    parent_sector: []
+- model: mi.sector
+  pk: 374
+  fields:
+    name: 'Food and drink : Free from'
+    disabled_on: null
+    sector_team:
+    - 4
+    parent_sector: []
+- model: mi.sector
+  pk: 375
+  fields:
+    name: 'Food and drink : Non-alcoholic drinks'
+    disabled_on: null
+    sector_team:
+    - 4
+    parent_sector: []
+- model: mi.sector
+  pk: 376
+  fields:
+    name: 'Food and drink : Organic'
+    disabled_on: null
+    sector_team:
+    - 4
+    parent_sector: []
+- model: mi.sector
+  pk: 377
+  fields:
+    name: Healthcare services
+    disabled_on: null
+    sector_team:
+    - 12
+    parent_sector: []
+- model: mi.sector
+  pk: 378
+  fields:
+    name: 'Healthcare services : Digital and data'
+    disabled_on: null
+    sector_team:
+    - 12
+    parent_sector: []
+- model: mi.sector
+  pk: 379
+  fields:
+    name: 'Healthcare services : Education and training'
+    disabled_on: null
+    sector_team:
+    - 12
+    parent_sector: []
+- model: mi.sector
+  pk: 380
+  fields:
+    name: 'Healthcare services : Health systems management'
+    disabled_on: null
+    sector_team:
+    - 12
+    parent_sector: []
+- model: mi.sector
+  pk: 381
+  fields:
+    name: 'Healthcare services : Infrastructure'
+    disabled_on: null
+    sector_team:
+    - 12
+    parent_sector: []
+- model: mi.sector
+  pk: 382
+  fields:
+    name: 'Healthcare services : Social care'
+    disabled_on: null
+    sector_team:
+    - 12
+    parent_sector: []
+- model: mi.sector
+  pk: 383
+  fields:
+    name: 'Maritime : Marine engineering'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 384
+  fields:
+    name: 'Maritime : Marine engineering : Autonomous vessels and systems'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 385
+  fields:
+    name: 'Maritime : Marine engineering : Composites and other specialist technical
+      areas'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 386
+  fields:
+    name: 'Maritime : Marine engineering : Construction and manufacture'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 387
+  fields:
+    name: 'Maritime : Marine engineering : Digital shipping'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 388
+  fields:
+    name: 'Maritime : Marine engineering : Engineering and interior design'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 389
+  fields:
+    name: 'Maritime : Marine engineering : Engineering consultancy'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 390
+  fields:
+    name: 'Maritime : Marine engineering : Fit out and refits'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 391
+  fields:
+    name: 'Maritime : Marine engineering : Green marine'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 392
+  fields:
+    name: 'Maritime : Marine engineering : Leisure marine'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 393
+  fields:
+    name: 'Maritime : Marine engineering : Marine science'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 394
+  fields:
+    name: 'Maritime : Marine engineering : Maritime equipment and systems'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 395
+  fields:
+    name: 'Maritime : Marine engineering : Ports and terminals'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 396
+  fields:
+    name: 'Maritime : Marine engineering : Project management'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 397
+  fields:
+    name: 'Maritime : Marine engineering : Research and development'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 398
+  fields:
+    name: 'Maritime : Maritime services'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 399
+  fields:
+    name: 'Maritime : Maritime services : Accounting and financial services'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 400
+  fields:
+    name: 'Maritime : Maritime services : Classification'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 401
+  fields:
+    name: 'Maritime : Maritime services : Consultancy'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 402
+  fields:
+    name: 'Maritime : Maritime services : Human resource management'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 403
+  fields:
+    name: 'Maritime : Maritime services : Marine insurance'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 404
+  fields:
+    name: 'Maritime : Maritime services : Maritime charities'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 405
+  fields:
+    name: 'Maritime : Maritime services : Maritime law and arbitration'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 406
+  fields:
+    name: 'Maritime : Maritime services : Media and PR'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 407
+  fields:
+    name: 'Maritime : Maritime services : Ship finance'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 408
+  fields:
+    name: 'Maritime : Maritime services : Ship management'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 409
+  fields:
+    name: 'Maritime : Maritime services : Shipbroking'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 410
+  fields:
+    name: 'Maritime : Maritime services : Training and education'
+    disabled_on: null
+    sector_team:
+    - 9
+    parent_sector: []
+- model: mi.sector
+  pk: 411
+  fields:
+    name: Medical devices and equipment
+    disabled_on: null
+    sector_team:
+    - 8
+    parent_sector: []
+- model: mi.sector
+  pk: 412
+  fields:
+    name: 'Medical devices and equipment : Digital and data'
+    disabled_on: null
+    sector_team:
+    - 8
+    parent_sector: []
+- model: mi.sector
+  pk: 413
+  fields:
+    name: 'Medical devices and equipment : Implantable devices'
+    disabled_on: null
+    sector_team:
+    - 8
+    parent_sector: []
+- model: mi.sector
+  pk: 414
+  fields:
+    name: 'Medical devices and equipment : In vitro diagnostic devices'
+    disabled_on: null
+    sector_team:
+    - 8
+    parent_sector: []
+- model: mi.sector
+  pk: 415
+  fields:
+    name: 'Pharmaceuticals and biotechnology : Digital and data'
+    disabled_on: null
+    sector_team:
+    - 8
+    parent_sector: []
+- model: mi.sector
+  pk: 416
+  fields:
+    name: 'Pharmaceuticals and biotechnology : Manufacturing'
+    disabled_on: null
+    sector_team:
+    - 8
+    parent_sector: []
+- model: mi.sector
+  pk: 417
+  fields:
+    name: 'Pharmaceuticals and biotechnology : Research and development'
+    disabled_on: null
+    sector_team:
+    - 8
+    parent_sector: []
+- model: mi.sector
+  pk: 418
+  fields:
+    name: 'Security : Cyber security'
+    disabled_on: null
+    sector_team:
+    - 14
+    parent_sector: []
+- model: mi.sector
+  pk: 419
+  fields:
+    name: Space
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 420
+  fields:
+    name: 'Space : Component manufacturing'
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 421
+  fields:
+    name: 'Space : Component manufacturing : Communications'
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 422
+  fields:
+    name: 'Space : Component manufacturing : Electronics'
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 423
+  fields:
+    name: 'Space : Component manufacturing : Optics'
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 424
+  fields:
+    name: 'Space : Component manufacturing : Propulsion'
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 425
+  fields:
+    name: 'Space : Component manufacturing : Robotics'
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 426
+  fields:
+    name: 'Space : Component manufacturing : Satellite bus'
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 427
+  fields:
+    name: 'Space : Services'
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 428
+  fields:
+    name: 'Space : Services : Artificial intelligence and data'
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 429
+  fields:
+    name: 'Space : Services : Communications'
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 430
+  fields:
+    name: 'Space : Services : Earth observation'
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 431
+  fields:
+    name: 'Space : Services : Ground based'
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 432
+  fields:
+    name: 'Space : Services : Launch'
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 433
+  fields:
+    name: 'Space : Services : Satellite operation'
+    disabled_on: null
+    sector_team:
+    - 5
+    parent_sector: []
+- model: mi.sector
+  pk: 434
+  fields:
+    name: 'Sports economy : Sports development and policy'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 435
+  fields:
+    name: 'Sports economy : Sports infrastructure : Sports architecture'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 436
+  fields:
+    name: 'Sports economy : Sports infrastructure : Sports construction'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 437
+  fields:
+    name: 'Sports economy : Sports infrastructure : Stadia fit out'
+    disabled_on: null
+    sector_team:
+    - 10
+    parent_sector: []
+- model: mi.sector
+  pk: 438
+  fields:
+    name: Technology and smart cities
+    disabled_on: null
+    sector_team:
+    - 3
+    parent_sector: []
+- model: mi.sector
+  pk: 439
+  fields:
+    name: 'Technology and smart cities : Communications'
+    disabled_on: null
+    sector_team:
+    - 3
+    parent_sector: []
+- model: mi.sector
+  pk: 440
+  fields:
+    name: 'Technology and smart cities : Communications : Internet service providers'
+    disabled_on: null
+    sector_team:
+    - 3
+    parent_sector: []
+- model: mi.sector
+  pk: 441
+  fields:
+    name: 'Technology and smart cities : Communications : Mobile'
+    disabled_on: null
+    sector_team:
+    - 3
+    parent_sector: []
+- model: mi.sector
+  pk: 442
+  fields:
+    name: 'Technology and smart cities : Communications : Wireless'
+    disabled_on: null
+    sector_team:
+    - 3
+    parent_sector: []
+- model: mi.sector
+  pk: 443
+  fields:
+    name: 'Technology and smart cities : Communications : Wireless internet of things'
+    disabled_on: null
+    sector_team:
+    - 3
+    parent_sector: []
+- model: mi.sector
+  pk: 444
+  fields:
+    name: 'Technology and smart cities : Hardware'
+    disabled_on: null
+    sector_team:
+    - 3
+    parent_sector: []
+- model: mi.sector
+  pk: 445
+  fields:
+    name: 'Technology and smart cities : Hardware : 5G'
+    disabled_on: null
+    sector_team:
+    - 3
+    parent_sector: []
+- model: mi.sector
+  pk: 446
+  fields:
+    name: 'Technology and smart cities : Hardware : Data centres'
+    disabled_on: null
+    sector_team:
+    - 3
+    parent_sector: []
+- model: mi.sector
+  pk: 447
+  fields:
+    name: 'Technology and smart cities : Hardware : Internet of things'
+    disabled_on: null
+    sector_team:
+    - 3
+    parent_sector: []
+- model: mi.sector
+  pk: 448
+  fields:
+    name: 'Technology and smart cities : Hardware : Photonics'
+    disabled_on: null
+    sector_team:
+    - 3
+    parent_sector: []
+- model: mi.sector
+  pk: 449
+  fields:
+    name: 'Technology and smart cities : Hardware : Semiconductors'
+    disabled_on: null
+    sector_team:
+    - 3
+    parent_sector: []
+- model: mi.sector
+  pk: 450
+  fields:
+    name: 'Technology and smart cities : Hardware : Sensors'
+    disabled_on: null
+    sector_team:
+    - 3
+    parent_sector: []
+- model: mi.sector
+  pk: 451
+  fields:
+    name: 'Technology and smart cities : Hardware : Telecommunications and electronics
+      systems'
+    disabled_on: null
+    sector_team:
+    - 3
+    parent_sector: []
+- model: mi.sector
+  pk: 452
+  fields:
+    name: 'Technology and smart cities : Software'
+    disabled_on: null
+    sector_team:
+    - 3
+    parent_sector: []
+- model: mi.sector
+  pk: 453
+  fields:
+    name: 'Technology and smart cities : Software : 5G'
+    disabled_on: null
+    sector_team:
+    - 3
+    parent_sector: []
+- model: mi.sector
+  pk: 454
+  fields:
+    name: 'Technology and smart cities : Software : Artificial intelligence'
+    disabled_on: null
+    sector_team:
+    - 3
+    parent_sector: []
+- model: mi.sector
+  pk: 455
+  fields:
+    name: 'Technology and smart cities : Software : Blockchain'
+    disabled_on: null
+    sector_team:
+    - 3
+    parent_sector: []
+- model: mi.sector
+  pk: 456
+  fields:
+    name: 'Technology and smart cities : Software : Cloud services'
+    disabled_on: null
+    sector_team:
+    - 3
+    parent_sector: []
+- model: mi.sector
+  pk: 457
+  fields:
+    name: 'Technology and smart cities : Software : Data analytics'
+    disabled_on: null
+    sector_team:
+    - 3
+    parent_sector: []
+- model: mi.sector
+  pk: 458
+  fields:
+    name: 'Technology and smart cities : Software : Internet of things'
+    disabled_on: null
+    sector_team:
+    - 3
+    parent_sector: []
+- model: mi.sector
+  pk: 459
+  fields:
+    name: 'Technology and smart cities : Software : Sensors'
+    disabled_on: null
+    sector_team:
+    - 3
+    parent_sector: []
+- model: mi.sector
+  pk: 460
+  fields:
+    name: 'Technology and smart cities : Software : Software as a service'
+    disabled_on: null
+    sector_team:
+    - 3
+    parent_sector: []
+- model: mi.sector
+  pk: 461
+  fields:
+    name: 'Water : Flood resilience'
+    disabled_on: null
+    sector_team:
+    - 6
+    parent_sector: []
+- model: mi.sector
+  pk: 462
+  fields:
+    name: 'Water : Wastewater management'
+    disabled_on: null
+    sector_team:
+    - 6
+    parent_sector: []

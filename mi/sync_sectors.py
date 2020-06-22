@@ -11,7 +11,7 @@ class SyncSectors:
         self.disable_on = disable_on
         self.simulate = simulate
 
-    def log(self, msg, level=logging.INFO):
+    def log(self, msg, level=logging.DEBUG):
         logger.log(level, msg)
 
     def __call__(self, *args, **kwargs):
