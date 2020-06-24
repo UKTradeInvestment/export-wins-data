@@ -65,3 +65,10 @@ DOCUMENT_BUCKETS = {
         'aws_region': 'eu-west-2',
     },
 }
+
+logger_level = 'INFO'
+handler_level = 'INFO'
+handler_options = {'stream': sys.stdout}
+django_request_logger_level = 'WARNING'
+
+LOGGING = logging_config(logger_level, handler_level, handler_options, django_request_logger_level)
