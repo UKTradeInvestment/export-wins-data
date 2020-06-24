@@ -258,55 +258,58 @@ else:
     handler_options = {'stream': sys.stdout}
     django_request_logger_level = 'DEBUG'
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'json': {
-            'format': '%(message)s',
-            'class': 'pythonjsonlogger.jsonlogger.JsonFormatter',
-        }
-    },
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse'
-        }
-    },
-    'handlers': {
-        'console': {
-            **{
-                'level': handler_level,
-                'class': 'logging.StreamHandler',
-            },
-            **handler_options
-        },
-        'json': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'json'
-        }
-    },
-    'loggers': {
-        'django.request': {
-            'handlers': ['console'],
-            'level': django_request_logger_level,
-            'propagate': True,
-        },
-        'core.middleware': {
-            'handlers': ['json'],
-            'level': logger_level,
-            'propagate': True,
-        },
-        '': {
-            'handlers': ['console'],
-            'level': logger_level,
-            'propagate': False,
-        },
-    }
-}
 
-# only show critical log message when running tests
-if len(sys.argv) > 1 and sys.argv[1] == 'test':
-    logging.disable(logging.CRITICAL)
+def logging_config(_logger_level, _handler_level, _handler_options, _django_request_logger_level):
+    return {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'json': {
+                'format': '%(message)s',
+                'class': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+            }
+        },
+        'filters': {
+            'require_debug_false': {
+                '()': 'django.utils.log.RequireDebugFalse'
+            }
+        },
+        'handlers': {
+            'console': {
+                **{
+                    'level': _handler_level,
+                    'class': 'logging.StreamHandler',
+                },
+                **_handler_options
+            },
+            'json': {
+                'class': 'logging.StreamHandler',
+                'formatter': 'json'
+            }
+        },
+        'loggers': {
+            'django.request': {
+                'handlers': ['console'],
+                'level': _django_request_logger_level,
+                'propagate': True,
+            },
+            'core.middleware': {
+                'handlers': ['json'],
+                'level': _logger_level,
+                'propagate': True,
+            },
+            'parso': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+            '': {
+                'handlers': ['console'],
+                'level': _logger_level,
+                'propagate': False,
+            },
+        }
+    }
+
+
+LOGGING = logging_config(logger_level, handler_level, handler_options, django_request_logger_level)
+
 
 FIXTURE_DIRS = (
     '/fdi/fixtures/',
