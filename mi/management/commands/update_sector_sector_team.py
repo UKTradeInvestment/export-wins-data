@@ -23,12 +23,12 @@ class Command(CSVBaseCommand):
 
     def is_update_required(self, sector, sector_teams):
         current_teams = list(sector.sector_team.all())
+        if len(current_teams) != len(sector_teams):
+            return True
+
         for team in sector_teams:
             if team not in current_teams:
                 return True
-
-        if len(current_teams) != len(sector_teams):
-            return False
         return False
 
     def get_sector_teams(self, sector_team_ids):
