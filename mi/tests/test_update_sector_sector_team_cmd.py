@@ -136,3 +136,23 @@ def test_unknown_sector_team(s3_stubber, caplog):
     sector.refresh_from_db()
     assert list(sector.sector_team.all()) == []
     assert 'Finished - succeeded: 0, failed: 1' in caplog.text
+
+
+def test_sector_with_multiple_teams_already(s3_stubber, caplog):
+    """Test a sector with multiple teams updates correctly."""
+    sector = SectorFactory(name='sector_1')
+    sector_team_1 = SectorTeamFactory(name='sector_team')
+    sector.sector_team.add(sector_team_1)
+    sector_team_2 = SectorTeamFactory(name='new sector_team')
+    sector.sector_team.add(sector_team_2)
+
+    csv_content = f"""id,sector,teams
+{sector.pk},"{sector.name}","{sector_team_1.pk}"
+"""
+    run_command(s3_stubber, csv_content)
+
+    sector.refresh_from_db()
+    assert sector.sector_team.count() == 1
+    assert sector_team_1 in sector.sector_team.all()
+    assert sector_team_2 not in sector.sector_team.all()
+    assert 'Finished - succeeded: 1, failed: 0' in caplog.text
