@@ -741,7 +741,7 @@
 - model: mi.sector
   pk: 98
   fields:
-    name: 'Creative industries : Film and tv : Sales and distribution'
+    name: 'Creative industries : Film and TV : Sales and distribution'
     disabled_on: null
     sector_team:
     - 10
@@ -879,7 +879,7 @@
 - model: mi.sector
   pk: 116
   fields:
-    name: 'Creative industries : Film and tv'
+    name: 'Creative industries : Film and TV'
     disabled_on: null
     sector_team:
     - 10
@@ -2447,7 +2447,7 @@
 - model: mi.sector
   pk: 318
   fields:
-    name: 'Creative industries : Film and tv : Broadcasting'
+    name: 'Creative industries : Film and TV : Broadcasting'
     disabled_on: null
     sector_team:
     - 10
@@ -2455,7 +2455,7 @@
 - model: mi.sector
   pk: 319
   fields:
-    name: 'Creative industries : Film and tv : Post production'
+    name: 'Creative industries : Film and TV : Post production'
     disabled_on: null
     sector_team:
     - 10
@@ -2463,7 +2463,7 @@
 - model: mi.sector
   pk: 320
   fields:
-    name: 'Creative industries : Film and tv : Production and finance'
+    name: 'Creative industries : Film and TV : Production and finance'
     disabled_on: null
     sector_team:
     - 10
