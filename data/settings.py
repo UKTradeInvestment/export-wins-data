@@ -418,11 +418,9 @@ def get_redis_instance():
     return redis_service['credentials']
 
 
-# redis_credentials = get_redis_instance()
+redis_credentials = get_redis_instance()
 
-
-redis_uri = "redis://127.0.0.1:6380/"
-
+redis_uri = redis_credentials['uri']
 
 def _build_redis_url(base_url, db_number=0, **query_args):
     encoded_query_args = urlencode(query_args)
