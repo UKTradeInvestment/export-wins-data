@@ -422,6 +422,7 @@ redis_credentials = get_redis_instance()
 
 redis_uri = redis_credentials['uri']
 
+
 def _build_redis_url(base_url, db_number=0, **query_args):
     encoded_query_args = urlencode(query_args)
     return f'{base_url}/{db_number}?{encoded_query_args}'
