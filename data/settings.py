@@ -324,6 +324,31 @@ COUNTRIES_OVERRIDE = {
     'XG': 'Global',
     'FK': 'Falkland Islands',
     'CZ': 'Czech Republic',
+    'BQ': 'Bonaire',
+    'BS': 'The Bahamas',
+    'CD': 'Congo (Democratic Republic)',
+    'CI': 'Ivory Coast',
+    'CV': 'Cape Verde',
+    'CZ': 'Czechia',
+    'FM': 'Micronesia',
+    'GM': 'The Gambia',
+    'GS': 'South Georgia and South Sandwich Islands',
+    'KN': 'St Kitts and Nevis',
+    'LC': 'St Lucia',
+    'MF': 'Saint-Martin (French part)',
+    'MK': 'North Macedonia',
+    'MM': 'Myanmar (Burma)',
+    'PN': 'Pitcairn, Henderson, Ducie and Oeno Islands',
+    'PS': 'Occupied Palestinian Territories',
+    'SH': 'Saint Helena',
+    'SZ': 'Eswatini',
+    'TL': 'East Timor',
+    'UM': 'Palmyra Atoll',
+    'US': 'United States',
+    'VA': 'Vatican City',
+    'VC': 'St Vincent',
+    'VG': 'British Virgin Islands',
+    'VI': 'United States Virgin Islands',
 }
 
 # Hawk Authentication
@@ -394,7 +419,6 @@ def get_redis_instance():
 
 
 redis_credentials = get_redis_instance()
-
 
 redis_uri = redis_credentials['uri']
 
