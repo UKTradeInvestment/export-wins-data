@@ -81,8 +81,11 @@ def add_markets(apps, schema_editor):
         market = Market.objects.get(name=market_name)
         countries = countries_str.split("|")
         for country_code in countries:
-            country = Country.objects.get(iso_code=country_code)
-            MarketCountry(market=market, country=country).save()
+            try:
+                country = Country.objects.get(iso_code=country_code)
+                MarketCountry(market=market, country=country).save()
+            except Country.DoesNotExist:
+                pass
 
 
 class Migration(migrations.Migration):
