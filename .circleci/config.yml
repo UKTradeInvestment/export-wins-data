@@ -4,7 +4,7 @@ jobs:
   build:
     working_directory: ~/app
     docker:
-      - image: python:3.6.9
+      - image: python:3.6.11
         environment:
           SECRET_KEY: data-secret-1
           ADMIN_SECRET: data-secret-2
