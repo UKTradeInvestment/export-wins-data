@@ -921,6 +921,7 @@ HQ_TEAM_REGION_OR_POST = tuple([
     ('obn:2', 'Cambodia - British Chamber of Commerce'),
     ('obn:3', 'Chile - British Chamber of Commerce Chile'),
     ('obn:4', 'China - CBBC'),
+    ('obn:36', 'China – Grant Thornton'),
     ('obn:5', 'Colombia - UK Colombia Trade'),
     ('obn:6', 'Czech Republic - British Chamber of Commerce'),
     ('obn:7', 'Ghana - British Chamber of Commerce'),
@@ -932,6 +933,7 @@ HQ_TEAM_REGION_OR_POST = tuple([
     ('obn:12', 'Kuwait - Kuwait British Business Centre'),
     ('obn:13', 'Malaysia - British Malaysian Chamber of Commerce'),
     ('obn:14', 'Morocco - British Chamber of Commerce'),
+    ('obn:35', 'North America – OCO Global'),
     ('obn:15', 'Pakistan - British Business Centre Karachi'),
     ('obn:16', 'Philippines - British Chamber of Commerce'),
     ('obn:17', 'Poland - British Polish Chamber of Commerce'),
@@ -949,7 +951,6 @@ HQ_TEAM_REGION_OR_POST = tuple([
     ('obn:29', 'Turkey - British Chamber of Commerce'),
     ('obn:30', 'UAE - British Centres for Business'),
     ('obn:32', 'USA - Altios'),
-    ('obn:33', 'USA - OCO Global'),
     ('obn:31', 'Vietnam - British Business Group'),
 
     ("other:1", "DIT Education"),
