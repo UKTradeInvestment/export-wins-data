@@ -282,6 +282,9 @@ PROGRAMMES = TrackedSupersetChoices(
     ('TE', 82, "PM Trade Envoy"),
     ('FINTECH', 95, "FinTech"),
     ('GBFS', 96, "Great British Food Showcase 2019"),
+    ('GBFP', 97, "Great British Food Programme"),
+    ('SXSW', 98, 'South by South West (SXSW)'),
+    ('ESIF', 99, 'ESIF'),
 )
 
 # Note: The programmes appear in the front end in the order they are listed here
@@ -315,11 +318,13 @@ PROGRAMMES.add_subset('ACTIVE', [
     'EO',
     'EOFXI',
     'EIG',
+    'ESIF',
     'FINTECH',
     'FTEP',
     'FTAS',
     'GCPRBS',
     'GCPSANTANDER',
+    'GBFP',
     'GBFS',
     'GCF',
     'GEP',
@@ -348,6 +353,7 @@ PROGRAMMES.add_subset('ACTIVE', [
     'SL',
     'SE',
     'SS',
+    'SXSW',
     'TAP',
     'TE',
     'WEBEP',
