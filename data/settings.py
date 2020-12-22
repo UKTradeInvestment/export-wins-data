@@ -318,10 +318,9 @@ FIXTURE_DIRS = (
 # django countries only uses ISO countries. Wikipedia says, "XK is a
 # 'user assigned' ISO 3166 code not designated by the standard, but used by
 # the European Commission, Switzerland, the Deutsche Bundesbank..."
-# adding Global (XG) to deal with global HVCs
+# Remove Global (XG) and GB to align with DIT countries, territories and regions reference dataset
 COUNTRIES_OVERRIDE = {
     'XK': 'Kosovo',
-    'XG': 'Global',
     'FK': 'Falkland Islands',
     'CZ': 'Czech Republic',
     'BQ': 'Bonaire',
@@ -331,6 +330,7 @@ COUNTRIES_OVERRIDE = {
     'CV': 'Cape Verde',
     'CZ': 'Czechia',
     'FM': 'Micronesia',
+    'GB': None,
     'GM': 'The Gambia',
     'GS': 'South Georgia and South Sandwich Islands',
     'KN': 'St Kitts and Nevis',
