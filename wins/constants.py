@@ -286,6 +286,7 @@ PROGRAMMES = TrackedSupersetChoices(
     ('SXSW', 98, 'South by South West (SXSW)'),
     ('ESIF', 99, 'ESIF'),
     ('IPP', 100, 'Investment Promotion Programme (IPP)'),
+    ('ITS', 101, 'International Trade Show'),
 )
 
 # Note: The programmes appear in the front end in the order they are listed here
@@ -338,6 +339,7 @@ PROGRAMMES.add_subset('ACTIVE', [
     'HAIC',
     'IP',
     'IFB',
+    'ITS',
     'IPP',
     'JETCO',
     'LR',
